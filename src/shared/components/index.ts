@@ -7,6 +7,10 @@
 export { ErrorBoundary } from "./error-boundary";
 export { GlobalToastProvider } from "./toast-provider";
 
+// ── App-level loading gate ──────────────────────────────────────────────────
+export { GlobalSkeletonGate } from "./global-skeleton-gate";
+export type { GlobalSkeletonGateProps } from "./global-skeleton-gate";
+
 // Skeleton factory — all skeleton variants
 export {
   CardSkeleton,

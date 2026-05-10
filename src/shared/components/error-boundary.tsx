@@ -36,6 +36,16 @@ interface ErrorBoundaryProps {
   fallback?: (error: Error, reset: () => void) => ReactNode;
   /** Optional label shown in the default fallback UI. */
   label?: string;
+  /**
+   * Optional callback invoked when an error is caught.
+   * Use this to fire analytics events or custom Sentry breadcrumbs.
+   */
+  onError?: (error: Error, info: ErrorInfo) => void;
+  /**
+   * When this key changes (e.g., on route change), the error boundary
+   * automatically resets — useful for page-level boundaries.
+   */
+  resetKey?: string | number;
 }
 
 interface ErrorBoundaryState {
@@ -54,15 +64,24 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
-    // Sentry integration — no-op if Sentry is not initialised
+    // Fire the consumer's onError callback first (analytics / custom breadcrumbs)
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const Sentry = require("@sentry/nextjs") as typeof import("@sentry/nextjs");
-      Sentry.captureException(error, { extra: { componentStack: info.componentStack } });
+      this.props.onError?.(error, info);
     } catch {
-      // Sentry not installed — fall back to console
-      console.error("[ErrorBoundary] Unhandled render error:", error, info.componentStack);
+      // consumer callback errors must not affect boundary
     }
+
+    // Sentry integration — async import for Next.js tree-shaking
+    import("@sentry/nextjs")
+      .then((Sentry) => {
+        Sentry.captureException(error, {
+          extra: { componentStack: info.componentStack },
+        });
+      })
+      .catch(() => {
+        // Sentry not installed or not reachable — fall back to console
+        console.error("[ErrorBoundary] Unhandled render error:", error, info.componentStack);
+      });
   }
 
   private reset = (): void => {

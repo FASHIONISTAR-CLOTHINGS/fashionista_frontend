@@ -35,6 +35,17 @@ export interface UseOptimisticMutationOptions<TData, TError, TVariables, TContex
   onSuccess?: (data: TData, vars: TVariables) => void;
   /** Called after mutation failure (rollback already applied). */
   onError?: (error: TError, vars: TVariables) => void;
+  /**
+   * Called after mutation resolves (success or failure).
+   * Equivalent to TanStack Query's `onSettled`.
+   */
+  onSettled?: (data: TData | undefined, error: TError | null, vars: TVariables) => void;
+  /**
+   * When false, skips `invalidateQueries` after success.
+   * Useful when the consumer manages its own refetch cycle.
+   * @default true
+   */
+  shouldRefetch?: boolean;
 }
 
 export function useOptimisticMutation<
@@ -48,6 +59,8 @@ export function useOptimisticMutation<
   onOptimisticUpdate,
   onSuccess,
   onError,
+  onSettled,
+  shouldRefetch = true,
 }: UseOptimisticMutationOptions<TData, TError, TVariables, TContext>) {
   const queryClient = useQueryClient();
 
@@ -77,12 +90,16 @@ export function useOptimisticMutation<
         queryClient.setQueryData(queryKey, context.previousData);
       }
       onError?.(err, vars);
+      onSettled?.(undefined, err, vars);
     },
 
     onSuccess: (data, vars) => {
       // Invalidate so the server truth replaces the optimistic data
-      queryClient.invalidateQueries({ queryKey });
+      if (shouldRefetch) {
+        queryClient.invalidateQueries({ queryKey });
+      }
       onSuccess?.(data, vars);
+      onSettled?.(data, null, vars);
     },
   });
 

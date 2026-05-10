@@ -12,3 +12,10 @@ export type { UseInfiniteScrollOptions } from "./use-infinite-scroll";
 
 export { useToast } from "./use-toast";
 export type { ToastOptions } from "./use-toast";
+
+// ── New hooks (Wave G frontend finalization) ────────────────────────────────
+export { useNetworkStatus } from "./use-network-status";
+export type { UseNetworkStatusOptions, UseNetworkStatusReturn } from "./use-network-status";
+
+export { useAuditableAction } from "./use-auditable-action";
+export type { UseAuditableActionOptions } from "./use-auditable-action";
