@@ -1,0 +1,508 @@
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   FASHIONISTAR AI — Global CSS Design System v2.0
+   Tailwind CSS v4 · Shadcn/ui CSS Variable System
+   Brand Palette: Golden Yellow #FDA600 · Forest Green #01454A · Cream #F4F3EC
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+@layer base {
+  /* ────────────────────────────────────────────────────────────────────────────
+     LIGHT MODE (Default)
+     ──────────────────────────────────────────────────────────────────────────── */
+  :root,
+  .light {
+    /* ── Core Brand Tokens ────────────────────────────────────────────────── */
+    --brand-gold: 38 100% 50%;          /* #FDA600 Golden Yellow */
+    --brand-gold-hover: 36 95% 46%;     /* #F28705 */
+    --brand-green: 184 97% 15%;         /* #01454A Forest Green */
+    --brand-green-hover: 184 97% 19%;   /* #016B73 */
+    --brand-cream: 46 33% 94%;          /* #F4F3EC Warm Cream */
+    --brand-cream-dark: 45 30% 90%;     /* #ECE6D6 */
+    --brand-milk: 0 0% 100%;            /* #FFFFFF Pure White */
+    --brand-onyx: 0 0% 8%;             /* #141414 Near Black */
+    --brand-charcoal: 220 5% 35%;       /* #565960 Text Gray */
+    --brand-muted: 220 8% 55%;          /* #8A8E95 Muted Text */
+
+    /* ── Shadcn/ui CSS Variables — Light Mode ─────────────────────────────── */
+    --background: 46 33% 94%;           /* Cream #F4F3EC */
+    --foreground: 0 0% 8%;              /* Near-black */
+    --card: 0 0% 100%;                  /* White */
+    --card-foreground: 0 0% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 8%;
+    --primary: 184 97% 15%;             /* FASHIONISTAR Green #01454A */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 46 33% 90%;            /* Cream-dark */
+    --secondary-foreground: 184 97% 15%;
+    --muted: 220 15% 92%;
+    --muted-foreground: 220 10% 45%;
+    --accent: 38 100% 50%;              /* Gold #FDA600 */
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 15% 88%;
+    --input: 0 0% 100%;
+    --input-border: 220 15% 82%;
+    --ring: 184 97% 15%;
+    --radius: 0.75rem;
+
+    /* ── Dashboard Specific ──────────────────────────────────────────────── */
+    --sidebar-bg: 0 0% 8%;              /* #141414 */
+    --sidebar-text: 0 0% 100%;
+    --sidebar-active: 38 100% 50%;      /* Gold active state */
+    --sidebar-active-text: 0 0% 0%;
+    --dashboard-surface: 46 33% 94%;    /* Cream base */
+    --card-shadow: 0px 4px 25px 0px rgba(0, 0, 0, 0.08);
+    --card-hover-shadow: 0px 8px 40px 0px rgba(1, 69, 74, 0.15);
+
+    /* ── Chart Colors ──────────────────────────────────────────────────────── */
+    --chart-1: 184 97% 15%;
+    --chart-2: 38 100% 50%;
+    --chart-3: 210 70% 50%;
+    --chart-4: 340 82% 52%;
+    --chart-5: 120 60% 40%;
+
+    /* ── Status Colors ───────────────────────────────────────────────────── */
+    --success: 142 70% 40%;
+    --success-bg: 142 70% 95%;
+    --warning: 38 100% 50%;
+    --warning-bg: 38 100% 97%;
+    --error: 0 84% 60%;
+    --error-bg: 0 84% 97%;
+    --info: 210 100% 50%;
+    --info-bg: 210 100% 96%;
+  }
+
+  /* ────────────────────────────────────────────────────────────────────────────
+     DARK MODE
+     Brand colors remain vivid; surfaces shift to deep charcoal/onyx
+     ──────────────────────────────────────────────────────────────────────────── */
+  .dark {
+    /* ── Core Brand Tokens (unchanged — brand is always brand) ───────────── */
+    --brand-gold: 38 100% 50%;
+    --brand-gold-hover: 36 95% 46%;
+    --brand-green: 184 80% 40%;         /* Brighter in dark for contrast */
+    --brand-green-hover: 184 80% 48%;
+    --brand-cream: 45 15% 18%;          /* Cream becomes deep warm surface */
+    --brand-cream-dark: 45 12% 14%;
+    --brand-milk: 45 15% 22%;           /* Card surface in dark */
+    --brand-onyx: 0 0% 5%;
+    --brand-charcoal: 220 8% 70%;
+    --brand-muted: 220 8% 50%;
+
+    /* ── Shadcn/ui CSS Variables — Dark Mode ──────────────────────────────── */
+    --background: 220 18% 10%;          /* Deep blue-black */
+    --foreground: 45 15% 92%;           /* Warm off-white */
+    --card: 220 18% 14%;
+    --card-foreground: 45 15% 92%;
+    --popover: 220 18% 12%;
+    --popover-foreground: 45 15% 92%;
+    --primary: 184 70% 48%;             /* Brighter green for dark mode */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 18% 20%;
+    --secondary-foreground: 45 15% 85%;
+    --muted: 220 15% 20%;
+    --muted-foreground: 220 10% 60%;
+    --accent: 38 100% 50%;              /* Gold stays gold */
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 62% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 15% 22%;
+    --input: 220 18% 16%;
+    --input-border: 220 15% 28%;
+    --ring: 38 100% 50%;                /* Gold ring in dark */
+
+    /* ── Dashboard Specific — Dark ───────────────────────────────────────── */
+    --sidebar-bg: 220 18% 7%;
+    --sidebar-text: 0 0% 90%;
+    --sidebar-active: 38 100% 50%;
+    --sidebar-active-text: 0 0% 0%;
+    --dashboard-surface: 220 18% 10%;
+    --card-shadow: 0px 4px 25px 0px rgba(0, 0, 0, 0.35);
+    --card-hover-shadow: 0px 8px 40px 0px rgba(253, 166, 0, 0.12);
+
+    /* ── Status Colors — Dark ────────────────────────────────────────────── */
+    --success: 142 60% 45%;
+    --success-bg: 142 60% 12%;
+    --warning: 38 100% 50%;
+    --warning-bg: 38 100% 10%;
+    --error: 0 80% 60%;
+    --error-bg: 0 80% 12%;
+    --info: 210 90% 55%;
+    --info-bg: 210 90% 12%;
+  }
+
+  /* ── Base Reset ──────────────────────────────────────────────────────────── */
+  * {
+    box-sizing: border-box;
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-inter, "Inter", system-ui, sans-serif);
+    font-feature-settings: "rlig" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  /* ── Typography ──────────────────────────────────────────────────────────── */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.25;
+  }
+
+  /* ── Focus ───────────────────────────────────────────────────────────────── */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* ── Selection ───────────────────────────────────────────────────────────── */
+  ::selection {
+    background-color: hsl(var(--accent) / 0.25);
+    color: hsl(var(--foreground));
+  }
+
+  /* ── Smooth transitions for theme changes ────────────────────────────────── */
+  *,
+  *::before,
+  *::after {
+    transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+    transition-duration: 0.15s;
+    transition-timing-function: ease;
+  }
+
+  /* Disable transition on initial load (prevents FOUC flash) */
+  .no-transition * {
+    transition: none !important;
+  }
+}
+
+@layer utilities {
+  /* ── Text Balance ────────────────────────────────────────────────────────── */
+  .text-balance { text-wrap: balance; }
+
+  /* ── Brand Gradients ─────────────────────────────────────────────────────── */
+  .gradient-brand {
+    background: linear-gradient(135deg, hsl(var(--brand-green)) 0%, hsl(184 70% 25%) 100%);
+  }
+  .gradient-gold {
+    background: linear-gradient(135deg, hsl(38 100% 45%) 0%, hsl(38 100% 55%) 100%);
+  }
+  .gradient-hero {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--brand-cream)) 0%,
+      hsl(var(--brand-cream-dark)) 100%
+    );
+  }
+  .gradient-dashboard {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--brand-cream)) 0%,
+      hsl(45 30% 88%) 100%
+    );
+  }
+  .dark .gradient-hero,
+  .dark .gradient-dashboard {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card)) 0%,
+      hsl(220 18% 16%) 100%
+    );
+  }
+
+  /* ── Glass Morphism ──────────────────────────────────────────────────────── */
+  .glass {
+    background: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.5);
+  }
+
+  /* ── Card Shadows ────────────────────────────────────────────────────────── */
+  .card-shadow { box-shadow: var(--card-shadow, 0px 4px 25px 0px rgba(0, 0, 0, 0.08)); }
+  .card-shadow-hover:hover { box-shadow: var(--card-hover-shadow, 0px 8px 40px 0px rgba(1, 69, 74, 0.15)); }
+
+  /* ── Hide Scrollbar ──────────────────────────────────────────────────────── */
+  .scroll-hide { scrollbar-width: none; -ms-overflow-style: none; }
+  .scroll-hide::-webkit-scrollbar { display: none; }
+
+  /* ── Shimmer Loading ─────────────────────────────────────────────────────── */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 25%,
+      hsl(var(--background)) 50%,
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* ── Status Badges ───────────────────────────────────────────────────────── */
+  .badge-success {
+    background-color: hsl(var(--success-bg));
+    color: hsl(var(--success));
+    border: 1px solid hsl(var(--success) / 0.3);
+  }
+  .badge-warning {
+    background-color: hsl(var(--warning-bg));
+    color: hsl(var(--warning));
+    border: 1px solid hsl(var(--warning) / 0.3);
+  }
+  .badge-error {
+    background-color: hsl(var(--error-bg));
+    color: hsl(var(--error));
+    border: 1px solid hsl(var(--error) / 0.3);
+  }
+
+  /* ── Dashboard Input Style ───────────────────────────────────────────────── */
+  .dash-input {
+    height: 3.5rem;
+    width: 100%;
+    border-radius: 1.125rem;
+    border: 1px solid hsl(var(--input-border));
+    background-color: hsl(var(--card));
+    color: hsl(var(--foreground));
+    padding: 0 1rem;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .dash-input:focus {
+    border-color: hsl(var(--accent));
+    box-shadow: 0 0 0 3px hsl(var(--accent) / 0.12);
+  }
+  .dark .dash-input {
+    background-color: hsl(var(--input));
+    border-color: hsl(var(--input-border));
+  }
+
+  /* ── Dashboard Textarea ──────────────────────────────────────────────────── */
+  .dash-textarea {
+    min-height: 10rem;
+    width: 100%;
+    border-radius: 1.125rem;
+    border: 1px solid hsl(var(--input-border));
+    background-color: hsl(var(--card));
+    color: hsl(var(--foreground));
+    padding: 1rem;
+    outline: none;
+    resize: none;
+    transition: border-color 0.15s ease;
+  }
+  .dash-textarea:focus { border-color: hsl(var(--accent)); }
+
+  /* ── Toggle Switch ───────────────────────────────────────────────────────── */
+  .fash-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  .fash-toggle input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .fash-toggle-track {
+    width: 2.75rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    background-color: hsl(var(--muted));
+    transition: background-color 0.2s ease;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .fash-toggle-track::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+  }
+  .fash-toggle input:checked ~ .fash-toggle-track {
+    background-color: hsl(var(--accent));
+  }
+  .fash-toggle input:checked ~ .fash-toggle-track::after {
+    transform: translateX(1.25rem);
+  }
+
+  /* ── PIN Input ───────────────────────────────────────────────────────────── */
+  .pin-cell {
+    width: 3.25rem;
+    height: 3.75rem;
+    border-radius: 0.875rem;
+    border: 2px solid hsl(var(--input-border));
+    background-color: hsl(var(--card));
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: hsl(var(--foreground));
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    -moz-appearance: textfield;
+  }
+  .pin-cell::-webkit-outer-spin-button,
+  .pin-cell::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .pin-cell:focus {
+    border-color: hsl(var(--accent));
+    box-shadow: 0 0 0 3px hsl(var(--accent) / 0.15);
+  }
+  .pin-cell.filled { border-color: hsl(var(--primary)); }
+
+  /* ── Settings Section ────────────────────────────────────────────────────── */
+  .settings-section {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  @media (min-width: 768px) {
+    .settings-section {
+      grid-template-columns: 18rem 1fr;
+      gap: 2rem;
+    }
+  }
+  .settings-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+}
+
+/* ── Keyframes ───────────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ── Progress Bar ────────────────────────────────────────────────────────────── */
+progress {
+  appearance: none;
+  height: 0.625rem;
+  width: 100%;
+  border-radius: 9999px;
+  overflow: hidden;
+
+  &::-webkit-progress-bar {
+    background: hsl(var(--muted));
+    border-radius: 9999px;
+  }
+  &::-webkit-progress-value {
+    background: hsl(var(--accent));
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+  }
+  &::-moz-progress-bar {
+    background: hsl(var(--accent));
+    border-radius: 9999px;
+  }
+}
+
+/* ── Custom Checkbox ─────────────────────────────────────────────────────────── */
+.custom-checkbox {
+  appearance: none;
+  background-color: hsl(var(--card));
+  border: 2px solid hsl(var(--input-border));
+  border-radius: 4px;
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.custom-checkbox:checked {
+  background-color: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E");
+}
+
+/* ── Mobile Responsive Dashboard Helpers ─────────────────────────────────────── */
+@media (max-width: 1023px) {
+  .dashboard-content {
+    padding-top: 5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* ── Scrollbar Styling (Desktop) ──────────────────────────────────────────────── */
+@media (min-width: 1024px) {
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+}
+
+/* ── Shimmer Skeleton Animation ─────────────────────────────────────────────
+   Used by all *Skeleton.tsx components for PPR-compatible loading states.
+   No JS required — pure CSS @keyframes.
+   ──────────────────────────────────────────────────────────────────────── */
+@keyframes shimmer-pan {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted))                     0%,
+    hsl(var(--muted-foreground) / 0.08)  45%,
+    hsl(var(--muted))                    90%
+  );
+  background-size: 400% 100%;
+  animation: shimmer-pan 1.6s ease-in-out infinite;
+  border-radius: 0.375rem;
+}
+
+.dark .shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted))                     0%,
+    hsl(var(--muted-foreground) / 0.12)  45%,
+    hsl(var(--muted))                    90%
+  );
+  background-size: 400% 100%;
+  animation: shimmer-pan 1.6s ease-in-out infinite;
+}

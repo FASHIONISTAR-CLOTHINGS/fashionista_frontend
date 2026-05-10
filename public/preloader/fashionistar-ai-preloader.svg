@@ -1,0 +1,95 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+<title id="title">FASHIONISTAR AI Preloader Mark</title>
+<desc id="desc">Lightweight animated SVG mark using Fashionistar gold, green, navy, cream, and luxury orbit details.</desc>
+<style>
+  :root {
+    --gold:#FDA600;
+    --gold2:#F7C56B;
+    --green:#01454A;
+    --cream:#F4F3EC;
+    --navy:#071D2B;
+    --milk:#FFFDF6;
+  }
+  .orbital-main { transform-origin:128px 128px; animation: orbit 2.6s linear infinite; }
+  .orbital-second { transform-origin:128px 128px; animation: orbitReverse 4.2s linear infinite; }
+  .star { transform-origin:174px 70px; animation: pulseStar 1.45s ease-in-out infinite; }
+  .runner { transform-origin:128px 118px; animation: breathe 1.55s ease-in-out infinite; }
+  .bars rect { transform-origin: bottom center; animation: barRise 1.15s ease-in-out infinite; }
+  .bars rect:nth-child(2){ animation-delay:.12s; }
+  .bars rect:nth-child(3){ animation-delay:.24s; }
+  .bars rect:nth-child(4){ animation-delay:.36s; }
+  .swoosh { stroke-dasharray: 360; stroke-dashoffset: 360; animation: drawSwoosh 1.7s ease-in-out infinite alternate; }
+  @keyframes orbit { to { transform: rotate(360deg); } }
+  @keyframes orbitReverse { to { transform: rotate(-360deg); } }
+  @keyframes pulseStar { 0%,100%{ transform:scale(.9); opacity:.75;} 50%{ transform:scale(1.16); opacity:1;} }
+  @keyframes breathe { 0%,100%{ transform:scale(.985) translateY(1px);} 50%{ transform:scale(1.025) translateY(-2px);} }
+  @keyframes barRise { 0%,100%{ transform:scaleY(.72); opacity:.58;} 50%{ transform:scaleY(1); opacity:1;} }
+  @keyframes drawSwoosh { to { stroke-dashoffset: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .orbital-main,.orbital-second,.star,.runner,.bars rect,.swoosh { animation:none!important; }
+  }
+</style>
+
+<defs>
+  <radialGradient id="plate" cx="50%" cy="36%" r="70%">
+    <stop offset="0%" stop-color="#FFFFFF"/>
+    <stop offset="55%" stop-color="#FFF9E8"/>
+    <stop offset="100%" stop-color="#F4F3EC"/>
+  </radialGradient>
+  <linearGradient id="goldGrad" x1="39" y1="36" x2="219" y2="218" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#FFF4C7"/>
+    <stop offset=".42" stop-color="#FDA600"/>
+    <stop offset="1" stop-color="#B76B00"/>
+  </linearGradient>
+  <linearGradient id="greenGold" x1="45" y1="177" x2="214" y2="80" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#01454A"/>
+    <stop offset=".42" stop-color="#1E8B75"/>
+    <stop offset="1" stop-color="#FDA600"/>
+  </linearGradient>
+  <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#01454A" flood-opacity=".18"/>
+    <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#FDA600" flood-opacity=".28"/>
+  </filter>
+</defs>
+
+<circle cx="128" cy="128" r="108" fill="url(#plate)" opacity=".98"/>
+<circle cx="128" cy="128" r="106" stroke="#01454A" stroke-opacity=".06"/>
+
+<g class="orbital-second" opacity=".75">
+  <path d="M45 155C32 105 64 53 119 42" stroke="#01454A" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="43" cy="154" r="4" fill="#01454A"/>
+  <path d="M211 103c19 57-21 103-73 114" stroke="#FDA600" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="211" cy="103" r="4" fill="#FDA600"/>
+</g>
+
+<g class="orbital-main" opacity=".95">
+  <path d="M58 73c33-38 96-43 137-9" stroke="url(#goldGrad)" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="195" cy="64" r="4" fill="#FDA600"/>
+  <path d="M200 188c-39 35-103 33-142-3" stroke="#01454A" stroke-width="3" stroke-dasharray="2 8" stroke-linecap="round"/>
+</g>
+
+<g filter="url(#softShadow)">
+  <g class="bars">
+    <rect x="95" y="132" width="17" height="42" rx="3" fill="url(#goldGrad)" opacity=".75"/>
+    <rect x="119" y="116" width="17" height="58" rx="3" fill="url(#goldGrad)" opacity=".82"/>
+    <rect x="143" y="99" width="17" height="75" rx="3" fill="url(#goldGrad)" opacity=".9"/>
+    <rect x="167" y="80" width="17" height="94" rx="3" fill="url(#goldGrad)" opacity=".98"/>
+  </g>
+
+  <path class="swoosh" d="M45 172C82 159 122 155 157 132C184 115 198 94 210 74" stroke="url(#greenGold)" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <path d="M48 173C93 193 156 190 206 146" stroke="url(#goldGrad)" stroke-width="15" stroke-linecap="round" fill="none"/>
+
+  <g class="runner">
+    <circle cx="111" cy="66" r="9" fill="url(#goldGrad)"/>
+    <path d="M103 82C86 84 75 96 67 114C84 102 94 101 105 96C92 124 76 148 53 164C82 158 108 138 126 109C138 114 151 113 163 104" stroke="url(#greenGold)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M121 113C117 131 111 148 104 163" stroke="#01454A" stroke-width="10" stroke-linecap="round"/>
+  </g>
+
+  <g class="star" fill="url(#goldGrad)">
+    <path d="M174 45L180 63L198 52L187 70L206 76L185 80L195 99L177 88L169 108L167 86L145 91L162 77L146 62L167 67L174 45Z"/>
+  </g>
+</g>
+
+<path d="M63 197c41 18 88 18 130 0" stroke="#01454A" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+<path d="M83 193c12 10 25 18 40 24M173 193c-12 10-25 18-40 24M128 190v30" stroke="#01454A" stroke-width="4" stroke-linecap="round" opacity=".5"/>
+</svg>
