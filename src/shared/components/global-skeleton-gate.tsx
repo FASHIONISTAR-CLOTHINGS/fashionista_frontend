@@ -103,6 +103,7 @@ export function GlobalSkeletonGate({
       const timer = setTimeout(() => setCanShow(true), minDurationMs);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [minDurationMs]);
 
   if (!isReady || !canShow) {

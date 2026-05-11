@@ -2,17 +2,22 @@
 
 /**
  * @file FashionistarVideo.tsx
- * @description Enterprise Cloudinary video wrapper for the Fashionistar platform.
+ * @description Canonical Fashionistar platform video component — MERGED v2.
  *
- * Features:
- *  - Automatic Cloudinary video transformation URL generation
- *  - Poster image from Cloudinary video thumbnail API
- *  - Adaptive bitrate via `q_auto` quality
- *  - Multiple source formats: WebM, MP4 (browser auto-selects best)
- *  - Custom controls UI with play/pause, mute, fullscreen
- *  - Lazy loading via IntersectionObserver
- *  - Accessibility: visible controls, keyboard support
- *  - Graceful fallback placeholder on error or missing publicId
+ * This is the SINGLE SOURCE OF TRUTH for all video rendering on the platform.
+ * The legacy `components/shared/media/FashionVideo.tsx` has been deprecated
+ * and deleted. All imports must reference this file.
+ *
+ * Features (merged from FashionVideo v1 + FashionistarVideo v1):
+ *  ● Cloudinary video URL + adaptive bitrate (q_auto:good, WebM + MP4 sources)
+ *  ● Poster frame via Cloudinary so_0 first-frame API
+ *  ● IntersectionObserver: lazy load + autoplay when ≥50% visible
+ *  ● Tab-visibility pause: pauses when browser tab is hidden (merged)
+ *  ● Service Worker analytics event: `fashionistar:video-viewed` (merged)
+ *  ● Custom controls: play/pause, mute, fullscreen, scrub-bar
+ *  ● Brand gold progress bar (hsl(var(--accent)))
+ *  ● Branded placeholder on error (no broken video element shown)
+ *  ● Full keyboard accessibility (aria-labels, focus-visible)
  *
  * Usage:
  *   <FashionistarVideo
@@ -97,6 +102,12 @@ export interface FashionistarVideoProps {
   onPlay?: () => void;
   /** Callback when video ends. */
   onEnded?: () => void;
+  /**
+   * Product / entity ID for analytics tools.
+   * Emitted on the `fashionistar:video-viewed` SW event.
+   * (Merged from FashionVideo v1)
+   */
+  dataProductId?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -115,6 +126,7 @@ export function FashionistarVideo({
   className,
   onPlay,
   onEnded,
+  dataProductId,
 }: FashionistarVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -151,6 +163,21 @@ export function FashionistarVideo({
     return () => observer.disconnect();
   }, [autoPlay]);
 
+  // ── Tab-visibility pause (merged from FashionVideo) ──────────────────────────
+  useEffect(() => {
+    const handleVisibility = () => {
+      const v = videoRef.current;
+      if (!v) return;
+      if (document.hidden && !v.paused) {
+        v.pause();
+        setIsPlaying(false);
+      }
+      // Do NOT auto-resume — let IntersectionObserver manage re-play
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, []);
+
   // ── Controls ───────────────────────────────────────────────────────────────
   const togglePlay = useCallback(() => {
     const v = videoRef.current;
@@ -159,11 +186,19 @@ export function FashionistarVideo({
       v.play();
       setIsPlaying(true);
       onPlay?.();
+      // ── SW analytics event (merged from FashionVideo) ──────────────────
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("fashionistar:video-viewed", {
+            detail: { publicId, productId: dataProductId },
+          }),
+        );
+      }
     } else {
       v.pause();
       setIsPlaying(false);
     }
-  }, [onPlay]);
+  }, [onPlay, publicId, dataProductId]);
 
   const toggleMute = useCallback(() => {
     const v = videoRef.current;
@@ -267,8 +302,8 @@ export function FashionistarVideo({
             onClick={handleProgressClick}
           >
             <div
-              className="h-full bg-violet-500 rounded-full transition-all"
-              style={{ width: `${progress}%` }}
+              className="h-full rounded-full transition-all"
+              style={{ width: `${progress}%`, background: "hsl(var(--accent))" }}
             />
           </div>
 

@@ -13,6 +13,7 @@
  *   StatSkeleton       — Dashboard stat cards
  *   ProfileSkeleton    — User/vendor profile header
  *   FormSkeleton       — Multi-field form placeholder
+ *   ProductDetailSkeleton — Full product detail page layout
  */
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -195,6 +196,93 @@ export function FormSkeleton({ fields = 5, className }: { fields?: number; class
         </div>
       ))}
       <Skeleton className="h-10 w-32 rounded-lg mt-2" />
+    </div>
+  );
+}
+
+// ─── Product Detail Skeleton ───────────────────────────────────────────────────
+
+/**
+ * Full-page skeleton that mirrors the product detail layout:
+ *  - Hero image panel (left / top on mobile)
+ *  - Info panel: title, price, size selector, add-to-cart button
+ *  - Tabbed content: Description / Reviews / Care
+ *  - Related products grid
+ */
+export function ProductDetailSkeleton({ className }: { className?: string }) {
+  return (
+    <div className={cn("space-y-8", className)} aria-busy="true" aria-label="Loading product">
+      {/* Hero + Info split */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
+        {/* Image gallery */}
+        <div className="space-y-3">
+          <Skeleton className="aspect-square w-full rounded-2xl" />
+          <div className="flex gap-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 w-16 rounded-xl flex-shrink-0" />
+            ))}
+          </div>
+        </div>
+
+        {/* Product info */}
+        <div className="space-y-4">
+          {/* Breadcrumb */}
+          <div className="flex gap-2">
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+          {/* Title */}
+          <Skeleton className="h-9 w-4/5" />
+          <Skeleton className="h-5 w-2/3" />
+          {/* Price */}
+          <Skeleton className="h-10 w-32" />
+          {/* Rating */}
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-4 w-4 rounded-sm" />
+              ))}
+            </div>
+            <Skeleton className="h-4 w-20" />
+          </div>
+          {/* Size selector */}
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-20" />
+            <div className="flex gap-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-12 rounded-lg" />
+              ))}
+            </div>
+          </div>
+          {/* CTA buttons */}
+          <div className="flex gap-3 pt-2">
+            <Skeleton className="h-12 flex-1 rounded-xl" />
+            <Skeleton className="h-12 w-12 rounded-xl" />
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs: Description / Reviews / Care */}
+      <div className="space-y-4">
+        <div className="flex gap-4 border-b border-border pb-2">
+          {["Description", "Reviews", "Care"].map((tab) => (
+            <Skeleton key={tab} className="h-5 w-24" />
+          ))}
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-11/12" />
+          <Skeleton className="h-4 w-4/5" />
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+      </div>
+
+      {/* Related products */}
+      <div className="space-y-3">
+        <Skeleton className="h-6 w-40" />
+        <CardGridSkeleton count={4} />
+      </div>
     </div>
   );
 }

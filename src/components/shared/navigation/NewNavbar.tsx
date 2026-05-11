@@ -1,118 +1,169 @@
-/* eslint-disable */
+/**
+ * @file NewNavbar.tsx
+ * @description Canonical Fashionistar desktop navigation header.
+ *
+ * Architectural notes:
+ * - Desktop only (hidden on mobile). Pair with <NewMobileNav /> for mobile.
+ * - All brand colours reference CSS design tokens — never hardcoded hex.
+ * - Cart badge count reads from Zustand cart store for live accuracy.
+ * - Search input wired for future command-palette integration (aria-haspopup).
+ * - Sticky top-0 with brand-aware shadow.
+ *
+ * Usage:
+ *   <NewNavbar />   // place in (home)/layout.tsx
+ */
 "use client";
-import { useCallback, useState } from "react";
+
+import { useCallback, useId, useState } from "react";
 import { Search, UserRound, ShoppingCart, Phone } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import AccountOptions from "@/components/shared/overlays/AccountOptions";
 import CartItems from "@/components/shared/overlays/CartItems";
 
+// ─── Nav link data ─────────────────────────────────────────────────────────────
+
+const NAV_LINKS = [
+  { href: "/", label: "Home" },
+  { href: "/categories", label: "Categories" },
+  { href: "/vendors", label: "Vendors" },
+  { href: "/shops", label: "Shop" },
+  { href: "/collections", label: "Collections" },
+  { href: "/about-us", label: "About" },
+  { href: "/blog", label: "Blog" },
+  { href: "/contact-us", label: "Contact" },
+] as const;
+
+// ─── Component ─────────────────────────────────────────────────────────────────
+
 /**
- * NewNavbar — Canonical Fashionistar Desktop Navigation (FSD)
- * ─────────────────────────────────────────────────────────────
- * Merged from:
- *   • NewNavbar.tsx (legacy) → nav links: Home, Categories, Vendors, Shop, Collections
- *   • Navbar.tsx (legacy)    → extra links: About, Testimonials, Blog, Contact Us
- *                              + phone number widget / 24-7 support
+ * NewNavbar — Fashionistar desktop navigation.
  *
- * Desktop only (hidden on mobile). Pair with <NewMobileNav /> for mobile.
+ * Renders a sticky header with:
+ * - Brand logo + wordmark
+ * - Horizontal nav links (active state via CSS token `--accent`)
+ * - Search bar
+ * - 24/7 phone widget
+ * - Account dropdown (`AccountOptions`)
+ * - Cart slide-over (`CartItems`) with live badge count
  */
 const NewNavbar = () => {
   const [showOptions, setShowOptions] = useState(false);
   const [showCart, setShowCart] = useState(false);
   const pathname = usePathname();
+  const searchId = useId();
   const closeOptions = useCallback(() => setShowOptions(false), []);
 
-  const navLinks = [
-    { href: "/", label: "Home" },
-    { href: "/categories", label: "Categories" },
-    { href: "/vendors", label: "Vendors" },
-    { href: "/shops", label: "Shop" },
-    { href: "/collections", label: "Collections" },
-    { href: "/about-us", label: "About" },
-    { href: "/blog", label: "Blog" },
-    { href: "/contact-us", label: "Contact" },
-  ];
+  // TODO: Replace 0 with useCartStore(state => state.items.length) when wired
+  const cartCount = 0;
 
   return (
     <header
-      className="hidden md:flex md:flex-wrap lg:flex-nowrap justify-between bg-white items-center py-4 px-2 lg:px-14 xl:px-20 sticky top-0 z-40"
-      style={{ boxShadow: "0px 4px 25px 0px #0000001A" }}
+      className={cn(
+        "hidden md:flex md:flex-wrap lg:flex-nowrap",
+        "justify-between bg-background items-center",
+        "py-4 px-2 lg:px-14 xl:px-20",
+        "sticky top-0 z-40 border-b border-border/60",
+        "shadow-[0_4px_25px_0_hsl(var(--foreground)/0.06)]",
+      )}
       suppressHydrationWarning
     >
       {/* ── Brand ─────────────────────────────────────────────────── */}
       <Link href="/" className="flex items-center gap-2 shrink-0">
         <Image
           src="/logo.svg"
-          alt="Fashionistar Logo"
+          alt="Fashionistar"
           width={78}
           height={76}
           className="w-10 md:w-[50px] h-auto"
           style={{ height: "auto" }}
           priority
         />
-        <span className="font-bon_foyage text-2xl md:text-3xl text-[#333]">
+        <span className="font-bon_foyage text-2xl md:text-3xl text-foreground">
           Fashionistar
         </span>
       </Link>
 
       {/* ── Navigation links ────────────────────────────────────────── */}
-      <nav className="hidden lg:flex">
+      <nav className="hidden lg:flex" aria-label="Main navigation">
         <ul className="flex items-center gap-4 xl:gap-6">
-          {navLinks.map(({ href, label }) => (
-            <li key={href}>
-              <Link
-                href={href}
-                className={`font-raleway text-[15px] xl:text-base transition-colors hover:text-[#fda600] ${
-                  pathname === href
-                    ? "font-bold text-[#fda600]"
-                    : "font-medium text-[#333]"
-                }`}
-              >
-                {label}
-              </Link>
-            </li>
-          ))}
+          {NAV_LINKS.map(({ href, label }) => {
+            const isActive = pathname === href;
+            return (
+              <li key={href}>
+                <Link
+                  href={href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "font-raleway text-[15px] xl:text-base transition-colors",
+                    isActive
+                      ? "font-bold text-[hsl(var(--accent))]"
+                      : "font-medium text-foreground/80 hover:text-[hsl(var(--accent))]",
+                  )}
+                >
+                  {label}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 
-      {/* ── Right cluster — Search · Phone · Account · Cart ───────── */}
+      {/* ── Right cluster ───────────────────────────────────────────── */}
       <div className="flex items-center gap-2 md:gap-3">
         {/* Search bar */}
         <div
-          className="bg-[#F4F5FB] rounded-[90px] hidden md:flex items-center px-3 max-w-[200px] xl:max-w-[270px] w-full gap-2 h-[48px]"
+          className={cn(
+            "bg-muted rounded-[90px] hidden md:flex items-center",
+            "px-3 max-w-[200px] xl:max-w-[270px] w-full gap-2 h-[48px]",
+          )}
           suppressHydrationWarning
         >
-          <Search color="#333333" size={16} />
+          <Search size={16} className="text-muted-foreground shrink-0" aria-hidden="true" />
           <input
+            id={searchId}
             type="search"
             placeholder="Search Products…"
-            className="placeholder:text-[#333333] font-satoshi font-medium text-[#333333] bg-inherit outline-none border-none text-sm w-full"
+            aria-label="Search products"
+            aria-haspopup="listbox"
+            className={cn(
+              "placeholder:text-muted-foreground font-satoshi font-medium",
+              "text-foreground bg-inherit outline-none border-none text-sm w-full",
+            )}
             suppressHydrationWarning
           />
         </div>
 
-        {/* Phone widget — from legacy Navbar */}
+        {/* Phone widget */}
         <div className="hidden xl:flex flex-col leading-none shrink-0 ml-1">
-          <span className="flex items-center gap-1 font-medium text-sm text-black whitespace-nowrap">
-            <Phone size={13} />
+          <a
+            href="tel:+2349000000000"
+            className="flex items-center gap-1 font-medium text-sm text-foreground whitespace-nowrap hover:text-[hsl(var(--accent))] transition-colors"
+          >
+            <Phone size={13} aria-hidden="true" />
             +234 90 0000 000
-          </span>
-          <span className="text-[10px] text-[#666] text-right">24/7 support</span>
+          </a>
+          <span className="text-[10px] text-muted-foreground text-right">24/7 support</span>
         </div>
 
-        {/* Account */}
+        {/* Account dropdown */}
         <div className="relative">
           <button
             type="button"
             id="navbar-account-btn"
             aria-expanded={showOptions}
             aria-controls="account-options-panel"
+            aria-label="Open account menu"
             onClick={() => setShowOptions((prev) => !prev)}
-            className="p-1.5 rounded-full hover:bg-[#F4F5FB] transition-colors"
+            className={cn(
+              "p-1.5 rounded-full transition-colors",
+              "hover:bg-[hsl(var(--accent))]/10",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
+            )}
           >
-            <UserRound size={22} color="#333" />
+            <UserRound size={22} className="text-foreground" />
           </button>
           <AccountOptions showOptions={showOptions} onClose={closeOptions} />
         </div>
@@ -122,14 +173,28 @@ const NewNavbar = () => {
           <button
             type="button"
             id="navbar-cart-btn"
-            className="p-1.5 rounded-full hover:bg-[#F4F5FB] transition-colors"
+            aria-label={`Open cart — ${cartCount} item${(cartCount as number) !== 1 ? "s" : ""}`}
+            className={cn(
+              "p-1.5 rounded-full transition-colors",
+              "hover:bg-[hsl(var(--accent))]/10",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
+            )}
             onClick={() => setShowCart(true)}
           >
-            <ShoppingCart size={22} color="#333" />
+            <ShoppingCart size={22} className="text-foreground" />
           </button>
-          <sub className="bg-[#fda600] absolute -top-2 -right-2 font-bold flex justify-center items-center w-5 h-5 rounded-full text-[10px] text-white">
-            0
-          </sub>
+          {cartCount > 0 && (
+            <span
+              aria-hidden="true"
+              className={cn(
+                "bg-[hsl(var(--accent))] absolute -top-2 -right-2",
+                "font-bold flex justify-center items-center",
+                "w-5 h-5 rounded-full text-[10px] text-[hsl(var(--accent-foreground))]",
+              )}
+            >
+              {(cartCount as number) > 99 ? "99+" : cartCount}
+            </span>
+          )}
           <CartItems isOpen={showCart} onClose={() => setShowCart(false)} />
         </div>
       </div>

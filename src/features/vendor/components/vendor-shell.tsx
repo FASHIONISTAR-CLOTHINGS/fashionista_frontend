@@ -71,7 +71,8 @@ export function VendorShell({ children }: { children: React.ReactNode }) {
 
   return (
     <RoleGuard requiredRole="vendor" requireVendorProfile={requiresVendorProfile}>
-      <div className="min-h-screen bg-[#F4F3EC] text-black lg:flex">
+      {/* TODO(a11y): Add focus-trap library on sidebar drawer for WCAG 2.1 AA keyboard compliance */}
+      <div className="min-h-screen bg-background text-foreground lg:flex">
         <button
           type="button"
           aria-label="Open vendor navigation"
@@ -91,7 +92,7 @@ export function VendorShell({ children }: { children: React.ReactNode }) {
         ) : null}
 
         <aside
-          className={`fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-[#141414] text-white transition-transform duration-200 lg:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-[hsl(var(--sidebar-bg))] text-[hsl(var(--sidebar-text))] transition-transform duration-200 lg:translate-x-0 ${
             isMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
@@ -130,8 +131,8 @@ export function VendorShell({ children }: { children: React.ReactNode }) {
                     href={href}
                     className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
                       active
-                        ? "bg-[#FDA600] text-black"
-                        : "text-white/75 hover:bg-white/10 hover:text-white"
+                        ? "bg-[hsl(var(--sidebar-active))] text-[hsl(var(--sidebar-active-text))]"
+                        : "text-[hsl(var(--sidebar-text)/0.75)] hover:bg-white/10 hover:text-[hsl(var(--sidebar-text))]"
                     }`}
                   >
                     <Icon className="h-4 w-4" />

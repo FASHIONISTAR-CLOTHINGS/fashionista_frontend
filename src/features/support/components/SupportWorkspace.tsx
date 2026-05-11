@@ -69,7 +69,7 @@ function TicketRail({ tickets, activeId, isLoading, isError, onSelect, onRefresh
   return (
     <aside className="flex min-h-[26rem] flex-col overflow-hidden rounded-xl border border-black/10 bg-white shadow-sm">
       <div className="border-b border-black/8 px-4 py-3">
-        <p className="text-[13px] font-semibold text-[#141414]">
+        <p className="text-[13px] font-semibold text-foreground">
           {tickets.length} {tickets.length === 1 ? "ticket" : "tickets"}
         </p>
       </div>
@@ -98,7 +98,7 @@ function TicketRail({ tickets, activeId, isLoading, isError, onSelect, onRefresh
                 ].join(" ")}
               >
                 <div className="flex items-center justify-between gap-3">
-                  <p className="truncate text-[13px] font-semibold text-[#141414]">
+                  <p className="truncate text-[13px] font-semibold text-foreground">
                     {ticket.title}
                   </p>
                   <span
@@ -162,7 +162,7 @@ export function SupportWorkspace() {
       {/* ── Header ─────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#141414]">Support</h1>
+          <h1 className="text-2xl font-bold text-foreground">Support</h1>
           <p className="mt-1 text-sm text-black/55">
             Track disputes, payment issues, delivery problems, and general inquiries.
           </p>
@@ -170,7 +170,7 @@ export function SupportWorkspace() {
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 rounded-full bg-[#FDA600] px-4 py-2 text-sm font-semibold text-[#141414] shadow-sm transition hover:brightness-95 active:scale-[0.98]"
+          className="flex items-center gap-2 rounded-full bg-[hsl(var(--accent))] px-4 py-2 text-sm font-semibold text-[hsl(var(--accent-foreground))] shadow-sm transition hover:opacity-90 active:scale-[0.98]"
         >
           <Plus className="h-4 w-4" />
           New ticket

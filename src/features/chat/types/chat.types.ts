@@ -137,6 +137,8 @@ export interface MessagePage {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type WsEventType =
+  | "ping"              // Server heartbeat (backend → client)
+  | "pong"             // Client heartbeat reply (client → server)
   | "message.new"
   | "message.read"
   | "message.deleted"

@@ -2,19 +2,21 @@
  * components/shared/feedback/index.ts
  *
  * Purpose:
- *   Exports shared feedback components for use by feature slices via
+ *   Exports all shared feedback UI components for use by feature slices via
  *   '@/components/shared/feedback'.
  *
  * Exported Symbols:
- *   - Footer: legacy public footer
- *   - NewFooter: newer public footer
+ *   - NewFooter         : Canonical public footer (newsletter + dark body + bottom bar)
+ *   - AuthAlert         : Enterprise animated alert (error | success | warning | info)
+ *   - FieldError        : Inline form field error message
+ *   - RichErrorMessage  : Rich error display with icon + message
  *
- * Dependencies:
- *   - All components rely on React 19's "react" import for useActionState
- *   - Some components use cn() utility; ensure @/lib/utils is properly aliased
- *
- * Usage Example:
- *   import { Footer, NewFooter } from "@/components/shared/feedback";
+ * Usage:
+ *   import { NewFooter } from "@/components/shared/feedback";
+ *   import { AuthAlert, FieldError } from "@/components/shared/feedback";
  */
 
 export { default as NewFooter } from "./NewFooter";
+export { AuthAlert, FieldError } from "./AuthAlert";
+export { RichErrorMessage } from "./RichErrorMessage";
+
