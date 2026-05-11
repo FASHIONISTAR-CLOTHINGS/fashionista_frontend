@@ -2,6 +2,7 @@ import Link from "next/link";
 import NewNavbar from "@/components/shared/navigation/NewNavbar";
 import NewFooter from "@/components/shared/feedback/NewFooter";
 import NewMobileNav from "@/components/shared/navigation/NewMobileNav";
+import { WishlistNudgeClient } from "./_components/WishlistNudgeClient";
 
 export default function Home({
   children,
@@ -182,6 +183,8 @@ export default function Home({
       </main>
       {/* <Footer /> */}
       <NewFooter />
+      {/* ── Revenue: Wishlist Nudge sticky bar (60s delay, 24h suppression) ── */}
+      <WishlistNudgeClient />
     </>
   );
 }

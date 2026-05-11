@@ -19,7 +19,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -31,6 +31,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import {
   useCart,
@@ -40,6 +41,7 @@ import {
   useRemoveCoupon,
   useSubmitCheckout,
 } from "@/features/cart/hooks/use-cart";
+import { useCartAbandonment } from "@/features/cart/hooks/use-cart-abandonment";
 import { CartPageSkeleton } from "./CartPageSkeleton";
 import { formatCurrency } from "@/lib/formatting";
 
@@ -62,6 +64,24 @@ export default function CartPage() {
       router.push(`/client/dashboard/orders/${orderId}`);
     }
   });
+
+  // ── Revenue: Cart abandonment recovery (fires once per session after 3 min) ─
+  const onCartAbandonment = useCallback(() => {
+    toast.info("Still deciding? Your cart is waiting 🛍️", {
+      description: "Complete your purchase before items sell out.",
+      action: {
+        label: "View Cart",
+        onClick: () => {}, // already on cart page
+      },
+      duration: 8_000,
+    });
+  }, []);
+
+  useCartAbandonment({
+    cartItemCount: cart?.items?.length ?? 0,
+    onFire: onCartAbandonment,
+  });
+  // ─────────────────────────────────────────────────────────────────────────────
 
   if (isLoading) return <CartPageSkeleton />;
 

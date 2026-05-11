@@ -7,6 +7,7 @@ import { formatCurrency } from "@/lib/formatting";
 import { Suspense } from "react";
 import FeaturedProductsSection from "./FeaturedProductsSection";
 import { ProductGridSkeleton } from "@/features/product";
+import { RecentlyViewedSection } from "./_components/RecentlyViewedSection";
 
 type ReviewProps = {
   id: string;
@@ -126,6 +127,9 @@ export default async function Home(props: { searchParams?: Promise<Record<string
           <FeaturedProductsSection />
         </Suspense>
       </section>
+
+      {/* ── Recently Viewed Rail (localStorage ring-buffer, SSR-safe) ── */}
+      <RecentlyViewedSection />
 
       {/* ── Live Collection Grid ───────────────────────────────────── */}
       <CatalogCollectionGrid />

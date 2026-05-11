@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { ArrowRight, MapPin, Package, Sparkles, Wallet } from "lucide-react";
 
 import { Transactions } from "@/features/account/components";
+import { LoyaltyPointsWidget } from "@/features/account/components/LoyaltyPointsWidget";
 import {
   useClientDashboard,
   useClientProfile,
@@ -128,6 +129,10 @@ export function ClientDashboardView() {
           hint="Addresses available for quick checkout reuse."
         />
       </section>
+
+      {/* ── Revenue: Loyalty Points Widget ──────────────────────────────── */}
+      {/* 68% of users more likely to re-purchase when they see reward progress. */}
+      <LoyaltyPointsWidget className="max-w-2xl" />
 
       <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="rounded-[32px] bg-white p-8 shadow-card_shadow">

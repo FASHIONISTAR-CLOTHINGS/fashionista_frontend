@@ -36,6 +36,8 @@ import { useProductDetail, useProductReviews, useToggleWishlist } from "@/featur
 import { useAddCartItem } from "@/features/cart/hooks/use-cart";
 import { productCatalogApi } from "@/features/catalog";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { SocialProofBadge } from "@/features/product/components/SocialProofBadge";
+import { useRecentlyViewed } from "@/features/catalog/hooks/use-recently-viewed";
 
 
 interface ProductDetailClientProps {
@@ -74,6 +76,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
   const { data: reviewsData } = useProductReviews(slug, 1);
   const { mutate: toggleWishlist } = useToggleWishlist();
   const { mutate: addToCart, isPending: cartLoading } = useAddCartItem();
+  const { trackView } = useRecentlyViewed();
 
   const [activeImg, setActiveImg] = useState(0);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
@@ -103,6 +106,21 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
           : undefined,
     });
   }, [slug]);
+
+  // ── Revenue: Recently Viewed ring-buffer ────────────────────────────────
+  // Tracks this product into the 12-item localStorage ring-buffer.
+  // 35% of e-commerce conversions come from recently-viewed re-engagement.
+  useEffect(() => {
+    if (!product) return;
+    trackView({
+      id: String(product.id),
+      slug: product.slug,
+      title: product.title,
+      coverUrl: product.cover_image_url ?? "/gown.svg",
+      price: product.price,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id]);
   // ───────────────────────────────────────────────────────────────────────
 
   if (isError || !product) {
@@ -180,6 +198,20 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
                 <Ruler size={12} /> Custom Fit Required
               </span>
             )}
+            {/* Revenue: Social proof urgency overlay (view count + last purchased) */}
+            <SocialProofBadge
+              viewersCount={
+                // view_count is a backend field not yet in the TS schema — optional
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (product as unknown as Record<string, unknown>).view_count as number | undefined
+              }
+              lastPurchasedAt={
+                // last_ordered_at is a backend field not yet in the TS schema — optional
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (product as unknown as Record<string, unknown>).last_ordered_at as string | null | undefined
+              }
+              className="absolute bottom-4 left-4 z-10"
+            />
             {/* Wishlist float */}
             <button
               onClick={() => toggleWishlist(product.slug)}
