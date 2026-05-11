@@ -5,8 +5,8 @@
  * Architectural notes:
  * - Desktop only (hidden on mobile). Pair with <NewMobileNav /> for mobile.
  * - All brand colours reference CSS design tokens — never hardcoded hex.
- * - Cart badge count reads from Zustand cart store for live accuracy.
- * - Search input wired for future command-palette integration (aria-haspopup).
+ * - Cart badge count reads from Zustand cart store (getItemCount selector).
+ * - Search input navigates to /products?q=<query> on submit.
  * - Sticky top-0 with brand-aware shadow.
  *
  * Usage:
@@ -16,12 +16,13 @@
 
 import { useCallback, useId, useState } from "react";
 import { Search, UserRound, ShoppingCart, Phone } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import AccountOptions from "@/components/shared/overlays/AccountOptions";
 import CartItems from "@/components/shared/overlays/CartItems";
+import { useCartStore } from "@/features/cart/store/cart.store";
 
 // ─── Nav link data ─────────────────────────────────────────────────────────────
 
@@ -44,20 +45,34 @@ const NAV_LINKS = [
  * Renders a sticky header with:
  * - Brand logo + wordmark
  * - Horizontal nav links (active state via CSS token `--accent`)
- * - Search bar
+ * - Search bar (navigates to /products?q=<query> on Enter)
  * - 24/7 phone widget
  * - Account dropdown (`AccountOptions`)
- * - Cart slide-over (`CartItems`) with live badge count
+ * - Cart slide-over (`CartItems`) with live badge count from Zustand store
  */
 const NewNavbar = () => {
   const [showOptions, setShowOptions] = useState(false);
   const [showCart, setShowCart] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const pathname = usePathname();
+  const router = useRouter();
   const searchId = useId();
   const closeOptions = useCallback(() => setShowOptions(false), []);
 
-  // TODO: Replace 0 with useCartStore(state => state.items.length) when wired
-  const cartCount = 0;
+  // Live cart count from persisted Zustand store
+  const cartCount = useCartStore((state) => state.getItemCount());
+
+  const handleSearchSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      const q = searchQuery.trim();
+      if (q) {
+        router.push(`/products?q=${encodeURIComponent(q)}`);
+        setSearchQuery("");
+      }
+    },
+    [searchQuery, router],
+  );
 
   return (
     <header
@@ -113,28 +128,39 @@ const NewNavbar = () => {
 
       {/* ── Right cluster ───────────────────────────────────────────── */}
       <div className="flex items-center gap-2 md:gap-3">
-        {/* Search bar */}
-        <div
-          className={cn(
-            "bg-muted rounded-[90px] hidden md:flex items-center",
-            "px-3 max-w-[200px] xl:max-w-[270px] w-full gap-2 h-[48px]",
-          )}
-          suppressHydrationWarning
+        {/* Search bar — navigates to /products?q=<query> on submit */}
+        <form
+          onSubmit={handleSearchSubmit}
+          role="search"
+          aria-label="Search products"
         >
-          <Search size={16} className="text-muted-foreground shrink-0" aria-hidden="true" />
-          <input
-            id={searchId}
-            type="search"
-            placeholder="Search Products…"
-            aria-label="Search products"
-            aria-haspopup="listbox"
+          <div
             className={cn(
-              "placeholder:text-muted-foreground font-satoshi font-medium",
-              "text-foreground bg-inherit outline-none border-none text-sm w-full",
+              "bg-muted rounded-[90px] hidden md:flex items-center",
+              "px-3 max-w-[200px] xl:max-w-[270px] w-full gap-2 h-[48px]",
             )}
             suppressHydrationWarning
-          />
-        </div>
+          >
+            <label htmlFor={searchId} className="sr-only">
+              Search products
+            </label>
+            <Search size={16} className="text-muted-foreground shrink-0" aria-hidden="true" />
+            <input
+              id={searchId}
+              type="search"
+              placeholder="Search Products…"
+              aria-label="Search products"
+              aria-haspopup="listbox"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={cn(
+                "placeholder:text-muted-foreground font-satoshi font-medium",
+                "text-foreground bg-inherit outline-none border-none text-sm w-full",
+              )}
+              suppressHydrationWarning
+            />
+          </div>
+        </form>
 
         {/* Phone widget */}
         <div className="hidden xl:flex flex-col leading-none shrink-0 ml-1">
@@ -168,12 +194,12 @@ const NewNavbar = () => {
           <AccountOptions showOptions={showOptions} onClose={closeOptions} />
         </div>
 
-        {/* Cart */}
+        {/* Cart — live badge count from Zustand store */}
         <div className="relative flex">
           <button
             type="button"
             id="navbar-cart-btn"
-            aria-label={`Open cart — ${cartCount} item${(cartCount as number) !== 1 ? "s" : ""}`}
+            aria-label={`Open cart — ${cartCount} item${cartCount !== 1 ? "s" : ""}`}
             className={cn(
               "p-1.5 rounded-full transition-colors",
               "hover:bg-[hsl(var(--accent))]/10",
@@ -190,9 +216,10 @@ const NewNavbar = () => {
                 "bg-[hsl(var(--accent))] absolute -top-2 -right-2",
                 "font-bold flex justify-center items-center",
                 "w-5 h-5 rounded-full text-[10px] text-[hsl(var(--accent-foreground))]",
+                "transition-all duration-200",
               )}
             >
-              {(cartCount as number) > 99 ? "99+" : cartCount}
+              {cartCount > 99 ? "99+" : cartCount}
             </span>
           )}
           <CartItems isOpen={showCart} onClose={() => setShowCart(false)} />
