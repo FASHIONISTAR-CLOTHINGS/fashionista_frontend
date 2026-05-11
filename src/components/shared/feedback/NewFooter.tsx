@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * @file NewFooter.tsx
  * @description Canonical Fashionistar footer.
@@ -33,6 +35,9 @@ import { useId } from "react";
 const DEFAULT_EMAIL = "support@fashionistar.net";
 const DEFAULT_PHONE = "+2349137654300";
 const DEFAULT_ADDRESS = "A3, Okigwe Road, Umuahia, Abia State";
+
+// Computed once at module load — avoids Next.js 16 prerender `new Date()` error.
+const CURRENT_YEAR = new Date().getFullYear();
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -114,7 +119,7 @@ const NewFooter = ({
   phone = DEFAULT_PHONE,
   email = DEFAULT_EMAIL,
 }: NewFooterProps) => {
-  const year = new Date().getFullYear();
+  const year = CURRENT_YEAR;
 
   const socialLinks = [
     { label: "WhatsApp", href: "/", Icon: Phone },
