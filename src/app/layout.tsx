@@ -229,10 +229,10 @@ export const metadata: Metadata = {
   // App Icons
   icons: {
     icon: [
-      { url: "/preloader/fashionistar-ai-favicon-white-transparent.svg", sizes: "any" },
-      { url: "/preloader/fashionistar-ai-favicon-white-transparent.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
     ],
-    apple: "/preloader/fashionistar-ai-favicon-white-transparent.svg",
+    apple: "/apple-touch-icon.png",
   },
 };
 

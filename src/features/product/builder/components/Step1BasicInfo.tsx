@@ -7,12 +7,14 @@
  * Fields: title, description (rich-text), short_description, condition,
  *         category_ids, sub_category_ids, tag_ids
  *
- * The category list is fetched from the catalog API on mount.
- * Tags use a combobox multi-select with search debounce.
+ * Category + sub-category + tags are fetched via TanStack Query / apiAsync (Ky)
+ * — no raw fetch() calls. This gives caching, deduplication, and loading states.
  */
 
 import { useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
+import { apiAsync } from "@/core/api/client.async";
 import type { ProductBuilderFormValues } from "../schemas/builder.schemas";
 
 // ── Shadcn/ui primitives ──────────────────────────────────────────────────────
@@ -94,6 +96,43 @@ export function Step1BasicInfo() {
       .then((data) => setSubCategories(data.results ?? []))
       .catch(() => setSubCategories([]));
   }, [selectedPrimaryCategoryId]);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function Step1BasicInfo() {
+  const form = useFormContext<ProductBuilderFormValues>();
+
+  // ── Catalog data ───────────────────────────────────────────────────────────
+  const { data: categoriesData, isLoading: loadingCategories } = useQuery({
+    queryKey: ["catalog", "categories"],
+    queryFn: () => apiAsync.get("catalog/categories/", { searchParams: { page_size: 100 } }).json<{ results: SelectOption[] }>(),
+    staleTime: 300_000,
+  });
+  const categories = categoriesData?.results ?? [];
+
+  const { data: tagsData, isLoading: loadingTags } = useQuery({
+    queryKey: ["product", "tags"],
+    queryFn: () => apiAsync.get("product/tags/", { searchParams: { page_size: 100 } }).json<{ results: SelectOption[] }>(),
+    staleTime: 300_000,
+  });
+  const tags = tagsData?.results ?? [];
+
+  const loadingCatalog = loadingCategories || loadingTags;
+
+  const selectedCategoryIds = form.watch("category_ids") ?? [];
+  const selectedSubCategoryIds = form.watch("sub_category_ids") ?? [];
+  const selectedPrimaryCategoryId = selectedCategoryIds[0];
+  const selectedTagIds = form.watch("tag_ids") ?? [];
+
+  const { data: subCategoriesData } = useQuery({
+    queryKey: ["catalog", "categories", selectedPrimaryCategoryId, "children"],
+    queryFn: () => apiAsync.get(`catalog/categories/${selectedPrimaryCategoryId}/children/`, { searchParams: { page_size: 50 } }).json<{ results: SelectOption[] }>(),
+    enabled: !!selectedPrimaryCategoryId,
+    staleTime: 300_000,
+  });
+  const subCategories = subCategoriesData?.results ?? [];
 
   const addCategory = (categoryId: string) => {
     const current = form.getValues("category_ids") ?? [];
