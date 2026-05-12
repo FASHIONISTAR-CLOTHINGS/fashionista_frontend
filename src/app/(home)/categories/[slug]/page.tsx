@@ -14,8 +14,6 @@ interface CategorySlugPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export const dynamicParams = true;
-
 export async function generateStaticParams() {
   try {
     const categories = await getCatalogCategories();

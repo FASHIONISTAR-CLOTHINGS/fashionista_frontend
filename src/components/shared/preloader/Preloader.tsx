@@ -29,9 +29,10 @@ export function PreloaderDismiss() {
     };
 
     const scheduleDismiss = () => {
-      timeoutId = window.setTimeout(dismiss, 450);
+      timeoutId = window.setTimeout(dismiss, 350);
     };
 
+    // Keep it short: visible enough for branding, never slow enough to irritate users.
     if (document.readyState === "complete") {
       scheduleDismiss();
     } else {
