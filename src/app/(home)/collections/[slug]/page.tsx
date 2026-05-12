@@ -14,8 +14,6 @@ interface CollectionDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
-// Allow slugs not in generateStaticParams to be rendered at request time
-export const dynamicParams = true;
 
 export async function generateStaticParams() {
   try {

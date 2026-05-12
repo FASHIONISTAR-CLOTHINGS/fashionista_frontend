@@ -55,21 +55,28 @@ export interface TransactionsProps {
 
 // ── Withdrawal form schema ────────────────────────────────────────────────────
 
+/**
+ * WithdrawalForm Zod schema.
+ * Field names mirror WalletWithdrawalSerializer (apps/wallet/serializers.py):
+ *   amount, pin, bank_code, account_number, account_name
+ */
 const withdrawalSchema = z.object({
+  /** Amount in NGN — minimum ₦1,000 enforced here (backend min is ₦0.01). */
   amount: z.string().min(1, "Amount is required").refine(
     (v) => !isNaN(Number(v)) && Number(v) >= 1000,
     { message: "Minimum withdrawal is ₦1,000" },
   ),
-  payment_method: z.string().min(1, "Payment method is required"),
-  full_name: z.string().min(2, "Full name is required"),
-  account_name: z.string().min(2, "Account name is required"),
-  bank_name: z.string().min(2, "Bank name is required"),
+  /** Nigerian bank code e.g. "057" for Zenith, "011" for First Bank. */
+  bank_code: z.string().min(2, "Bank code is required"),
+  /** 10-digit NUBAN account number. */
   account_number: z
     .string()
     .length(10, "Account number must be exactly 10 digits")
     .regex(/^\d+$/, "Only digits allowed"),
-  /** 4-digit wallet transaction PIN — verified server-side */
-  transaction_password: z
+  /** Beneficiary name as registered with the bank. */
+  account_name: z.string().min(2, "Account name is required"),
+  /** 4-digit wallet transaction PIN — bcrypt-verified server-side. */
+  pin: z
     .string()
     .length(4, "PIN must be exactly 4 digits")
     .regex(/^\d+$/, "PIN must be numeric"),
@@ -364,50 +371,56 @@ function WithdrawalForm() {
   const onSubmit = async (data: WithdrawalFormValues) => {
     try {
       /**
-       * POST /api/v1/client/wallet/transfer/
-       * DRF sync — WalletBalanceService.transfer() is atomic (DB transaction).
+       * POST /api/v1/client/wallet/withdraw/
+       * ClientWalletWithdrawView → WalletWithdrawalService.request_withdrawal()
        *
-       * The backend resolves the withdrawal destination from `receiver_id`.
-       * Here we send a self-annotated withdrawal request; the platform admin
-       * receiver_id is expected to be resolved on the server from the
-       * payment_method + account metadata provided.
+       * Service guarantees:
+       *   - KYC gate (assert_kyc_approved)
+       *   - PIN verified (bcrypt, wallet locked after 5 failures)
+       *   - Atomic DB transaction: available_balance → pending_balance
+       *   - Immutable PAYOUT ledger row (CBN compliance)
+       *   - Idempotency-Key prevents double-submission on network retry
        *
-       * Idempotency-Key prevents duplicate submissions on retry.
+       * Body fields map 1-to-1 to WalletWithdrawalSerializer:
+       *   amount, pin, bank_code, account_number, account_name
        */
-      await apiSync.post("/api/v1/client/wallet/transfer/", {
-        amount: data.amount,
-        transaction_password: data.transaction_password,
-        // Bank metadata for withdrawal processing reference
-        metadata: {
-          payment_method: data.payment_method,
-          full_name: data.full_name,
-          account_name: data.account_name,
-          bank_name: data.bank_name,
+      await apiSync.post(
+        "/api/v1/client/wallet/withdraw/",
+        {
+          amount: data.amount,
+          pin: data.pin,
+          bank_code: data.bank_code,
           account_number: data.account_number,
+          account_name: data.account_name,
         },
-      }, {
-        headers: {
-          "Idempotency-Key": `withdrawal-${Date.now()}-${data.account_number}`,
+        {
+          headers: {
+            "Idempotency-Key": `withdrawal-${Date.now()}-${data.account_number}`,
+          },
         },
-      });
-      toast.success("Withdrawal request submitted! Funds arrive in 1–3 business days.");
+      );
+      toast.success(
+        "Withdrawal request submitted! Funds arrive in 1–3 business days.",
+        { duration: 6000 },
+      );
       reset();
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? "Withdrawal failed. Please check your PIN and try again.";
-      toast.error(msg);
+      const apiMsg =
+        (err as { response?: { data?: { message?: string } } })
+          ?.response?.data?.message;
+      toast.error(
+        apiMsg ?? "Withdrawal failed. Please check your PIN and try again.",
+      );
     }
   };
 
+  // Fields map 1:1 to WalletWithdrawalSerializer fields.
   const fields = [
-    { label: "Amount (₦)", name: "amount" as const, type: "number", full: false, placeholder: "Minimum ₦1,000" },
-    { label: "Payment Method", name: "payment_method" as const, type: "text", full: false, placeholder: "e.g. Bank Transfer" },
-    { label: "Full Name", name: "full_name" as const, type: "text", full: false, placeholder: "As on your ID" },
-    { label: "Account Name", name: "account_name" as const, type: "text", full: false, placeholder: "As on your bank account" },
-    { label: "Bank Name", name: "bank_name" as const, type: "text", full: true, placeholder: "e.g. Zenith Bank" },
-    { label: "Account Number", name: "account_number" as const, type: "text", full: false, placeholder: "10-digit NUBAN" },
-    { label: "Transaction PIN", name: "transaction_password" as const, type: "password", full: false, placeholder: "4-digit security PIN" },
+    { label: "Amount (₦)",      name: "amount"         as const, type: "number",   full: false, placeholder: "Minimum ₦1,000" },
+    { label: "Bank Code",       name: "bank_code"      as const, type: "text",     full: false, placeholder: "e.g. 057 (Zenith), 011 (FirstBank)" },
+    { label: "Account Number", name: "account_number" as const, type: "text",     full: false, placeholder: "10-digit NUBAN" },
+    { label: "Account Name",   name: "account_name"   as const, type: "text",     full: true,  placeholder: "Name as registered with your bank" },
+    { label: "Transaction PIN", name: "pin"            as const, type: "password", full: false, placeholder: "4-digit security PIN" },
   ];
 
   return (

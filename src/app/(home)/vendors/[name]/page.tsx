@@ -10,8 +10,6 @@ interface VendorNamePageProps {
   params: Promise<{ name: string }>;
 }
 
-// Allow any vendor slug not pre-generated to render at request time
-export const dynamicParams = true;
 
 export async function generateMetadata({
   params,
