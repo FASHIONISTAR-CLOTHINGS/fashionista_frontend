@@ -30,7 +30,7 @@ const vendorNavItems = [
   { href: "/vendor/dashboard", label: "Dashboard", Icon: LayoutDashboard },
   { href: "/vendor/orders", label: "Orders", Icon: Package },
   { href: "/vendor/products", label: "New Product", Icon: Store },
-  { href: "/vendor/products/catelog", label: "Catalog", Icon: Package },
+  { href: "/vendor/products/catalog", label: "Catalog", Icon: Package },
   { href: "/vendor/analytics", label: "Analytics", Icon: BarChart3 },
   { href: "/vendor/payments", label: "Payments", Icon: CreditCard },
   { href: "/vendor/transactions", label: "Transactions", Icon: ReceiptText },

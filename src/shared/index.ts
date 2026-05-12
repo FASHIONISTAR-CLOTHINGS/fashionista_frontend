@@ -26,11 +26,15 @@ export {
   useOptimisticMutation,
   useInfiniteScroll,
   useToast,
+  useNetworkStatus,
+  useAuditableAction,
 } from "./hooks";
 
 export type {
   UseOptimisticMutationOptions,
   UseInfiniteScrollOptions,
   ToastOptions,
+  UseNetworkStatusOptions,
+  UseNetworkStatusReturn,
 } from "./hooks";
   

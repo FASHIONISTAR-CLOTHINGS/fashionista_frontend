@@ -1,3 +1,6 @@
+"use client";
+
+import { ErrorBoundary } from "@/shared";
 import { VendorShell } from "@/features/vendor";
 
 export default function VendorLayout({
@@ -5,5 +8,9 @@ export default function VendorLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <VendorShell>{children}</VendorShell>;
+  return (
+    <ErrorBoundary>
+      <VendorShell>{children}</VendorShell>
+    </ErrorBoundary>
+  );
 }

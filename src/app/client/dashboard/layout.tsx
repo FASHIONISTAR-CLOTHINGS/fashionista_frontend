@@ -1,3 +1,6 @@
+"use client";
+
+import { ErrorBoundary } from "@/shared";
 import { ClientShell } from "@/features/client";
 
 export default function ClientDashboardLayout({
@@ -5,5 +8,9 @@ export default function ClientDashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <ClientShell>{children}</ClientShell>;
+  return (
+    <ErrorBoundary>
+      <ClientShell>{children}</ClientShell>
+    </ErrorBoundary>
+  );
 }

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 
 import AdminTopBanner from "@/components/shared/utilities/AdminTopBanner";
 import { RoleGuard } from "@/features/auth/components/RoleGuard";
+import { ErrorBoundary } from "@/shared";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -571,7 +572,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <div className="lg:ml-[25%] bg-[#F4F3EC] min-h-screen flex flex-col">
           <AdminTopBanner title="Jennifer" pathname={pathname} />
           <div className="p-3 md:p-[30px] mt-1 lg:mt-[100px] bg-inherit space-y-10">
-            {children}
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
           </div>
         </div>
       </div>

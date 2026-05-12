@@ -533,7 +533,7 @@ export function VendorDashboardView() {
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
-              href="/vendor/products/catelog"
+              href="/vendor/products/catalog"
               className="flex items-center justify-between rounded-[20px] bg-[#F8F5ED] px-5 py-4 text-sm font-semibold text-black transition hover:bg-[#ECE6D6]"
             >
               <span className="flex items-center gap-3">
@@ -733,7 +733,7 @@ export function VendorProductComposerView() {
 
     // ── 3. Invalidate catalog cache + redirect ───────────────────────────────
     void qc.invalidateQueries({ queryKey: productKeys.lists() });
-    router.push("/vendor/products/catelog");
+    router.push("/vendor/products/catalog");
   };
 
   return (
@@ -749,7 +749,7 @@ export function VendorProductComposerView() {
           </h1>
         </div>
         <Link
-          href="/vendor/products/catelog"
+          href="/vendor/products/catalog"
           className="rounded-full border border-black/10 px-6 py-3 text-sm font-semibold text-[#5A6465] transition hover:bg-[#F4F3EC]"
         >
           Open catalog
