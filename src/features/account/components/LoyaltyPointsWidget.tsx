@@ -7,13 +7,18 @@
  *
  * Data source: GET /api/v1/client/wallet/summary/ — reads `loyalty_points` field.
  * Tier thresholds defined below (easily moved to a config or backend constant).
+ *
+ * Wave 10b: Migrated from raw fetch() → apiAsync (Ky) for standardized error
+ * handling, automatic auth headers, and retry logic.
  */
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { Trophy, Star, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { apiAsync } from "@/core/api/client.async";
 
 // ─── Tier config ──────────────────────────────────────────────────────────────
 
@@ -67,11 +72,7 @@ interface WalletSummary {
 }
 
 async function fetchWalletSummary(): Promise<WalletSummary> {
-  const res = await fetch("/api/v1/client/wallet/summary/", {
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error("Failed to load wallet summary");
-  return res.json() as Promise<WalletSummary>;
+  return apiAsync.get("client/wallet/summary/").json<WalletSummary>();
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -153,7 +154,10 @@ export function LoyaltyPointsWidget({
   }
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
       className={cn(
         "rounded-2xl border border-border bg-card p-5 space-y-4",
         className,
@@ -196,12 +200,14 @@ export function LoyaltyPointsWidget({
             aria-valuemax={100}
             aria-label={`${progressPct}% progress to ${next.name}`}
           >
-            <div
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
               className={cn(
-                "h-full rounded-full bg-gradient-to-r transition-all duration-700",
+                "h-full rounded-full bg-gradient-to-r",
                 current.color,
               )}
-              style={{ width: `${progressPct}%` }}
             />
           </div>
           <p className="text-xs text-muted-foreground text-center">
@@ -234,6 +240,6 @@ export function LoyaltyPointsWidget({
         <Star className="h-4 w-4" aria-hidden="true" />
         View Rewards History
       </Link>
-    </div>
+    </motion.div>
   );
 }

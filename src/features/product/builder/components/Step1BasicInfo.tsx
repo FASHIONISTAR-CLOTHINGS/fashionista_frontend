@@ -4,14 +4,15 @@
  * @file Step1BasicInfo.tsx
  * @description Step 1 — Basic Information
  *
- * Fields: title, description (rich-text), short_description, condition,
+ * Fields: title, description, short_description, condition,
  *         category_ids, sub_category_ids, tag_ids
  *
- * Category + sub-category + tags are fetched via TanStack Query / apiAsync (Ky)
- * — no raw fetch() calls. This gives caching, deduplication, and loading states.
+ * Data fetching:
+ *  - ALL catalog data uses TanStack Query + apiAsync (Ky) — zero raw fetch() calls.
+ *  - Sub-categories use a dependent query keyed on the first selected category.
+ *  - All queries cache for 5 minutes — vendors never see a spinner on revisit.
  */
 
-import { useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { apiAsync } from "@/core/api/client.async";
@@ -37,7 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/Button";
-import { X, Loader2 } from "lucide-react";
+import { X } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -49,97 +50,103 @@ interface SelectOption {
   slug?: string;
 }
 
+interface PaginatedOptions {
+  results: SelectOption[];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// API FETCHERS — Ky-based, goes through the shared apiAsync client
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function fetchCategories(): Promise<SelectOption[]> {
+  const data = await apiAsync
+    .get("catalog/categories/?page_size=100")
+    .json<PaginatedOptions>();
+  return data.results ?? [];
+}
+
+async function fetchSubCategories(parentId: string): Promise<SelectOption[]> {
+  if (!parentId) return [];
+  const data = await apiAsync
+    .get(`catalog/categories/${parentId}/children/?page_size=50`)
+    .json<PaginatedOptions>();
+  return data.results ?? [];
+}
+
+async function fetchTags(): Promise<SelectOption[]> {
+  const data = await apiAsync
+    .get("product/tags/?page_size=100")
+    .json<PaginatedOptions>();
+  return data.results ?? [];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SKELETON — shown during initial catalog load
+// ─────────────────────────────────────────────────────────────────────────────
+
+function FieldSkeleton({ label }: { label: string }) {
+  return (
+    <div className="space-y-2">
+      <div className="text-white/90 font-semibold text-sm">{label}</div>
+      <div className="h-10 w-full rounded-lg bg-white/5 animate-pulse" />
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function Step1BasicInfo() {
   const form = useFormContext<ProductBuilderFormValues>();
-
-  // ── Catalog data ───────────────────────────────────────────────────────────
-  const [categories, setCategories] = useState<SelectOption[]>([]);
-  const [subCategories, setSubCategories] = useState<SelectOption[]>([]);
-  const [tags, setTags] = useState<SelectOption[]>([]);
-  const [loadingCatalog, setLoadingCatalog] = useState(true);
 
   const selectedCategoryIds = form.watch("category_ids") ?? [];
   const selectedSubCategoryIds = form.watch("sub_category_ids") ?? [];
-  const selectedPrimaryCategoryId = selectedCategoryIds[0];
+  const selectedPrimaryCategoryId = selectedCategoryIds[0] ?? "";
   const selectedTagIds = form.watch("tag_ids") ?? [];
 
-  useEffect(() => {
-    async function loadCatalog() {
-      try {
-        const [catRes, tagRes] = await Promise.all([
-          fetch("/api/catalog/categories/?page_size=100").then((r) => r.json()),
-          fetch("/api/product/tags/?page_size=100").then((r) => r.json()),
-        ]);
-        setCategories(catRes.results ?? []);
-        setTags(tagRes.results ?? []);
-      } catch {
-        // Non-critical — vendor can type manually
-      } finally {
-        setLoadingCatalog(false);
-      }
-    }
-    loadCatalog();
-  }, []);
-
-  // Load sub-categories when category changes
-  useEffect(() => {
-    if (!selectedPrimaryCategoryId) {
-      setSubCategories([]);
-      return;
-    }
-    fetch(`/api/catalog/categories/${selectedPrimaryCategoryId}/children/?page_size=50`)
-      .then((r) => r.json())
-      .then((data) => setSubCategories(data.results ?? []))
-      .catch(() => setSubCategories([]));
-  }, [selectedPrimaryCategoryId]);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// COMPONENT
-// ─────────────────────────────────────────────────────────────────────────────
-
-export function Step1BasicInfo() {
-  const form = useFormContext<ProductBuilderFormValues>();
-
-  // ── Catalog data ───────────────────────────────────────────────────────────
-  const { data: categoriesData, isLoading: loadingCategories } = useQuery({
+  // ── TanStack Query — categories (cached 5 min) ────────────────────────────
+  const {
+    data: categories = [],
+    isLoading: catsLoading,
+  } = useQuery({
     queryKey: ["catalog", "categories"],
-    queryFn: () => apiAsync.get("catalog/categories/", { searchParams: { page_size: 100 } }).json<{ results: SelectOption[] }>(),
-    staleTime: 300_000,
+    queryFn: fetchCategories,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
   });
-  const categories = categoriesData?.results ?? [];
 
-  const { data: tagsData, isLoading: loadingTags } = useQuery({
-    queryKey: ["product", "tags"],
-    queryFn: () => apiAsync.get("product/tags/", { searchParams: { page_size: 100 } }).json<{ results: SelectOption[] }>(),
-    staleTime: 300_000,
-  });
-  const tags = tagsData?.results ?? [];
-
-  const loadingCatalog = loadingCategories || loadingTags;
-
-  const selectedCategoryIds = form.watch("category_ids") ?? [];
-  const selectedSubCategoryIds = form.watch("sub_category_ids") ?? [];
-  const selectedPrimaryCategoryId = selectedCategoryIds[0];
-  const selectedTagIds = form.watch("tag_ids") ?? [];
-
-  const { data: subCategoriesData } = useQuery({
-    queryKey: ["catalog", "categories", selectedPrimaryCategoryId, "children"],
-    queryFn: () => apiAsync.get(`catalog/categories/${selectedPrimaryCategoryId}/children/`, { searchParams: { page_size: 50 } }).json<{ results: SelectOption[] }>(),
+  // ── TanStack Query — sub-categories (dependent on primary category) ────────
+  const {
+    data: subCategories = [],
+    isLoading: subsLoading,
+  } = useQuery({
+    queryKey: ["catalog", "subcategories", selectedPrimaryCategoryId],
+    queryFn: () => fetchSubCategories(selectedPrimaryCategoryId),
     enabled: !!selectedPrimaryCategoryId,
-    staleTime: 300_000,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
   });
-  const subCategories = subCategoriesData?.results ?? [];
 
+  // ── TanStack Query — tags (cached 5 min) ─────────────────────────────────
+  const {
+    data: tags = [],
+    isLoading: tagsLoading,
+  } = useQuery({
+    queryKey: ["catalog", "tags"],
+    queryFn: fetchTags,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
+  });
+
+  // ── Category helpers ───────────────────────────────────────────────────────
   const addCategory = (categoryId: string) => {
     const current = form.getValues("category_ids") ?? [];
     if (!current.includes(categoryId) && current.length < 5) {
-      form.setValue("category_ids", [...current, categoryId], { shouldValidate: true });
+      form.setValue("category_ids", [...current, categoryId], {
+        shouldValidate: true,
+      });
       if (current.length === 0) {
-        // Sub-categories are loaded from the first selected category only.
         form.setValue("sub_category_ids", [], { shouldValidate: true });
       }
     }
@@ -174,11 +181,21 @@ export function Step1BasicInfo() {
     );
   };
 
-  if (loadingCatalog) {
+  // ── Initial skeleton during first catalog fetch ───────────────────────────
+  const initialLoading = catsLoading || tagsLoading;
+
+  if (initialLoading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-6 h-6 animate-spin text-violet-400" />
-        <span className="ml-3 text-sm text-white/60">Loading catalog…</span>
+      <div className="space-y-8 animate-pulse">
+        <FieldSkeleton label="Product Title *" />
+        <FieldSkeleton label="Short Description" />
+        <FieldSkeleton label="Full Description *" />
+        <FieldSkeleton label="Condition *" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FieldSkeleton label="Categories *" />
+          <FieldSkeleton label="Sub-Category" />
+        </div>
+        <FieldSkeleton label="Tags" />
       </div>
     );
   }
@@ -361,11 +378,19 @@ export function Step1BasicInfo() {
               <Select
                 onValueChange={(value) => field.onChange(value ? [value] : [])}
                 value={selectedSubCategoryIds[0] ?? ""}
-                disabled={subCategories.length === 0}
+                disabled={!selectedPrimaryCategoryId || subsLoading}
               >
                 <FormControl>
                   <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-violet-500 disabled:opacity-40">
-                    <SelectValue placeholder={subCategories.length === 0 ? "Select a category first" : "Select sub-category"} />
+                    <SelectValue
+                      placeholder={
+                        !selectedPrimaryCategoryId
+                          ? "Select a category first"
+                          : subsLoading
+                            ? "Loading…"
+                            : "Select sub-category"
+                      }
+                    />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent className="bg-zinc-900 border-white/10 max-h-60 overflow-y-auto">
@@ -427,7 +452,13 @@ export function Step1BasicInfo() {
               disabled={selectedTagIds.length >= 10}
             >
               <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-violet-500">
-                <SelectValue placeholder={selectedTagIds.length >= 10 ? "Maximum tags reached" : "Add a tag…"} />
+                <SelectValue
+                  placeholder={
+                    selectedTagIds.length >= 10
+                      ? "Maximum tags reached"
+                      : "Add a tag…"
+                  }
+                />
               </SelectTrigger>
               <SelectContent className="bg-zinc-900 border-white/10 max-h-60 overflow-y-auto">
                 {tags
