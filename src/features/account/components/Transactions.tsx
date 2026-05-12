@@ -21,6 +21,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { apiSync } from "@/core/api/client.sync";
 import {
   PackageOpen,
   ChevronDown,
@@ -67,6 +68,11 @@ const withdrawalSchema = z.object({
     .string()
     .length(10, "Account number must be exactly 10 digits")
     .regex(/^\d+$/, "Only digits allowed"),
+  /** 4-digit wallet transaction PIN — verified server-side */
+  transaction_password: z
+    .string()
+    .length(4, "PIN must be exactly 4 digits")
+    .regex(/^\d+$/, "PIN must be numeric"),
 });
 
 type WithdrawalFormValues = z.infer<typeof withdrawalSchema>;
@@ -355,15 +361,42 @@ function WithdrawalForm() {
     resolver: zodResolver(withdrawalSchema),
   });
 
-  const onSubmit = async (_data: WithdrawalFormValues) => {
+  const onSubmit = async (data: WithdrawalFormValues) => {
     try {
-      // POST handled by DRF sync endpoint — apiSync (Axios)
-      // TODO(Wave11): wire to apiSync.post("client/wallet/withdraw/", { json: data })
-      await new Promise((res) => setTimeout(res, 900)); // placeholder
-      toast.success("Withdrawal request submitted successfully!");
+      /**
+       * POST /api/v1/client/wallet/transfer/
+       * DRF sync — WalletBalanceService.transfer() is atomic (DB transaction).
+       *
+       * The backend resolves the withdrawal destination from `receiver_id`.
+       * Here we send a self-annotated withdrawal request; the platform admin
+       * receiver_id is expected to be resolved on the server from the
+       * payment_method + account metadata provided.
+       *
+       * Idempotency-Key prevents duplicate submissions on retry.
+       */
+      await apiSync.post("/api/v1/client/wallet/transfer/", {
+        amount: data.amount,
+        transaction_password: data.transaction_password,
+        // Bank metadata for withdrawal processing reference
+        metadata: {
+          payment_method: data.payment_method,
+          full_name: data.full_name,
+          account_name: data.account_name,
+          bank_name: data.bank_name,
+          account_number: data.account_number,
+        },
+      }, {
+        headers: {
+          "Idempotency-Key": `withdrawal-${Date.now()}-${data.account_number}`,
+        },
+      });
+      toast.success("Withdrawal request submitted! Funds arrive in 1–3 business days.");
       reset();
-    } catch {
-      toast.error("Withdrawal failed. Please try again.");
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+        ?? "Withdrawal failed. Please check your PIN and try again.";
+      toast.error(msg);
     }
   };
 
@@ -374,6 +407,7 @@ function WithdrawalForm() {
     { label: "Account Name", name: "account_name" as const, type: "text", full: false, placeholder: "As on your bank account" },
     { label: "Bank Name", name: "bank_name" as const, type: "text", full: true, placeholder: "e.g. Zenith Bank" },
     { label: "Account Number", name: "account_number" as const, type: "text", full: false, placeholder: "10-digit NUBAN" },
+    { label: "Transaction PIN", name: "transaction_password" as const, type: "password", full: false, placeholder: "4-digit security PIN" },
   ];
 
   return (
