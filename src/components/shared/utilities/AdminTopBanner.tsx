@@ -11,16 +11,16 @@
  *     instant badge refresh without waiting for the next poll interval.
  *
  * Usage:
- *   <AdminTopBanner title="Jennifer" pathname={pathname} walletBalance="₦45,200" />
+ *   <AdminTopBanner title="Admin Name" pathname={pathname} walletBalance="₦45,200" />
  */
 "use client";
 
-import Image from "next/image";
 import { Bell, Search, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useId, useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
+import { FashionistarImage } from "@/components/media";
 import {
   fetchUnreadBadgeCount,
   fetchNotifications,
@@ -268,8 +268,8 @@ const AdminTopBanner = ({
     >
       {/* ── Welcome row ─────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
-        <Image
-          src="/woman3.svg"
+        <FashionistarImage
+          src="/woman3.png"
           alt=""
           aria-hidden="true"
           height={50}

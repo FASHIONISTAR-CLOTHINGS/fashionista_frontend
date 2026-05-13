@@ -16,7 +16,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { FashionistarImage } from "@/components/media";
 import { X, ShoppingBag, Minus, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore, type CartItem } from "@/features/cart/store/cart.store";
@@ -49,7 +49,7 @@ function CartItemRow({ item }: { item: CartItem }) {
       {/* Thumbnail */}
       <div className="relative h-16 w-14 shrink-0 rounded-lg overflow-hidden bg-muted">
         {item.image ? (
-          <Image
+          <FashionistarImage
             src={item.image}
             alt={item.name}
             fill
