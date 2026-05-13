@@ -30,7 +30,7 @@ const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/categories", label: "Categories" },
   { href: "/vendors", label: "Vendors" },
-  { href: "/shops", label: "Shop" },
+  { href: "/products", label: "Shop" },
   { href: "/collections", label: "Collections" },
   { href: "/about-us", label: "About" },
   { href: "/blog", label: "Blog" },

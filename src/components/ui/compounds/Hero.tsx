@@ -37,7 +37,7 @@ const Hero = () => {
             </div>
           </form>
           <Link
-            href="/shops"
+            href="/products"
             className="w-[144px] h-[43px] font-semibold font-raleway rounded-[100px] bg-[#01454a] text-white shrink-0 inline-flex items-center justify-center"
           >
             Shop now
