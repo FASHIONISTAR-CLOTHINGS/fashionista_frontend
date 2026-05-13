@@ -1,6 +1,7 @@
 version: 3
 
-agent: {}
+agent:
+  authtoken: 3Dg2lrkooCEEEiZ6VhESNitwrw2_34wf9NXHAPzfMr4yC4n6z
 
 endpoints:
   - name: fashionista-frontend
