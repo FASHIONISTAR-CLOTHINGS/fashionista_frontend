@@ -122,15 +122,25 @@ const NewFooter = ({
   const year = CURRENT_YEAR;
 
   const socialLinks = [
-    { label: "WhatsApp", href: "/", Icon: Phone },
-    { label: "Twitter / X", href: "/", Icon: Twitter },
-    { label: "Instagram", href: "/", Icon: Instagram },
-    { label: "Facebook", href: "/", Icon: Facebook },
-    { label: "YouTube", href: "/", Icon: Youtube },
+    { label: "WhatsApp", href: "#", Icon: Phone },
+    { label: "Twitter / X", href: "#", Icon: Twitter },
+    { label: "Instagram", href: "#", Icon: Instagram },
+    { label: "Facebook", href: "#", Icon: Facebook },
+    { label: "YouTube", href: "#", Icon: Youtube },
   ] as const;
 
-  const quickCompanyLinks = ["Our Story", "Careers", "Influencers", "Join our team"];
-  const customerLinks = ["Contact Us", "Customer Service", "Find Store", "Shipping and Returns"];
+  const quickCompanyLinks = [
+    { label: "Our Story", href: "/about-us" },
+    { label: "Careers", href: "/contact-us" },
+    { label: "Influencers", href: "/contact-us" },
+    { label: "Join our team", href: "/contact-us" },
+  ];
+  const customerLinks = [
+    { label: "Contact Us", href: "/contact-us" },
+    { label: "Customer Service", href: "/contact-us" },
+    { label: "Find Store", href: "/contact-us" },
+    { label: "Shipping and Returns", href: "/contact-us" },
+  ];
   const accountLinks = [
     { label: "Sign In", href: "/auth/sign-in" },
     { label: "View Cart", href: "/cart" },
@@ -186,30 +196,30 @@ const NewFooter = ({
         {/* Quick link row */}
         <div className="w-full px-8 md:px-20 flex items-center gap-y-8 md:gap-4 flex-wrap justify-between py-8">
           <ul className="md:order-2 space-y-1">
-            {quickCompanyLinks.map((item) => (
-              <li key={item}>
+            {quickCompanyLinks.map(({ label, href }) => (
+              <li key={label}>
                 <Link
-                  href="#"
+                  href={href}
                   className="text-foreground/80 hover:text-[hsl(var(--accent))] text-lg md:text-xl font-raleway font-medium transition-colors"
                 >
-                  {item}
+                  {label}
                 </Link>
               </li>
             ))}
           </ul>
           <ul className="font-raleway text-lg md:w-full lg:max-w-[50%] md:order-1 text-muted-foreground max-w-[200px] w-full space-y-1">
-            <li>Tel: (234) 23-45-666</li>
+            <li>Tel: {phone}</li>
             <li>Mon–Fri: 8am – 8pm</li>
             <li>Sat–Sun: 8am – 7pm</li>
           </ul>
           <ul className="md:order-2 max-w-[50%] w-full md:max-w-fit space-y-1">
-            {customerLinks.map((item) => (
-              <li key={item}>
+            {customerLinks.map(({ label, href }) => (
+              <li key={label}>
                 <Link
-                  href="#"
+                  href={href}
                   className="text-foreground/80 hover:text-[hsl(var(--accent))] md:text-xl font-raleway font-medium transition-colors"
                 >
-                  {item}
+                  {label}
                 </Link>
               </li>
             ))}
@@ -284,11 +294,11 @@ const NewFooter = ({
               From Apple Store or Google Play Store
             </p>
 
-            {/* Apple Store */}
-            <a
-              href="#"
-              aria-label="Download on the Apple Store"
-              className="flex items-center gap-2 bg-black/80 border border-background/10 p-2 rounded-xl cursor-pointer hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]"
+            {/* Apple Store — Coming Soon */}
+            <span
+              aria-label="App Store — Coming soon"
+              title="Coming soon"
+              className="flex items-center gap-2 bg-black/80 border border-background/10 p-2 rounded-xl cursor-not-allowed opacity-60 select-none"
             >
               <svg width="45" height="45" viewBox="0 0 45 45" fill="none" aria-hidden="true">
                 <path
@@ -302,13 +312,13 @@ const NewFooter = ({
                 <span className="text-[11px] md:text-sm text-background/60 font-satoshi">Download on the</span>
                 <span className="text-white md:text-xl font-semibold font-satoshi">App Store</span>
               </div>
-            </a>
+            </span>
 
-            {/* Google Play */}
-            <a
-              href="#"
-              aria-label="Download on Google Play"
-              className="flex items-center gap-2 bg-black/80 border border-background/10 p-2 rounded-xl cursor-pointer hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]"
+            {/* Google Play — Coming Soon */}
+            <span
+              aria-label="Google Play — Coming soon"
+              title="Coming soon"
+              className="flex items-center gap-2 bg-black/80 border border-background/10 p-2 rounded-xl cursor-not-allowed opacity-60 select-none"
             >
               <svg width="45" height="45" viewBox="0 0 45 45" fill="none" aria-hidden="true">
                 <path
@@ -320,7 +330,7 @@ const NewFooter = ({
                 <span className="text-[11px] md:text-sm text-background/60 font-satoshi">Get it on</span>
                 <span className="text-white md:text-xl font-semibold font-satoshi">Google Play</span>
               </div>
-            </a>
+            </span>
 
             {/* Payment gateways */}
             <div>

@@ -23,7 +23,7 @@ import { Step6Specifications } from "./Step6Specifications";
 import { Step7Faqs } from "./Step7Faqs";
 import { Step8Publish } from "./Step8Publish";
 import { BUILDER_STEPS } from "../schemas/builder.schemas";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Loader2, SendHorizontal, Save } from "lucide-react";
 

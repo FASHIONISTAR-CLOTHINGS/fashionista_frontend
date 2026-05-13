@@ -119,7 +119,7 @@ const NAV_LINKS: NavLink[] = [
     ),
   },
   {
-    href: "/shops",
+    href: "/products",
     label: "Shop",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -175,9 +175,9 @@ const NAV_LINKS: NavLink[] = [
 ];
 
 const SOCIAL_LINKS = [
-  { label: "Facebook", href: "/", Icon: Facebook },
-  { label: "Twitter / X", href: "/", Icon: Twitter },
-  { label: "Instagram", href: "/", Icon: Instagram },
+  { label: "Facebook", href: "#", Icon: Facebook },
+  { label: "Twitter / X", href: "#", Icon: Twitter },
+  { label: "Instagram", href: "#", Icon: Instagram },
 ] as const;
 
 // ─── Focus-trap utility ────────────────────────────────────────────────────────
