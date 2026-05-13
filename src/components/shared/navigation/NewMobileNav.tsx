@@ -42,6 +42,7 @@ import {
 import { cn } from "@/lib/utils";
 import AccountOptions from "@/components/shared/overlays/AccountOptions";
 import CartItems from "@/components/shared/overlays/CartItems";
+import { useCartStore } from "@/features/cart/store/cart.store";
 
 // ─── Nav link data ─────────────────────────────────────────────────────────────
 
@@ -256,7 +257,10 @@ const NewMobileNav = () => {
   const closeOptions = useCallback(() => setShowOptions(false), []);
 
   // TODO: Replace 0 with useCartStore(state => state.items.length) when wired
-  const cartCount = 0;
+  // const cartCount = 0;
+
+  // Live cart count from persisted Zustand store
+  const cartCount = useCartStore((state) => state.getItemCount());
 
   // Close everything on route change
   useEffect(() => {
