@@ -305,12 +305,10 @@ tunnel-ngrok: ## 🌐 ngrok (global token, use only when backend ngrok is stoppe
 	@echo ""
 	$(NGROK) http 3000
 
-tunnel-ngrok-fe: ## 🌐 Dedicated frontend ngrok tunnel on port 3000 (ngrok v2 compatible)
+tunnel-ngrok-fe: ## 🌐 Dedicated frontend ngrok tunnel on port 3000 (uses ngrok-frontend.yml)
 	@echo "$(CYAN)Starting dedicated frontend ngrok tunnel on port 3000...$(NC)"
-	@echo "$(YELLOW)Using system ngrok with token from .env.local$(NC)"
-	@test -n "$(NGROK_FRONTEND_TOKEN)" || (echo "$(RED)NGROK_FRONTEND_TOKEN is missing from .env.local$(NC)" && exit 1)
-	ngrok authtoken "$(NGROK_FRONTEND_TOKEN)"
-	ngrok http 3000
+	@echo "$(YELLOW)Config: ngrok-frontend.yml  |  Token: embedded$(NC)"
+	ngrok start --config ngrok-frontend.yml --all
 
 tunnel-url: ## 🔍 Print active tunnel URLs (ngrok inspector)
 	@echo "$(CYAN)Active ngrok tunnels:$(NC)"
