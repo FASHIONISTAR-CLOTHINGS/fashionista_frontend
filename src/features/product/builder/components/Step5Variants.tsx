@@ -15,8 +15,10 @@
  * existing data for unchanged combinations.
  */
 
-import React, { useEffect } from "react";
+import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useFormContext, useFieldArray } from "react-hook-form";
+import { apiAsync } from "@/core/api/client.async";
 import type { ProductBuilderFormValues, VariantRow } from "../schemas/builder.schemas";
 import {
   FormField,
@@ -34,6 +36,7 @@ import { cn } from "@/lib/utils";
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface CatalogItem { id: string; name: string; hex_code?: string; }
+interface PaginatedEnvelope<T> { results?: T[]; }
 
 /** Generates a default SKU from size and color names. */
 function autoSku(sizeName: string, colorName: string, index: number): string {
@@ -56,18 +59,24 @@ export function Step5Variants() {
     name: "variants",
   });
 
-  // Fetch catalog labels for display
-  const [sizeMap, setSizeMap] = React.useState<Record<string, CatalogItem>>({});
-  const [colorMap, setColorMap] = React.useState<Record<string, CatalogItem>>({});
+  const { data: catalogData } = useQuery({
+    queryKey: ["product-builder", "variant-catalog"],
+    queryFn: async () => {
+      const [sizesData, colorsData] = await Promise.all([
+        apiAsync.get("product/sizes/?page_size=100").json<PaginatedEnvelope<CatalogItem>>(),
+        apiAsync.get("product/colors/?page_size=100").json<PaginatedEnvelope<CatalogItem>>(),
+      ]);
 
-  React.useEffect(() => {
-    fetch("/api/product/sizes/?page_size=100")
-      .then((r) => r.json())
-      .then((d) => setSizeMap(Object.fromEntries((d.results ?? []).map((s: CatalogItem) => [s.id, s]))));
-    fetch("/api/product/colors/?page_size=100")
-      .then((r) => r.json())
-      .then((d) => setColorMap(Object.fromEntries((d.results ?? []).map((c: CatalogItem) => [c.id, c]))));
-  }, []);
+      return {
+        sizeMap: Object.fromEntries((sizesData.results ?? []).map((s) => [s.id, s])),
+        colorMap: Object.fromEntries((colorsData.results ?? []).map((c) => [c.id, c])),
+      };
+    },
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
+  });
+  const sizeMap = catalogData?.sizeMap ?? {};
+  const colorMap = catalogData?.colorMap ?? {};
 
   // ── Auto-generate matrix when selections change ────────────────────────────
   useEffect(() => {

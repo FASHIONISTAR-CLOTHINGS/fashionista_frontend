@@ -38,7 +38,7 @@ import {
   useInitiateKyc,
   useRecordKycDocument,
 } from "../hooks/use-kyc";
-import { FashionistarImage } from "@/components/ui/media/FashionistarImage";
+import { FashionistarImage } from "@/components/media";
 import type { KycDocumentType } from "../types/kyc.types";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
