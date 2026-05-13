@@ -9,8 +9,9 @@
  * Color swatches rendered with hex_code previews.
  */
 
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useFormContext } from "react-hook-form";
+import { apiAsync } from "@/core/api/client.async";
 import type { ProductBuilderFormValues } from "../schemas/builder.schemas";
 import {
   FormField,
@@ -25,27 +26,30 @@ import { Loader2, Check } from "lucide-react";
 
 interface SizeOption { id: string; name: string; }
 interface ColorOption { id: string; name: string; hex_code: string; }
+interface PaginatedEnvelope<T> { results?: T[]; }
 
 export function Step4SizesColors() {
   const form = useFormContext<ProductBuilderFormValues>();
   const selectedSizes = form.watch("size_ids") ?? [];
   const selectedColors = form.watch("color_ids") ?? [];
-  const [sizes, setSizes] = useState<SizeOption[]>([]);
-  const [colors, setColors] = useState<ColorOption[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["product-builder", "sizes-colors"],
+    queryFn: async () => {
+      const [sizesData, colorsData] = await Promise.all([
+        apiAsync.get("product/sizes/?page_size=100").json<PaginatedEnvelope<SizeOption>>(),
+        apiAsync.get("product/colors/?page_size=100").json<PaginatedEnvelope<ColorOption>>(),
+      ]);
 
-  useEffect(() => {
-    Promise.all([
-      fetch("/api/product/sizes/?page_size=100").then((r) => r.json()),
-      fetch("/api/product/colors/?page_size=100").then((r) => r.json()),
-    ])
-      .then(([sData, cData]) => {
-        setSizes(sData.results ?? []);
-        setColors(cData.results ?? []);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+      return {
+        sizes: sizesData.results ?? [],
+        colors: colorsData.results ?? [],
+      };
+    },
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
+  });
+  const sizes = data?.sizes ?? [];
+  const colors = data?.colors ?? [];
 
   const toggleSize = (id: string) => {
     const current = form.getValues("size_ids") ?? [];

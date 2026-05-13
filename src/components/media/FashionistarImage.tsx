@@ -126,6 +126,10 @@ export interface FashionistarImageProps {
   width?: number;
   /** Display height in px. */
   height?: number;
+  /** Stretch to the bounds of a relative parent container. */
+  fill?: boolean;
+  /** Explicit responsive sizes attribute override. */
+  sizes?: string;
   /** Named transformation preset (default: "product"). */
   transformation?: keyof typeof TRANSFORMATION_PRESETS | string;
   /** Custom Cloudinary transformation string (overrides preset). */
@@ -175,6 +179,8 @@ export function FashionistarImage({
   alt,
   width,
   height,
+  fill = false,
+  sizes,
   transformation = "product",
   customTransformation,
   aspectRatio,
@@ -238,9 +244,9 @@ export function FashionistarImage({
 
   const lqipSrc = publicId && showBlurUp ? buildLqipUrl(publicId) : undefined;
 
-  const sizesAttr = width
+  const sizesAttr = sizes ?? (width
     ? `(max-width: ${width}px) 100vw, ${width}px`
-    : "(max-width: 768px) 100vw, 50vw";
+    : "(max-width: 768px) 100vw, 50vw");
 
   // ── Error → show placeholder ───────────────────────────────────────────────
   if (errored || (!publicId && !src)) {
@@ -278,8 +284,8 @@ export function FashionistarImage({
           srcSet={resolvedSrcSet}
           sizes={sizesAttr}
           alt={alt}
-          width={width}
-          height={height}
+          width={fill ? undefined : width}
+          height={fill ? undefined : height}
           loading={priority ? "eager" : "lazy"}
           decoding="async"
           data-product-id={dataProductId}
@@ -312,7 +318,8 @@ export function FashionistarImage({
           // eslint-disable-next-line react-hooks/exhaustive-deps
           }, [retries, onError])}
           className={cn(
-            "w-full h-full object-cover transition-opacity duration-500",
+            "transition-opacity duration-500",
+            fill ? "absolute inset-0 h-full w-full object-cover" : "h-full w-full object-cover",
             loaded ? "opacity-100" : "opacity-0",
             imgClassName,
           )}

@@ -14,8 +14,10 @@
  *  - Measurement toggle with contextual tooltip
  */
 
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useFormContext } from "react-hook-form";
+import { apiAsync } from "@/core/api/client.async";
 import type { ProductBuilderFormValues } from "../schemas/builder.schemas";
 import {
   FormField,
@@ -46,6 +48,10 @@ interface Courier {
   estimated_days_max: number;
 }
 
+interface CourierEnvelope {
+  results?: Courier[];
+}
+
 const CURRENCIES = [
   { code: "NGN", label: "₦ Nigerian Naira" },
   { code: "USD", label: "$ US Dollar" },
@@ -56,7 +62,17 @@ const CURRENCIES = [
 
 export function Step2Pricing() {
   const form = useFormContext<ProductBuilderFormValues>();
-  const [couriers, setCouriers] = useState<Courier[]>([]);
+  const { data: couriers = [] } = useQuery({
+    queryKey: ["product-builder", "couriers"],
+    queryFn: async () => {
+      const data = await apiAsync
+        .get("product/couriers/?page_size=50&active=true")
+        .json<CourierEnvelope>();
+      return data.results ?? [];
+    },
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
+  });
 
   const price = form.watch("price");
   const oldPrice = form.watch("old_price");
@@ -70,13 +86,6 @@ export function Step2Pricing() {
     }
     return null;
   }, [price, oldPrice]);
-
-  useEffect(() => {
-    fetch("/api/product/couriers/?page_size=50&active=true")
-      .then((r) => r.json())
-      .then((data) => setCouriers(data.results ?? []))
-      .catch(() => {});
-  }, []);
 
   return (
     <div className="space-y-8">

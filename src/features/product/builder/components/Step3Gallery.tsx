@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/form";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { FashionistarImage, FashionistarVideo } from "@/components/ui/media";
+import { FashionistarImage, FashionistarVideo } from "@/components/media";
 import { cn } from "@/lib/utils";
 import {
   ImagePlus,
