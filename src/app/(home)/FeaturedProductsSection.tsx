@@ -1,7 +1,5 @@
-"use client";
-import { useFeaturedProducts } from "@/features/product";
 import ProductCard from "@/features/product/components/ProductCard";
-import { ProductGridSkeleton } from "@/features/product";
+import { getFeaturedProductsServer } from "@/features/product/api/product.server";
 import type { ProductListItem } from "@/features/product";
 import { Package } from "lucide-react";
 
@@ -14,14 +12,10 @@ import { Package } from "lucide-react";
  *
  * NOTE: useFeaturedProducts returns ProductListItem[] (not paginated).
  */
-export default function FeaturedProductsSection() {
-  const { data, isLoading, isError } = useFeaturedProducts();
-  // useFeaturedProducts returns ProductListItem[] directly (not paginated)
-  const products: ProductListItem[] = (data ?? []).slice(0, 4);
+export default async function FeaturedProductsSection() {
+  const products: ProductListItem[] = (await getFeaturedProductsServer()).slice(0, 4);
 
-  if (isLoading) return <ProductGridSkeleton count={4} />;
-
-  if (isError || products.length === 0) {
+  if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
         <Package size={48} className="text-[#D9D9D9]" />

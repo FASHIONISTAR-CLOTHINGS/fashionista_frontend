@@ -491,3 +491,34 @@ If you need interactivity, consider converting part of this to a Client Componen
     at div (<anonymous>)
 ⚠ Fast Refresh had to perform a full reload due to a runtime error.
 ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[server fetch] 502 for /api/v1/ninja/products/featured/
+[server fetch] Error for /api/v1/ninja/products/featured/: [Error [AbortError]: This operation was aborted] {
+  code: 20,
+  INDEX_SIZE_ERR: 1,
+  DOMSTRING_SIZE_ERR: 2,
+  HIERARCHY_REQUEST_ERR: 3,
+  WRONG_DOCUMENT_ERR: 4,
+  INVALID_CHARACTER_ERR: 5,
+  NO_DATA_ALLOWED_ERR: 6,
+  NO_MODIFICATION_ALLOWED_ERR: 7,
+  NOT_FOUND_ERR: 8,
+  NOT_SUPPORTED_ERR: 9,
+  INUSE_ATTRIBUTE_ERR: 10,
+  INVALID_STATE_ERR: 11,
+  SYNTAX_ERR: 12,
+  INVALID_MODIFICATION_ERR: 13,
+  NAMESPACE_ERR: 14,
+  INVALID_ACCESS_ERR: 15,
+  VALIDATION_ERR: 16,
+  TYPE_MISMATCH_ERR: 17,
+  SECURITY_ERR: 18,
+  NETWORK_ERR: 19,
+  ABORT_ERR: 20,
+  URL_MISMATCH_ERR: 21,
+  QUOTA_EXCEEDED_ERR: 22,
+  TIMEOUT_ERR: 23,
+  INVALID_NODE_TYPE_ERR: 24,
+  DATA_CLONE_ERR: 25
+}
