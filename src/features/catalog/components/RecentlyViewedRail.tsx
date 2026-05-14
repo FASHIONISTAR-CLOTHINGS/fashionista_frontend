@@ -13,11 +13,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { ChevronRight, Clock } from "lucide-react";
 import { useRecentlyViewed, type RecentlyViewedItem } from "../hooks/use-recently-viewed";
 import { CardSkeleton } from "@/shared/components/skeletons";
 import { cn } from "@/lib/utils";
+import { FashionistarImage } from "@/components/media";
 
 // ─── Sub-component: single recently-viewed card ───────────────────────────────
 
@@ -35,12 +35,13 @@ function RecentCard({ item }: { item: RecentlyViewedItem }) {
       {/* Thumbnail */}
       <div className="relative aspect-square bg-muted overflow-hidden">
         {item.coverUrl ? (
-          <Image
+          <FashionistarImage
             src={item.coverUrl}
             alt={item.title}
             fill
             sizes="160px"
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            className="h-full w-full"
+            imgClassName="object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-muted">

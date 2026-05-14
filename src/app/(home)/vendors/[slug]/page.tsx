@@ -4,38 +4,39 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ProductGridSkeleton } from "@/features/product";
+import { FashionistarImage } from "@/components/media";
 import VendorStoreClient from "./VendorStoreClient";
 
 interface VendorNamePageProps {
-  params: Promise<{ name: string }>;
+  params: Promise<{ slug: string }>;
 }
 
 
 export async function generateMetadata({
   params,
 }: VendorNamePageProps): Promise<Metadata> {
-  const { name } = await params;
-  const displayName = decodeURIComponent(name).replace(/-/g, " ");
+  const { slug } = await params;
+  const displayName = decodeURIComponent(slug).replace(/-/g, " ");
 
   return {
     title: `${displayName} | Fashionistar Vendors`,
     description: `Browse products from ${displayName} on Fashionistar — AI-powered fashion commerce connecting you with professional tailors and designers.`,
-    alternates: { canonical: `/vendors/${name}` },
+    alternates: { canonical: `/vendors/${slug}` },
     openGraph: {
       title: `${displayName} | Fashionistar`,
       description: `Shop ${displayName}'s curated collection on Fashionistar.`,
-      url: `/vendors/${name}`,
+      url: `/vendors/${slug}`,
       type: "profile",
     },
   };
 }
 
 export default async function VendorNamePage({ params }: VendorNamePageProps) {
-  const { name } = await params;
+  const { slug } = await params;
 
-  if (!name) notFound();
+  if (!slug) notFound();
 
-  const displayName = decodeURIComponent(name).replace(/-/g, " ");
+  const displayName = decodeURIComponent(slug).replace(/-/g, " ");
 
   return (
     <div className="bg-background text-foreground">
@@ -56,12 +57,13 @@ export default async function VendorNamePage({ params }: VendorNamePageProps) {
           <div className="flex flex-col md:flex-row gap-6 md:items-end">
             {/* Avatar placeholder */}
             <div className="relative h-24 w-24 md:h-32 md:w-32 rounded-2xl border-4 border-[#fda600] bg-[#D9D9D9] overflow-hidden shrink-0">
-              <Image
+              <FashionistarImage
                 src="/gown.svg"
                 alt={displayName}
                 fill
                 sizes="128px"
-                className="object-contain p-2"
+                className="h-full w-full"
+                imgClassName="object-contain p-2"
               />
             </div>
 
@@ -105,7 +107,7 @@ export default async function VendorNamePage({ params }: VendorNamePageProps) {
                 Get Measured
               </Link>
               <Link
-                href={`/contact-us?vendor=${name}`}
+                href={`/contact-us?vendor=${slug}`}
                 className="rounded-full border border-white/40 px-7 py-3 font-raleway text-sm font-semibold text-white hover:bg-white/10 transition-colors text-center"
               >
                 Contact Vendor
@@ -155,7 +157,7 @@ export default async function VendorNamePage({ params }: VendorNamePageProps) {
           </Link>
         </div>
         <Suspense fallback={<ProductGridSkeleton count={8} />}>
-          <VendorStoreClient vendorSlug={name} />
+          <VendorStoreClient vendorSlug={slug} />
         </Suspense>
       </section>
     </div>

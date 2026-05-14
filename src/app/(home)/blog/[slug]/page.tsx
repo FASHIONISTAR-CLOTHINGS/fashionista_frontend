@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { FashionistarImage } from "@/components/media";
 import {
   getCatalogBlogPostBySlug,
   getCatalogBlogPosts,
@@ -91,13 +91,14 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
         </header>
 
         <div className="overflow-hidden rounded-lg border border-border bg-[hsl(var(--brand-cream))]">
-          <Image
+          <FashionistarImage
             src={post.image_url || post.featured_image || "/gown.svg"}
             alt={post.title}
             width={1200}
             height={700}
             sizes="(max-width: 768px) 100vw, 896px"
-            className="h-[320px] w-full object-contain p-8 md:h-[520px]"
+            className="h-[320px] w-full md:h-[520px]"
+            imgClassName="object-contain p-8"
             priority
           />
         </div>

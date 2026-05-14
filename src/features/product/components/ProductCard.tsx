@@ -14,7 +14,6 @@
  *  - 200ms shimmer reveal on mount
  */
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { Heart, ShoppingBag, Ruler, Star } from "lucide-react";
@@ -23,6 +22,7 @@ import { useToggleWishlist } from "../hooks/use-product";
 import { useAddCartItem } from "@/features/cart/hooks/use-cart";
 import { formatCurrency } from "@/lib/formatting";
 import type { ProductListItem } from "../types/product.types";
+import { FashionistarImage } from "@/components/media";
 
 interface ProductCardProps {
   product: ProductListItem;
@@ -103,12 +103,13 @@ export default function ProductCard({
         className="block relative h-64 overflow-hidden bg-[hsl(var(--brand-cream))] dark:bg-[hsl(var(--muted))]"
         tabIndex={-1}
       >
-        <Image
+        <FashionistarImage
           src={imageUrl}
           alt={product.title}
           fill
           sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          className="h-full w-full"
+          imgClassName="object-cover transition-transform duration-500 group-hover:scale-105"
           onError={() => setImgErr(true)}
         />
 
