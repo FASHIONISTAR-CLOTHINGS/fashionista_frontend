@@ -23,7 +23,6 @@ import {
   useRef,
 } from "react";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import {
   Search,
@@ -40,6 +39,7 @@ import {
   Twitter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FashionistarImage } from "@/components/media";
 import AccountOptions from "@/components/shared/overlays/AccountOptions";
 import CartItems from "@/components/shared/overlays/CartItems";
 import { useCartStore } from "@/features/cart/store/cart.store";
@@ -255,6 +255,12 @@ const NewMobileNav = () => {
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   const closeOptions = useCallback(() => setShowOptions(false), []);
+  const signInHref = pathname.startsWith("/auth")
+    ? "/auth/sign-in"
+    : `/auth/sign-in?returnUrl=${encodeURIComponent(pathname)}`;
+  const chooseRoleHref = pathname.startsWith("/auth")
+    ? "/auth/choose-role"
+    : `/auth/choose-role?returnUrl=${encodeURIComponent(pathname)}`;
 
   // TODO: Replace 0 with useCartStore(state => state.items.length) when wired
   // const cartCount = 0;
@@ -304,13 +310,14 @@ const NewMobileNav = () => {
     >
       {/* ── Brand ────────────────────────────────────────────────── */}
       <Link href="/" className="flex items-center gap-2 w-1/2">
-        <Image
+        <FashionistarImage
           src="/logo.svg"
           alt="Fashionistar"
           width={78}
           height={76}
-          className="w-9 h-auto"
-          style={{ height: "auto" }}
+          sizes="78px"
+          className="h-auto w-9"
+          imgClassName="h-auto w-full"
         />
         <span className="font-bon_foyage text-2xl text-foreground">Fashionistar</span>
       </Link>
@@ -405,13 +412,14 @@ const NewMobileNav = () => {
         {/* Drawer header */}
         <div className="bg-[hsl(var(--sidebar-bg,_14_14_14))] py-5 px-6 flex items-center justify-between shrink-0 bg-foreground">
           <div className="flex items-center gap-2">
-            <Image
+            <FashionistarImage
               src="/logo.svg"
               alt="Fashionistar"
               width={40}
               height={40}
-              className="w-9 h-auto"
-              style={{ height: "auto" }}
+              sizes="40px"
+              className="h-auto w-9"
+              imgClassName="h-auto w-full"
             />
             <span className="font-bon_foyage text-2xl text-background">Fashionistar</span>
           </div>
@@ -513,7 +521,7 @@ const NewMobileNav = () => {
           {/* Auth CTAs */}
           <div className="mt-auto pt-4 border-t border-border space-y-2">
             <Link
-              href="/auth/sign-in"
+              href={signInHref}
               className={cn(
                 "block w-full text-center py-3 px-4 rounded-xl",
                 "bg-foreground text-background",
@@ -524,7 +532,7 @@ const NewMobileNav = () => {
               Sign In
             </Link>
             <Link
-              href="/auth/sign-up"
+              href={chooseRoleHref}
               className={cn(
                 "block w-full text-center py-3 px-4 border-2 border-foreground rounded-xl",
                 "text-foreground font-raleway font-semibold",
@@ -533,6 +541,17 @@ const NewMobileNav = () => {
               )}
             >
               Create Account
+            </Link>
+            <Link
+              href="/auth/sign-up?role=vendor"
+              className={cn(
+                "block w-full rounded-xl border border-border py-3 px-4 text-center",
+                "font-raleway text-sm font-semibold text-foreground/80",
+                "transition-colors hover:bg-muted",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
+              )}
+            >
+              Become a Vendor
             </Link>
           </div>
         </div>

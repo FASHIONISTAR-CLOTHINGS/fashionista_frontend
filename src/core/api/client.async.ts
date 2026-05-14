@@ -13,13 +13,11 @@
  */
 import ky, { type KyInstance } from "ky";
 import { readAccessToken } from "@/features/auth/lib/auth-session.client";
+import { getAsyncApiBaseUrl } from "@/core/config/api-roots";
 
 // ── Async Client Instance ─────────────────────────────────────────────────────
 export const apiAsync: KyInstance = ky.create({
-  prefixUrl:
-    process.env.NEXT_PUBLIC_API_NINJA_URL ??
-    process.env.NEXT_PUBLIC_API_V1_NINJA_URL ??
-    "/api/v1/ninja",
+  prefixUrl: getAsyncApiBaseUrl(),
   timeout: 60_000, // 60s for AI / streaming ops
   credentials: "include",
   headers: {

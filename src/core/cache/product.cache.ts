@@ -11,18 +11,13 @@
  *   - getCachedCollections — all collections (15min revalidation)
  */
 import { unstable_cache } from "next/cache";
-
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
-const NINJA_URL =
-  process.env.NEXT_PUBLIC_API_NINJA_URL ||
-  process.env.NEXT_PUBLIC_API_V1_NINJA_URL ||
-  `${BACKEND_URL}/api/v1/ninja`;
+import { getServerAsyncApiBaseUrl } from "@/core/config/api-roots";
 
 // ── Shared fetch helper ───────────────────────────────────────────────────────
 async function fetchFromNinja<T>(path: string, fallback: T): Promise<T> {
   try {
-    const base = NINJA_URL.endsWith("/") ? NINJA_URL : `${NINJA_URL}/`;
+    const ninjaUrl = getServerAsyncApiBaseUrl();
+    const base = ninjaUrl.endsWith("/") ? ninjaUrl : `${ninjaUrl}/`;
     const res = await fetch(new URL(path.replace(/^\//, ""), base), {
       headers: {
         "Content-Type": "application/json",

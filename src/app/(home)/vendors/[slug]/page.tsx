@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -77,24 +76,10 @@ export default async function VendorNamePage({ params }: VendorNamePageProps) {
                 Artisan fashion craftsmanship — precise measurements, bespoke tailoring, and curated collections designed to fit you perfectly.
               </p>
 
-              {/* Social links */}
-              <div className="flex items-center gap-3 pt-2">
-                {[
-                  { href: "#", icon: "/socials/twitter.svg", label: "Twitter" },
-                  { href: "#", icon: "/socials/instagram.svg", label: "Instagram" },
-                  { href: "#", icon: "/socials/facebook.svg", label: "Facebook" },
-                ].map(({ href, icon, label }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={label}
-                    className="h-8 w-8 bg-[#fda600] rounded-full flex items-center justify-center hover:bg-[#e09500] transition-colors"
-                  >
-                    <Image src={icon} alt={label} width={14} height={14} />
-                  </a>
-                ))}
+              <div className="pt-2">
+                <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white/80">
+                  Verified storefront
+                </span>
               </div>
             </div>
 

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -8,6 +7,7 @@ import {
   getCatalogCategories,
 } from "@/features/catalog";
 import { ProductGridSkeleton } from "@/features/product";
+import { FashionistarImage } from "@/components/media";
 import CollectionProductsClient from "./CollectionProductsClient";
 
 interface CollectionDetailPageProps {
@@ -72,7 +72,7 @@ export default async function CollectionDetailPage({
       {/* ── Hero Banner ───────────────────────────────────────────── */}
       <section className="relative min-h-[320px] md:min-h-[420px] bg-[#01454A] flex items-end overflow-hidden">
         {collection.background_image_url || collection.image_url ? (
-          <Image
+          <FashionistarImage
             src={
               collection.background_image_url ||
               collection.image_url ||
@@ -82,6 +82,7 @@ export default async function CollectionDetailPage({
             fill
             sizes="100vw"
             className="object-cover opacity-30"
+            imgClassName="object-cover"
             priority
           />
         ) : null}
@@ -183,12 +184,13 @@ export default async function CollectionDetailPage({
                 className="group relative rounded-2xl overflow-hidden border border-border bg-white shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="relative h-48">
-                  <Image
+                  <FashionistarImage
                     src={col.image_url || "/gown.svg"}
                     alt={col.title}
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-contain p-6 group-hover:scale-105 transition-transform duration-300"
+                    className="h-full w-full"
+                    imgClassName="object-contain p-6 group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
                 <div className="p-4">

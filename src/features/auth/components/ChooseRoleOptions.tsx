@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { ArrowRight, ShoppingBag, Store } from "lucide-react";
 
 function RoleCard({
@@ -40,6 +41,17 @@ function RoleCard({
 }
 
 export function ChooseRoleOptions() {
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get("returnUrl");
+  const encodedReturnUrl =
+    returnUrl && returnUrl.startsWith("/")
+      ? `&returnUrl=${encodeURIComponent(returnUrl)}`
+      : "";
+  const signInHref =
+    returnUrl && returnUrl.startsWith("/")
+      ? `/auth/sign-in?returnUrl=${encodeURIComponent(returnUrl)}`
+      : "/auth/sign-in";
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-cream via-white to-secondary p-4">
       <div className="w-full max-w-md">
@@ -62,14 +74,14 @@ export function ChooseRoleOptions() {
               id="choose-role-vendor"
               title="Vendor"
               description="Upload your work and fashion collections"
-              href="/auth/sign-up?role=vendor"
+              href={`/auth/sign-up?role=vendor${encodedReturnUrl}`}
               Icon={Store}
             />
             <RoleCard
               id="choose-role-client"
               title="Client"
               description="Get your designed and tailored dress"
-              href="/auth/sign-up?role=client"
+              href={`/auth/sign-up?role=client${encodedReturnUrl}`}
               Icon={ShoppingBag}
             />
           </div>
@@ -77,7 +89,7 @@ export function ChooseRoleOptions() {
           <p className="mt-8 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <a
-              href="/auth/sign-in"
+              href={signInHref}
               className="font-semibold text-primary hover:underline"
             >
               Sign in

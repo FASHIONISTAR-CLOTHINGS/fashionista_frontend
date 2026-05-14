@@ -23,9 +23,13 @@ export default async function SignUpPage({
 }) {
   const params = await searchParams;
   const role = params.role;
+  const returnUrl = params.returnUrl;
 
   // Guard: missing or invalid role → redirect to role selection
   if (!role || (role !== "vendor" && role !== "client")) {
+    if (returnUrl && returnUrl.startsWith("/")) {
+      redirect(`/auth/choose-role?returnUrl=${encodeURIComponent(returnUrl)}`);
+    }
     redirect("/auth/choose-role");
   }
 

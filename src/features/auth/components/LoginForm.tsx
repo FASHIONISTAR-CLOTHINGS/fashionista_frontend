@@ -47,6 +47,10 @@ export function LoginForm() {
 
   // returnUrl — where to send the user after successful auth
   const returnUrl = searchParams.get("returnUrl") ?? "";
+  const createAccountHref =
+    returnUrl && returnUrl.startsWith("/")
+      ? `/auth/choose-role?returnUrl=${encodeURIComponent(returnUrl)}`
+      : "/auth/choose-role";
 
   async function mergeCommerceBeforeRedirect() {
     try {
@@ -162,8 +166,8 @@ export function LoginForm() {
           description: "A verification code has been sent to your email/phone.",
         });
         const otpHref = returnUrl
-          ? `/verify-otp?returnUrl=${encodeURIComponent(returnUrl)}`
-          : "/verify-otp";
+          ? `/auth/verify-otp?returnUrl=${encodeURIComponent(returnUrl)}`
+          : "/auth/verify-otp";
         router.push(otpHref);
         return;
       }
@@ -406,7 +410,7 @@ export function LoginForm() {
       {/* ── Footer ───────────────────────────────────────────────────── */}
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <Link href="/auth/choose-role" className="text-primary font-semibold hover:underline">
+        <Link href={createAccountHref} className="text-primary font-semibold hover:underline">
           Create one
         </Link>
       </p>

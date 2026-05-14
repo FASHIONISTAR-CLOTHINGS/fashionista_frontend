@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import {
@@ -8,6 +7,7 @@ import {
   getCatalogBrands,
 } from "@/features/catalog";
 import { ProductGridSkeleton } from "@/features/product";
+import { FashionistarImage } from "@/components/media";
 import CategoryProductsClient from "./CategoryProductsClient";
 
 interface CategorySlugPageProps {
@@ -67,12 +67,13 @@ export default async function CategorySlugPage({
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative min-h-[280px] md:min-h-[360px] bg-[#01454A] flex items-end overflow-hidden">
         {category.image_url ? (
-          <Image
+          <FashionistarImage
             src={category.image_url}
             alt={category.name}
             fill
             sizes="100vw"
             className="object-cover opacity-20"
+            imgClassName="object-cover"
             priority
           />
         ) : null}
@@ -166,12 +167,13 @@ export default async function CategorySlugPage({
                 className="group flex flex-col items-center gap-3 rounded-2xl border border-border bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="relative h-16 w-16 overflow-hidden rounded-full bg-[hsl(var(--primary)/0.08)]">
-                  <Image
+                  <FashionistarImage
                     src={cat.image_url || "/gown.svg"}
                     alt={cat.name}
                     fill
                     sizes="64px"
-                    className="object-contain p-2 group-hover:scale-110 transition-transform duration-300"
+                    className="h-full w-full"
+                    imgClassName="object-contain p-2 group-hover:scale-110 transition-transform duration-300"
                   />
                 </div>
                 <p className="text-center font-raleway text-xs font-semibold text-[#141414] capitalize">

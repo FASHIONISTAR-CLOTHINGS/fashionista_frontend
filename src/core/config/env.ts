@@ -27,21 +27,17 @@ export const env = createEnv({
   // ── Client-Side Variables (prefixed NEXT_PUBLIC_) ────────────────────────
   client: {
     NEXT_PUBLIC_APP_NAME: z.string().default("FASHIONISTAR AI"),
-    NEXT_PUBLIC_VERSION: z.string().default("2.0.0"),
+    NEXT_PUBLIC_VERSION: z.string().default("1.0.0"),
     NEXT_PUBLIC_ENV: z
       .enum(["development", "test", "staging", "production"])
       .default("development"),
 
     // Backend API
-    NEXT_PUBLIC_API_V1_URL: z
-      .string()
-      .url("NEXT_PUBLIC_API_V1_URL must be a valid URL"),
-    NEXT_PUBLIC_API_V2_URL: z
-      .string()
-      .url("NEXT_PUBLIC_API_V2_URL must be a valid URL"),
     NEXT_PUBLIC_BACKEND_URL: z
       .string()
       .url("NEXT_PUBLIC_BACKEND_URL must be a valid URL"),
+    NEXT_PUBLIC_API_V1_URL: z.string().url().optional(),
+    NEXT_PUBLIC_API_NINJA_URL: z.string().url().optional(),
 
     // Frontend
     NEXT_PUBLIC_APP_URL: z.string().url(),
@@ -85,9 +81,9 @@ export const env = createEnv({
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
     NEXT_PUBLIC_VERSION: process.env.NEXT_PUBLIC_VERSION,
     NEXT_PUBLIC_ENV: process.env.NEXT_PUBLIC_ENV,
-    NEXT_PUBLIC_API_V1_URL: process.env.NEXT_PUBLIC_API_V1_URL,
-    NEXT_PUBLIC_API_V2_URL: process.env.NEXT_PUBLIC_API_V2_URL,
     NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL,
+    NEXT_PUBLIC_API_V1_URL: process.env.NEXT_PUBLIC_API_V1_URL,
+    NEXT_PUBLIC_API_NINJA_URL: process.env.NEXT_PUBLIC_API_NINJA_URL,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_FRONTEND_TUNNEL_URL:
       process.env.NEXT_PUBLIC_FRONTEND_TUNNEL_URL,
