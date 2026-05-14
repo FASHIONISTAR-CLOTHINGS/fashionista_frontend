@@ -1,5 +1,8 @@
 /**
  * @file loading.tsx (Vendor Order Detail — [order_id])
+ *
+ * Skeleton shown while the vendor order detail page loads.
+ * Canonical route segment: [order_id] (matches page.tsx in the same folder).
  */
 export default function VendorOrderDetailLoading() {
   return (

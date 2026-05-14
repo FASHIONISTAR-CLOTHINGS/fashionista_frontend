@@ -307,9 +307,10 @@ export default function AboutUsPage() {
             Get the latest drops, exclusive deals, and style guides from Fashionistar
             delivered directly to your inbox.
           </p>
-          <form
+          <div
+            role="group"
+            aria-label="Newsletter signup"
             className="flex flex-col gap-3 sm:flex-row"
-            onSubmit={(e) => e.preventDefault()}
           >
             <input
               type="email"
@@ -317,12 +318,12 @@ export default function AboutUsPage() {
               className="flex-1 rounded-xl border border-white/20 bg-white/10 px-4 py-3 font-raleway text-sm text-white placeholder:text-white/50 outline-none focus:border-[#fda600] transition-colors backdrop-blur-sm"
             />
             <button
-              type="submit"
+              type="button"
               className="rounded-xl bg-[#fda600] px-7 py-3 font-raleway text-sm font-bold text-black hover:bg-[#e09500] transition-all duration-200 hover:-translate-y-0.5 shadow-lg"
             >
               Subscribe
             </button>
-          </form>
+          </div>
           <p className="mt-3 font-raleway text-xs text-white/40">
             No spam. Unsubscribe anytime.
           </p>

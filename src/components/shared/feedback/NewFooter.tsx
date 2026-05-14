@@ -122,12 +122,12 @@ const NewFooter = ({
   const year = CURRENT_YEAR;
 
   const socialLinks = [
-    { label: "WhatsApp", href: "#", Icon: Phone },
-    { label: "Twitter / X", href: "#", Icon: Twitter },
-    { label: "Instagram", href: "#", Icon: Instagram },
-    { label: "Facebook", href: "#", Icon: Facebook },
-    { label: "YouTube", href: "#", Icon: Youtube },
-  ] as const;
+    { label: "WhatsApp", href: process.env.NEXT_PUBLIC_FASHIONISTAR_WHATSAPP_URL ?? "", Icon: Phone },
+    { label: "Twitter / X", href: process.env.NEXT_PUBLIC_FASHIONISTAR_X_URL ?? "", Icon: Twitter },
+    { label: "Instagram", href: process.env.NEXT_PUBLIC_FASHIONISTAR_INSTAGRAM_URL ?? "", Icon: Instagram },
+    { label: "Facebook", href: process.env.NEXT_PUBLIC_FASHIONISTAR_FACEBOOK_URL ?? "", Icon: Facebook },
+    { label: "YouTube", href: process.env.NEXT_PUBLIC_FASHIONISTAR_YOUTUBE_URL ?? "", Icon: Youtube },
+  ].filter(({ href }) => Boolean(href));
 
   const quickCompanyLinks = [
     { label: "Our Story", href: "/about-us" },
@@ -372,29 +372,31 @@ const NewFooter = ({
           </p>
 
           {/* Social icons */}
-          <div className="flex items-center gap-3">
-            {socialLinks.map(({ label, href, Icon }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={label}
-                className={cn(
-                  "w-8 h-8 md:w-[45px] md:h-[45px]",
-                  "bg-[hsl(var(--accent))] flex justify-center items-center rounded-full",
-                  "hover:opacity-80 transition-opacity",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
-                )}
-              >
-                <Icon
-                  size={18}
-                  className="text-[hsl(var(--accent-foreground))]"
-                  aria-hidden="true"
-                />
-              </a>
-            ))}
-          </div>
+          {socialLinks.length > 0 && (
+            <div className="flex items-center gap-3">
+              {socialLinks.map(({ label, href, Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className={cn(
+                    "w-8 h-8 md:w-[45px] md:h-[45px]",
+                    "bg-[hsl(var(--accent))] flex justify-center items-center rounded-full",
+                    "hover:opacity-80 transition-opacity",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
+                  )}
+                >
+                  <Icon
+                    size={18}
+                    className="text-[hsl(var(--accent-foreground))]"
+                    aria-hidden="true"
+                  />
+                </a>
+              ))}
+            </div>
+          )}
 
           {/* Copyright (mobile) */}
           <p className="text-background/60 font-satoshi md:hidden text-[13px] text-center leading-5">

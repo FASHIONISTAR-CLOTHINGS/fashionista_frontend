@@ -86,6 +86,13 @@ const CONTACT_DETAILS = [
   },
 ];
 
+const SOCIAL_LINKS = [
+  { label: "Instagram", href: process.env.NEXT_PUBLIC_FASHIONISTAR_INSTAGRAM_URL ?? "" },
+  { label: "Facebook", href: process.env.NEXT_PUBLIC_FASHIONISTAR_FACEBOOK_URL ?? "" },
+  { label: "TikTok", href: process.env.NEXT_PUBLIC_FASHIONISTAR_TIKTOK_URL ?? "" },
+  { label: "Twitter", href: process.env.NEXT_PUBLIC_FASHIONISTAR_X_URL ?? "" },
+].filter(({ href }) => Boolean(href));
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Contact Form
 // ─────────────────────────────────────────────────────────────────────────────
@@ -370,18 +377,26 @@ export default function ContactUsPage() {
               <h3 className="font-bon_foyage text-xl text-foreground mb-3">
                 Follow Us
               </h3>
-              <div className="flex gap-3">
-                {["Instagram", "Facebook", "TikTok", "Twitter"].map((s) => (
-                  <a
-                    key={s}
-                    href="#"
-                    aria-label={s}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-border/40 bg-muted/20 text-xs font-bold text-foreground hover:bg-[#fda600] hover:text-black hover:border-[#fda600] transition-all duration-200"
-                  >
-                    {s.charAt(0)}
-                  </a>
-                ))}
-              </div>
+              {SOCIAL_LINKS.length > 0 ? (
+                <div className="flex gap-3">
+                  {SOCIAL_LINKS.map(({ label, href }) => (
+                    <a
+                      key={label}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={label}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-border/40 bg-muted/20 text-xs font-bold text-foreground hover:bg-[#fda600] hover:text-black hover:border-[#fda600] transition-all duration-200"
+                    >
+                      {label.charAt(0)}
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="font-raleway text-sm text-muted-foreground">
+                  Official social profiles will appear here once they are configured.
+                </p>
+              )}
             </div>
           </div>
         </div>

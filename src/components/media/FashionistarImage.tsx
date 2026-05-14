@@ -204,7 +204,7 @@ export function FashionistarImage({
   const containerRef = useRef<HTMLDivElement>(null);
 
   // ── Dev warning ────────────────────────────────────────────────────────────
-  if (process.env.NODE_ENV === "development" && !alt) {
+  if (process.env.NODE_ENV === "development" && alt == null) {
     console.warn("[FashionistarImage] Missing `alt` prop — required for accessibility");
   }
 
@@ -247,6 +247,32 @@ export function FashionistarImage({
   const sizesAttr = sizes ?? (width
     ? `(max-width: ${width}px) 100vw, ${width}px`
     : "(max-width: 768px) 100vw, 50vw");
+
+  const handleLoad = useCallback(() => {
+    setLoaded(true);
+    onLoad?.();
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("fashionistar:image-loaded", {
+          detail: { src: resolvedSrc, productId: dataProductId },
+        }),
+      );
+    }
+  }, [resolvedSrc, dataProductId, onLoad]);
+
+  const handleError = useCallback(() => {
+    if (retries < MAX_IMAGE_RETRIES) {
+      const next = retries + 1;
+      setRetries(next);
+      // Cache-bust param forces a fresh fetch from Cloudinary CDN.
+      setRetrySuffix(`?retry=${next}&ts=${Date.now()}`);
+      return;
+    }
+
+    setErrored(true);
+    onError?.();
+  }, [retries, onError]);
 
   // ── Error → show placeholder ───────────────────────────────────────────────
   if (errored || (!publicId && !src)) {
@@ -291,32 +317,8 @@ export function FashionistarImage({
           data-product-id={dataProductId}
           draggable={draggable}
           onDragStart={onDragStart}
-          onLoad={useCallback(() => {
-            setLoaded(true);
-            onLoad?.();
-            // ── Service Worker analytics event (merged from FashionImage) ──
-            if (typeof window !== "undefined") {
-              window.dispatchEvent(
-                new CustomEvent("fashionistar:image-loaded", {
-                  detail: { src: resolvedSrc, productId: dataProductId },
-                }),
-              );
-            }
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          }, [resolvedSrc, dataProductId, onLoad])}
-          onError={useCallback(() => {
-            // ── 2× exponential-backoff retry (merged from FashionImage) ──
-            if (retries < MAX_IMAGE_RETRIES) {
-              const next = retries + 1;
-              setRetries(next);
-              // Cache-bust param forces a fresh fetch from Cloudinary CDN
-              setRetrySuffix(`?retry=${next}&ts=${Date.now()}`);
-            } else {
-              setErrored(true);
-              onError?.();
-            }
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          }, [retries, onError])}
+          onLoad={handleLoad}
+          onError={handleError}
           className={cn(
             "transition-opacity duration-500",
             fill ? "absolute inset-0 h-full w-full object-cover" : "h-full w-full object-cover",
