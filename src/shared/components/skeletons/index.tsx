@@ -317,3 +317,120 @@ export function PageSkeleton({ className }: { className?: string }) {
     </div>
   );
 }
+
+
+
+
+
+/**
+ * @file loading.tsx
+ * @description Global loading component for Fashionistar — clean, modern skeleton-based page shell.
+ *
+ * Follows Wave 8 UX standards:
+ * - No deprecated next/image
+ * - No deprecated shadcn/ui legacy components
+ * - Complete shell for hero, metadata, main content, and footer areas
+ * - No hardcoded brand references
+ * - Ready for live deployment
+ */
+
+import { Button } from "@/shared/components/ui";
+import { Navigation } from "@/shared/components/navigation";
+import { Footer } from "@/shared/components/feedback";
+import {
+  LogoSkeleton,
+  NavigationSkeleton,
+  BreadcrumbsSkeleton,
+  TextSkeleton,
+  ImageSkeleton,
+  ProductCardSkeleton,
+  FilterSkeleton,
+  FooterSkeleton,
+  PaginationSkeleton,
+  CartSkeleton,
+  SidebarSkeleton,
+} from "@/shared/components/skeletons";
+
+export default function GlobalLoading() {
+  return (
+    <div className="min-h-screen w-full flex flex-col bg-background">
+      {/* Top Navbar */}
+      <header className="border-b w-full bg-white border-black/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <LogoSkeleton />
+            <NavigationSkeleton className="hidden md:flex" />
+            <div className="flex items-center gap-2">
+              <div className="hidden md:block w-24 h-9">
+                <div className="w-full h-full bg-muted animate-pulse rounded-md" />
+              </div>
+              <div className="w-9 h-9 md:hidden">
+                <div className="w-full h-full bg-muted animate-pulse rounded-md" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Page Wrapper */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumbs Skeleton */}
+        <BreadcrumbsSkeleton className="mb-4" />
+
+        {/* Main Page Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Sidebar / Filters (4 cols) */}
+          <div className="lg:col-span-3 hidden lg:block">
+            <div className="flex flex-col gap-6">
+              <TextSkeleton className="h-6 w-1/2" />
+              <FilterSkeleton />
+            </div>
+          </div>
+
+          {/* Content Area (9 cols) */}
+          <div className="lg:col-span-9">
+            {/* Hero / Header Section */}
+            <div className="mb-10">
+              <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TextSkeleton className="h-8 w-1/3" />
+                    <PaginationSkeleton className="h-6 w-24" />
+                  </div>
+                  <TextSkeleton className="h-5 w-full max-w-md" />
+                </div>
+                <div className="hidden md:flex items-center gap-2">
+                  <SidebarSkeleton className="h-9 w-24" />
+                  <FilterSkeleton className="h-9 w-24" />
+                </div>
+              </div>
+
+              {/* Product Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <ProductCardSkeleton key={i} />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              <PaginationSkeleton className="mt-8 mx-auto" />
+            </div>
+
+            {/* Additional Content Section */}
+            <div className="mt-10">
+              <TextSkeleton className="h-10 w-1/2 mb-4" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <ProductCardSkeleton key={i} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <FooterSkeleton />
+    </div>
+  );
+}

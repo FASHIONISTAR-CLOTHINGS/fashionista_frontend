@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { FashionistarImage } from "@/components/media";
 
 interface CartProp {
   data: CardProps & { quantity: number };
@@ -7,7 +7,7 @@ const CartCard = ({ data }: CartProp) => {
   return (
     <div>
       <div>
-        <Image src={data.image} alt={data.title} width={160} height={160} />
+        <FashionistarImage src={data.image} alt={data.title} width={160} height={160} />
       </div>
       <div>
         <div>
