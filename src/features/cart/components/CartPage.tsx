@@ -17,7 +17,6 @@
  *  - Empty state CTA
  */
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -44,6 +43,7 @@ import {
 import { useCartAbandonment } from "@/features/cart/hooks/use-cart-abandonment";
 import { CartPageSkeleton } from "./CartPageSkeleton";
 import { formatCurrency } from "@/lib/formatting";
+import { FashionistarImage } from "@/components/media";
 
 export default function CartPage() {
   const router = useRouter();
@@ -179,12 +179,13 @@ export default function CartPage() {
                   href={`/products/${item.product.slug}`}
                   className="relative h-28 w-24 shrink-0 overflow-hidden rounded-xl bg-[hsl(var(--brand-cream))] md:h-36 md:w-32"
                 >
-                  <Image
+                  <FashionistarImage
                     src={item.product.cover_image_url ?? "/gown.svg"}
                     alt={item.product.title}
                     fill
                     sizes="128px"
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="h-full w-full"
+                    imgClassName="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 </Link>
 

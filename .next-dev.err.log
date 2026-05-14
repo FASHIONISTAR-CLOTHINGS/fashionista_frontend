@@ -24906,3 +24906,1103 @@ Import traces:
 
     at <unknown> (Error: ./src/shared/components/skeletons/index.tsx:340:1)
     at <unknown> (Error: (./src/shared/components/skeletons/index.tsx:340:1)
+⨯ ./src/shared/components/skeletons/index.tsx:340:1
+Export BreadcrumbsSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export BreadcrumbsSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import PageSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(home)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+
+./src/shared/components/skeletons/index.tsx:340:1
+Export FilterSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export FilterSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import ProfileSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(home)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+
+./src/shared/components/skeletons/index.tsx:340:1
+Export FooterSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export FooterSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import FormSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(home)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+
+./src/shared/components/skeletons/index.tsx:340:1
+Export LogoSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export LogoSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import FormSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(home)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+
+./src/shared/components/skeletons/index.tsx:340:1
+Export NavigationSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export NavigationSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import StatSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(home)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+
+./src/shared/components/skeletons/index.tsx:340:1
+Export PaginationSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export PaginationSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import PageSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(home)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+
+./src/shared/components/skeletons/index.tsx:340:1
+Export ProductCardSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export ProductCardSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import ProductDetailSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(home)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+
+./src/shared/components/skeletons/index.tsx:340:1
+Export SidebarSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export SidebarSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import PageSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(home)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+
+./src/shared/components/skeletons/index.tsx:340:1
+Export TextSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export TextSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import PageSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(home)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+⨯ ./src/shared/components/skeletons/index.tsx:340:1
+Export BreadcrumbsSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export BreadcrumbsSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import PageSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(auth)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+
+./src/shared/components/skeletons/index.tsx:340:1
+Export FilterSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export FilterSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import ProfileSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(auth)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+
+./src/shared/components/skeletons/index.tsx:340:1
+Export FooterSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export FooterSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import FormSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(auth)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+
+./src/shared/components/skeletons/index.tsx:340:1
+Export LogoSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export LogoSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import FormSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(auth)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+
+./src/shared/components/skeletons/index.tsx:340:1
+Export NavigationSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export NavigationSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import StatSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(auth)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+
+./src/shared/components/skeletons/index.tsx:340:1
+Export PaginationSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export PaginationSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import PageSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(auth)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+
+./src/shared/components/skeletons/index.tsx:340:1
+Export ProductCardSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export ProductCardSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import ProductDetailSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(auth)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+
+./src/shared/components/skeletons/index.tsx:340:1
+Export SidebarSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export SidebarSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import PageSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(auth)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+
+./src/shared/components/skeletons/index.tsx:340:1
+Export TextSkeleton doesn't exist in target module
+  [90m338 |[0m [36mimport[0m { [33mNavigation[0m } [36mfrom[0m [32m"@/shared/components/navigation"[0m;
+  [90m339 |[0m [36mimport[0m { [33mFooter[0m } [36mfrom[0m [32m"@/shared/components/feedback"[0m;
+[31m[1m>[0m [90m340 |[0m [36mimport[0m {
+  [90m    |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m341 |[0m   [33mLogoSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m342 |[0m   [33mNavigationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m343 |[0m   [33mBreadcrumbsSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m344 |[0m   [33mTextSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m345 |[0m   [33mImageSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m346 |[0m   [33mProductCardSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m347 |[0m   [33mFilterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m348 |[0m   [33mFooterSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m349 |[0m   [33mPaginationSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m350 |[0m   [33mCartSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m351 |[0m   [33mSidebarSkeleton[0m,
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m352 |[0m } [36mfrom[0m [32m"@/shared/components/skeletons"[0m;
+  [90m    |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m353 |[0m
+  [90m354 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mGlobalLoading[0m() {
+  [90m355 |[0m   [36mreturn[0m (
+
+The export TextSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import PageSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(auth)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+[browser] Uncaught Error: ./src/shared/components/skeletons/index.tsx:340:1
+Export BreadcrumbsSkeleton doesn't exist in target module
+  338 | import { Navigation } from "@/shared/components/navigation";
+  339 | import { Footer } from "@/shared/components/feedback";
+> 340 | import {
+      | ^^^^^^^
+> 341 |   LogoSkeleton,
+      | ^^^^^^^^^^^^^^^
+> 342 |   NavigationSkeleton,
+      | ^^^^^^^^^^^^^^^^^^^^^
+> 343 |   BreadcrumbsSkeleton,
+      | ^^^^^^^^^^^^^^^^^^^^^^
+> 344 |   TextSkeleton,
+      | ^^^^^^^^^^^^^^^
+> 345 |   ImageSkeleton,
+      | ^^^^^^^^^^^^^^^^
+> 346 |   ProductCardSkeleton,
+      | ^^^^^^^^^^^^^^^^^^^^^^
+> 347 |   FilterSkeleton,
+      | ^^^^^^^^^^^^^^^^^
+> 348 |   FooterSkeleton,
+      | ^^^^^^^^^^^^^^^^^
+> 349 |   PaginationSkeleton,
+      | ^^^^^^^^^^^^^^^^^^^^^
+> 350 |   CartSkeleton,
+      | ^^^^^^^^^^^^^^^
+> 351 |   SidebarSkeleton,
+      | ^^^^^^^^^^^^^^^^^^
+> 352 | } from "@/shared/components/skeletons";
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  353 |
+  354 | export default function GlobalLoading() {
+  355 |   return (
+
+The export BreadcrumbsSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import PageSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(home)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+    at <unknown> (Error: ./src/shared/components/skeletons/index.tsx:340:1)
+    at <unknown> (Error: (./src/shared/components/skeletons/index.tsx:340:1)
+[browser] Uncaught Error: ./src/shared/components/skeletons/index.tsx:340:1
+Export BreadcrumbsSkeleton doesn't exist in target module
+  338 | import { Navigation } from "@/shared/components/navigation";
+  339 | import { Footer } from "@/shared/components/feedback";
+> 340 | import {
+      | ^^^^^^^
+> 341 |   LogoSkeleton,
+      | ^^^^^^^^^^^^^^^
+> 342 |   NavigationSkeleton,
+      | ^^^^^^^^^^^^^^^^^^^^^
+> 343 |   BreadcrumbsSkeleton,
+      | ^^^^^^^^^^^^^^^^^^^^^^
+> 344 |   TextSkeleton,
+      | ^^^^^^^^^^^^^^^
+> 345 |   ImageSkeleton,
+      | ^^^^^^^^^^^^^^^^
+> 346 |   ProductCardSkeleton,
+      | ^^^^^^^^^^^^^^^^^^^^^^
+> 347 |   FilterSkeleton,
+      | ^^^^^^^^^^^^^^^^^
+> 348 |   FooterSkeleton,
+      | ^^^^^^^^^^^^^^^^^
+> 349 |   PaginationSkeleton,
+      | ^^^^^^^^^^^^^^^^^^^^^
+> 350 |   CartSkeleton,
+      | ^^^^^^^^^^^^^^^
+> 351 |   SidebarSkeleton,
+      | ^^^^^^^^^^^^^^^^^^
+> 352 | } from "@/shared/components/skeletons";
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  353 |
+  354 | export default function GlobalLoading() {
+  355 |   return (
+
+The export BreadcrumbsSkeleton was not found in module [project]/src/shared/components/skeletons/index.tsx [app-rsc] (ecmascript).
+Did you mean to import PageSkeleton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  #1 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/(home)/loading.tsx
+
+  #2 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/app/loading.tsx
+
+  #3 [Server Component]:
+    ./src/shared/components/skeletons/index.tsx
+    ./src/shared/components/index.ts
+    ./src/shared/index.ts
+    ./src/app/layout.tsx
+
+
+    at <unknown> (Error: ./src/shared/components/skeletons/index.tsx:340:1)
+    at <unknown> (Error: (./src/shared/components/skeletons/index.tsx:340:1)

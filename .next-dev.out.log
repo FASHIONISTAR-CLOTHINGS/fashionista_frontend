@@ -709,3 +709,9 @@ Creating turbopack project {
  GET /brands 500 in 418ms (next.js: 299ms, application-code: 120ms)
  GET /auth/sign-in?returnUrl=%2F 500 in 416ms (next.js: 326ms, application-code: 90ms)
  GET /brands 500 in 296ms (next.js: 254ms, application-code: 42ms)
+✓ Finished filesystem cache database compaction in 17.1s
+ GET /brands 500 in 2.4s (next.js: 2.0s, application-code: 345ms)
+ GET /auth/sign-in?returnUrl=%2F 500 in 2.4s (next.js: 2.3s, application-code: 74ms)
+✓ Compiled in 3.1s
+ GET /auth/sign-in?returnUrl=%2F 200 in 3.5s (next.js: 432ms, application-code: 3.0s)
+ GET /brands 200 in 9.9s (next.js: 1809ms, application-code: 8.1s)

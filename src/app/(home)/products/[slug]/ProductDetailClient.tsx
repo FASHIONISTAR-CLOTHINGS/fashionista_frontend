@@ -16,7 +16,6 @@
  *  - Fire-and-forget view-log analytics (POST /products/{slug}/view-log/)
  */
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import {
@@ -38,6 +37,7 @@ import { productCatalogApi } from "@/features/catalog";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { SocialProofBadge } from "@/features/product/components/SocialProofBadge";
 import { useRecentlyViewed } from "@/features/catalog/hooks/use-recently-viewed";
+import { FashionistarImage } from "@/components/media";
 
 
 interface ProductDetailClientProps {
@@ -185,12 +185,13 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
         <div className="flex-1">
           {/* Main image */}
           <div className="relative h-[420px] w-full overflow-hidden rounded-2xl bg-[hsl(var(--brand-cream))] md:h-[520px]">
-            <Image
+            <FashionistarImage
               src={images[activeImg] ?? "/gown.svg"}
               alt={product.title}
               fill
               sizes="(max-width:768px) 100vw, 50vw"
-              className="object-contain p-4 transition-opacity duration-300"
+              className="h-full w-full"
+              imgClassName="object-contain p-4 transition-opacity duration-300"
               priority
             />
             {product.requires_measurement && (
@@ -235,7 +236,14 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
                       : "border-transparent hover:border-border"
                   }`}
                 >
-                  <Image src={src} alt="" fill sizes="80px" className="object-cover" />
+                  <FashionistarImage
+                    src={src}
+                    alt=""
+                    fill
+                    sizes="80px"
+                    className="h-full w-full"
+                    imgClassName="object-cover"
+                  />
                 </button>
               ))}
             </div>
@@ -432,12 +440,13 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
               >
                 <div className="mb-3 flex items-start gap-3">
                   {r.reviewer_avatar_url ? (
-                    <Image
+                    <FashionistarImage
                       src={r.reviewer_avatar_url}
                       alt={r.reviewer_display}
                       width={40}
                       height={40}
-                      className="h-10 w-10 rounded-full object-cover"
+                      className="h-10 w-10 overflow-hidden rounded-full"
+                      imgClassName="h-10 w-10 rounded-full object-cover"
                     />
                   ) : (
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--primary))] text-sm font-bold text-primary-foreground">
