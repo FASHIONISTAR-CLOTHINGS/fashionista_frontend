@@ -19,14 +19,19 @@ export const clientWishlistKeys = {
   list: ["client", "wishlist", "list"] as const,
 };
 
-export function useClientWishlist() {
+interface UseClientWishlistOptions {
+  enabled?: boolean;
+}
+
+export function useClientWishlist(options?: UseClientWishlistOptions) {
   const { isAuthenticated } = useAuth();
+  const isEnabled = options?.enabled ?? true;
 
   return useQuery({
     queryKey:  clientWishlistKeys.list,
     queryFn:   clientApi.getWishlist,
     staleTime: 30_000,
-    enabled:   isAuthenticated,
+    enabled:   isAuthenticated && isEnabled,
   });
 }
 

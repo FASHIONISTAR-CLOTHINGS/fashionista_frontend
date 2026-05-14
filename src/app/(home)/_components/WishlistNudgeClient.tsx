@@ -19,10 +19,6 @@ import { WishlistNudge } from "@/features/catalog/components/WishlistNudge";
 const COMMERCE_ROUTE_PREFIXES = [
   "/",
   "/products",
-  "/categories",
-  "/collections",
-  "/vendors",
-  "/brands",
   "/wishlist",
 ] as const;
 
@@ -39,7 +35,7 @@ export function WishlistNudgeClient() {
     prefix === "/" ? pathname === "/" : pathname.startsWith(prefix),
   );
 
-  const { data: wishlist } = useClientWishlist();
+  const { data: wishlist } = useClientWishlist({ enabled: isCommerceRoute });
 
   // getWishlist() returns WishlistItem[] — a plain array, not a paginated response.
   const count = wishlist?.length ?? 0;
