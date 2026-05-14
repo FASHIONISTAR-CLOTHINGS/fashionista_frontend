@@ -1,7 +1,7 @@
 // UI Primitives
 export * from "./ui/primitives";
-// UI Compounds
-export * from "./ui/compounds";
+// UI Composites
+export * from "./ui/composites";
 // Shared Navigation
 export * from "./shared/navigation";
 // Shared Feedback

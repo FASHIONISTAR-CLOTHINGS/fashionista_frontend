@@ -1,4 +1,4 @@
-import BarChart from "@/components/ui/compounds/Charts";
+import BarChart from "@/components/ui/composites/Charts";
 import { ChartOptions, ChartData } from "chart.js";
 import Image from "next/image";
 import { Suspense } from "react";
