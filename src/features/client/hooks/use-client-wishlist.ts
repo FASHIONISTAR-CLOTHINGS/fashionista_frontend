@@ -12,6 +12,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { clientApi } from "@/features/client/api/client.api";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 
 export const clientWishlistKeys = {
   all:  ["client", "wishlist"] as const,
@@ -19,10 +20,13 @@ export const clientWishlistKeys = {
 };
 
 export function useClientWishlist() {
+  const { isAuthenticated } = useAuth();
+
   return useQuery({
     queryKey:  clientWishlistKeys.list,
     queryFn:   clientApi.getWishlist,
     staleTime: 30_000,
+    enabled:   isAuthenticated,
   });
 }
 

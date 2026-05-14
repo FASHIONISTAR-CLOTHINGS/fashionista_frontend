@@ -12,8 +12,19 @@
  */
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useClientWishlist } from "@/features/client/hooks/use-client-wishlist";
 import { WishlistNudge } from "@/features/catalog/components/WishlistNudge";
+
+const COMMERCE_ROUTE_PREFIXES = [
+  "/",
+  "/products",
+  "/categories",
+  "/collections",
+  "/vendors",
+  "/brands",
+  "/wishlist",
+] as const;
 
 /**
  * Reads the authenticated user's wishlist count and conditionally
@@ -23,10 +34,19 @@ import { WishlistNudge } from "@/features/catalog/components/WishlistNudge";
  * (useClientWishlist will return { data: undefined }).
  */
 export function WishlistNudgeClient() {
+  const pathname = usePathname();
+  const isCommerceRoute = COMMERCE_ROUTE_PREFIXES.some((prefix) =>
+    prefix === "/" ? pathname === "/" : pathname.startsWith(prefix),
+  );
+
   const { data: wishlist } = useClientWishlist();
 
   // getWishlist() returns WishlistItem[] — a plain array, not a paginated response.
   const count = wishlist?.length ?? 0;
+
+  if (!isCommerceRoute) {
+    return null;
+  }
 
   return <WishlistNudge wishlistCount={count} />;
 }

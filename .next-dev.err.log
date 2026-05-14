@@ -1,0 +1,493 @@
+⨯ Error: Event handlers cannot be passed to Client Component props.
+  <form className=... onSubmit={function onSubmit} children=...>
+                               ^^^^^^^^^^^^^^^^^^^
+If you need interactivity, consider converting part of this to a Client Component.
+    at stringify (<anonymous>) {
+  digest: '2773845672'
+}
+[FashionistarImage] Missing `alt` prop — required for accessibility
+[browser] Uncaught Error: Event handlers cannot be passed to Client Component props.
+  <form className=... onSubmit={function onSubmit} children=...>
+                               ^^^^^^^^^^^^^^^^^^^
+If you need interactivity, consider converting part of this to a Client Component.
+    at stringify (<anonymous>:1:18)
+[FashionistarImage] Missing `alt` prop — required for accessibility
+[FashionistarImage] Missing `alt` prop — required for accessibility
+[FashionistarImage] Missing `alt` prop — required for accessibility
+[FashionistarImage] Missing `alt` prop — required for accessibility
+[browser] [FashionistarImage] Missing `alt` prop — required for accessibility (src/components/media/FashionistarImage.tsx:208:13)
+[browser] [FashionistarImage] Missing `alt` prop — required for accessibility (src/components/media/FashionistarImage.tsx:208:13)
+[TypeError: fetch failed] {
+  [cause]: Error [SocketError]: other side closed
+      at ignore-listed frames {
+    code: 'UND_ERR_SOCKET',
+    socket: {
+      localAddress: '2605:59c0:eba:fe08:f5de:daa2:3d9f:e7d',
+      localPort: 63540,
+      remoteAddress: '2a05:d014:21b:8e01:3c80:1f43:5e3:5f78',
+      remotePort: 443,
+      remoteFamily: 'IPv6',
+      timeout: undefined,
+      bytesWritten: 286,
+      bytesRead: 0
+    }
+  }
+}
+[TypeError: fetch failed] {
+  [cause]: Error [SocketError]: other side closed
+      at ignore-listed frames {
+    code: 'UND_ERR_SOCKET',
+    socket: {
+      localAddress: '2605:59c0:eba:fe08:f5de:daa2:3d9f:e7d',
+      localPort: 63540,
+      remoteAddress: '2a05:d014:21b:8e01:3c80:1f43:5e3:5f78',
+      remotePort: 443,
+      remoteFamily: 'IPv6',
+      timeout: undefined,
+      bytesWritten: 286,
+      bytesRead: 0
+    }
+  }
+}
+[TypeError: fetch failed] {
+  [cause]: Error [SocketError]: other side closed
+      at ignore-listed frames {
+    code: 'UND_ERR_SOCKET',
+    socket: {
+      localAddress: '2605:59c0:eba:fe08:f5de:daa2:3d9f:e7d',
+      localPort: 63539,
+      remoteAddress: '2a05:d014:21b:8e02:e663:9299:6d67:9d5a',
+      remotePort: 443,
+      remoteFamily: 'IPv6',
+      timeout: undefined,
+      bytesWritten: 285,
+      bytesRead: 0
+    }
+  }
+}
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+⨯ [Error [EmptyGenerateStaticParamsError]: When using Cache Components, all `generateStaticParams` functions must return at least one result. This is to ensure that we can perform build-time validation that there is no other dynamic accesses that would cause a runtime error.
+
+Learn more: https://nextjs.org/docs/messages/empty-generate-static-params] {
+  type: 'Error',
+  page: '/categories/minimalist'
+}
+⨯ [Error [EmptyGenerateStaticParamsError]: When using Cache Components, all `generateStaticParams` functions must return at least one result. This is to ensure that we can perform build-time validation that there is no other dynamic accesses that would cause a runtime error.
+
+Learn more: https://nextjs.org/docs/messages/empty-generate-static-params] {
+  type: 'Error',
+  page: '/categories/minimalist'
+}
+[browser] Uncaught EmptyGenerateStaticParamsError: When using Cache Components, all `generateStaticParams` functions must return at least one result. This is to ensure that we can perform build-time validation that there is no other dynamic accesses that would cause a runtime error.
+
+Learn more: https://nextjs.org/docs/messages/empty-generate-static-params
+
+⨯ [Error [EmptyGenerateStaticParamsError]: When using Cache Components, all `generateStaticParams` functions must return at least one result. This is to ensure that we can perform build-time validation that there is no other dynamic accesses that would cause a runtime error.
+
+Learn more: https://nextjs.org/docs/messages/empty-generate-static-params] {
+  type: 'Error',
+  page: '/categories/minimalist'
+}
+[browser] Uncaught EmptyGenerateStaticParamsError: When using Cache Components, all `generateStaticParams` functions must return at least one result. This is to ensure that we can perform build-time validation that there is no other dynamic accesses that would cause a runtime error.
+
+Learn more: https://nextjs.org/docs/messages/empty-generate-static-params
+
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+⨯ [Error [EmptyGenerateStaticParamsError]: When using Cache Components, all `generateStaticParams` functions must return at least one result. This is to ensure that we can perform build-time validation that there is no other dynamic accesses that would cause a runtime error.
+
+Learn more: https://nextjs.org/docs/messages/empty-generate-static-params] {
+  type: 'Error',
+  page: '/categories/gowns'
+}
+⨯ [Error [EmptyGenerateStaticParamsError]: When using Cache Components, all `generateStaticParams` functions must return at least one result. This is to ensure that we can perform build-time validation that there is no other dynamic accesses that would cause a runtime error.
+
+Learn more: https://nextjs.org/docs/messages/empty-generate-static-params] {
+  type: 'Error',
+  page: '/categories/gowns'
+}
+[browser] Uncaught EmptyGenerateStaticParamsError: When using Cache Components, all `generateStaticParams` functions must return at least one result. This is to ensure that we can perform build-time validation that there is no other dynamic accesses that would cause a runtime error.
+
+Learn more: https://nextjs.org/docs/messages/empty-generate-static-params
+
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] Image with src "/gown.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Image with src "/gown.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Image with src "/gown.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/wishlist/?page=1&session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/wishlist/?page=1&session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/wishlist/?page=1&session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/wishlist/?page=1&session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/wishlist/?page=1&session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/wishlist/?page=1&session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/cart/?session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/cart/?session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/cart/?session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/cart/?session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/cart/?session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/cart/?session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/cart/?session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/cart/?session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+Route /cart is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/cart/?session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/cart/?session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/cart/?session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/cart/?session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/cart/?session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/cart/?session_key=bec0bd52-e270-483f-8fc6-7343aa56fb56 (src/core/api/client.async.ts:61:19)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&min_price=7&max_price=500009&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&min_price=7&max_price=500009&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&min_price=7&max_price=500009&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&min_price=7&max_price=500009&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&min_price=7&max_price=500009&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&min_price=7&max_price=500009&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Image with src "/gown.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/categories/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/brands/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/categories/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/brands/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/categories/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/brands/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/categories/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/brands/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/categories/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/brands/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/categories/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/brands/ (src/core/api/client.async.ts:61:19)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/categories/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/brands/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/categories/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/brands/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/categories/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/brands/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/categories/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/brands/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/categories/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/brands/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/categories/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/brands/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/categories/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/brands/ (src/core/api/client.async.ts:61:19)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+⨯ [Error [EmptyGenerateStaticParamsError]: When using Cache Components, all `generateStaticParams` functions must return at least one result. This is to ensure that we can perform build-time validation that there is no other dynamic accesses that would cause a runtime error.
+
+Learn more: https://nextjs.org/docs/messages/empty-generate-static-params] {
+  type: 'Error',
+  page: '/collections/wedding-edit'
+}
+⨯ [Error [EmptyGenerateStaticParamsError]: When using Cache Components, all `generateStaticParams` functions must return at least one result. This is to ensure that we can perform build-time validation that there is no other dynamic accesses that would cause a runtime error.
+
+Learn more: https://nextjs.org/docs/messages/empty-generate-static-params] {
+  type: 'Error',
+  page: '/collections/wedding-edit'
+}
+[browser] Uncaught EmptyGenerateStaticParamsError: When using Cache Components, all `generateStaticParams` functions must return at least one result. This is to ensure that we can perform build-time validation that there is no other dynamic accesses that would cause a runtime error.
+
+Learn more: https://nextjs.org/docs/messages/empty-generate-static-params
+
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Image with src "/gown.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+⨯ Error: Event handlers cannot be passed to Client Component props.
+  <form className=... onSubmit={function onSubmit} children=...>
+                               ^^^^^^^^^^^^^^^^^^^
+If you need interactivity, consider converting part of this to a Client Component.
+    at stringify (<anonymous>) {
+  digest: '2773845672'
+}
+⨯ Error: Event handlers cannot be passed to Client Component props.
+  <form className=... onSubmit={function onSubmit} children=...>
+                               ^^^^^^^^^^^^^^^^^^^
+If you need interactivity, consider converting part of this to a Client Component.
+    at stringify (<anonymous>) {
+  digest: '2773845672'
+}
+[browser] Uncaught Error: Event handlers cannot be passed to Client Component props.
+  <form className=... onSubmit={function onSubmit} children=...>
+                               ^^^^^^^^^^^^^^^^^^^
+If you need interactivity, consider converting part of this to a Client Component.
+    at stringify (<anonymous>:1:18)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+⨯ Error: Event handlers cannot be passed to Client Component props.
+  <form className=... onSubmit={function onSubmit} children=...>
+                               ^^^^^^^^^^^^^^^^^^^
+If you need interactivity, consider converting part of this to a Client Component.
+    at stringify (<anonymous>) {
+  digest: '2773845672'
+}
+⨯ Error: Event handlers cannot be passed to Client Component props.
+  <form className=... onSubmit={function onSubmit} children=...>
+                               ^^^^^^^^^^^^^^^^^^^
+If you need interactivity, consider converting part of this to a Client Component.
+    at stringify (<anonymous>) {
+  digest: '2773845672'
+}
+[browser] Uncaught Error: Event handlers cannot be passed to Client Component props.
+  <form className=... onSubmit={function onSubmit} children=...>
+                               ^^^^^^^^^^^^^^^^^^^
+If you need interactivity, consider converting part of this to a Client Component.
+    at stringify (<anonymous>:1:18)
+[browser] Image with src "/gown.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&q=GHJHGHJ&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?page=1&page_size=24&max_price=500000&ordering=newest (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/featured/ (src/core/api/client.async.ts:61:19)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.

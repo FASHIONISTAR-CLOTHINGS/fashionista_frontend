@@ -176,10 +176,10 @@ const NAV_LINKS: NavLink[] = [
 ];
 
 const SOCIAL_LINKS = [
-  { label: "Facebook", href: "#", Icon: Facebook },
-  { label: "Twitter / X", href: "#", Icon: Twitter },
-  { label: "Instagram", href: "#", Icon: Instagram },
-] as const;
+  { label: "Facebook", href: process.env.NEXT_PUBLIC_FASHIONISTAR_FACEBOOK_URL ?? "", Icon: Facebook },
+  { label: "Twitter / X", href: process.env.NEXT_PUBLIC_FASHIONISTAR_X_URL ?? "", Icon: Twitter },
+  { label: "Instagram", href: process.env.NEXT_PUBLIC_FASHIONISTAR_INSTAGRAM_URL ?? "", Icon: Instagram },
+].filter(({ href }) => Boolean(href));
 
 // ─── Focus-trap utility ────────────────────────────────────────────────────────
 
@@ -488,25 +488,27 @@ const NewMobileNav = () => {
           </div>
 
           {/* Social links */}
-          <div className="space-y-2">
-            <p className="font-raleway font-semibold text-sm text-muted-foreground uppercase tracking-wider">
-              Follow Us
-            </p>
-            <div className="flex items-center gap-2 flex-wrap">
-              {SOCIAL_LINKS.map(({ label, href, Icon }) => (
-                <a
-                  key={label}
-                  href={href}
-                  aria-label={label}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-[hsl(var(--accent))] flex justify-center items-center hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]"
-                >
-                  <Icon size={18} className="text-[hsl(var(--accent-foreground))]" aria-hidden="true" />
-                </a>
-              ))}
+          {SOCIAL_LINKS.length > 0 && (
+            <div className="space-y-2">
+              <p className="font-raleway font-semibold text-sm text-muted-foreground uppercase tracking-wider">
+                Follow Us
+              </p>
+              <div className="flex items-center gap-2 flex-wrap">
+                {SOCIAL_LINKS.map(({ label, href, Icon }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    aria-label={label}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full bg-[hsl(var(--accent))] flex justify-center items-center hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]"
+                  >
+                    <Icon size={18} className="text-[hsl(var(--accent-foreground))]" aria-hidden="true" />
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Auth CTAs */}
           <div className="mt-auto pt-4 border-t border-border space-y-2">

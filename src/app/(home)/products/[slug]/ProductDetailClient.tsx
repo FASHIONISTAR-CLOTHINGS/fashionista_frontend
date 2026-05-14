@@ -247,7 +247,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
           {/* Vendor + category */}
           <div className="flex items-center justify-between">
             <Link
-              href={`/shops/${product.vendor_slug ?? ""}`}
+              href={`/vendors/${product.vendor_slug ?? ""}`}
               className="text-xs font-bold uppercase tracking-widest text-[hsl(var(--primary))] hover:opacity-80"
             >
               {product.vendor_name}
