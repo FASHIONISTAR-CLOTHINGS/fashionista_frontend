@@ -144,22 +144,19 @@ export default function BlogPage() {
             Weekly style guides, artisan spotlights, measurement tips, and
             platform updates delivered straight to your inbox.
           </p>
-          <form
-            className="flex flex-col gap-3 sm:flex-row max-w-md mx-auto"
-            onSubmit={(e) => e.preventDefault()}
-          >
+          <div className="flex flex-col gap-3 sm:flex-row max-w-md mx-auto">
             <input
               type="email"
               placeholder="your@email.com"
               className="flex-1 rounded-xl border border-white/20 bg-white/10 px-4 py-3 font-raleway text-sm text-white placeholder:text-white/50 outline-none focus:border-[#fda600] transition-colors"
             />
             <button
-              type="submit"
+              type="button"
               className="rounded-xl bg-[#fda600] px-7 py-3 font-raleway text-sm font-bold text-black hover:bg-[#e09500] transition-all duration-200 hover:-translate-y-0.5 shadow-lg whitespace-nowrap"
             >
               Subscribe Free
             </button>
-          </form>
+          </div>
         </div>
       </section>
     </main>

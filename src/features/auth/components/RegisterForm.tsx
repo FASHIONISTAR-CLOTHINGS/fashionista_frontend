@@ -51,6 +51,10 @@ export function RegisterForm({ role = "client" }: RegisterFormProps) {
 
   // returnUrl — carry forward from the query string so OTP page can redirect back
   const returnUrl = searchParams.get("returnUrl") ?? "";
+  const signInHref =
+    returnUrl && returnUrl.startsWith("/")
+      ? `/auth/sign-in?returnUrl=${encodeURIComponent(returnUrl)}`
+      : "/auth/sign-in";
 
   const {
     register: rhfRegister,
@@ -372,7 +376,7 @@ export function RegisterForm({ role = "client" }: RegisterFormProps) {
       {/* ── Footer ───────────────────────────────────────────────────── */}
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <a href="/auth/sign-in" className="text-primary font-semibold hover:underline">
+        <a href={signInHref} className="text-primary font-semibold hover:underline">
           Sign in
         </a>
       </p>

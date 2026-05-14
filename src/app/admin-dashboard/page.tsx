@@ -2,6 +2,7 @@ import BarChart from "@/components/ui/composites/Charts";
 import { ChartOptions, ChartData } from "chart.js";
 import Image from "next/image";
 import { Suspense } from "react";
+import { TableRowSkeleton } from "@/shared/components/skeletons";
 
 import { OrderList } from "@/features/order";
 
@@ -341,7 +342,13 @@ const page = () => {
         <h2 className="font-satoshi font-medium text-2xl text-black">
           Latest Orders
         </h2>
-        <Suspense fallback={<div>Loading ...</div>}>
+        <Suspense
+          fallback={
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <TableRowSkeleton columns={5} rows={6} />
+            </div>
+          }
+        >
           <OrderList />
         </Suspense>
       </div>

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getCatalogBrands } from "@/features/catalog";
 import { ProductGridSkeleton } from "@/features/product";
+import { FashionistarImage } from "@/components/media";
 import BrandProductsClient from "./BrandProductsClient";
 
 interface BrandDetailPageProps {
@@ -65,12 +65,13 @@ export default async function BrandDetailPage({
       {/* ── Brand Hero ──────────────────────────────────────────────── */}
       <section className="relative min-h-[300px] md:min-h-[380px] bg-[#0D0D0D] flex items-end overflow-hidden">
         {brand.image_url ? (
-          <Image
+          <FashionistarImage
             src={brand.image_url}
             alt={brand.title}
             fill
             sizes="100vw"
-            className="object-contain p-16 opacity-20"
+            className="h-full w-full"
+            imgClassName="object-contain p-16 opacity-20"
             priority
           />
         ) : null}
@@ -138,12 +139,13 @@ export default async function BrandDetailPage({
               >
                 {b.image_url ? (
                   <div className="relative h-20 w-full mb-4">
-                    <Image
+                    <FashionistarImage
                       src={b.image_url}
                       alt={b.title}
                       fill
                       sizes="(max-width: 768px) 50vw, 25vw"
-                      className="object-contain group-hover:scale-105 transition-transform duration-300"
+                      className="h-full w-full"
+                      imgClassName="object-contain group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
                 ) : (

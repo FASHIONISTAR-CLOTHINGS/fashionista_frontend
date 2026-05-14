@@ -12,7 +12,7 @@ export const env = createEnv({
   },
   client: {
     NEXT_PUBLIC_BACKEND_URL: z.string().url(),
-    NEXT_PUBLIC_BACKEND_V2_URL: z.string().url(),
+    NEXT_PUBLIC_BACKEND_V1_URL: z.string().url().optional(),
     NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
     NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string(),
     NEXT_PUBLIC_GOOGLE_CLIENT_ID: z.string().optional(),
@@ -25,7 +25,7 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     REDIS_URL: process.env.REDIS_URL,
     NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000",
-    NEXT_PUBLIC_BACKEND_V2_URL: process.env.NEXT_PUBLIC_BACKEND_V2_URL || "http://localhost:8000",
+    NEXT_PUBLIC_BACKEND_V1_URL: process.env.NEXT_PUBLIC_BACKEND_V1_URL || "http://localhost:8000",
     JWT_SECRET: process.env.JWT_SECRET,
     WEBHOOK_SECRET: process.env.WEBHOOK_SECRET,
     ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,

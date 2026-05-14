@@ -27,6 +27,7 @@ import {
   readRefreshToken,
   syncMirrorCookies,
 } from "@/features/auth/lib/auth-session.client";
+import { getClientBackendRootUrl, getSyncApiBaseUrl } from "@/core/config/api-roots";
 
 // ── Circuit Breaker State ─────────────────────────────────────────────────────
 let circuitOpen = false;
@@ -49,7 +50,7 @@ function onRefreshed(token: string) {
 
 // ── Axios Instance ────────────────────────────────────────────────────────────
 export const apiSync: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_V1_URL,
+  baseURL: getSyncApiBaseUrl(),
   timeout: 15_000,
   withCredentials: true,
   headers: {
@@ -175,7 +176,7 @@ apiSync.interceptors.response.use(
         }
 
         const { data } = await axios.post(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/token/refresh/`,
+          `${getClientBackendRootUrl()}/api/v1/auth/token/refresh/`,
           { refresh: refreshToken },
           {
             withCredentials: true,

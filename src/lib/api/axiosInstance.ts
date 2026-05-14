@@ -1,7 +1,8 @@
 import axios from "axios";
+import { getSyncApiBaseUrl } from "@/core/config/api-roots";
 
 export const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000",
+  baseURL: getSyncApiBaseUrl(),
   headers: {
     "Content-Type": "application/json",
   },

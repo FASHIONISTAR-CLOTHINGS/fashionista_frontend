@@ -1,10 +1,7 @@
+import { getServerAsyncApiBaseUrl } from "@/core/config/api-roots";
 
-const VENDOR_DIRECTORY_PATH = "/api/v1/ninja/vendor/directory/";
+const VENDOR_DIRECTORY_PATH = "/vendor/directory/";
 const REQUEST_TIMEOUT_MS = 3_000;
-
-function apiBaseUrl() {
-  return process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:8000";
-}
 
 function unwrapResults(payload: unknown): unknown[] {
   if (payload && typeof payload === "object" && "data" in payload) {
@@ -58,7 +55,7 @@ export async function getAllVendors(): Promise<VendorProp[]> {
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`${apiBaseUrl()}${VENDOR_DIRECTORY_PATH}`, {
+    const response = await fetch(`${getServerAsyncApiBaseUrl()}${VENDOR_DIRECTORY_PATH}`, {
       headers: {
         Accept: "application/json",
         "ngrok-skip-browser-warning": "true",

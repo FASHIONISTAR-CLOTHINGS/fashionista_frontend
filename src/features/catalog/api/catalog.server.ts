@@ -11,12 +11,9 @@ import type {
   CatalogCategory,
   CatalogCollection,
 } from "../types/catalog.types";
+import { getServerBackendRootUrl } from "@/core/config/api-roots";
 
 const FALLBACK_TIMEOUT_MS = 3_000;
-
-function apiBaseUrl() {
-  return process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:8000";
-}
 
 function unwrapEnvelope(payload: unknown): unknown {
   if (payload && typeof payload === "object" && "data" in payload) {
@@ -37,7 +34,7 @@ async function fetchCatalog(path: string): Promise<unknown[]> {
   const timeout = setTimeout(() => controller.abort(), FALLBACK_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`${apiBaseUrl()}${path}`, {
+    const response = await fetch(`${getServerBackendRootUrl()}${path}`, {
       headers: {
         Accept: "application/json",
         "ngrok-skip-browser-warning": "true",
@@ -63,7 +60,7 @@ async function fetchCatalogItem(path: string): Promise<unknown | null> {
   const timeout = setTimeout(() => controller.abort(), FALLBACK_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`${apiBaseUrl()}${path}`, {
+    const response = await fetch(`${getServerBackendRootUrl()}${path}`, {
       headers: {
         Accept: "application/json",
         "ngrok-skip-browser-warning": "true",

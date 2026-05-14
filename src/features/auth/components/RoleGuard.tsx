@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { AuthHydrationGate } from "@/features/auth/components/AuthHydrationGate";
 import { getCanonicalDashboardPath, isRoleAllowed, normalizeCanonicalRole } from "@/features/auth/lib/auth-routing";
@@ -26,6 +26,7 @@ export function RoleGuard({
 }: RoleGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const hydrated = useIsHydrated();
   const accessToken = useAuthStore((state) => state.accessToken);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -38,6 +39,8 @@ export function RoleGuard({
   const profileGateFailed =
     (requireVendorProfile && user?.has_vendor_profile !== true) ||
     (requireClientProfile && user?.has_client_profile !== true);
+  const queryString = searchParams.toString();
+  const returnUrl = queryString ? `${pathname}?${queryString}` : pathname;
 
   useEffect(() => {
     if (!hydrated) {
@@ -45,7 +48,7 @@ export function RoleGuard({
     }
 
     if (!isAuthenticated || !accessToken) {
-      router.replace(`/auth/sign-in?returnUrl=${encodeURIComponent(pathname)}`);
+      router.replace(`/auth/sign-in?returnUrl=${encodeURIComponent(returnUrl)}`);
       return;
     }
 
@@ -62,10 +65,12 @@ export function RoleGuard({
     hydrated,
     isAuthenticated,
     pathname,
+    returnUrl,
     profileGateFailed,
     requiredRole,
     role,
     router,
+    searchParams,
     user?.is_staff,
     user?.role,
   ]);

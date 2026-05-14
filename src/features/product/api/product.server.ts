@@ -20,18 +20,9 @@
 import { ProductDetailSchema, ProductDetailBundleSchema } from "../schemas/product.schemas";
 import type { ProductDetail, ProductDetailBundle, ProductListItem } from "../types/product.types";
 import { unwrapApiData } from "@/core/api/response";
+import { getServerBackendRootUrl } from "@/core/config/api-roots";
 
 const METADATA_TIMEOUT_MS = 2_500;
-const DEFAULT_BACKEND = "http://127.0.0.1:8000";
-
-/** Returns the internal backend base URL (server-to-server, skips CDN). */
-function backendBaseUrl(): string {
-  return (
-    process.env.BACKEND_INTERNAL_URL ??
-    process.env.NEXT_PUBLIC_BACKEND_URL ??
-    DEFAULT_BACKEND
-  );
-}
 
 /** Shared headers for internal server-to-server requests. */
 function serverHeaders(): HeadersInit {
@@ -54,7 +45,7 @@ async function serverFetch<T>(
   const timeout = setTimeout(() => controller.abort(), METADATA_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`${backendBaseUrl()}${path}`, {
+    const response = await fetch(`${getServerBackendRootUrl()}${path}`, {
       headers: serverHeaders(),
       next: {
         revalidate,
