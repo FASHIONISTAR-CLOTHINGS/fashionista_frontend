@@ -28,6 +28,7 @@ import { PhoneInputField } from "@/components/shared/forms/PhoneInputField";
 import { RichErrorMessage, FieldError } from "@/components/shared/feedback/RichErrorMessage";
 import { AuthAlert } from "@/components/shared/feedback/AuthAlert";
 import { GoogleSignInButton } from "@/features/auth/components/GoogleSignInButton";
+import { getPostAuthRedirectPath } from "@/features/auth/lib/auth-routing";
 import { mergeAnonymousCommerce } from "@/features/cart";
 import { parseApiError } from "@/lib/api/parseApiError";
 
@@ -74,33 +75,16 @@ export function LoginForm() {
   function handlePostAuthRedirect(
     role?: string,
     hasVendorProfile?: boolean,
-    hasClientProfile?: boolean,
     isStaff?: boolean,
   ) {
-    const normalizedRole = (role ?? "").toLowerCase();
-
-    // Admin roles: support, staff, admin, editor, director + is_staff flag
-    const ADMIN_ROLES = ["admin", "staff", "support", "editor", "director"];
-    const isAdminUser = isStaff === true || ADMIN_ROLES.includes(normalizedRole);
-
-    if (isAdminUser) {
-      router.push("/admin-dashboard");
-      return;
-    }
-
-    if (normalizedRole === "vendor") {
-      const vendorSetupComplete = hasVendorProfile ?? false;
-      router.push(vendorSetupComplete ? "/vendor/dashboard" : "/vendor/setup");
-      return;
-    }
-
-    // Client redirect — same destination regardless of profile completion
-    void hasClientProfile; // future: /client/complete-profile
-    if (returnUrl && returnUrl.startsWith("/")) {
-      router.push(returnUrl);
-      return;
-    }
-    router.push("/client/dashboard");
+    router.push(
+      getPostAuthRedirectPath({
+        role,
+        hasVendorProfile,
+        isStaff,
+        returnUrl,
+      }),
+    );
   }
 
 
@@ -147,7 +131,6 @@ export function LoginForm() {
       handlePostAuthRedirect(
         data.role ?? data.user?.role,
         data.has_vendor_profile,
-        data.has_client_profile,
         data.user?.is_staff,
       );
     }, 600); // Small delay so success alert is visible
@@ -161,7 +144,14 @@ export function LoginForm() {
       if (data.requires_otp) {
         // Backend requires OTP verification step
         const pendingEmail = data.user?.email ?? data.identifying_info;
-        setPendingOTP({ email: pendingEmail });
+        const identifier = data.identifying_info ?? "";
+        const isPhoneLogin =
+          mode === "phone" || identifier.startsWith("+") || !identifier.includes("@");
+        setPendingOTP(
+          isPhoneLogin
+            ? { phone: data.user?.phone ?? identifier }
+            : { email: pendingEmail },
+        );
         toast.info("OTP Required", {
           description: "A verification code has been sent to your email/phone.",
         });
@@ -210,7 +200,6 @@ export function LoginForm() {
       handlePostAuthRedirect(
         data.role ?? data.user?.role,
         data.has_vendor_profile,
-        data.has_client_profile,
         data.user?.is_staff,
       );
 

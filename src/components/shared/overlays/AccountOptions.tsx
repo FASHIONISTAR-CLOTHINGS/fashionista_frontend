@@ -213,7 +213,7 @@ function GuestPanel({
     ? "/auth/choose-role"
     : `/auth/choose-role?returnUrl=${encodeURIComponent(pathname)}`;
   const trackingHref = `/auth/sign-in?returnUrl=${encodeURIComponent("/client/dashboard/orders/track-order")}`;
-  const becomeVendorHref = pathname.startsWith("/auth")
+                                                                                                                                const becomeVendorHref = pathname.startsWith("/auth")
     ? "/auth/sign-up?role=vendor"
     : `/auth/sign-up?role=vendor&returnUrl=${encodeURIComponent(pathname)}`;
 

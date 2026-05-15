@@ -7,6 +7,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   ChartColumn,
+  Check,
   MapPin,
   Package,
   Store,
@@ -35,6 +36,7 @@ import type {
   VendorProfile,
   VendorSetupPayload,
 } from "@/features/vendor/types/vendor.types";
+import { useCatalogCollections } from "@/features/catalog/hooks/use-catalog";
 
 type VendorStatCardProps = {
   title: string;
@@ -95,6 +97,10 @@ export function VendorSetupView() {
   );
   const { data: setupState } = useVendorSetupState();
   const { data: profile } = useVendorProfile({ enabled: hasVendorProfile });
+  const {
+    data: collections = [],
+    isLoading: isCollectionsLoading,
+  } = useCatalogCollections();
   const submitSetup = useSubmitVendorSetup();
   const [payload, setPayload] = useState<VendorSetupPayload>({
     store_name: "",
@@ -105,6 +111,7 @@ export function VendorSetupView() {
     city: "",
     state: "",
     country: "Nigeria",
+    collection_ids: [],
     instagram_url: "",
     tiktok_url: "",
     twitter_url: "",
@@ -124,6 +131,10 @@ export function VendorSetupView() {
       city: profile.city || current.city,
       state: profile.state || current.state,
       country: profile.country || current.country,
+      collection_ids:
+        profile.collections?.length && current.collection_ids.length === 0
+          ? profile.collections.map((collection) => collection.id)
+          : current.collection_ids,
       instagram_url: profile.instagram_url || current.instagram_url,
       tiktok_url: profile.tiktok_url || current.tiktok_url,
       twitter_url: profile.twitter_url || current.twitter_url,
@@ -132,6 +143,23 @@ export function VendorSetupView() {
   }, [profile]);
 
   const completion = setupState?.completion_percentage ?? 0;
+  const isSubmitDisabled =
+    submitSetup.isPending ||
+    isCollectionsLoading ||
+    collections.length === 0 ||
+    payload.collection_ids.length === 0;
+
+  const toggleCollection = (collectionId: string) => {
+    setPayload((current) => {
+      const exists = current.collection_ids.includes(collectionId);
+      return {
+        ...current,
+        collection_ids: exists
+          ? current.collection_ids.filter((id) => id !== collectionId)
+          : [...current.collection_ids, collectionId],
+      };
+    });
+  };
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -293,6 +321,86 @@ export function VendorSetupView() {
           />
         </div>
 
+        <div className="space-y-3 md:col-span-2">
+          <FieldLabel htmlFor="vendor-collections">Collections</FieldLabel>
+          <div
+            id="vendor-collections"
+            className="rounded-[18px] border border-[#D9D9D9] bg-[#FCFBF8] p-4"
+          >
+            <p className="text-sm leading-6 text-[#5A6465]">
+              Choose the fashion collections your store specializes in. This powers
+              discovery, onboarding quality, and the live vendor catalog filters.
+            </p>
+
+            {isCollectionsLoading ? (
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                {[1, 2, 3, 4].map((item) => (
+                  <div
+                    key={item}
+                    className="h-[68px] animate-pulse rounded-[18px] bg-white"
+                  />
+                ))}
+              </div>
+            ) : collections.length === 0 ? (
+              <div className="mt-4 rounded-[18px] border border-dashed border-[#D9D9D9] bg-white p-5">
+                <p className="text-sm font-semibold text-black">
+                  No catalog collections are available yet.
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[#5A6465]">
+                  A vendor cannot finish setup until at least one collection exists
+                  in the catalog.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                {collections.map((collection) => {
+                  const selected = payload.collection_ids.includes(collection.id);
+
+                  return (
+                    <button
+                      key={collection.id}
+                      type="button"
+                      onClick={() => toggleCollection(collection.id)}
+                      className={`rounded-[18px] border p-4 text-left transition ${
+                        selected
+                          ? "border-[#FDA600] bg-[#FFF6E3]"
+                          : "border-[#D9D9D9] bg-white hover:border-[#FDA600]/50"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-black">
+                            {collection.title}
+                          </p>
+                          <p className="mt-1 text-xs uppercase tracking-[0.14em] text-[#7A6B44]">
+                            {collection.slug}
+                          </p>
+                          <p className="mt-2 text-sm leading-6 text-[#5A6465]">
+                            {collection.description || "Curated fashion collection"}
+                          </p>
+                        </div>
+                        <span
+                          className={`mt-1 flex h-6 w-6 items-center justify-center rounded-full border ${
+                            selected
+                              ? "border-[#FDA600] bg-[#FDA600] text-black"
+                              : "border-[#D9D9D9] text-transparent"
+                          }`}
+                        >
+                          <Check className="h-4 w-4" />
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            <p className="mt-3 text-xs text-[#7A6B44]">
+              Selected: {payload.collection_ids.length}
+            </p>
+          </div>
+        </div>
+
         <div className="space-y-3">
           <FieldLabel htmlFor="website_url">Website</FieldLabel>
           <TextInput
@@ -392,7 +500,7 @@ export function VendorSetupView() {
           </Link>
           <button
             type="submit"
-            disabled={submitSetup.isPending}
+            disabled={isSubmitDisabled}
             className="inline-flex items-center gap-2 rounded-full bg-[#FDA600] px-6 py-3 text-sm font-semibold text-black transition hover:bg-[#f28705] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {submitSetup.isPending ? "Saving..." : "Save shop details"}
