@@ -31,6 +31,13 @@ export const VendorProfileSchema = z.object({
   tiktok_url:     z.string(),
   twitter_url:    z.string(),
   website_url:    z.string(),
+  collections:    z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      slug: z.string(),
+    }),
+  ).optional(),
   whatsapp:       z.string().optional(),
   total_products: z.number(),
   total_sales:    z.number(),
@@ -81,6 +88,7 @@ export const VendorSetupSchema = z.object({
   city:          z.string().min(1, "City is required"),
   state:         z.string().min(1, "State is required"),
   country:       z.string().optional(),
+  collection_ids: z.array(z.string()).min(1, "Select at least one collection"),
   instagram_url: z.string().url().optional().or(z.literal("")),
   tiktok_url:    z.string().url().optional().or(z.literal("")),
   twitter_url:   z.string().url().optional().or(z.literal("")),

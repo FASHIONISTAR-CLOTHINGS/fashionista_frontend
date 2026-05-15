@@ -1,0 +1,44 @@
+{
+    "client": {
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc5NDU4MjY2LCJpYXQiOjE3Nzg4NTM0NjYsImp0aSI6IjhhY2I0YTg1ODRiYzQxYzg5NDBkZWYwZGRjMGJjN2RjIiwidXNlcl9pZCI6IjAxOWUyMjU1LWZhNWQtN2YyMS04YzVjLTBmNzg2Yjg3YTJhOCJ9.EKITuV3GvhiaZ6N8hib9bxaU0GSzlf9f95YhR9uldOA",
+        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc4NjYyOTQ2NiwiaWF0IjoxNzc4ODUzNDY2LCJqdGkiOiJkMDI0NGRmMmExZGY0NzAxYjc1NTRmM2QzNzM3OTExYiIsInVzZXJfaWQiOiIwMTllMjI1NS1mYTVkLTdmMjEtOGM1Yy0wZjc4NmI4N2EyYTgifQ.13V6Ekr9G1OdngPhb3hwPnfSGnibCWsmObdAnhktJVs",
+        "user": {
+            "id": "019e2255-fa5d-7f21-8c5c-0f786b87a2a8",
+            "role": "client",
+            "is_staff": false,
+            "first_name": "QA",
+            "last_name": "Client",
+            "is_verified": true,
+            "has_vendor_profile": false,
+            "has_client_profile": true
+        }
+    },
+    "vendor": {
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc5NDU4MjY2LCJpYXQiOjE3Nzg4NTM0NjcsImp0aSI6Ijc3YzJhNGRiYTIzZjQ4YjY5YjVhYmEyNGZlNTJhN2QyIiwidXNlcl9pZCI6IjAxOWUyMjU2LTBjZTQtN2QxNy1hZTMyLWM3MzA5ZDFiN2VmOCJ9.vHzja1_c47jyXNeBSCxKj3_WrJBReyzioL3ycJ7dqh4",
+        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc4NjYyOTQ2NiwiaWF0IjoxNzc4ODUzNDY2LCJqdGkiOiI5YjViYjUwNDMzZTg0NWM1ODkwOGFhMWI2M2YyNDVhMSIsInVzZXJfaWQiOiIwMTllMjI1Ni0wY2U0LTdkMTctYWUzMi1jNzMwOWQxYjdlZjgifQ.7mLFpIhQXlbMZb0NXjv0_Nzz3e-ZyuOg0A9-KToQi3s",
+        "user": {
+            "id": "019e2256-0ce4-7d17-ae32-c7309d1b7ef8",
+            "role": "vendor",
+            "is_staff": false,
+            "first_name": "QA",
+            "last_name": "Vendor",
+            "is_verified": true,
+            "has_vendor_profile": true,
+            "has_client_profile": false
+        }
+    },
+    "admin": {
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc5NDU4MjY3LCJpYXQiOjE3Nzg4NTM0NjcsImp0aSI6ImFhNGUzNjRmMWRlMzQxYTU4Y2RkY2JiMzcwYTIzZDQ2IiwidXNlcl9pZCI6IjAxOWUyMjU2LTgzNDctNzdkOC1iMTdjLWY4MWI2MjRlOTA3YyJ9.031lZOa1EdQeamhYc4Uy97D8Z41dwBQn78ME24O6INM",
+        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc4NjYyOTQ2NywiaWF0IjoxNzc4ODUzNDY3LCJqdGkiOiI0ZjdkY2RkYzQ5Njk0OTg3OTFiMDM2ZDJlNTMxY2RlZiIsInVzZXJfaWQiOiIwMTllMjI1Ni04MzQ3LTc3ZDgtYjE3Yy1mODFiNjI0ZTkwN2MifQ.vEeRq1N1SHf9BoHpwWyVNguazm22Y0Rzts4IlQxft4c",
+        "user": {
+            "id": "019e2256-8347-77d8-b17c-f81b624e907c",
+            "role": "admin",
+            "is_staff": true,
+            "first_name": "QA",
+            "last_name": "Admin",
+            "is_verified": true,
+            "has_vendor_profile": true,
+            "has_client_profile": false
+        }
+    }
+}

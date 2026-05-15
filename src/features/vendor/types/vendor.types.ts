@@ -42,6 +42,11 @@ export interface VendorProfile {
   tiktok_url: string;
   twitter_url: string;
   website_url: string;
+  collections?: Array<{
+    id: string;
+    title: string;
+    slug: string;
+  }>;
   whatsapp?: string;
   total_products: number;
   total_sales: number;
@@ -193,6 +198,7 @@ export interface VendorSetupPayload {
   city: string;
   state: string;
   country?: string;
+  collection_ids: string[];
   instagram_url?: string;
   tiktok_url?: string;
   twitter_url?: string;

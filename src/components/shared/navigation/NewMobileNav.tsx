@@ -43,6 +43,8 @@ import { FashionistarImage } from "@/components/media";
 import AccountOptions from "@/components/shared/overlays/AccountOptions";
 import CartItems from "@/components/shared/overlays/CartItems";
 import { useCartStore } from "@/features/cart/store/cart.store";
+import { useAuthStore } from "@/features/auth/store/auth.store";
+import { getCanonicalDashboardPath } from "@/features/auth/lib/auth-routing";
 
 // ─── Nav link data ─────────────────────────────────────────────────────────────
 
@@ -250,6 +252,8 @@ const NewMobileNav = () => {
   const [showNav, setShowNav] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
 
   const drawerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -261,6 +265,7 @@ const NewMobileNav = () => {
   const chooseRoleHref = pathname.startsWith("/auth")
     ? "/auth/choose-role"
     : `/auth/choose-role?returnUrl=${encodeURIComponent(pathname)}`;
+  const dashboardHref = getCanonicalDashboardPath(user?.role, user?.is_staff);
 
   // TODO: Replace 0 with useCartStore(state => state.items.length) when wired
   // const cartCount = 0;
@@ -520,39 +525,72 @@ const NewMobileNav = () => {
 
           {/* Auth CTAs */}
           <div className="mt-auto pt-4 border-t border-border space-y-2">
-            <Link
-              href={signInHref}
-              className={cn(
-                "block w-full text-center py-3 px-4 rounded-xl",
-                "bg-foreground text-background",
-                "font-raleway font-semibold hover:opacity-90 transition-opacity",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
-              )}
-            >
-              Sign In
-            </Link>
-            <Link
-              href={chooseRoleHref}
-              className={cn(
-                "block w-full text-center py-3 px-4 border-2 border-foreground rounded-xl",
-                "text-foreground font-raleway font-semibold",
-                "hover:bg-muted transition-colors",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
-              )}
-            >
-              Create Account
-            </Link>
-            <Link
-              href="/auth/sign-up?role=vendor"
-              className={cn(
-                "block w-full rounded-xl border border-border py-3 px-4 text-center",
-                "font-raleway text-sm font-semibold text-foreground/80",
-                "transition-colors hover:bg-muted",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
-              )}
-            >
-              Become a Vendor
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  href={dashboardHref}
+                  className={cn(
+                    "block w-full text-center py-3 px-4 rounded-xl",
+                    "bg-foreground text-background",
+                    "font-raleway font-semibold hover:opacity-90 transition-opacity",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
+                  )}
+                >
+                  Open Dashboard
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeDrawer();
+                    setShowOptions(true);
+                  }}
+                  className={cn(
+                    "block w-full text-center py-3 px-4 border-2 border-foreground rounded-xl",
+                    "text-foreground font-raleway font-semibold",
+                    "hover:bg-muted transition-colors",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
+                  )}
+                >
+                  Account Options
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href={signInHref}
+                  className={cn(
+                    "block w-full text-center py-3 px-4 rounded-xl",
+                    "bg-foreground text-background",
+                    "font-raleway font-semibold hover:opacity-90 transition-opacity",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
+                  )}
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href={chooseRoleHref}
+                  className={cn(
+                    "block w-full text-center py-3 px-4 border-2 border-foreground rounded-xl",
+                    "text-foreground font-raleway font-semibold",
+                    "hover:bg-muted transition-colors",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
+                  )}
+                >
+                  Create Account
+                </Link>
+                <Link
+                  href="/auth/sign-up?role=vendor"
+                  className={cn(
+                    "block w-full rounded-xl border border-border py-3 px-4 text-center",
+                    "font-raleway text-sm font-semibold text-foreground/80",
+                    "transition-colors hover:bg-muted",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
+                  )}
+                >
+                  Become a Vendor
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

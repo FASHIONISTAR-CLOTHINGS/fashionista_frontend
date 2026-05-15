@@ -43,7 +43,9 @@ export const env = createEnv({
     NEXT_PUBLIC_APP_URL: z.string().url(),
     NEXT_PUBLIC_FRONTEND_TUNNEL_URL: z.string().url().optional(),
     NEXT_PUBLIC_GOOGLE_ALLOWED_ORIGINS: z.string().optional(),
-
+    NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: z.string().optional(),
+    NEXT_PUBLIC_GOOGLE_ADSENSE_ID: z.string().optional(),
+    NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT: z.string().optional(),
     // Cloudinary
     NEXT_PUBLIC_CLOUDINARY_CLOUD: z.string().min(1),
     NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: z.string().min(1),

@@ -147,6 +147,7 @@ export function Step1BasicInfo() {
         shouldValidate: true,
       });
       if (current.length === 0) {
+        // Sub-categories are loaded from the first selected category only.
         form.setValue("sub_category_ids", [], { shouldValidate: true });
       }
     }
