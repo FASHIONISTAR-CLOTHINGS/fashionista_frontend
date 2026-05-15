@@ -27,6 +27,9 @@ export default function ForgotPasswordPage() {
             <h1 className="text-2xl font-bold font-bon-foyage text-primary tracking-wide mb-1">
               FASHIONISTAR
             </h1>
+            <h2 className="text-lg font-semibold text-foreground">
+              Forgot Password
+            </h2>
             <p className="text-muted-foreground text-sm">
               Reset your password — choose a method below
             </p>

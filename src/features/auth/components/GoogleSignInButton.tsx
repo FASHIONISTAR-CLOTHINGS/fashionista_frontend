@@ -59,6 +59,29 @@ let hasInitializedGoogleIdentity = false;
 let activeCredentialHandler: ((response: GoogleCredentialResponse) => void) | null =
   null;
 
+function getAllowedGoogleOrigins(): string[] {
+  const configuredOrigins =
+    process.env.NEXT_PUBLIC_GOOGLE_ALLOWED_ORIGINS
+      ?.split(",")
+      .map((origin) => origin.trim())
+      .filter(Boolean) ?? [];
+
+  const fallbackOrigins = [
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.NEXT_PUBLIC_FRONTEND_TUNNEL_URL,
+  ].filter(Boolean) as string[];
+
+  return Array.from(new Set([...configuredOrigins, ...fallbackOrigins]));
+}
+
+function isCurrentOriginAllowedForGoogleAuth(): boolean {
+  if (typeof window === "undefined") {
+    return true;
+  }
+
+  return getAllowedGoogleOrigins().includes(window.location.origin);
+}
+
 function loadGoogleIdentityScript(): Promise<void> {
   if (typeof window === "undefined") {
     return Promise.resolve();
@@ -178,6 +201,7 @@ function RenderedGoogleButton({
 }: RenderedGoogleButtonProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const [isOriginAllowed, setIsOriginAllowed] = useState(true);
 
   useEffect(() => {
     activeCredentialHandler = onCredential;
@@ -192,6 +216,18 @@ function RenderedGoogleButton({
       if (!clientId) {
         onError("Google sign-in is not configured yet.");
         return;
+      }
+
+      if (!isCurrentOriginAllowedForGoogleAuth()) {
+        if (!cancelled) {
+          setIsOriginAllowed(false);
+          setIsReady(false);
+        }
+        return;
+      }
+
+      if (!cancelled) {
+        setIsOriginAllowed(true);
       }
 
       try {
@@ -271,15 +307,25 @@ function RenderedGoogleButton({
       aria-label={label}
       className={`w-full ${className}`}
     >
+      {!isOriginAllowed ? (
+        <div className="flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-3 text-center">
+          <span className="text-sm font-medium text-gray-700">
+            Google sign-in unavailable on this local origin
+          </span>
+          <span className="mt-1 text-xs text-muted-foreground">
+            Approve this origin in Google Cloud, then add it to `NEXT_PUBLIC_GOOGLE_ALLOWED_ORIGINS`.
+          </span>
+        </div>
+      ) : null}
       {/* Keep a local loading shell so auth pages do not jump while GIS mounts. */}
-      {!isReady ? (
+      {!isReady && isOriginAllowed ? (
         <div className="flex w-full items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm">
           {label}
         </div>
       ) : null}
       <div
         ref={containerRef}
-        className={`${isReady ? "block" : "hidden"} w-full overflow-hidden rounded-xl`}
+        className={`${isReady && isOriginAllowed ? "block" : "hidden"} w-full overflow-hidden rounded-xl`}
         aria-label={`${label} button`}
       />
     </div>

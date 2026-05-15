@@ -213,6 +213,9 @@ function GuestPanel({
     ? "/auth/choose-role"
     : `/auth/choose-role?returnUrl=${encodeURIComponent(pathname)}`;
   const trackingHref = `/auth/sign-in?returnUrl=${encodeURIComponent("/client/dashboard/orders/track-order")}`;
+  const becomeVendorHref = pathname.startsWith("/auth")
+    ? "/auth/sign-up?role=vendor"
+    : `/auth/sign-up?role=vendor&returnUrl=${encodeURIComponent(pathname)}`;
 
   return (
     <div className="flex flex-col gap-0.5 py-1">
@@ -222,7 +225,7 @@ function GuestPanel({
       <MenuAction id="nav-signin-link" href={signInHref} label="Sign In" Icon={LogIn} useDocumentNavigation />
       <MenuAction id="nav-register-client-link" href={createAccountHref} label="Create Account" Icon={UserPlus} useDocumentNavigation />
       <MenuAction id="nav-order-tracking-guest" href={trackingHref} label="Track an Order" Icon={PackageSearch} useDocumentNavigation />
-      <MenuAction id="nav-register-vendor-link" href="/auth/sign-up?role=vendor" label="Become a Vendor" Icon={UserRoundCheck} useDocumentNavigation />
+      <MenuAction id="nav-register-vendor-link" href={becomeVendorHref} label="Become a Vendor" Icon={UserRoundCheck} useDocumentNavigation />
     </div>
   );
 }

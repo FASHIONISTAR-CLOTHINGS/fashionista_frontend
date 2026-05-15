@@ -16,6 +16,7 @@ export const env = createEnv({
     NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
     NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string(),
     NEXT_PUBLIC_GOOGLE_CLIENT_ID: z.string().optional(),
+    NEXT_PUBLIC_GOOGLE_ALLOWED_ORIGINS: z.string().optional(),
     NEXT_PUBLIC_STRIPE_PUBLIC_KEY: z.string().optional(),
     NEXT_PUBLIC_APP_NAME: z.string().default("FASHIONISTAR"),
     NEXT_PUBLIC_APP_URL: z.string().url(),
@@ -32,6 +33,8 @@ export const env = createEnv({
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "fashionistar",
     NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+    NEXT_PUBLIC_GOOGLE_ALLOWED_ORIGINS:
+      process.env.NEXT_PUBLIC_GOOGLE_ALLOWED_ORIGINS,
     NEXT_PUBLIC_STRIPE_PUBLIC_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY,
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || "FASHIONISTAR",
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",

@@ -34,12 +34,12 @@ const uniqueEmail = (prefix = 'e2e') => {
 }
 
 async function goToLogin(page: Page) {
-  await page.goto('/auth/login')
+  await page.goto('/auth/sign-in')
   await page.waitForSelector('#login-email', { timeout: 30_000 })
 }
 
 async function goToRegister(page: Page, role: 'client' | 'vendor' = 'client') {
-  await page.goto(`/auth/register?role=${role}`)
+  await page.goto(`/auth/sign-up?role=${role}`)
   await page.waitForSelector('input[type="email"], input[id*="email"]', { timeout: 30_000 })
 }
 
@@ -55,7 +55,7 @@ async function fillLogin(page: Page, emailOrPhone: string, password: string) {
 
 test.describe('Auth Pages Load @smoke', () => {
   test('login page renders correctly', async ({ page }) => {
-    await page.goto('/auth/login')
+    await page.goto('/auth/sign-in')
     await expect(page).toHaveTitle(/login|sign in/i, { timeout: 30_000 })
     await expect(page.locator('#login-email')).toBeVisible()
     await expect(page.locator('#login-password')).toBeVisible()
@@ -130,13 +130,13 @@ test.describe('Login Flow', () => {
 
   test('forgot password link navigates correctly', async ({ page }) => {
     await goToLogin(page)
-    await page.click('a[href="/auth/forgot-password"]')
+    await page.getByRole('link', { name: /forgot password/i }).click()
     await expect(page).toHaveURL(/forgot-password/)
   })
 
   test('create account link navigates to choose-role', async ({ page }) => {
     await goToLogin(page)
-    await page.click('a[href="/auth/choose-role"]')
+    await page.getByRole('link', { name: /create account/i }).click()
     await expect(page).toHaveURL(/choose-role/, { timeout: 15_000 })
   })
 })
@@ -215,7 +215,7 @@ test.describe('Protected Route Guards', () => {
   test('unauthenticated dashboard access redirects to login', async ({ page }) => {
     await page.goto('/dashboard', { waitUntil: 'networkidle' })
     const url = page.url()
-    expect(url.includes('/auth/login') || url.includes('/login')).toBe(true)
+    expect(url.includes('/auth/sign-in') || url.includes('/login')).toBe(true)
   })
 
   test('unauthenticated /verify-otp redirects or stays on page', async ({ page }) => {

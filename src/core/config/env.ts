@@ -42,6 +42,7 @@ export const env = createEnv({
     // Frontend
     NEXT_PUBLIC_APP_URL: z.string().url(),
     NEXT_PUBLIC_FRONTEND_TUNNEL_URL: z.string().url().optional(),
+    NEXT_PUBLIC_GOOGLE_ALLOWED_ORIGINS: z.string().optional(),
 
     // Cloudinary
     NEXT_PUBLIC_CLOUDINARY_CLOUD: z.string().min(1),
@@ -87,6 +88,8 @@ export const env = createEnv({
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_FRONTEND_TUNNEL_URL:
       process.env.NEXT_PUBLIC_FRONTEND_TUNNEL_URL,
+    NEXT_PUBLIC_GOOGLE_ALLOWED_ORIGINS:
+      process.env.NEXT_PUBLIC_GOOGLE_ALLOWED_ORIGINS,
     NEXT_PUBLIC_CLOUDINARY_CLOUD: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD,
     NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET:
       process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
