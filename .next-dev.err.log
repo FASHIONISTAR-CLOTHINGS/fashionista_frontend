@@ -43072,3 +43072,215 @@ django.core.exceptions.SynchronousOnlyOperation: You cannot call this from an as
   72 |               `[apiAsync] ${response.status} ${response.url}\n${body}`,
   73 |             );
   74 |           } (src/core/api/client.async.ts:71:21)
+[browser] Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+[browser] Uncaught NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+    at div (<anonymous>)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] [apiAsync] 500 https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at
+Traceback (most recent call last):
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\ninja\operation.py", line 493, in run
+    result = await self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\apps\product\apis\async_\product_views.py", line 403, in list_products
+    return await _paginated(request, qs, _product_card_out, page=page, page_size=page_size)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\apps\product\apis\async_\product_views.py", line 366, in _paginated
+    payload["results"] = [serializer_fn(item) for item in payload["results"]]
+                          ~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\apps\product\apis\async_\product_views.py", line 263, in _product_card_out
+    "vendor_name": _vendor_out(product.vendor)["store_name"],
+                   ~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\apps\product\apis\async_\product_views.py", line 129, in _vendor_out
+    getattr(vendor, "logo_url", None)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query_utils.py", line 271, in __get__
+    instance.refresh_from_db(fields=[field_name])
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\base.py", line 758, in refresh_from_db
+    db_instance = db_instance_qs.get()
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query.py", line 635, in get
+    num = len(clone)
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1622, in execute_sql
+    cursor = self.connection.cursor()
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\utils\asyncio.py", line 24, in inner
+    raise SynchronousOnlyOperation(message)
+django.core.exceptions.SynchronousOnlyOperation: You cannot call this from an async context - use a thread or sync_to_async.
+ 
+    at push.__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$ky$40$1$2e$14$2e$3$2f$node_modules$2f$ky$2f$distribution$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__.default.create.hooks.afterResponse (src/core/api/client.async.ts:71:21)
+    at async fetchProducts (src/features/product/api/product.api.ts:132:15)
+  69 |           if (process.env.NODE_ENV === "development") {
+  70 |             const body = await response.clone().text();
+> 71 |             console.error(
+     |                     ^
+  72 |               `[apiAsync] ${response.status} ${response.url}\n${body}`,
+  73 |             );
+  74 |           } (src/core/api/client.async.ts:71:21)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at (src/core/api/client.async.ts:59:19)
+[browser] [apiAsync] 500 https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at
+Traceback (most recent call last):
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\ninja\operation.py", line 493, in run
+    result = await self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\apps\product\apis\async_\product_views.py", line 403, in list_products
+    return await _paginated(request, qs, _product_card_out, page=page, page_size=page_size)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\apps\product\apis\async_\product_views.py", line 366, in _paginated
+    payload["results"] = [serializer_fn(item) for item in payload["results"]]
+                          ~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\apps\product\apis\async_\product_views.py", line 263, in _product_card_out
+    "vendor_name": _vendor_out(product.vendor)["store_name"],
+                   ~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\apps\product\apis\async_\product_views.py", line 129, in _vendor_out
+    getattr(vendor, "logo_url", None)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query_utils.py", line 271, in __get__
+    instance.refresh_from_db(fields=[field_name])
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\base.py", line 758, in refresh_from_db
+    db_instance = db_instance_qs.get()
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query.py", line 635, in get
+    num = len(clone)
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1622, in execute_sql
+    cursor = self.connection.cursor()
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\utils\asyncio.py", line 24, in inner
+    raise SynchronousOnlyOperation(message)
+django.core.exceptions.SynchronousOnlyOperation: You cannot call this from an async context - use a thread or sync_to_async.
+ 
+    at push.__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$ky$40$1$2e$14$2e$3$2f$node_modules$2f$ky$2f$distribution$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__.default.create.hooks.afterResponse (src/core/api/client.async.ts:71:21)
+    at async fetchProducts (src/features/product/api/product.api.ts:132:15)
+  69 |           if (process.env.NODE_ENV === "development") {
+  70 |             const body = await response.clone().text();
+> 71 |             console.error(
+     |                     ^
+  72 |               `[apiAsync] ${response.status} ${response.url}\n${body}`,
+  73 |             );
+  74 |           } (src/core/api/client.async.ts:71:21)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at (src/core/api/client.async.ts:59:19)
+[browser] [apiAsync] 500 https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at
+Traceback (most recent call last):
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\ninja\operation.py", line 493, in run
+    result = await self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\apps\product\apis\async_\product_views.py", line 403, in list_products
+    return await _paginated(request, qs, _product_card_out, page=page, page_size=page_size)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\apps\product\apis\async_\product_views.py", line 366, in _paginated
+    payload["results"] = [serializer_fn(item) for item in payload["results"]]
+                          ~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\apps\product\apis\async_\product_views.py", line 263, in _product_card_out
+    "vendor_name": _vendor_out(product.vendor)["store_name"],
+                   ~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\apps\product\apis\async_\product_views.py", line 129, in _vendor_out
+    getattr(vendor, "logo_url", None)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query_utils.py", line 271, in __get__
+    instance.refresh_from_db(fields=[field_name])
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\base.py", line 758, in refresh_from_db
+    db_instance = db_instance_qs.get()
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query.py", line 635, in get
+    num = len(clone)
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1622, in execute_sql
+    cursor = self.connection.cursor()
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\utils\asyncio.py", line 24, in inner
+    raise SynchronousOnlyOperation(message)
+django.core.exceptions.SynchronousOnlyOperation: You cannot call this from an async context - use a thread or sync_to_async.
+ 
+    at push.__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$ky$40$1$2e$14$2e$3$2f$node_modules$2f$ky$2f$distribution$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__.default.create.hooks.afterResponse (src/core/api/client.async.ts:71:21)
+    at async fetchProducts (src/features/product/api/product.api.ts:132:15)
+  69 |           if (process.env.NODE_ENV === "development") {
+  70 |             const body = await response.clone().text();
+> 71 |             console.error(
+     |                     ^
+  72 |               `[apiAsync] ${response.status} ${response.url}\n${body}`,
+  73 |             );
+  74 |           } (src/core/api/client.async.ts:71:21)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at (src/core/api/client.async.ts:59:19)
+[browser] [apiAsync] 500 https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/products/?ordering=-created_at
+Traceback (most recent call last):
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\ninja\operation.py", line 493, in run
+    result = await self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\apps\product\apis\async_\product_views.py", line 403, in list_products
+    return await _paginated(request, qs, _product_card_out, page=page, page_size=page_size)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\apps\product\apis\async_\product_views.py", line 366, in _paginated
+    payload["results"] = [serializer_fn(item) for item in payload["results"]]
+                          ~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\apps\product\apis\async_\product_views.py", line 263, in _product_card_out
+    "vendor_name": _vendor_out(product.vendor)["store_name"],
+                   ~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\apps\product\apis\async_\product_views.py", line 129, in _vendor_out
+    getattr(vendor, "logo_url", None)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query_utils.py", line 271, in __get__
+    instance.refresh_from_db(fields=[field_name])
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\base.py", line 758, in refresh_from_db
+    db_instance = db_instance_qs.get()
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query.py", line 635, in get
+    num = len(clone)
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1622, in execute_sql
+    cursor = self.connection.cursor()
+  File "C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionistar_backend\.venv\Lib\site-packages\django\utils\asyncio.py", line 24, in inner
+    raise SynchronousOnlyOperation(message)
+django.core.exceptions.SynchronousOnlyOperation: You cannot call this from an async context - use a thread or sync_to_async.
+ 
+    at push.__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$ky$40$1$2e$14$2e$3$2f$node_modules$2f$ky$2f$distribution$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__.default.create.hooks.afterResponse (src/core/api/client.async.ts:71:21)
+    at async fetchProducts (src/features/product/api/product.api.ts:132:15)
+  69 |           if (process.env.NODE_ENV === "development") {
+  70 |             const body = await response.clone().text();
+> 71 |             console.error(
+     |                     ^
+  72 |               `[apiAsync] ${response.status} ${response.url}\n${body}`,
+  73 |             );
+  74 |           } (src/core/api/client.async.ts:71:21)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/categories/ (src/core/api/client.async.ts:59:19)
+[browser] [apiAsync] Retry #1 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/brands/ (src/core/api/client.async.ts:59:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/brands/ (src/core/api/client.async.ts:59:19)
+[browser] [apiAsync] Retry #2 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/categories/ (src/core/api/client.async.ts:59:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/brands/ (src/core/api/client.async.ts:59:19)
+[browser] [apiAsync] Retry #3 for https://hydrographically-tawdrier-hayley.ngrok-free.dev/api/v1/ninja/catalog/categories/ (src/core/api/client.async.ts:59:19)
