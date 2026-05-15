@@ -143,11 +143,11 @@ export function VendorSetupView() {
   }, [profile]);
 
   const completion = setupState?.completion_percentage ?? 0;
+  const requiresCollections = collections.length > 0;
   const isSubmitDisabled =
     submitSetup.isPending ||
     isCollectionsLoading ||
-    collections.length === 0 ||
-    payload.collection_ids.length === 0;
+    (requiresCollections && payload.collection_ids.length === 0);
 
   const toggleCollection = (collectionId: string) => {
     setPayload((current) => {
@@ -347,8 +347,9 @@ export function VendorSetupView() {
                   No catalog collections are available yet.
                 </p>
                 <p className="mt-2 text-sm leading-6 text-[#5A6465]">
-                  A vendor cannot finish setup until at least one collection exists
-                  in the catalog.
+                  Vendor setup can still continue in this environment, but the
+                  catalog team needs to finish the collections data lane before
+                  marketplace discovery is fully production-ready.
                 </p>
               </div>
             ) : (
