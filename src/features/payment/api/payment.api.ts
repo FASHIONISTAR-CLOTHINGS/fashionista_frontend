@@ -16,6 +16,7 @@ import {
   PaymentDashboardSchema,
   PaymentIntentSchema,
   PaymentSummarySchema,
+  WalletFundPaymentResponseSchema,
   parsePaymentResponse,
 } from "../schemas/payment.schemas";
 import type {
@@ -26,6 +27,8 @@ import type {
   PaymentIntent,
   PaymentSummary,
   TransferRecipientInput,
+  WalletFundPaymentInput,
+  WalletFundPaymentResponse,
 } from "../types/payment.types";
 
 // ─── DRF Sync Endpoints ───────────────────────────────────────────────────────
@@ -58,6 +61,17 @@ export async function fetchBanks(): Promise<BankOption[]> {
 export async function createTransferRecipient(input: TransferRecipientInput): Promise<unknown> {
   const { data } = await apiSync.post<unknown>("/v1/payment/transfer-recipient/", input);
   return unwrapApiData(data);
+}
+
+export async function fundWalletPayment(
+  input: WalletFundPaymentInput,
+): Promise<WalletFundPaymentResponse> {
+  const { data } = await apiSync.post<unknown>("/v1/payment/wallet/fund/", input);
+  return parsePaymentResponse(
+    WalletFundPaymentResponseSchema,
+    unwrapApiData(data),
+    "fundWalletPayment",
+  ) as WalletFundPaymentResponse;
 }
 
 // ─── Ninja Async Endpoints ────────────────────────────────────────────────────

@@ -27,6 +27,7 @@ const skipWebServer = process.env.PLAYWRIGHT_SKIP_WEB_SERVER === "1";
  */
 export default defineConfig({
   testDir: "./tests/e2e",
+  globalSetup: "./tests/e2e/global-setup.ts",
   fullyParallel: true,
   workers: process.env.CI ? 4 : 3, // 3 in dev — Turbopack is CPU heavy
   retries: process.env.CI ? 2 : 1,  // 1 retry in dev to handle cold-start flakiness

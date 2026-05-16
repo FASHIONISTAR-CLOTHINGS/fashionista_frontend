@@ -6,7 +6,10 @@ import { z } from "zod";
 
 export const PaymentIntentSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
-  provider: z.literal("paystack").optional().default("paystack"),
+  provider: z
+    .enum(["wallet", "paystack", "flutterwave", "olive_pay"])
+    .optional()
+    .default("paystack"),
   purpose: z.enum([
     "wallet_topup",
     "order_payment",
@@ -22,6 +25,13 @@ export const PaymentIntentSchema = z.object({
   access_code: z.string().optional().default(""),
   order_id: z.string().optional().default(""),
   created_at: z.string().optional(),
+});
+
+export const WalletFundPaymentResponseSchema = z.object({
+  intent: PaymentIntentSchema,
+  order_id: z.string().optional().default(""),
+  payment_record_id: z.string().optional().default(""),
+  authorization_url: z.string().optional().default(""),
 });
 
 export const BankOptionSchema = z.object({
@@ -63,4 +73,3 @@ export const NinjaPaymentHistorySchema = z.object({
   data: z.array(PaymentIntentSchema).default([]),
   count: z.number().int().min(0).default(0),
 });
-

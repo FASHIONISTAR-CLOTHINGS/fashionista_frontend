@@ -183,6 +183,31 @@ const SOCIAL_LINKS = [
   { label: "Instagram", href: process.env.NEXT_PUBLIC_FASHIONISTAR_INSTAGRAM_URL ?? "", Icon: Instagram },
 ].filter(({ href }) => Boolean(href));
 
+function getRoleQuickLinks(role?: string, isStaff?: boolean) {
+  if (isStaff) {
+    return [
+      { href: "/admin-dashboard/orders", label: "Admin Orders" },
+      { href: "/admin-dashboard/payments", label: "Admin Payments" },
+    ];
+  }
+  if (role === "vendor") {
+    return [
+      { href: "/vendor/dashboard/orders", label: "Vendor Orders" },
+      { href: "/vendor/dashboard/wallet", label: "Vendor Wallet" },
+      { href: "/vendor/dashboard/payments", label: "Vendor Payments" },
+      { href: "/vendor/dashboard/payouts", label: "Vendor Payouts" },
+    ];
+  }
+  if (role === "client") {
+    return [
+      { href: "/client/dashboard/orders", label: "My Orders" },
+      { href: "/client/dashboard/wallet", label: "My Wallet" },
+      { href: "/client/dashboard/payments", label: "My Payments" },
+    ];
+  }
+  return [];
+}
+
 // ─── Focus-trap utility ────────────────────────────────────────────────────────
 
 /**
@@ -266,6 +291,7 @@ const NewMobileNav = () => {
     ? "/auth/choose-role"
     : `/auth/choose-role?returnUrl=${encodeURIComponent(pathname)}`;
   const dashboardHref = getCanonicalDashboardPath(user?.role, user?.is_staff);
+  const roleQuickLinks = getRoleQuickLinks(user?.role, user?.is_staff);
 
   // TODO: Replace 0 with useCartStore(state => state.items.length) when wired
   // const cartCount = 0;
@@ -499,6 +525,25 @@ const NewMobileNav = () => {
               </Link>
             </div>
           </div>
+
+          {isAuthenticated && roleQuickLinks.length > 0 && (
+            <div className="rounded-xl border border-border bg-white px-3 py-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Quick Access
+              </p>
+              <div className="mt-3 grid gap-2">
+                {roleQuickLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="rounded-lg border border-border px-3 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Social links */}
           {SOCIAL_LINKS.length > 0 && (

@@ -61,7 +61,7 @@ export default function CartPage() {
     if (paymentUrl) {
       window.location.href = paymentUrl;
     } else {
-      router.push(`/client/dashboard/orders/${orderId}`);
+      router.push(`/client/dashboard/orders/${orderId}/payment`);
     }
   });
 

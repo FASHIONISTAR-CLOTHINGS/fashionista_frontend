@@ -81,4 +81,4 @@ export {
 } from "./api/order.server-actions";
 
 // ── Components ─────────────────────────────────────────────────────────────
-export { OrderTable, OrderList, ClientOrderList, OrderDetailView } from "./components";
+export { OrderTable, OrderList, ClientOrderList, OrderDetailView, OrderPaymentView } from "./components";
