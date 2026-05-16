@@ -13,13 +13,18 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createTransferRecipient,
   fetchBanks,
+  fundWalletPayment,
   getNinjaPaymentDashboard,
   getNinjaPaymentHistory,
   getNinjaPaymentSummary,
   initializePayment,
   verifyPayment,
 } from "../api/payment.api";
-import type { InitializePaymentInput, TransferRecipientInput } from "../types/payment.types";
+import type {
+  InitializePaymentInput,
+  TransferRecipientInput,
+  WalletFundPaymentInput,
+} from "../types/payment.types";
 
 // ─── Query Key Factory ────────────────────────────────────────────────────────
 
@@ -42,6 +47,20 @@ export function useInitializePayment() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: paymentKeys.ninjaDashboard() });
       qc.invalidateQueries({ queryKey: paymentKeys.ninjaSummary() });
+    },
+  });
+}
+
+export function useFundWalletPayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: WalletFundPaymentInput) => fundWalletPayment(input),
+    onSuccess: (payload) => {
+      qc.invalidateQueries({ queryKey: paymentKeys.ninjaDashboard() });
+      qc.invalidateQueries({ queryKey: paymentKeys.ninjaSummary() });
+      if (payload.order_id) {
+        qc.invalidateQueries({ queryKey: ["order", "detail", payload.order_id] });
+      }
     },
   });
 }

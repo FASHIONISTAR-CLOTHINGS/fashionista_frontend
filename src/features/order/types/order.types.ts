@@ -11,6 +11,7 @@
 export type OrderStatus =
   | "pending_payment"
   | "payment_confirmed"
+  | "awaiting_cash_confirmation"
   | "processing"
   | "shipped"
   | "out_for_delivery"
@@ -24,6 +25,9 @@ export type OrderStatus =
 export type EscrowStatus = "held" | "released" | "refunded" | "disputed";
 export type PaymentStatus = "unpaid" | "paid" | "failed" | "refunded";
 export type RefundStatus = "pending" | "approved" | "rejected" | "processed";
+export type CashPaymentMode = "disabled" | "cod" | "pay_at_shop" | "both";
+export type OrderPaymentPath = "wallet" | "gateway" | "cod" | "pay_at_shop";
+export type OrderDeliveryMode = "platform_courier" | "vendor_shop_pickup" | "cod";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // IMMUTABLE SNAPSHOTS
@@ -78,6 +82,41 @@ export interface OrderDeliveryTracking {
   updated_at: string;
 }
 
+export interface OrderPaymentRecord {
+  sequence_number: number;
+  payment_source: string;
+  provider: string;
+  selected_percent: number;
+  applied_percent: string;
+  amount: string;
+  currency: string;
+  cumulative_amount_paid: string;
+  cumulative_percent_paid: string;
+  remaining_amount: string;
+  remaining_percent: string;
+  is_final_payment: boolean;
+  paid_at: string | null;
+  correlation_id: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface OrderCommercialTransitionLog {
+  transition_type: string;
+  from_status: string;
+  to_status: string;
+  delivery_mode: string;
+  cash_payment_mode_snapshot: CashPaymentMode;
+  selected_percent: number;
+  cumulative_percent_paid: string;
+  amount_delta: string;
+  balance_after: string;
+  actor_role: string;
+  occurred_at: string | null;
+  correlation_id: string;
+  note: string;
+  metadata: Record<string, unknown>;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // REFUND REQUEST
 // ─────────────────────────────────────────────────────────────────────────────
@@ -101,6 +140,12 @@ export interface OrderListItem {
   status: OrderStatus;
   payment_status: PaymentStatus;
   escrow_status: EscrowStatus;
+  amount_paid_total: string;
+  percent_paid_total: string;
+  amount_outstanding: string;
+  is_fully_paid: boolean;
+  cash_payment_mode_snapshot: CashPaymentMode;
+  delivery_mode: OrderDeliveryMode;
   item_count: number;
   subtotal: string;
   final_total: string;
@@ -125,8 +170,13 @@ export interface OrderDetail extends OrderListItem {
   notes: string;
   idempotency_key: string;
   paid_at: string | null;
+  first_paid_at: string | null;
+  final_paid_at: string | null;
+  active_payment_path: string;
   delivered_at: string | null;
   cancelled_at: string | null;
+  payment_records: OrderPaymentRecord[];
+  commercial_transition_logs: OrderCommercialTransitionLog[];
   updated_at: string;
 }
 

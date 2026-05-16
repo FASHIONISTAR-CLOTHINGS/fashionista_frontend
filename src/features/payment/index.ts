@@ -16,6 +16,8 @@ export type {
   BankOption,
   InitializePaymentInput,
   TransferRecipientInput,
+  WalletFundPaymentInput,
+  WalletFundPaymentResponse,
 } from "./types/payment.types";
 
 // ── Schemas ────────────────────────────────────────────────────────────────
@@ -25,6 +27,7 @@ export {
   PaymentDashboardSchema,
   NinjaPaymentHistorySchema,
   BankOptionSchema,
+  WalletFundPaymentResponseSchema,
   parsePaymentResponse,
 } from "./schemas/payment.schemas";
 
@@ -34,6 +37,7 @@ export {
   verifyPayment,
   fetchBanks,
   createTransferRecipient,
+  fundWalletPayment,
   getNinjaPaymentDashboard,
   getNinjaPaymentSummary,
   getNinjaPaymentHistory,
@@ -43,6 +47,7 @@ export {
 export {
   paymentKeys,
   useInitializePayment,
+  useFundWalletPayment,
   useVerifyPayment,
   useBanks,
   useCreateTransferRecipient,

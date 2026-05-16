@@ -7,6 +7,7 @@ import { z } from "zod";
 const OrderStatusSchema = z.enum([
   "pending_payment",
   "payment_confirmed",
+  "awaiting_cash_confirmation",
   "processing",
   "shipped",
   "out_for_delivery",
@@ -16,6 +17,12 @@ const OrderStatusSchema = z.enum([
   "refund_requested",
   "refunded",
   "disputed",
+]);
+const CashPaymentModeSchema = z.enum(["disabled", "cod", "pay_at_shop", "both"]);
+const OrderDeliveryModeSchema = z.enum([
+  "platform_courier",
+  "vendor_shop_pickup",
+  "cod",
 ]);
 const EscrowStatusSchema = z.enum(["held", "released", "refunded", "disputed"]);
 const PaymentStatusSchema = z.enum(["unpaid", "paid", "failed", "refunded"]);
@@ -69,12 +76,53 @@ export const OrderRefundRequestSchema = z.object({
   created_at: z.string().datetime({ offset: true }),
 });
 
+export const OrderPaymentRecordSchema = z.object({
+  sequence_number: z.number().int().min(1),
+  payment_source: z.string(),
+  provider: z.string(),
+  selected_percent: z.number().int().min(0).max(100),
+  applied_percent: z.string(),
+  amount: z.string(),
+  currency: z.string().default("NGN"),
+  cumulative_amount_paid: z.string(),
+  cumulative_percent_paid: z.string(),
+  remaining_amount: z.string(),
+  remaining_percent: z.string(),
+  is_final_payment: z.boolean(),
+  paid_at: z.string().nullable().optional().default(null),
+  correlation_id: z.string().optional().default(""),
+  metadata: z.record(z.unknown()).optional().default({}),
+});
+
+export const OrderCommercialTransitionLogSchema = z.object({
+  transition_type: z.string(),
+  from_status: z.string().optional().default(""),
+  to_status: z.string().optional().default(""),
+  delivery_mode: z.string().optional().default(""),
+  cash_payment_mode_snapshot: CashPaymentModeSchema.optional().default("disabled"),
+  selected_percent: z.number().int().min(0).max(100),
+  cumulative_percent_paid: z.string(),
+  amount_delta: z.string(),
+  balance_after: z.string(),
+  actor_role: z.string().optional().default(""),
+  occurred_at: z.string().nullable().optional().default(null),
+  correlation_id: z.string().optional().default(""),
+  note: z.string().optional().default(""),
+  metadata: z.record(z.unknown()).optional().default({}),
+});
+
 export const OrderListItemSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
   order_number: z.string(),
   status: OrderStatusSchema,
   payment_status: PaymentStatusSchema,
   escrow_status: EscrowStatusSchema,
+  amount_paid_total: z.string().optional().default("0.00"),
+  percent_paid_total: z.string().optional().default("0.00"),
+  amount_outstanding: z.string().optional().default("0.00"),
+  is_fully_paid: z.boolean().optional().default(false),
+  cash_payment_mode_snapshot: CashPaymentModeSchema.optional().default("disabled"),
+  delivery_mode: OrderDeliveryModeSchema.optional().default("platform_courier"),
   item_count: z.number().int().min(0),
   subtotal: z.string(),
   final_total: z.string(),
@@ -95,8 +143,16 @@ export const OrderDetailSchema = OrderListItemSchema.extend({
   notes: z.string().optional().default(""),
   idempotency_key: z.string().optional().default(""),
   paid_at: z.string().nullable().optional().default(null),
+  first_paid_at: z.string().nullable().optional().default(null),
+  final_paid_at: z.string().nullable().optional().default(null),
+  active_payment_path: z.string().optional().default(""),
   delivered_at: z.string().nullable().optional().default(null),
   cancelled_at: z.string().nullable().optional().default(null),
+  payment_records: z.array(OrderPaymentRecordSchema).optional().default([]),
+  commercial_transition_logs: z
+    .array(OrderCommercialTransitionLogSchema)
+    .optional()
+    .default([]),
   updated_at: z.string(),
 });
 

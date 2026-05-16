@@ -17,9 +17,13 @@ export type PaymentIntentStatus =
   | "failed"
   | "cancelled";
 
+export type PaymentProvider = "wallet" | "paystack" | "flutterwave" | "olive_pay";
+export type CashPaymentMode = "disabled" | "cod" | "pay_at_shop" | "both";
+export type OrderPaymentPath = "wallet" | "gateway" | "cod" | "pay_at_shop";
+
 export interface PaymentIntent {
   id: string;
-  provider: "paystack";
+  provider: PaymentProvider;
   purpose: PaymentPurpose;
   amount: string;
   currency: string;
@@ -37,6 +41,25 @@ export interface InitializePaymentInput {
   email?: string;
   order_id?: string;
   metadata?: Record<string, unknown>;
+}
+
+export interface WalletFundPaymentInput {
+  order_id?: string;
+  amount?: string;
+  purpose: PaymentPurpose;
+  provider: PaymentProvider;
+  currency?: string;
+  selected_percent?: number;
+  cash_payment_mode?: CashPaymentMode;
+  payment_path?: OrderPaymentPath;
+  metadata?: Record<string, unknown>;
+}
+
+export interface WalletFundPaymentResponse {
+  intent: PaymentIntent;
+  order_id?: string;
+  payment_record_id?: string;
+  authorization_url: string;
 }
 
 export interface BankOption {
@@ -78,4 +101,3 @@ export interface NinjaPaymentHistory {
   data: PaymentIntent[];
   count: number;
 }
-
