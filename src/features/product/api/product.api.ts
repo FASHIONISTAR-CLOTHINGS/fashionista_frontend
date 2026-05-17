@@ -25,7 +25,8 @@
  *     /api/v1/products/<slug>/wishlist/toggle/  → toggle wishlist
  *     /api/v1/products/<slug>/inventory/adjust/ → inventory adjustment (vendor)
  *     /api/v1/products/coupons/                 → vendor coupon list/create
- *     /api/v1/products/admin/<slug>/status/     → admin approve/reject
+ *     /api/v1/products/admin/<slug>/approve/    → admin approve
+ *     /api/v1/products/admin/<slug>/reject/     → admin reject
  *
  *   Ninja async:
  *     /api/v1/ninja/products/                   → public paginated feed
@@ -466,15 +467,27 @@ export async function replyToReview(
 
 /**
  * Admin: approve or reject a product (status mutation).
- * Endpoint: PATCH /api/v1/products/admin/<slug>/status/
+ * Endpoints:
+ *   POST /api/v1/products/admin/<slug>/approve/
+ *   POST /api/v1/products/admin/<slug>/reject/
  */
 export async function updateProductStatus(
   slug: string,
   payload: { status: "published" | "rejected"; reason?: string },
 ): Promise<ProductDetail> {
-  const { data } = await apiSync.patch<ProductDetail>(
-    `/products/admin/${slug}/status/`,
-    payload,
+  const endpoint =
+    payload.status === "published"
+      ? `/products/admin/${slug}/approve/`
+      : `/products/admin/${slug}/reject/`;
+
+  const body =
+    payload.status === "rejected"
+      ? { reason: payload.reason ?? "" }
+      : undefined;
+
+  const { data } = await apiSync.post<ProductDetail>(
+    endpoint,
+    body,
   );
   return parseApiResponse(ProductDetailSchema, data, "updateProductStatus") as ProductDetail;
 }

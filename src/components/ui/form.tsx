@@ -10,6 +10,7 @@
 "use client";
 
 import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
 import {
   Controller,
   type ControllerProps,
@@ -123,13 +124,13 @@ FormLabel.displayName = "FormLabel";
 // ── FormControl ───────────────────────────────────────────────────────────────
 
 const FormControl = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
+  React.ElementRef<typeof Slot>,
+  React.ComponentPropsWithoutRef<typeof Slot>
 >(({ ...props }, ref) => {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
 
   return (
-    <div
+    <Slot
       ref={ref}
       id={formItemId}
       aria-describedby={
