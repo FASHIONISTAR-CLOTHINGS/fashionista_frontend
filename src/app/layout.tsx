@@ -4,7 +4,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Script from "next/script";
 import { Providers } from "@/components/providers";
-import { PreloaderDismiss } from "@/components/shared/preloader/Preloader";
+import { Preloader } from "@/components/shared/preloader/Preloader";
 import { GlobalToastProvider } from "@/shared";
 
 import "./globals.css";
@@ -306,47 +306,8 @@ export default function RootLayout({
           </>
         ) : null}
 
-        {/*
-         * ── Static Preloader Shell ────────────────────────────────────────
-         * Server-rendered — visible on the very first paint before any JS.
-         * Styled entirely by /public/preloader.css (zero JS cost).
-         * Dismissed by <PreloaderDismiss> after React hydration.
-         */}
-        <div id="fs-preloader" role="status" aria-label="Loading Fashionistar AI">
-          <div className="fs-preloader-inner">
-            <div className="fs-logo-wrap" aria-hidden="true">
-              <img
-                className="fs-logo-svg"
-                src="/preloader/fashionistar-ai-preloader.svg"
-                alt=""
-                width="256"
-                height="256"
-                fetchPriority="high"
-              />
-            </div>
-
-            <p className="fs-brand">
-              FASHION<span>ISTAR</span>
-            </p>
-
-            <p className="fs-tagline">
-              AI Precision • Perfect Fit • Seamless Fashion Commerce
-            </p>
-
-            <div className="fs-progress-track" aria-hidden="true">
-              <div className="fs-progress-bar" />
-            </div>
-
-            <div className="fs-dots" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </div>
-          </div>
-        </div>
-
-        {/* Dismiss preloader after React hydration — zero re-renders, RAF-based */}
-        <PreloaderDismiss />
+        {/* React-managed first-paint preloader — safe to unmount after hydration. */}
+        <Preloader />
 
         <Providers>
           {children}
