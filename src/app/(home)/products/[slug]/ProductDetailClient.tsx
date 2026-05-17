@@ -31,7 +31,12 @@ import {
   ArrowLeft,
   Package,
 } from "lucide-react";
-import { useProductDetail, useProductReviews, useToggleWishlist } from "@/features/product";
+import {
+  useProductDetail,
+  useProductReviews,
+  useToggleWishlist,
+} from "@/features/product";
+import type { ProductDetail } from "@/features/product";
 import { useAddCartItem } from "@/features/cart/hooks/use-cart";
 import { productCatalogApi } from "@/features/catalog";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -42,6 +47,7 @@ import { FashionistarImage } from "@/components/media";
 
 interface ProductDetailClientProps {
   slug: string;
+  initialProduct?: ProductDetail | null;
 }
 
 function AccordionItem({
@@ -71,12 +77,16 @@ function AccordionItem({
   );
 }
 
-export function ProductDetailClient({ slug }: ProductDetailClientProps) {
-  const { data: product, isError } = useProductDetail(slug);
+export function ProductDetailClient({
+  slug,
+  initialProduct = null,
+}: ProductDetailClientProps) {
+  const { data: liveProduct, isError } = useProductDetail(slug);
   const { data: reviewsData } = useProductReviews(slug, 1);
   const { mutate: toggleWishlist } = useToggleWishlist();
   const { mutate: addToCart, isPending: cartLoading } = useAddCartItem();
   const { trackView } = useRecentlyViewed();
+  const product = liveProduct ?? initialProduct;
 
   const [activeImg, setActiveImg] = useState(0);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
@@ -123,7 +133,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
   }, [product?.id]);
   // ───────────────────────────────────────────────────────────────────────
 
-  if (isError || !product) {
+  if (isError && !product) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-32 text-center px-4">
         <Package size={56} className="text-muted-foreground" />
@@ -136,6 +146,10 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
         </Link>
       </div>
     );
+  }
+
+  if (!product) {
+    return null;
   }
 
   const images =

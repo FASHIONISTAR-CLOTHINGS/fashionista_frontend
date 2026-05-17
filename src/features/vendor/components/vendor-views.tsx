@@ -21,6 +21,7 @@ import {
   ProductBuilderProvider,
   publishProduct,
   useCreateProduct,
+  useVendorCatalogProducts,
   useUpdateProduct,
   productKeys,
 } from "@/features/product";
@@ -36,6 +37,7 @@ import type {
   VendorProfile,
   VendorSetupPayload,
 } from "@/features/vendor/types/vendor.types";
+import type { ProductListItem } from "@/features/product";
 import { useCatalogCollections } from "@/features/catalog/hooks/use-catalog";
 
 type VendorStatCardProps = {
@@ -878,24 +880,58 @@ export function VendorProductComposerView() {
   );
 }
 
-const productCatalog = [
-  {
-    id: "P-1001",
-    title: "Men Senator",
-    price: "NGN 120,000",
-    status: "active",
-    date: "02.07.2026",
-  },
-  {
-    id: "P-1002",
-    title: "Isi Agu Native Wear",
-    price: "NGN 95,000",
-    status: "draft",
-    date: "05.07.2026",
-  },
-];
+function formatVendorCatalogPrice(value: number) {
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function formatVendorCatalogDate(value: string) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(parsed);
+}
+
+function renderVendorCatalogCard(product: ProductListItem) {
+  return (
+    <div
+      key={product.slug}
+      className="flex flex-col gap-3 rounded-[24px] bg-white p-6 shadow-card_shadow md:flex-row md:items-center md:justify-between"
+    >
+      <div>
+        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#7A6B44]">
+          {product.sku}
+        </p>
+        <h2 className="mt-2 text-2xl font-semibold text-black">
+          {product.title}
+        </h2>
+        {product.category_name ? (
+          <p className="mt-2 text-sm text-[#5A6465]">{product.category_name}</p>
+        ) : null}
+      </div>
+      <div className="flex flex-wrap items-center gap-4 text-sm text-[#5A6465]">
+        <span>{formatVendorCatalogPrice(Number(product.price))}</span>
+        <span>{product.in_stock ? "in stock" : "out of stock"}</span>
+        <span>Stock {product.stock_qty}</span>
+        <span>{formatVendorCatalogDate(product.created_at)}</span>
+      </div>
+    </div>
+  );
+}
 
 export function VendorProductCatalogView() {
+  const { data, isLoading, isError, error } = useVendorCatalogProducts();
+  const products = data?.results ?? [];
+
   return (
     <div className="space-y-8 py-4">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -916,26 +952,27 @@ export function VendorProductCatalogView() {
       </div>
 
       <div className="space-y-4">
-        {productCatalog.map((product) => (
-          <div
-            key={product.id}
-            className="flex flex-col gap-3 rounded-[24px] bg-white p-6 shadow-card_shadow md:flex-row md:items-center md:justify-between"
-          >
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#7A6B44]">
-                {product.id}
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold text-black">
-                {product.title}
-              </h2>
-            </div>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-[#5A6465]">
-              <span>{product.price}</span>
-              <span>{product.status}</span>
-              <span>{product.date}</span>
-            </div>
+        {isLoading ? (
+          <div className="rounded-[24px] bg-white p-6 text-sm text-[#5A6465] shadow-card_shadow">
+            Loading your live product catalog...
           </div>
-        ))}
+        ) : null}
+
+        {isError ? (
+          <div className="rounded-[24px] border border-[#F2C9C9] bg-[#FFF7F7] p-6 text-sm text-[#8A3B3B] shadow-card_shadow">
+            We could not load the live vendor catalog right now.
+            {error instanceof Error ? ` ${error.message}` : ""}
+          </div>
+        ) : null}
+
+        {!isLoading && !isError && products.length === 0 ? (
+          <div className="rounded-[24px] bg-white p-6 text-sm text-[#5A6465] shadow-card_shadow">
+            No live products are in this catalog yet. Create a product and it
+            will appear here immediately after save.
+          </div>
+        ) : null}
+
+        {!isLoading && !isError ? products.map(renderVendorCatalogCard) : null}
       </div>
     </div>
   );

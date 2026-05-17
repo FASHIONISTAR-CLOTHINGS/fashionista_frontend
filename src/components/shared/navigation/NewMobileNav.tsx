@@ -201,6 +201,7 @@ function getRoleQuickLinks(role?: string, isStaff?: boolean) {
   if (role === "client") {
     return [
       { href: "/client/dashboard/orders", label: "My Orders" },
+      { href: "/client/dashboard/orders?payment_status=pending_payment", label: "Unpaid Orders" },
       { href: "/client/dashboard/wallet", label: "My Wallet" },
       { href: "/client/dashboard/payments", label: "My Payments" },
     ];

@@ -6,7 +6,6 @@
  * Cart writes use `apiSync` (Axios → DRF) for strict transaction boundaries.
  */
 import { apiSync } from "@/core/api/client.sync";
-import { apiAsync } from "@/core/api/client.async";
 import { unwrapApiData } from "@/core/api/response";
 import { readAccessToken } from "@/features/auth/lib/auth-session.client";
 import {
@@ -32,7 +31,7 @@ import type {
   SubmitCheckoutInput,
 } from "../types/cart.types";
 
-const BASE = "/cart";
+const BASE = "/v1/cart";
 
 function guestOptions() {
   if (readAccessToken()) return {};
@@ -65,7 +64,7 @@ export async function mergeAnonymousCommerce(): Promise<void> {
 
   const results = await Promise.allSettled([
     mergeEndpoint(`${BASE}/merge/`, sessionKey),
-    mergeEndpoint("/products/wishlist/merge/", sessionKey),
+    mergeEndpoint("/v1/products/wishlist/merge/", sessionKey),
   ]);
 
   const failed = results.find((result) => result.status === "rejected");
@@ -79,12 +78,10 @@ export async function mergeAnonymousCommerce(): Promise<void> {
 /** Fetch or create the current user's cart. */
 export async function fetchCart(): Promise<Cart> {
   const sessionKey = readAccessToken() ? undefined : getFashionistarSessionKey();
-  const data = await apiAsync
-    .get("cart/", {
-      ...guestOptions(),
-      searchParams: sessionKey ? { session_key: sessionKey } : undefined,
-    })
-    .json();
+  const { data } = await apiSync.get<unknown>(`${BASE}/current/`, {
+    ...guestOptions(),
+    params: sessionKey ? { session_key: sessionKey } : undefined,
+  });
   return parseCartResponse(CartSchema, unwrapApiData(data), "fetchCart");
 }
 

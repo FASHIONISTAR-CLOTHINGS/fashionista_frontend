@@ -142,6 +142,19 @@ export async function fetchProducts(
 }
 
 /**
+ * Fetch the authenticated vendor's own catalog products.
+ * Endpoint: GET /api/v1/products/vendor/
+ */
+export async function fetchVendorProducts(): Promise<PaginatedProductList> {
+  const { data } = await apiSync.get<unknown>("/v1/products/vendor/");
+  return parseApiResponse(
+    PaginatedProductListSchema,
+    data,
+    "fetchVendorProducts",
+  ) as PaginatedProductList;
+}
+
+/**
  * Fetch full product detail by slug.
  * Endpoint: GET /api/v1/ninja/products/<slug>/
  */
@@ -269,7 +282,7 @@ export async function toggleWishlist(
   slug: string,
 ): Promise<WishlistToggleResult> {
   const { data } = await apiSync.post<WishlistToggleResult>(
-    `/products/${slug}/wishlist/toggle/`,
+    `/v1/products/${slug}/wishlist/toggle/`,
     guestPayload(),
     guestOptions(),
   );
@@ -307,7 +320,7 @@ export async function validateCoupon(
  * Endpoint: GET /api/v1/products/coupons/
  */
 export async function fetchVendorCoupons(): Promise<Coupon[]> {
-  const { data } = await apiSync.get<Coupon[]>("/products/coupons/");
+  const { data } = await apiSync.get<Coupon[]>("/v1/products/coupons/");
   return (data as any[]).map((item) =>
     parseApiResponse(CouponSchema, item, "fetchVendorCoupons"),
   );
@@ -320,7 +333,7 @@ export async function fetchVendorCoupons(): Promise<Coupon[]> {
 export async function createCoupon(
   input: Omit<Coupon, "id" | "usage_count">,
 ): Promise<Coupon> {
-  const { data } = await apiSync.post<Coupon>("/products/coupons/", input);
+  const { data } = await apiSync.post<Coupon>("/v1/products/coupons/", input);
   return parseApiResponse(CouponSchema, data, "createCoupon");
 }
 
@@ -329,7 +342,7 @@ export async function createCoupon(
  * Endpoint: DELETE /api/v1/products/coupons/<id>/
  */
 export async function deleteCoupon(couponId: string): Promise<void> {
-  await apiSync.delete(`/products/coupons/${couponId}/`);
+  await apiSync.delete(`/v1/products/coupons/${couponId}/`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -344,7 +357,7 @@ export async function createProduct(
   input: CreateProductInput,
 ): Promise<ProductDetail> {
   const { data } = await apiSync.post<ProductDetail>(
-    "/products/vendor/",
+    "/v1/products/vendor/",
     input,
   );
   return parseApiResponse(ProductDetailSchema, data, "createProduct") as ProductDetail;
@@ -359,7 +372,7 @@ export async function updateProduct(
   input: UpdateProductInput,
 ): Promise<ProductDetail> {
   const { data } = await apiSync.patch<ProductDetail>(
-    `/products/vendor/${slug}/`,
+    `/v1/products/vendor/${slug}/`,
     input,
   );
   return parseApiResponse(ProductDetailSchema, data, "updateProduct") as ProductDetail;
@@ -371,7 +384,7 @@ export async function updateProduct(
  */
 export async function publishProduct(slug: string): Promise<ProductDetail> {
   const { data } = await apiSync.post<ProductDetail>(
-    `/products/vendor/${slug}/publish/`,
+    `/v1/products/vendor/${slug}/publish/`,
   );
   return parseApiResponse(ProductDetailSchema, data, "publishProduct") as ProductDetail;
 }
@@ -381,7 +394,7 @@ export async function publishProduct(slug: string): Promise<ProductDetail> {
  * Endpoint: DELETE /api/v1/products/vendor/<slug>/
  */
 export async function deleteProduct(slug: string): Promise<void> {
-  await apiSync.delete(`/products/vendor/${slug}/`);
+  await apiSync.delete(`/v1/products/vendor/${slug}/`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -416,7 +429,7 @@ export async function adjustInventory(
   input: InventoryAdjustInput,
 ): Promise<ProductInventoryLog> {
   const { data } = await apiSync.post<ProductInventoryLog>(
-    `/products/vendor/${slug}/inventory/adjust/`,
+    `/v1/products/vendor/${slug}/inventory/adjust/`,
     input,
   );
   return parseApiResponse(
@@ -440,7 +453,7 @@ export async function createProductReview(
   input: CreateReviewInput,
 ): Promise<ProductReview> {
   const { data } = await apiSync.post<ProductReview>(
-    `/products/${slug}/reviews/`,
+    `/v1/products/${slug}/reviews/`,
     input,
   );
   return parseApiResponse(ProductReviewSchema, data, "createProductReview") as ProductReview;
@@ -455,7 +468,7 @@ export async function replyToReview(
   input: VendorReplyInput,
 ): Promise<ProductReview> {
   const { data } = await apiSync.patch<ProductReview>(
-    `/products/reviews/${reviewId}/reply/`,
+    `/v1/products/reviews/${reviewId}/reply/`,
     input,
   );
   return parseApiResponse(ProductReviewSchema, data, "replyToReview") as ProductReview;
@@ -474,20 +487,28 @@ export async function replyToReview(
 export async function updateProductStatus(
   slug: string,
   payload: { status: "published" | "rejected"; reason?: string },
-): Promise<ProductDetail> {
+): Promise<{ slug: string; status: "published" | "rejected" }> {
   const endpoint =
     payload.status === "published"
-      ? `/products/admin/${slug}/approve/`
-      : `/products/admin/${slug}/reject/`;
+      ? `/v1/products/admin/${slug}/approve/`
+      : `/v1/products/admin/${slug}/reject/`;
 
   const body =
     payload.status === "rejected"
       ? { reason: payload.reason ?? "" }
       : undefined;
 
-  const { data } = await apiSync.post<ProductDetail>(
+  const { data } = await apiSync.post<ProductDetail | { status?: string }>(
     endpoint,
     body,
   );
-  return parseApiResponse(ProductDetailSchema, data, "updateProductStatus") as ProductDetail;
+  if (payload.status === "published") {
+    const product = parseApiResponse(
+      ProductDetailSchema,
+      data,
+      "updateProductStatus",
+    ) as ProductDetail;
+    return { slug: product.slug, status: "published" };
+  }
+  return { slug, status: "rejected" };
 }

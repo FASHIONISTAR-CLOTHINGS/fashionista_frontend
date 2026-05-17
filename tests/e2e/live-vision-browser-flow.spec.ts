@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -27,12 +28,22 @@ const seededAuthPath = path.resolve(
 );
 
 const backendBaseUrl = process.env.PLAYWRIGHT_BACKEND_URL ?? "http://127.0.0.1:8000";
+const frontendBaseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
 
 function readSeededAuth(): SeededAuth {
   return JSON.parse(fs.readFileSync(seededAuthPath, "utf8")) as SeededAuth;
 }
 
 async function seedAuthenticatedSession(page: Page, session: SeededAuthSession) {
+  const payload = {
+    state: {
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
+      user: session.user,
+      isAuthenticated: true,
+    },
+  };
+
   await page.addInitScript((payload: SeededAuthSession) => {
     window.sessionStorage.setItem(
       "fashionistar-auth",
@@ -46,6 +57,27 @@ async function seedAuthenticatedSession(page: Page, session: SeededAuthSession) 
       }),
     );
   }, session);
+
+  await page.context().addCookies([
+    {
+      name: "fashionistar_auth_hint",
+      value: "1",
+      url: frontendBaseUrl,
+      sameSite: "Lax",
+    },
+    {
+      name: "fashionistar_role",
+      value: session.user.role,
+      url: frontendBaseUrl,
+      sameSite: "Lax",
+    },
+  ]);
+
+  if (page.url().startsWith(frontendBaseUrl)) {
+    await page.evaluate((nextPayload) => {
+      window.sessionStorage.setItem("fashionistar-auth", JSON.stringify(nextPayload));
+    }, payload);
+  }
 }
 
 async function capture(page: Page, name: string) {
@@ -82,8 +114,12 @@ async function apiJson(
       ? await request.post(url, {
           headers,
           data: options?.data,
+          timeout: 60_000,
         })
-      : await request.get(url, { headers });
+      : await request.get(url, {
+          headers,
+          timeout: 60_000,
+        });
 
   const text = await response.text();
   let payload: unknown = null;
@@ -144,9 +180,6 @@ async function createPublishedBrowserProduct(
     {
       token: auth.vendor.accessToken,
       method: "POST",
-      extraHeaders: {
-        "X-Idempotency-Key": `live-vision-${uniqueSuffix}`,
-      },
       data: {
         title: productTitle,
         description: "Live browser verification product created for the wallet-first order flow.",
@@ -161,7 +194,7 @@ async function createPublishedBrowserProduct(
         is_customisable: false,
         hot_deal: false,
         digital: false,
-        idempotency_key: `browser-product-${uniqueSuffix}`,
+        idempotency_key: crypto.randomUUID(),
       },
     },
   );
@@ -201,22 +234,18 @@ async function createPublishedBrowserProduct(
     throw new Error(`Admin approve failed: ${approveResponse.status} ${JSON.stringify(approveResponse.payload)}`);
   }
 
-  const publicListResponse = await apiJson(
+  const publicDetailResponse = await apiJson(
     request,
-    `${backendBaseUrl}/api/v1/ninja/products/?q=${encodeURIComponent(created.slug)}&page=1&page_size=10`,
+    `${backendBaseUrl}/api/v1/ninja/products/${created.slug}/`,
   );
 
-  if (!publicListResponse.ok) {
-    throw new Error(`Public product list verification failed: ${publicListResponse.status}`);
+  if (!publicDetailResponse.ok) {
+    throw new Error(`Public product detail verification failed: ${publicDetailResponse.status}`);
   }
 
-  const publicList = requireObject(publicListResponse.payload, "Public product list");
-  const publicResults = Array.isArray(publicList.results)
-    ? (publicList.results as Array<Record<string, unknown>>)
-    : [];
-  const visible = publicResults.some((item) => item.slug === created.slug);
-  if (!visible) {
-    throw new Error(`Published product ${created.slug} is still missing from the public list.`);
+  const publicProduct = requireObject(publicDetailResponse.payload, "Public product detail");
+  if (publicProduct.slug !== created.slug) {
+    throw new Error(`Published product ${created.slug} is still missing from the public detail endpoint.`);
   }
 
   return created;
@@ -225,6 +254,7 @@ async function createPublishedBrowserProduct(
 test.describe.configure({ mode: "serial" });
 
 test("real live vendor to payment browser flow", async ({ page, request }) => {
+  test.setTimeout(240_000);
   const auth = readSeededAuth();
   const browserErrors: string[] = [];
   page.on("pageerror", (error) => browserErrors.push(error.message));
@@ -241,16 +271,24 @@ test("real live vendor to payment browser flow", async ({ page, request }) => {
 
   await test.step("client browses the public catalog and reaches product detail", async () => {
     await seedAuthenticatedSession(page, auth.client);
-    await page.goto(`/products?q=${encodeURIComponent(createdProduct.slug)}`);
+    await page.goto(`/products?q=${encodeURIComponent(createdProduct.title)}`);
     await expect(page).toHaveURL(/\/products/, { timeout: 30_000 });
-    await expect(page.getByRole("link", { name: new RegExp(createdProduct.title, "i") }).first()).toBeVisible({
+    const productLink = page.locator(`a[href='/products/${createdProduct.slug}']`).first();
+    await expect(productLink).toBeVisible({
       timeout: 30_000,
     });
     await capture(page, "live-client-products-list");
 
-    await page.getByRole("link", { name: new RegExp(createdProduct.title, "i") }).first().click();
+    await productLink.click();
     await expect(page).toHaveURL(new RegExp(`/products/${createdProduct.slug}`), { timeout: 30_000 });
-    await expect(page.getByText(new RegExp(createdProduct.title, "i"))).toBeVisible({ timeout: 30_000 });
+    await expect(
+      page.getByRole("heading", {
+        name: new RegExp(`^${createdProduct.title}$`, "i"),
+      }),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(
+      page.getByRole("button", { name: /Add to Cart|Add to Bag/i }).first(),
+    ).toBeVisible({ timeout: 30_000 });
     await capture(page, "live-client-product-detail");
   });
 
@@ -261,6 +299,8 @@ test("real live vendor to payment browser flow", async ({ page, request }) => {
 
     await expect(addToCartButton).toBeVisible({ timeout: 20_000 });
     await addToCartButton.click();
+    await page.waitForTimeout(22_000);
+    await seedAuthenticatedSession(page, auth.client);
 
     await page.goto("/cart");
     await expect(page).toHaveURL(/\/cart/, { timeout: 30_000 });

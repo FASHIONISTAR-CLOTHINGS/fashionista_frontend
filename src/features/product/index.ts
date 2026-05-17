@@ -88,6 +88,7 @@ export {
 export {
   // Public reads (Ninja async)
   fetchProducts,
+  fetchVendorProducts,
   fetchProductDetail,
   fetchProductBundle,
   fetchFeaturedProducts,
@@ -123,6 +124,7 @@ export {
   productKeys,
   // Catalog reads
   useProducts,
+  useVendorCatalogProducts,
   useProductDetail,
   useProductBundle,
   useFeaturedProducts,
