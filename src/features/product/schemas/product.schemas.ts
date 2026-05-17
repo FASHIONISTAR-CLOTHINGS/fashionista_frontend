@@ -243,10 +243,12 @@ export const ProductListItemSchema = z
     featured: z.boolean().default(false),
     hot_deal: z.boolean().default(false),
     digital: z.boolean().default(false),
-    rating: z.number().min(0).max(5).default(0),
-    review_count: z.number().int().min(0).default(0),
-    computed_review_count: z.number().int().min(0).default(0),
-    computed_avg_rating: z.number().min(0).max(5).default(0),
+    rating: z.coerce.number().min(0).max(5).default(0),
+    review_count: z.coerce.number().int().min(0).default(0),
+    computed_review_count: z.coerce.number().int().min(0).default(0),
+    computed_avg_rating: z
+      .union([z.coerce.number().min(0).max(5), z.null()])
+      .transform((value) => value ?? 0),
     category_name: z.string().nullable().optional(),
     category_slug: z.string().nullable().optional(),
     brand_name: z.string().nullable().optional(),
@@ -286,10 +288,12 @@ export const ProductDetailSchema = z
     max_stock: z.number().int().nullable().optional(),
     views: z.number().int().min(0).default(0),
     orders_count: z.number().int().min(0).default(0),
-    rating: z.number().min(0).max(5).default(0),
-    review_count: z.number().int().min(0).default(0),
-    computed_review_count: z.number().int().min(0).default(0),
-    computed_avg_rating: z.number().min(0).max(5).default(0),
+    rating: z.coerce.number().min(0).max(5).default(0),
+    review_count: z.coerce.number().int().min(0).default(0),
+    computed_review_count: z.coerce.number().int().min(0).default(0),
+    computed_avg_rating: z
+      .union([z.coerce.number().min(0).max(5), z.null()])
+      .transform((value) => value ?? 0),
     featured: z.boolean().default(false),
     hot_deal: z.boolean().default(false),
     digital: z.boolean().default(false),

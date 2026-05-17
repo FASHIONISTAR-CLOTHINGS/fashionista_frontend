@@ -48,6 +48,7 @@ export {
 export {
   cartKeys,
   useCart,
+  usePrefetchCart,
   useAddCartItem,
   useUpdateCartItem,
   useRemoveCartItem,

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getProductDetailForMetadata } from "@/features/product/api/product.server";
+import type { ProductDetail } from "@/features/product";
 import { ProductDetailClient } from "./ProductDetailClient";
 import { ProductDetailSkeleton } from "./ProductDetailSkeleton";
 
@@ -54,11 +55,12 @@ export default async function ProductDetailPage({
   params,
 }: ProductDetailPageProps) {
   const { slug } = await params;
+  const initialProduct: ProductDetail | null = await getProductDetailForMetadata(slug);
 
   return (
     <div className="min-h-screen bg-background">
       <Suspense fallback={<ProductDetailSkeleton />}>
-        <ProductDetailClient slug={slug} />
+        <ProductDetailClient slug={slug} initialProduct={initialProduct} />
       </Suspense>
     </div>
   );

@@ -28,6 +28,7 @@ import {
 import { toast } from "sonner";
 import {
   fetchProducts,
+  fetchVendorProducts,
   fetchProductDetail,
   fetchProductBundle,
   fetchFeaturedProducts,
@@ -79,6 +80,7 @@ export const productKeys = {
   // Catalog list
   lists: () => [...productKeys.all, "list"] as const,
   list: (params: object) => [...productKeys.lists(), params] as const,
+  vendorList: () => [...productKeys.all, "vendor-list"] as const,
   // Product detail
   details: () => [...productKeys.all, "detail"] as const,
   detail: (slug: string) => [...productKeys.details(), slug] as const,
@@ -119,6 +121,18 @@ export function useProducts(
     queryFn: () => fetchProducts(params),
     staleTime: 60_000,         // 1 minute
     placeholderData: keepPreviousData,
+    ...options,
+  });
+}
+
+/** Authenticated vendor product catalog. */
+export function useVendorCatalogProducts(
+  options?: Partial<UseQueryOptions<PaginatedProductList>>,
+) {
+  return useQuery<PaginatedProductList>({
+    queryKey: productKeys.vendorList(),
+    queryFn: fetchVendorProducts,
+    staleTime: 30_000,
     ...options,
   });
 }
@@ -434,7 +448,7 @@ export function useReplyToReview(slug: string, reviewId: string) {
 export function useUpdateProductStatus() {
   const qc = useQueryClient();
   return useMutation<
-    ProductDetail,
+    { slug: string; status: "published" | "rejected" },
     Error,
     { slug: string; status: "published" | "rejected"; reason?: string }
   >({

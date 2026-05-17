@@ -4,27 +4,67 @@
  */
 import { z } from "zod";
 
-export const CartProductRefSchema = z.object({
-  id: z.string().uuid(),
-  slug: z.string(),
-  title: z.string(),
-  sku: z.string(),
-  cover_image_url: z.string().url().nullable(),
-  requires_measurement: z.boolean(),
-  vendor_name: z.string(),
-});
+const MoneyStringSchema = z.union([z.string(), z.number()]).transform((value) => String(value));
 
-export const CartItemSchema = z.object({
-  id: z.string().uuid(),
-  product: CartProductRefSchema,
-  variant_id: z.string().uuid().nullable(),
-  size_label: z.string().nullable(),
-  color_label: z.string().nullable(),
-  quantity: z.number().int().min(1),
-  unit_price: z.string(),
-  line_total: z.string(),
-  currency: z.string(),
-});
+const LegacyAppliedCouponSchema = z
+  .object({
+    coupon_code: z.string().nullable().optional(),
+    coupon_discount: MoneyStringSchema.optional(),
+  })
+  .transform((cart) => {
+    if (!cart.coupon_code) return null;
+    return {
+      code: cart.coupon_code,
+      coupon_type: "legacy",
+      discount_amount: cart.coupon_discount ?? "0",
+    };
+  });
+
+export const CartProductRefSchema = z
+  .object({
+    id: z.string().uuid(),
+    slug: z.string(),
+    title: z.string(),
+    sku: z.string(),
+    cover_image_url: z.string().url().nullable().optional(),
+    image_url: z.string().url().nullable().optional(),
+    requires_measurement: z.boolean(),
+    vendor_name: z.string(),
+  })
+  .transform((product) => ({
+    id: product.id,
+    slug: product.slug,
+    title: product.title,
+    sku: product.sku,
+    cover_image_url: product.cover_image_url ?? product.image_url ?? null,
+    requires_measurement: product.requires_measurement,
+    vendor_name: product.vendor_name,
+  }));
+
+export const CartItemSchema = z
+  .object({
+    id: z.string().uuid(),
+    product: CartProductRefSchema,
+    variant_id: z.string().uuid().nullable().optional(),
+    variant: z.union([z.string().uuid(), z.null()]).optional(),
+    size_label: z.string().nullable().optional(),
+    color_label: z.string().nullable().optional(),
+    quantity: z.number().int().min(1),
+    unit_price: MoneyStringSchema,
+    line_total: MoneyStringSchema,
+    currency: z.string().optional(),
+  })
+  .transform((item) => ({
+    id: item.id,
+    product: item.product,
+    variant_id: item.variant_id ?? item.variant ?? null,
+    size_label: item.size_label ?? null,
+    color_label: item.color_label ?? null,
+    quantity: item.quantity,
+    unit_price: item.unit_price,
+    line_total: item.line_total,
+    currency: item.currency ?? "NGN",
+  }));
 
 export const AppliedCouponSchema = z.object({
   code: z.string(),
@@ -32,15 +72,33 @@ export const AppliedCouponSchema = z.object({
   discount_amount: z.string(),
 });
 
-export const CartSchema = z.object({
-  id: z.string().uuid().nullable(),
-  items: z.array(CartItemSchema),
-  item_count: z.number().int().min(0),
-  subtotal: z.string(),
-  currency: z.string(),
-  expires_at: z.string().nullable(),
-  applied_coupon: AppliedCouponSchema.nullable().optional(),
-});
+export const CartSchema = z
+  .object({
+    id: z.string().uuid().nullable(),
+    items: z.array(CartItemSchema),
+    item_count: z.number().int().min(0),
+    subtotal: MoneyStringSchema,
+    currency: z.string().optional(),
+    expires_at: z.string().nullable().optional(),
+    last_activity: z.string().nullable().optional(),
+    applied_coupon: AppliedCouponSchema.nullable().optional(),
+    coupon_code: z.string().nullable().optional(),
+    coupon_discount: MoneyStringSchema.optional(),
+  })
+  .transform((cart) => ({
+    id: cart.id,
+    items: cart.items,
+    item_count: cart.item_count,
+    subtotal: cart.subtotal,
+    currency: cart.currency ?? "NGN",
+    expires_at: cart.expires_at ?? cart.last_activity ?? null,
+    applied_coupon:
+      cart.applied_coupon ??
+      LegacyAppliedCouponSchema.parse({
+        coupon_code: cart.coupon_code,
+        coupon_discount: cart.coupon_discount,
+      }),
+  }));
 
 export const CheckoutQuoteSchema = z.object({
   subtotal: z.string(),
