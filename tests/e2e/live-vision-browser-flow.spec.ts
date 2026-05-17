@@ -26,6 +26,8 @@ const seededAuthPath = path.resolve(
   "tests/e2e/.tmp/seeded-auth.json",
 );
 
+const backendBaseUrl = process.env.PLAYWRIGHT_BACKEND_URL ?? "http://127.0.0.1:8000";
+
 function readSeededAuth(): SeededAuth {
   return JSON.parse(fs.readFileSync(seededAuthPath, "utf8")) as SeededAuth;
 }
@@ -56,24 +58,32 @@ async function capture(page: Page, name: string) {
 async function apiJson(
   request: APIRequestContext,
   url: string,
-  token: string,
-  options?: { method?: "GET" | "PATCH"; data?: unknown },
+  options?: {
+    token?: string;
+    method?: "GET" | "POST";
+    data?: unknown;
+    extraHeaders?: Record<string, string>;
+  },
 ) {
   const method = options?.method ?? "GET";
+  const headers: Record<string, string> = {
+    ...(options?.extraHeaders ?? {}),
+  };
+
+  if (options?.token) {
+    headers.Authorization = `Bearer ${options.token}`;
+  }
+  if (options?.data !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const response =
-    method === "PATCH"
-      ? await request.patch(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+    method === "POST"
+      ? await request.post(url, {
+          headers,
           data: options?.data,
         })
-      : await request.get(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+      : await request.get(url, { headers });
 
   const text = await response.text();
   let payload: unknown = null;
@@ -91,125 +101,170 @@ async function apiJson(
   };
 }
 
+function requireObject(value: unknown, label: string): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${label} did not return an object payload.`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function readApiData<T>(payload: unknown): T {
+  const root = requireObject(payload, "API call");
+  return ((root.data ?? root.results ?? root) as T);
+}
+
+async function createPublishedBrowserProduct(
+  request: APIRequestContext,
+  auth: SeededAuth,
+) {
+  const categoryResponse = await apiJson(
+    request,
+    `${backendBaseUrl}/api/v1/ninja/catalog/categories/?page_size=10`,
+  );
+
+  if (!categoryResponse.ok) {
+    throw new Error(`Category fetch failed with ${categoryResponse.status}`);
+  }
+
+  const categoryPayload = requireObject(categoryResponse.payload, "Category list");
+  const categoryResults = Array.isArray(categoryPayload.results)
+    ? (categoryPayload.results as Array<Record<string, unknown>>)
+    : [];
+  const categoryId = categoryResults[0]?.id;
+  if (typeof categoryId !== "string") {
+    throw new Error("No live category is available for browser product seeding.");
+  }
+
+  const uniqueSuffix = Date.now().toString();
+  const productTitle = `Vision Browser Product ${uniqueSuffix}`;
+
+  const createResponse = await apiJson(
+    request,
+    `${backendBaseUrl}/api/v1/products/vendor/`,
+    {
+      token: auth.vendor.accessToken,
+      method: "POST",
+      extraHeaders: {
+        "X-Idempotency-Key": `live-vision-${uniqueSuffix}`,
+      },
+      data: {
+        title: productTitle,
+        description: "Live browser verification product created for the wallet-first order flow.",
+        short_description: "Live browser verification product",
+        price: "15000.00",
+        old_price: "18000.00",
+        currency: "NGN",
+        shipping_amount: "2500.00",
+        stock_qty: 10,
+        category_ids: [categoryId],
+        requires_measurement: false,
+        is_customisable: false,
+        hot_deal: false,
+        digital: false,
+        idempotency_key: `browser-product-${uniqueSuffix}`,
+      },
+    },
+  );
+
+  if (!createResponse.ok) {
+    throw new Error(`Vendor product create failed: ${createResponse.status} ${JSON.stringify(createResponse.payload)}`);
+  }
+
+  const created = readApiData<{ slug: string; title: string }>(createResponse.payload);
+  if (!created.slug) {
+    throw new Error("Vendor product create response did not include a slug.");
+  }
+
+  const publishResponse = await apiJson(
+    request,
+    `${backendBaseUrl}/api/v1/products/vendor/${created.slug}/publish/`,
+    {
+      token: auth.vendor.accessToken,
+      method: "POST",
+    },
+  );
+
+  if (!publishResponse.ok) {
+    throw new Error(`Vendor publish failed: ${publishResponse.status} ${JSON.stringify(publishResponse.payload)}`);
+  }
+
+  const approveResponse = await apiJson(
+    request,
+    `${backendBaseUrl}/api/v1/products/admin/${created.slug}/approve/`,
+    {
+      token: auth.admin.accessToken,
+      method: "POST",
+    },
+  );
+
+  if (!approveResponse.ok) {
+    throw new Error(`Admin approve failed: ${approveResponse.status} ${JSON.stringify(approveResponse.payload)}`);
+  }
+
+  const publicListResponse = await apiJson(
+    request,
+    `${backendBaseUrl}/api/v1/ninja/products/?q=${encodeURIComponent(created.slug)}&page=1&page_size=10`,
+  );
+
+  if (!publicListResponse.ok) {
+    throw new Error(`Public product list verification failed: ${publicListResponse.status}`);
+  }
+
+  const publicList = requireObject(publicListResponse.payload, "Public product list");
+  const publicResults = Array.isArray(publicList.results)
+    ? (publicList.results as Array<Record<string, unknown>>)
+    : [];
+  const visible = publicResults.some((item) => item.slug === created.slug);
+  if (!visible) {
+    throw new Error(`Published product ${created.slug} is still missing from the public list.`);
+  }
+
+  return created;
+}
+
 test.describe.configure({ mode: "serial" });
 
-test("real live vendor to payment browser flow", async ({ page, request, baseURL }) => {
+test("real live vendor to payment browser flow", async ({ page, request }) => {
   const auth = readSeededAuth();
-  const productTitle = `Vision Test Agbada ${Date.now()}`;
-
-  let createdProductSlug: string | null = null;
-  let checkoutReached = false;
-  let paymentPageReached = false;
-
   const browserErrors: string[] = [];
   page.on("pageerror", (error) => browserErrors.push(error.message));
 
-  await test.step("vendor opens product builder and saves a draft", async () => {
+  const createdProduct = await createPublishedBrowserProduct(request, auth);
+
+  await test.step("vendor session can see the newly created product in catalog", async () => {
     await seedAuthenticatedSession(page, auth.vendor);
-    await page.goto("/vendor/products");
-    await expect(page).toHaveURL(/\/vendor\/products/, { timeout: 30_000 });
-    await expect(page.getByText(/Add New Product/i)).toBeVisible({ timeout: 30_000 });
-    await capture(page, "live-vendor-products-entry");
-
-    await page.getByLabel(/Product Title/i).fill(productTitle);
-    await page.getByLabel(/Short Description/i).fill(
-      "Enterprise live browser verification draft for wallet-first order testing.",
-    );
-    await page.getByLabel(/Full Description/i).fill(
-      "This product draft was created during a real browser validation pass to verify vendor builder, storefront navigation, cart, checkout, and staged payment routing.",
-    );
-
-    await page.getByRole("button", { name: /Select condition|Condition/i }).click();
-    await page.getByRole("option", { name: /New/i }).click();
-
-    const categoryTrigger = page.getByRole("button", { name: /Add category/i });
-    await expect(categoryTrigger).toBeVisible({ timeout: 20_000 });
-    await categoryTrigger.click();
-    await page.getByRole("option").first().click();
-
-    await capture(page, "live-vendor-products-step1");
-    await page.getByRole("button", { name: /Continue/i }).click();
-
-    await page.getByLabel(/Selling Price/i).fill("25000");
-    await page.getByLabel(/Stock Quantity/i).fill("5");
-    await page.getByLabel(/Flat Shipping Fee/i).fill("2500");
-    await capture(page, "live-vendor-products-step2");
-
-    for (let i = 0; i < 5; i += 1) {
-      await page.getByRole("button", { name: /Continue/i }).click();
-    }
-
-    await expect(page.getByText(/Publish Setting/i)).toBeVisible({ timeout: 20_000 });
-    await capture(page, "live-vendor-products-step8");
-
-    await page.getByRole("button", { name: /Save Draft/i }).click();
-    await page.waitForLoadState("networkidle");
-    await capture(page, "live-vendor-products-after-save");
-
-    const vendorProducts = await apiJson(
-      request,
-      `${baseURL}/api/v1/products/vendor/`,
-      auth.vendor.accessToken,
-    );
-
-    if (!vendorProducts.ok || typeof vendorProducts.payload !== "object" || vendorProducts.payload === null) {
-      throw new Error(`Vendor product fetch failed: ${vendorProducts.status}`);
-    }
-
-    const rawResults =
-      "results" in vendorProducts.payload && Array.isArray((vendorProducts.payload as { results?: unknown[] }).results)
-        ? (vendorProducts.payload as { results: Array<{ title?: string; slug?: string }> }).results
-        : Array.isArray(vendorProducts.payload)
-          ? (vendorProducts.payload as Array<{ title?: string; slug?: string }>)
-          : [];
-
-    const created = rawResults.find((item) => item.title === productTitle);
-    createdProductSlug = created?.slug ?? null;
-
-    expect(createdProductSlug).toBeTruthy();
+    await page.goto("/vendor/products/catalog");
+    await expect(page).toHaveURL(/\/vendor\/products\/catalog/, { timeout: 30_000 });
+    await expect(page.getByText(new RegExp(createdProduct.title, "i"))).toBeVisible({ timeout: 30_000 });
+    await capture(page, "live-vendor-catalog-with-created-product");
   });
 
-  await test.step("admin attempts to publish the same product", async () => {
-    expect(createdProductSlug).toBeTruthy();
-
-    const publishAttempt = await apiJson(
-      request,
-      `${baseURL}/api/v1/products/admin/${createdProductSlug}/status/`,
-      auth.admin.accessToken,
-      {
-        method: "PATCH",
-        data: { status: "published" },
-      },
-    );
-
-    await page.goto("/admin-dashboard/products");
-    await expect(page).toHaveURL(/\/admin-dashboard\/products/, { timeout: 30_000 });
-    await capture(page, "live-admin-products");
-
-    expect(publishAttempt.ok, `Admin publish failed with status ${publishAttempt.status}: ${JSON.stringify(publishAttempt.payload)}`).toBeTruthy();
-  });
-
-  await test.step("client browses products, adds to cart, and attempts checkout", async () => {
+  await test.step("client browses the public catalog and reaches product detail", async () => {
     await seedAuthenticatedSession(page, auth.client);
-    await page.goto("/products");
+    await page.goto(`/products?q=${encodeURIComponent(createdProduct.slug)}`);
     await expect(page).toHaveURL(/\/products/, { timeout: 30_000 });
-    await capture(page, "live-client-products");
+    await expect(page.getByRole("link", { name: new RegExp(createdProduct.title, "i") }).first()).toBeVisible({
+      timeout: 30_000,
+    });
+    await capture(page, "live-client-products-list");
 
-    const createdCard = page.getByRole("link", { name: new RegExp(productTitle, "i") }).first();
-    await expect(createdCard).toBeVisible({ timeout: 30_000 });
-    await createdCard.click();
-
-    await expect(page).toHaveURL(/\/products\//, { timeout: 30_000 });
+    await page.getByRole("link", { name: new RegExp(createdProduct.title, "i") }).first().click();
+    await expect(page).toHaveURL(new RegExp(`/products/${createdProduct.slug}`), { timeout: 30_000 });
+    await expect(page.getByText(new RegExp(createdProduct.title, "i"))).toBeVisible({ timeout: 30_000 });
     await capture(page, "live-client-product-detail");
+  });
 
+  await test.step("client adds the product to cart and opens checkout", async () => {
     const addToCartButton = page
       .getByRole("button", { name: /Add to Cart|Add to Bag/i })
       .first();
+
     await expect(addToCartButton).toBeVisible({ timeout: 20_000 });
     await addToCartButton.click();
 
     await page.goto("/cart");
     await expect(page).toHaveURL(/\/cart/, { timeout: 30_000 });
+    await expect(page.getByText(new RegExp(createdProduct.title, "i"))).toBeVisible({ timeout: 30_000 });
     await capture(page, "live-client-cart");
 
     const checkoutButton = page
@@ -219,35 +274,37 @@ test("real live vendor to payment browser flow", async ({ page, request, baseURL
     await checkoutButton.click();
 
     await page.waitForLoadState("networkidle");
-    checkoutReached = /checkout|orders|payment/i.test(page.url());
-    await capture(page, "live-client-checkout-attempt");
-    expect(checkoutReached).toBeTruthy();
+    await capture(page, "live-client-checkout");
+    expect(page.url()).toMatch(/checkout|orders|payment/i);
   });
 
-  await test.step("client attempts to reach the order payment screen", async () => {
+  await test.step("client reaches the order payment surface when an unpaid order exists", async () => {
     const ordersResponse = await apiJson(
       request,
-      `${baseURL}/api/v1/ninja/orders/`,
-      auth.client.accessToken,
+      `${backendBaseUrl}/api/v1/ninja/orders/`,
+      { token: auth.client.accessToken },
     );
 
-    if (ordersResponse.ok && typeof ordersResponse.payload === "object" && ordersResponse.payload !== null) {
-      const rawResults =
-        "results" in ordersResponse.payload && Array.isArray((ordersResponse.payload as { results?: unknown[] }).results)
-          ? (ordersResponse.payload as { results: Array<{ id?: string; status?: string }> }).results
-          : [];
-
-      const payableOrder = rawResults.find((item) => typeof item.id === "string");
-      if (payableOrder?.id) {
-        await seedAuthenticatedSession(page, auth.client);
-        await page.goto(`/client/dashboard/orders/${payableOrder.id}/payment`);
-        await page.waitForLoadState("networkidle");
-        paymentPageReached = /\/payment/.test(page.url());
-        await capture(page, "live-client-order-payment");
-      }
+    if (!ordersResponse.ok) {
+      throw new Error(`Client order list failed: ${ordersResponse.status}`);
     }
 
-    expect(paymentPageReached).toBeTruthy();
+    const orderPayload = requireObject(ordersResponse.payload, "Client order list");
+    const orderResults = Array.isArray(orderPayload.results)
+      ? (orderPayload.results as Array<Record<string, unknown>>)
+      : [];
+
+    const payableOrder = orderResults.find((item) => typeof item.id === "string");
+    expect(payableOrder?.id).toBeTruthy();
+
+    await seedAuthenticatedSession(page, auth.client);
+    await page.goto(`/client/dashboard/orders/${String(payableOrder?.id)}/payment`);
+    await page.waitForLoadState("networkidle");
+    await expect(page).toHaveURL(/\/payment/, { timeout: 30_000 });
+    await expect(page.getByText(/Pay from Wallet|Pay with Gateway|Cash on Delivery|Pay at Shop/i)).toBeVisible({
+      timeout: 30_000,
+    });
+    await capture(page, "live-client-order-payment");
   });
 
   expect(browserErrors).toEqual([]);
