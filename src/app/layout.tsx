@@ -8,6 +8,11 @@ import { Preloader } from "@/components/shared/preloader/Preloader";
 import { GlobalToastProvider } from "@/shared";
 
 import "./globals.css";
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+
 
 // ── Local Fonts ───────────────────────────────────────────────────────────────
 const bonFoyage = localFont({
@@ -258,7 +263,7 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning // Required for next-themes
       data-scroll-behavior="smooth"
-      className={`${bonFoyage.variable} ${satoshi.variable}`}
+      className={cn(bonFoyage.variable, satoshi.variable, "font-sans", geist.variable)}
     >
       <head>
         {/*

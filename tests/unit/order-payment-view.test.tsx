@@ -121,6 +121,14 @@ vi.mock("@/features/order/hooks/use-order", () => ({
     isLoading: false,
     isError: false,
   })),
+  useCancelOrder: vi.fn(() => ({
+    mutate: vi.fn(),
+    isPending: false,
+  })),
+  useConfirmDelivery: vi.fn(() => ({
+    mutate: vi.fn(),
+    isPending: false,
+  })),
 }));
 
 vi.mock("@/features/payment", () => ({
@@ -146,9 +154,9 @@ describe("Order payment surfaces", () => {
   it("renders staged payment timeline entries for 50 -> 30 -> 20 flow", () => {
     render(<OrderPaymentView orderId="order-1" />);
 
-    expect(screen.getByText("Payment #1 - 50%")).toBeInTheDocument();
-    expect(screen.getByText("Payment #2 - 30%")).toBeInTheDocument();
-    expect(screen.getByText("Payment #3 - 20%")).toBeInTheDocument();
+    expect(screen.getByText("Payment #1 — 50%")).toBeInTheDocument();
+    expect(screen.getByText("Payment #2 — 30%")).toBeInTheDocument();
+    expect(screen.getByText("Payment #3 — 20%")).toBeInTheDocument();
   });
 
   it("shows continue payment link for partially paid order detail", () => {
