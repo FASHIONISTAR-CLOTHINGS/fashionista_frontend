@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file payment.api.ts
  * @description Payment API client for Paystack-backed payment flows.
  *
@@ -34,7 +34,7 @@ import type {
 // ─── DRF Sync Endpoints ───────────────────────────────────────────────────────
 
 export async function initializePayment(input: InitializePaymentInput): Promise<PaymentIntent> {
-  const { data } = await apiSync.post<unknown>("/v1/payment/paystack/initialize/", input);
+  const { data } = await apiSync.post<unknown>("v1/payment/paystack/initialize/", input);
   return parsePaymentResponse(
     PaymentIntentSchema,
     unwrapApiData(data),
@@ -43,7 +43,7 @@ export async function initializePayment(input: InitializePaymentInput): Promise<
 }
 
 export async function verifyPayment(reference: string): Promise<PaymentIntent> {
-  const { data } = await apiSync.get<unknown>(`/v1/payment/paystack/verify/${reference}/`);
+  const { data } = await apiSync.get<unknown>(`v1/payment/paystack/verify/${reference}/`);
   return parsePaymentResponse(
     PaymentIntentSchema,
     unwrapApiData(data),
@@ -52,21 +52,21 @@ export async function verifyPayment(reference: string): Promise<PaymentIntent> {
 }
 
 export async function fetchBanks(): Promise<BankOption[]> {
-  const { data } = await apiSync.get<unknown>("/v1/payment/banks/");
+  const { data } = await apiSync.get<unknown>("v1/payment/banks/");
   const payload = unwrapApiData<unknown>(data);
   const banks = Array.isArray(payload) ? payload : [];
   return parsePaymentResponse(z.array(BankOptionSchema), banks, "fetchBanks");
 }
 
 export async function createTransferRecipient(input: TransferRecipientInput): Promise<unknown> {
-  const { data } = await apiSync.post<unknown>("/v1/payment/transfer-recipient/", input);
+  const { data } = await apiSync.post<unknown>("v1/payment/transfer-recipient/", input);
   return unwrapApiData(data);
 }
 
 export async function fundWalletPayment(
   input: WalletFundPaymentInput,
 ): Promise<WalletFundPaymentResponse> {
-  const { data } = await apiSync.post<unknown>("/v1/payment/wallet/fund/", input);
+  const { data } = await apiSync.post<unknown>("v1/payment/wallet/fund/", input);
   return parsePaymentResponse(
     WalletFundPaymentResponseSchema,
     unwrapApiData(data),

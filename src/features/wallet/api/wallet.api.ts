@@ -26,7 +26,7 @@ import type {
 // ─── DRF Sync Endpoints ───────────────────────────────────────────────────────
 
 export async function fetchWallet(): Promise<WalletAccount> {
-  const { data } = await apiSync.get<unknown>("/v1/wallet/me/");
+  const { data } = await apiSync.get<unknown>("v1/wallet/me/");
   return parseWalletResponse(
     WalletSchema,
     unwrapApiData(data),
@@ -35,7 +35,7 @@ export async function fetchWallet(): Promise<WalletAccount> {
 }
 
 export async function setWalletPin(payload: PinPayload): Promise<WalletAccount> {
-  const { data } = await apiSync.post<unknown>("/v1/wallet/pin/set/", payload);
+  const { data } = await apiSync.post<unknown>("v1/wallet/pin/set/", payload);
   return parseWalletResponse(
     WalletSchema,
     unwrapApiData(data),
@@ -44,12 +44,12 @@ export async function setWalletPin(payload: PinPayload): Promise<WalletAccount> 
 }
 
 export async function verifyWalletPin(payload: PinPayload): Promise<{ valid: boolean }> {
-  const { data } = await apiSync.post<unknown>("/v1/wallet/pin/verify/", payload);
+  const { data } = await apiSync.post<unknown>("v1/wallet/pin/verify/", payload);
   return unwrapApiData<{ valid: boolean }>(data);
 }
 
 export async function changeWalletPin(payload: ChangePinPayload): Promise<WalletAccount> {
-  const { data } = await apiSync.post<unknown>("/v1/wallet/pin/change/", payload);
+  const { data } = await apiSync.post<unknown>("v1/wallet/pin/change/", payload);
   return parseWalletResponse(
     WalletSchema,
     unwrapApiData(data),
@@ -90,6 +90,6 @@ export async function getNinjaWalletDashboard(): Promise<WalletDashboardData> {
 export async function initiateWithdrawal(
   payload: WithdrawalInput,
 ): Promise<WithdrawalResult> {
-  const { data } = await apiSync.post<unknown>("/v1/wallet/withdraw/", payload);
+  const { data } = await apiSync.post<unknown>("v1/wallet/withdraw/", payload);
   return unwrapApiData<WithdrawalResult>(data);
 }

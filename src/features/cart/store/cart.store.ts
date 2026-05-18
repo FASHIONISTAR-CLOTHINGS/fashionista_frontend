@@ -1,121 +1,52 @@
 /**
- * Cart Store — Zustand v5 with localStorage persistence
+ * Cart Store — UI-only Zustand slice (2027 Edition)
  *
- * Persisted to localStorage (cart survives browser close).
- * Implements: add, remove, update quantity, clear, total calculation.
+ * Architecture change:
+ *  BEFORE: This store managed its own item array persisted to localStorage,
+ *          creating a dual-source-of-truth conflict with the TanStack Query
+ *          server cache. Logged-in users would see divergent state.
+ *
+ *  AFTER:  Item data is owned exclusively by TanStack Query (useCart hook).
+ *          This store is responsible ONLY for drawer UI state:
+ *            • isOpen    — drawer visibility
+ *            • activeTab — "cart" | "saved" tab selection
+ *
+ *  Anything that previously read items from this store should now call:
+ *    const { data: cart } = useCart();   // server-synced, optimistic
  */
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-export interface CartItem {
-  id: string;
-  product_id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  image?: string;
-  size?: string;
-  color?: string;
-  variant_id?: string;
-}
 
-interface CartState {
-  items: CartItem[];
+type CartTab = "cart" | "saved";
+
+interface CartUIState {
+  /** Whether the cart drawer is currently visible. */
   isOpen: boolean;
+  /** Which tab is active inside the drawer. */
+  activeTab: CartTab;
 
-  addItem: (item: Omit<CartItem, "id">) => void;
-  removeItem: (productId: string, variantId?: string) => void;
-  updateQuantity: (
-    productId: string,
-    quantity: number,
-    variantId?: string,
-  ) => void;
-  clearCart: () => void;
+  /** Toggle drawer open/closed. */
   toggleCart: () => void;
-
-  // Computed
-  getItemCount: () => number;
-  getTotal: () => number;
-  getSubtotal: () => number;
+  /** Open the cart drawer (idempotent). */
+  openCart: () => void;
+  /** Close the cart drawer (idempotent). */
+  closeCart: () => void;
+  /** Switch the active tab. */
+  setActiveTab: (tab: CartTab) => void;
 }
 
 // ── Store ─────────────────────────────────────────────────────────────────────
-export const useCartStore = create<CartState>()(
-  persist(
-    (set, get) => ({
-      items: [],
-      isOpen: false,
+//
+// Intentionally NOT persisted — drawer open/closed state should always reset
+// to closed on page refresh, and tab selection is cheap to re-derive.
+//
+export const useCartStore = create<CartUIState>()((set) => ({
+  isOpen: false,
+  activeTab: "cart",
 
-      addItem: (newItem) => {
-        set((state) => {
-          const key = `${newItem.product_id}-${newItem.variant_id ?? "default"}`;
-          const existing = state.items.find(
-            (i) => `${i.product_id}-${i.variant_id ?? "default"}` === key,
-          );
-
-          if (existing) {
-            // Increment quantity if item already in cart
-            return {
-              items: state.items.map((i) =>
-                `${i.product_id}-${i.variant_id ?? "default"}` === key
-                  ? { ...i, quantity: i.quantity + (newItem.quantity ?? 1) }
-                  : i,
-              ),
-            };
-          }
-
-          return {
-            items: [...state.items, { ...newItem, id: `${key}-${Date.now()}` }],
-          };
-        });
-      },
-
-      removeItem: (productId, variantId) => {
-        set((state) => ({
-          items: state.items.filter(
-            (i) =>
-              !(
-                i.product_id === productId &&
-                (variantId ? i.variant_id === variantId : true)
-              ),
-          ),
-        }));
-      },
-
-      updateQuantity: (productId, quantity, variantId) => {
-        if (quantity <= 0) {
-          get().removeItem(productId, variantId);
-          return;
-        }
-        set((state) => ({
-          items: state.items.map((i) =>
-            i.product_id === productId &&
-            (variantId ? i.variant_id === variantId : true)
-              ? { ...i, quantity }
-              : i,
-          ),
-        }));
-      },
-
-      clearCart: () => set({ items: [] }),
-      toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
-
-      getItemCount: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
-
-      getTotal: () =>
-        get().items.reduce((sum, i) => sum + i.price * i.quantity, 0),
-
-      getSubtotal: () =>
-        get().items.reduce((sum, i) => sum + i.price * i.quantity, 0),
-    }),
-    {
-      name: "fashionistar-cart",
-      storage: createJSONStorage(() =>
-        typeof window !== "undefined" ? localStorage : sessionStorage,
-      ),
-      // Don't persist UI state (isOpen)
-      partialize: (state) => ({ items: state.items }),
-    },
-  ),
-);
+  toggleCart: () => set((s) => ({ isOpen: !s.isOpen })),
+  openCart: () => set({ isOpen: true }),
+  closeCart: () => set({ isOpen: false }),
+  setActiveTab: (tab) => set({ activeTab: tab }),
+}));

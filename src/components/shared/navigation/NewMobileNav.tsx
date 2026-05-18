@@ -42,7 +42,7 @@ import { cn } from "@/lib/utils";
 import { FashionistarImage } from "@/components/media";
 import AccountOptions from "@/components/shared/overlays/AccountOptions";
 import CartItems from "@/components/shared/overlays/CartItems";
-import { useCartStore } from "@/features/cart/store/cart.store";
+import { useCartBadge } from "@/features/cart/hooks/use-cart-badge";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { getCanonicalDashboardPath } from "@/features/auth/lib/auth-routing";
 
@@ -294,11 +294,13 @@ const NewMobileNav = () => {
   const dashboardHref = getCanonicalDashboardPath(user?.role, user?.is_staff);
   const roleQuickLinks = getRoleQuickLinks(user?.role, user?.is_staff);
 
-  // TODO: Replace 0 with useCartStore(state => state.items.length) when wired
-  // const cartCount = 0;
+  // Live cart count from TanStack Query cache (zero-cost cache read)
+  const cartCount = useCartBadge();
 
-  // Live cart count from persisted Zustand store
-  const cartCount = useCartStore((state) => state.getItemCount());
+  // Delay badge rendering until after hydration — prevents SSR/client mismatch
+  // when sessionStorage persistence returns a non-zero count on cold mount.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // Close everything on route change
   useEffect(() => {
@@ -402,11 +404,12 @@ const NewMobileNav = () => {
             id="mobile-cart-btn"
             onClick={() => setIsCartOpen(true)}
             aria-label={`Open cart — ${cartCount} item${(cartCount as number) !== 1 ? "s" : ""}`}
+            suppressHydrationWarning
             className="p-1 rounded-lg hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]"
           >
             <ShoppingCart size={22} className="text-foreground" />
           </button>
-          {cartCount > 0 && (
+          {mounted && cartCount > 0 && (
             <span
               aria-hidden="true"
               className="bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] absolute -top-2 -right-2 font-bold flex justify-center items-center w-5 h-5 rounded-full text-[10px]"

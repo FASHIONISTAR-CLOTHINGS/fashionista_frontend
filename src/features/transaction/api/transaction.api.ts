@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file transaction.api.ts
  * @description Transaction read/write API client.
  *
@@ -37,7 +37,7 @@ function normalizeList(payload: unknown): PaginatedTransactions {
 // ─── DRF Sync Endpoints ───────────────────────────────────────────────────────
 
 export async function fetchTransactions(page = 1): Promise<PaginatedTransactions> {
-  const { data } = await apiSync.get<unknown>("/v1/transactions/", { params: { page } });
+  const { data } = await apiSync.get<unknown>("v1/transactions/", { params: { page } });
   return parseTransactionResponse(
     PaginatedTransactionsSchema,
     normalizeList(data),
@@ -46,7 +46,7 @@ export async function fetchTransactions(page = 1): Promise<PaginatedTransactions
 }
 
 export async function fetchTransactionSummary(): Promise<TransactionSummary> {
-  const { data } = await apiSync.get<unknown>("/v1/transactions/summary/");
+  const { data } = await apiSync.get<unknown>("v1/transactions/summary/");
   return parseTransactionResponse(
     TransactionSummarySchema,
     unwrapApiData(data),

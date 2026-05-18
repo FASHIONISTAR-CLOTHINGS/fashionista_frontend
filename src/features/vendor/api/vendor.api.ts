@@ -1,4 +1,4 @@
-// features/vendor/api/vendor.api.ts
+﻿// features/vendor/api/vendor.api.ts
 /**
  * Vendor API Client — Full Production Contract.
  *
@@ -62,7 +62,7 @@ export const vendorApi = {
   },
 
   async updateProfile(payload: Partial<VendorSetupPayload>): Promise<VendorProfile> {
-    const { data } = await apiSync.patch("/v1/vendor/profile/", payload);
+    const { data } = await apiSync.patch("v1/vendor/profile/", payload);
     return VendorProfileSchema.parse(unwrapData<VendorProfile>(data));
   },
 
@@ -77,7 +77,7 @@ export const vendorApi = {
     setup_state: VendorSetupState | null;
   }> {
     const validatedPayload = VendorSetupSchema.parse(payload);
-    const { data } = await apiSync.post("/v1/vendor/setup/", validatedPayload);
+    const { data } = await apiSync.post("v1/vendor/setup/", validatedPayload);
     const unwrapped = unwrapData<{
       profile: VendorProfile;
       setup_state: VendorSetupState | null;
@@ -93,20 +93,20 @@ export const vendorApi = {
   // ── Payout ─────────────────────────────────────────────────────────────────
   async savePayout(payload: VendorPayoutPayload): Promise<{ message: string }> {
     VendorPayoutSchema.parse(payload);
-    const { data } = await apiSync.post("/v1/vendor/payout/", payload);
+    const { data } = await apiSync.post("v1/vendor/payout/", payload);
     return data as { message: string };
   },
 
   // ── PIN ────────────────────────────────────────────────────────────────────
   async setPin(payload: VendorPinSetPayload): Promise<{ message: string }> {
     VendorPinSetSchema.parse(payload);
-    const { data } = await apiSync.post("/v1/vendor/pin/set/", payload);
+    const { data } = await apiSync.post("v1/vendor/pin/set/", payload);
     return data as { message: string };
   },
 
   async verifyPin(payload: VendorPinVerifyPayload): Promise<{ valid: boolean }> {
     VendorPinVerifySchema.parse(payload);
-    const { data } = await apiSync.post("/v1/vendor/pin/verify/", payload);
+    const { data } = await apiSync.post("v1/vendor/pin/verify/", payload);
     return data as { valid: boolean };
   },
 
@@ -224,119 +224,119 @@ export const vendorApi = {
 
   // ── Analytics ─────────────────────────────────────────────────────────────
   async getAnalyticsSummary() {
-    const { data } = await apiSync.get("/v1/vendor/analytics/");
+    const { data } = await apiSync.get("v1/vendor/analytics/");
     return VendorAnalyticsSummarySchema.parse(unwrapData(data));
   },
 
   async getRevenueChart() {
-    const { data } = await apiSync.get("/v1/vendor/analytics/revenue/");
+    const { data } = await apiSync.get("v1/vendor/analytics/revenue/");
     return VendorChartResponseSchema.parse(data);
   },
 
   async getOrderChart() {
-    const { data } = await apiSync.get("/v1/vendor/analytics/orders/");
+    const { data } = await apiSync.get("v1/vendor/analytics/orders/");
     return VendorChartResponseSchema.parse(data);
   },
 
   async getProductChart() {
-    const { data } = await apiSync.get("/v1/vendor/analytics/products/");
+    const { data } = await apiSync.get("v1/vendor/analytics/products/");
     return VendorChartResponseSchema.parse(data);
   },
 
   async getTopCategories() {
-    const { data } = await apiSync.get("/v1/vendor/analytics/categories/");
+    const { data } = await apiSync.get("v1/vendor/analytics/categories/");
     return data;
   },
 
   async getPaymentDistribution() {
-    const { data } = await apiSync.get("/v1/vendor/analytics/distribution/");
+    const { data } = await apiSync.get("v1/vendor/analytics/distribution/");
     return data;
   },
 
   async getCustomerBehavior() {
-    const { data } = await apiSync.get("/v1/vendor/analytics/customers/");
+    const { data } = await apiSync.get("v1/vendor/analytics/customers/");
     return data;
   },
 
   // ── Products ───────────────────────────────────────────────────────────────
   async getProducts() {
-    const { data } = await apiSync.get("/v1/vendor/products/");
+    const { data } = await apiSync.get("v1/vendor/products/");
     return VendorProductListSchema.parse(data);
   },
 
   async filterProducts(params?: { status?: string; ordering?: string }) {
-    const { data } = await apiSync.get("/v1/vendor/products/filter/", { params });
+    const { data } = await apiSync.get("v1/vendor/products/filter/", { params });
     return VendorProductListSchema.parse(data);
   },
 
   async getLowStockProducts() {
-    const { data } = await apiSync.get("/v1/vendor/products/low-stock/");
+    const { data } = await apiSync.get("v1/vendor/products/low-stock/");
     return VendorProductListSchema.parse(data);
   },
 
   async getTopSellingProducts() {
-    const { data } = await apiSync.get("/v1/vendor/products/top/");
+    const { data } = await apiSync.get("v1/vendor/products/top/");
     return VendorProductListSchema.parse(data);
   },
 
   async createProduct(payload: VendorProductCreatePayload): Promise<{ pid: string; title: string }> {
     VendorProductCreateSchema.parse(payload);
-    const { data } = await apiSync.post("/v1/vendor/products/create/", payload);
+    const { data } = await apiSync.post("v1/vendor/products/create/", payload);
     return unwrapData<{ pid: string; title: string }>(data);
   },
 
   async updateProduct(pid: string, payload: VendorProductUpdatePayload): Promise<{ message: string }> {
     VendorProductUpdateSchema.parse(payload);
-    const { data } = await apiSync.patch(`/v1/vendor/products/${pid}/edit/`, payload);
+    const { data } = await apiSync.patch(`v1/vendor/products/${pid}/edit/`, payload);
     return data as { message: string };
   },
 
   async deleteProduct(pid: string): Promise<{ message: string }> {
-    const { data } = await apiSync.delete(`/v1/vendor/products/${pid}/delete/`);
+    const { data } = await apiSync.delete(`v1/vendor/products/${pid}/delete/`);
     return data as { message: string };
   },
 
   // ── Orders ─────────────────────────────────────────────────────────────────
   async getOrders() {
-    const { data } = await apiSync.get("/v1/vendor/orders/");
+    const { data } = await apiSync.get("v1/vendor/orders/");
     return VendorOrderListSchema.parse(data);
   },
 
   async getOrder(orderId: number) {
-    const { data } = await apiSync.get(`/v1/vendor/orders/${orderId}/`);
+    const { data } = await apiSync.get(`v1/vendor/orders/${orderId}/`);
     return VendorOrderSchema.parse(unwrapData(data));
   },
 
   async getOrderStatusCounts() {
-    const { data } = await apiSync.get("/v1/vendor/orders/status-counts/");
+    const { data } = await apiSync.get("v1/vendor/orders/status-counts/");
     return data;
   },
 
   async updateOrderStatus(orderId: number, order_status: VendorOrderStatus): Promise<{ message: string }> {
-    const { data } = await apiSync.patch(`/v1/vendor/orders/${orderId}/status/`, { order_status });
+    const { data } = await apiSync.patch(`v1/vendor/orders/${orderId}/status/`, { order_status });
     return data as { message: string };
   },
 
   // ── Earnings ───────────────────────────────────────────────────────────────
   async getEarnings() {
-    const { data } = await apiSync.get("/v1/vendor/earnings/");
+    const { data } = await apiSync.get("v1/vendor/earnings/");
     return VendorEarningTrackerSchema.parse(unwrapData(data));
   },
 
   // ── Reviews ────────────────────────────────────────────────────────────────
   async getReviews() {
-    const { data } = await apiSync.get("/v1/vendor/reviews/");
+    const { data } = await apiSync.get("v1/vendor/reviews/");
     return VendorReviewListSchema.parse(data);
   },
 
   async getReview(reviewId: number) {
-    const { data } = await apiSync.get(`/v1/vendor/reviews/${reviewId}/`);
+    const { data } = await apiSync.get(`v1/vendor/reviews/${reviewId}/`);
     return VendorReviewItemSchema.parse(unwrapData(data));
   },
 
   // ── Coupons ────────────────────────────────────────────────────────────────
   async getCoupons() {
-    const { data } = await apiSync.get("/v1/vendor/coupons/");
+    const { data } = await apiSync.get("v1/vendor/coupons/");
     return VendorCouponListSchema.parse(data);
   },
 };

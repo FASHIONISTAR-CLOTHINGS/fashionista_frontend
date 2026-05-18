@@ -5,8 +5,9 @@
  * @description Enterprise product card — Fashionistar Design System.
  *
  * Features:
- *  - Optimistic wishlist toggle via `useToggleWishlist()`
- *  - Add-to-cart via `useAddCartItem()` with stock guard
+ *  - Dynamic wishlist toggle: filled heart ↔ outline heart (real-time TanStack Query state)
+ *  - Dynamic cart toggle: "Add to Cart" ↔ "Remove" (derived from cart cache via useIsInCart)
+ *  - Optimistic mutations — zero-latency UI response before server round-trip
  *  - Cloudinary-served Next/Image (avif/webp)
  *  - Star rating badge + review count
  *  - Measurement-required badge (tape measure icon)
@@ -16,10 +17,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Heart, ShoppingBag, Ruler, Star } from "lucide-react";
+import { Heart, ShoppingBag, Ruler, Star, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useToggleWishlist } from "../hooks/use-product";
-import { useAddCartItem } from "@/features/cart/hooks/use-cart";
+import { useWishlistItemIds } from "@/features/client/hooks/use-client-wishlist";
+import { useAddCartItem, useRemoveCartItem, useIsInCart } from "@/features/cart/hooks/use-cart";
+import { useCart } from "@/features/cart/hooks/use-cart";
 import { formatCurrency } from "@/lib/formatting";
 import type { ProductListItem } from "../types/product.types";
 import { FashionistarImage } from "@/components/media";
@@ -57,11 +60,25 @@ export default function ProductCard({
   showQuickAdd = true,
 }: ProductCardProps) {
   const [imgErr, setImgErr] = useState(false);
-  const { mutate: toggleWishlist, isPending: wishlistLoading } = useToggleWishlist();
-  const { mutate: addToCart, isPending: cartLoading } = useAddCartItem();
 
-  const imageUrl =
-    !imgErr && product.image_url ? product.image_url : "/gown.svg";
+  // ── Wishlist state ──────────────────────────────────────────────────────────
+  const { mutate: toggleWishlist, isPending: wishlistLoading } = useToggleWishlist();
+  const wishlistIds = useWishlistItemIds();
+  const isWishlisted = wishlistIds.has(product.id) || wishlistIds.has(product.slug);
+
+  // ── Cart state ──────────────────────────────────────────────────────────────
+  const { mutate: addToCart, isPending: cartAddLoading } = useAddCartItem();
+  const { mutate: removeFromCart, isPending: cartRemoveLoading } = useRemoveCartItem();
+  const cartLoading = cartAddLoading || cartRemoveLoading;
+  const inCart = useIsInCart(product.id);
+
+  // Find the cart item ID for removal (needed by removeCartItem API)
+  const { data: cart } = useCart();
+  const cartItemId = cart?.items.find(
+    (item) => item.product.id === product.id || item.product.slug === product.slug,
+  )?.id;
+
+  const imageUrl = !imgErr && product.image_url ? product.image_url : "/gown.svg";
 
   const hasDiscount =
     product.old_price && parseFloat(product.old_price) > parseFloat(product.price);
@@ -74,21 +91,32 @@ export default function ProductCard({
       )
     : 0;
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleCartToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(
-      { product_id: product.id, product_slug: product.slug, quantity: 1 },
-      {
-        onSuccess: () => toast.success(`${product.title} added to cart!`),
-      },
-    );
+    if (inCart && cartItemId) {
+      removeFromCart(cartItemId, {
+        onSuccess: () => toast.success(`${product.title} removed from cart.`),
+      });
+    } else {
+      addToCart(
+        { product_id: product.id, product_slug: product.slug, quantity: 1 },
+        {
+          onSuccess: () => toast.success(`${product.title} added to cart! 🛍️`),
+        },
+      );
+    }
   };
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleWishlist(product.slug);
+    toggleWishlist(product.slug, {
+      onSuccess: () =>
+        isWishlisted
+          ? toast.success("Removed from wishlist.")
+          : toast.success("Added to wishlist! ❤️"),
+    });
   };
 
   return (
@@ -130,26 +158,47 @@ export default function ProductCard({
 
         {/* Hover overlay actions */}
         <div className="absolute inset-0 flex items-end justify-center gap-3 bg-gradient-to-t from-black/40 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-          {/* Wishlist */}
+          {/* Wishlist — filled when wishlisted */}
           <button
             onClick={handleWishlist}
             disabled={wishlistLoading}
-            aria-label="Toggle wishlist"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-[hsl(var(--primary))] shadow-md transition hover:bg-white hover:scale-110 disabled:opacity-50"
+            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            className={`flex h-10 w-10 items-center justify-center rounded-full shadow-md transition hover:scale-110 disabled:opacity-50 ${
+              isWishlisted
+                ? "bg-[hsl(var(--accent))] text-white"
+                : "bg-white/90 text-[hsl(var(--primary))] hover:bg-white"
+            }`}
           >
-            <Heart size={18} strokeWidth={2} />
+            <Heart
+              size={18}
+              strokeWidth={2}
+              fill={isWishlisted ? "currentColor" : "none"}
+            />
           </button>
 
-          {/* Quick add */}
+          {/* Cart — toggles between Add and Remove */}
           {showQuickAdd && (
             <button
-              onClick={handleAddToCart}
+              onClick={handleCartToggle}
               disabled={cartLoading}
-              aria-label="Add to cart"
-              className="flex flex-1 max-w-[160px] items-center justify-center gap-2 rounded-full bg-[hsl(var(--accent))] px-5 py-2.5 text-sm font-bold text-[hsl(var(--accent-foreground))] shadow-md transition hover:brightness-110 disabled:opacity-60"
+              aria-label={inCart ? "Remove from cart" : "Add to cart"}
+              className={`flex flex-1 max-w-[160px] items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold shadow-md transition hover:brightness-110 disabled:opacity-60 ${
+                inCart
+                  ? "bg-red-500 text-white"
+                  : "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]"
+              }`}
             >
-              <ShoppingBag size={15} />
-              Add to Cart
+              {inCart ? (
+                <>
+                  <Check size={15} />
+                  In Cart
+                </>
+              ) : (
+                <>
+                  <ShoppingBag size={15} />
+                  Add to Cart
+                </>
+              )}
             </button>
           )}
         </div>
@@ -181,6 +230,24 @@ export default function ProductCard({
             </span>
           )}
         </div>
+
+        {/* Wishlist / Cart quick-status pill (below price) */}
+        {(isWishlisted || inCart) && (
+          <div className="flex items-center gap-2 pt-1">
+            {isWishlisted && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-600 dark:bg-rose-900/30 dark:text-rose-400">
+                <Heart size={9} fill="currentColor" />
+                Wishlisted
+              </span>
+            )}
+            {inCart && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                <Check size={9} />
+                In Cart
+              </span>
+            )}
+          </div>
+        )}
       </Link>
     </article>
   );
