@@ -11,16 +11,7 @@ interface BrandDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
-// NOTE: dynamicParams is intentionally omitted — incompatible with cacheComponents: true.
-// generateStaticParams pre-renders the top 50 brands; remaining slugs fallback dynamically.
-export async function generateStaticParams() {
-  try {
-    const brands = await getCatalogBrands();
-    return brands.slice(0, 50).map((b) => ({ slug: b.slug }));
-  } catch {
-    return [];
-  }
-}
+
 
 export async function generateMetadata({
   params,

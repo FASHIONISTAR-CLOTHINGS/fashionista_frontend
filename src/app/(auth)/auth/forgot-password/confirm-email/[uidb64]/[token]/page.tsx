@@ -1,3 +1,6 @@
+// Prevent EmptyGenerateStaticParamsError with cacheComponents: true
+export const dynamic = 'force-dynamic';
+
 import type { Metadata } from "next";
 import { PasswordResetConfirmForm } from "@/features/auth/components/PasswordResetConfirmForm";
 

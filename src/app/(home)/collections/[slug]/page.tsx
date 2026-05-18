@@ -15,14 +15,6 @@ interface CollectionDetailPageProps {
 }
 
 
-export async function generateStaticParams() {
-  try {
-    const collections = await getCatalogCollections();
-    return collections.slice(0, 50).map((c) => ({ slug: c.slug }));
-  } catch {
-    return [];
-  }
-}
 
 export async function generateMetadata({
   params,
