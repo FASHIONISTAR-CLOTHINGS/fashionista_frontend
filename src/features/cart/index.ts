@@ -37,6 +37,7 @@ export {
   addCartItem,
   updateCartItem,
   removeCartItem,
+  clearCart,
   applyCoupon,
   removeCoupon,
   mergeAnonymousCommerce,
@@ -52,11 +53,16 @@ export {
   useAddCartItem,
   useUpdateCartItem,
   useRemoveCartItem,
+  useClearCart,
+  useMergeCart,
   useApplyCoupon,
   useRemoveCoupon,
   usePrepareCheckout,
   useSubmitCheckout,
 } from "./hooks/use-cart";
+
+// ── Badge hook (cache-only, zero network) ──────────────────────────────────
+export { useCartBadge } from "./hooks/use-cart-badge";
 
 // ── Zustand Stores ─────────────────────────────────────────────────────────
 export { useCartStore } from "./store/cart.store";

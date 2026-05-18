@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file account.api.ts
  * @description Account domain API client — Fashionistar frontend.
  *
@@ -107,7 +107,7 @@ export async function fetchAccountRecentTransactions(
 export async function updateAccountProfile(
   input: UpdateProfileInput,
 ): Promise<AccountProfile> {
-  const { data } = await apiSync.patch<unknown>("/v1/client/profile/update/", input);
+  const { data } = await apiSync.patch<unknown>("v1/client/profile/update/", input);
   return parseAccountResponse(
     AccountProfileSchema,
     unwrapApiData(data),
@@ -122,7 +122,7 @@ export async function updateAccountProfile(
 export async function addAccountAddress(
   input: AddAddressInput,
 ): Promise<AccountAddress> {
-  const { data } = await apiSync.post<unknown>("/v1/client/addresses/", input);
+  const { data } = await apiSync.post<unknown>("v1/client/addresses/", input);
   return unwrapApiData<AccountAddress>(data);
 }
 
@@ -135,7 +135,7 @@ export async function updateAccountAddress(
   input: Partial<AddAddressInput>,
 ): Promise<AccountAddress> {
   const { data } = await apiSync.patch<unknown>(
-    `/v1/client/addresses/${id}/`,
+    `v1/client/addresses/${id}/`,
     input,
   );
   return unwrapApiData<AccountAddress>(data);
@@ -146,7 +146,7 @@ export async function updateAccountAddress(
  * Remove a shipping address.
  */
 export async function deleteAccountAddress(id: number): Promise<void> {
-  await apiSync.delete(`/v1/client/addresses/${id}/`);
+  await apiSync.delete(`v1/client/addresses/${id}/`);
 }
 
 /**
@@ -155,7 +155,7 @@ export async function deleteAccountAddress(id: number): Promise<void> {
  */
 export async function setDefaultAddress(id: number): Promise<AccountAddress> {
   const { data } = await apiSync.post<unknown>(
-    `/v1/client/addresses/${id}/set-default/`,
+    `v1/client/addresses/${id}/set-default/`,
   );
   return unwrapApiData<AccountAddress>(data);
 }

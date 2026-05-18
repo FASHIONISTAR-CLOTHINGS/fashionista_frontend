@@ -1,4 +1,4 @@
-// features/client/api/client.api.ts
+﻿// features/client/api/client.api.ts
 /**
  * Client API — Full Production Contract.
  *
@@ -49,7 +49,7 @@ export const clientApi = {
 
   async updateProfile(payload: ClientProfileUpdatePayload): Promise<ClientProfile> {
     const validatedPayload = ClientProfileUpdateSchema.parse(payload);
-    const { data } = await apiSync.patch("/v1/client/profile/", validatedPayload);
+    const { data } = await apiSync.patch("v1/client/profile/", validatedPayload);
     return ClientProfileSchema.parse(unwrapData<ClientProfile>(data));
   },
 
@@ -60,62 +60,62 @@ export const clientApi = {
   },
 
   async addAddress(payload: ClientAddressCreatePayload): Promise<ClientAddress> {
-    const { data } = await apiSync.post("/v1/client/addresses/", payload);
+    const { data } = await apiSync.post("v1/client/addresses/", payload);
     return unwrapData<ClientAddress>(data);
   },
 
   async deleteAddress(addressId: string): Promise<{ message: string }> {
-    const { data } = await apiSync.delete(`/v1/client/addresses/${addressId}/`);
+    const { data } = await apiSync.delete(`v1/client/addresses/${addressId}/`);
     return data as { message: string };
   },
 
   async setDefaultAddress(addressId: string): Promise<ClientAddress> {
-    const { data } = await apiSync.post(`/v1/client/addresses/${addressId}/set-default/`);
+    const { data } = await apiSync.post(`v1/client/addresses/${addressId}/set-default/`);
     return unwrapData<ClientAddress>(data);
   },
 
   // ── Orders ─────────────────────────────────────────────────────────────────
   async getOrders(): Promise<ClientOrder[]> {
-    const { data } = await apiSync.get("/v1/client/orders/");
+    const { data } = await apiSync.get("v1/client/orders/");
     return unwrapData<ClientOrder[]>(data);
   },
 
   async getOrder(oid: string): Promise<ClientOrder> {
-    const { data } = await apiSync.get(`/v1/client/orders/${oid}/`);
+    const { data } = await apiSync.get(`v1/client/orders/${oid}/`);
     return unwrapData<ClientOrder>(data);
   },
 
   // ── Wishlist ───────────────────────────────────────────────────────────────
   async getWishlist(): Promise<WishlistItem[]> {
-    const { data } = await apiSync.get("/v1/client/wishlist/");
+    const { data } = await apiSync.get("v1/client/wishlist/");
     return unwrapData<WishlistItem[]>(data);
   },
 
   async toggleWishlist(product_id: string): Promise<WishlistToggleResponse> {
-    const { data } = await apiSync.post("/v1/client/wishlist/toggle/", { product_id });
+    const { data } = await apiSync.post("v1/client/wishlist/toggle/", { product_id });
     return data as WishlistToggleResponse;
   },
 
   // ── Reviews ────────────────────────────────────────────────────────────────
   async getProductReviews(product_id: string): Promise<ProductReview[]> {
     // Public endpoint — no auth required (falls under /api/v1/home/ on backend)
-    const { data } = await apiSync.get(`/v1/home/reviews/${product_id}/`);
+    const { data } = await apiSync.get(`v1/home/reviews/${product_id}/`);
     return unwrapData<ProductReview[]>(data);
   },
 
   async createReview(payload: ReviewCreatePayload): Promise<{ message: string }> {
-    const { data } = await apiSync.post("/v1/client/reviews/create/", payload);
+    const { data } = await apiSync.post("v1/client/reviews/create/", payload);
     return data as { message: string };
   },
 
   // ── Wallet ─────────────────────────────────────────────────────────────────
   async getWalletBalance(): Promise<WalletBalance> {
-    const { data } = await apiSync.get("/v1/client/wallet/balance/");
+    const { data } = await apiSync.get("v1/client/wallet/balance/");
     return unwrapData<WalletBalance>(data);
   },
 
   async transferFunds(payload: WalletTransferPayload): Promise<WalletTransferResponse> {
-    const { data } = await apiSync.post("/v1/client/wallet/transfer/", payload);
+    const { data } = await apiSync.post("v1/client/wallet/transfer/", payload);
     return data as WalletTransferResponse;
   },
 

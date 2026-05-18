@@ -1,6 +1,6 @@
 /**
  * @file use-cart.ts
- * @description TanStack Query v5 hooks for the Cart domain — 2026 Edition.
+ * @description TanStack Query v5 hooks for the Cart domain — 2027 Edition.
  *
  * Architecture:
  *  - All mutations apply INSTANT optimistic updates before the server round-trip.
@@ -8,6 +8,16 @@
  *  - Quantity updates are debounced (500ms) to batch rapid stepper interactions.
  *  - Cart prefetch fires on user intent (hover over cart icon) via `usePrefetchCart`.
  *  - `gcTime: 10_min` keeps cart data warm in memory even after component unmount.
+ *  - `placeholderData: keepPreviousData` prevents empty-cart flashes during refetch.
+ *
+ * Optimistic accuracy (2027 improvements):
+ *  - useRemoveCartItem: recomputes item_count and subtotal in cache.
+ *  - useUpdateCartItem: recomputes line_total per item and subtotal in cache.
+ *  - useAddCartItem:    carries product title/slug through for meaningful display.
+ *
+ * New hooks:
+ *  - useClearCart      — empties the entire cart with optimistic clear.
+ *  - useMergeCart      — wraps mergeAnonymousCommerce with pending/error states.
  *
  * Checkout flow:
  *  1. `useCart()` → displays items
@@ -19,7 +29,12 @@
 "use client";
 
 import { useCallback, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -29,9 +44,9 @@ import {
   removeCartItem,
   applyCoupon,
   removeCoupon,
-  prepareCheckout,
-  submitCheckout,
+  clearCart,
 } from "../api/cart.api";
+import { mergeAnonymousCommerce } from "../api/cart.api";
 import type {
   Cart,
   AddCartItemInput,
@@ -39,6 +54,7 @@ import type {
   ApplyCouponInput,
   PrepareCheckoutInput,
 } from "../types/cart.types";
+import { prepareCheckout, submitCheckout } from "../api/cart.api";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // QUERY KEYS (factory pattern — avoids typos, enables surgical invalidation)
@@ -50,12 +66,31 @@ export const cartKeys = {
   checkout: () => [...cartKeys.all, "checkout"] as const,
 } as const;
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function toNumber(value: string | number | undefined): number {
+  if (value === undefined) return 0;
+  const n = typeof value === "string" ? parseFloat(value) : value;
+  return isNaN(n) ? 0 : n;
+}
+
+function recomputeCartTotals(cart: Cart): Cart {
+  const activeItems = cart.items;
+  const item_count = activeItems.reduce((sum, i) => sum + i.quantity, 0);
+  const subtotal = activeItems
+    .reduce((sum, i) => sum + toNumber(i.unit_price) * i.quantity, 0)
+    .toFixed(2);
+  return { ...cart, item_count, subtotal };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CART READ
 // staleTime:  30s — data is "fresh" for 30 seconds, preventing waterfall calls
 //             while the user is actively browsing.
 // gcTime:    10m — keeps cart warm in memory even when CartDrawer unmounts,
 //             so reopening is instant with no network round-trip.
+// placeholderData: keepPreviousData — prevents the drawer from flashing empty
+//             while a background revalidation is in-flight.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Hook: get current cart with items. */
@@ -65,6 +100,7 @@ export function useCart() {
     queryFn: fetchCart,
     staleTime: 30_000,
     gcTime: 10 * 60 * 1_000,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -103,53 +139,64 @@ export function useAddCartItem() {
     mutationFn: (input: AddCartItemInput) => addCartItem(input),
 
     onMutate: async (input) => {
-      // 1. Cancel outgoing fetches so they don't overwrite optimistic data
       await qc.cancelQueries({ queryKey: cartKeys.detail() });
-
-      // 2. Snapshot for rollback
       const previousCart = qc.getQueryData<Cart>(cartKeys.detail());
 
-      // 3. Optimistically append the item to the cached cart
       qc.setQueryData<Cart>(cartKeys.detail(), (old) => {
         if (!old) return old;
+
         const existing = old.items.find(
           (i) =>
-            i.product_id === (input.product_id ?? input.product_slug) &&
+            i.product.id === (input.product_id ?? input.product_slug) &&
             i.variant_id === input.variant_id,
         );
+
+        let nextItems;
         if (existing) {
-          return {
-            ...old,
-            items: old.items.map((i) =>
-              i === existing
-                ? { ...i, quantity: i.quantity + (input.quantity ?? 1) }
-                : i,
-            ),
-          };
-        }
-        return {
-          ...old,
-          items: [
+          nextItems = old.items.map((i) =>
+            i === existing
+              ? {
+                  ...i,
+                  quantity: i.quantity + (input.quantity ?? 1),
+                  line_total: String(
+                    toNumber(i.unit_price) * (i.quantity + (input.quantity ?? 1)),
+                  ),
+                }
+              : i,
+          );
+        } else {
+          // Append a placeholder — onSettled will replace with real server data
+          nextItems = [
             ...old.items,
             {
               id: `optimistic-${Date.now()}`,
-              product_id: input.product_id ?? input.product_slug ?? "",
+              product: {
+                id: input.product_id ?? input.product_slug ?? "",
+                slug: input.product_slug ?? "",
+                title: input.product_slug ?? "New item",
+                sku: "",
+                cover_image_url: null,
+                requires_measurement: false,
+                vendor_name: "",
+              },
               variant_id: input.variant_id ?? null,
+              size_label: null,
+              color_label: null,
               quantity: input.quantity ?? 1,
-              // Remaining fields will be filled by onSettled revalidation
-              name: "",
-              price: 0,
-              image: null,
+              unit_price: "0",
+              line_total: "0",
+              currency: "NGN",
             },
-          ],
-        };
+          ];
+        }
+
+        return recomputeCartTotals({ ...old, items: nextItems });
       });
 
       return { previousCart };
     },
 
     onError: (_err, _input, ctx) => {
-      // Rollback to the snapshot we captured in onMutate
       if (ctx?.previousCart !== undefined) {
         qc.setQueryData(cartKeys.detail(), ctx.previousCart);
       }
@@ -161,7 +208,6 @@ export function useAddCartItem() {
     },
 
     onSettled: () => {
-      // Always revalidate to reconcile any server-side differences
       void qc.invalidateQueries({ queryKey: cartKeys.detail() });
     },
   });
@@ -169,7 +215,8 @@ export function useAddCartItem() {
 
 /**
  * Optimistic remove-from-cart.
- * The item disappears INSTANTLY from the list. Reappears if the server rejects.
+ * The item disappears INSTANTLY. item_count and subtotal recomputed in cache.
+ * Reappears if the server rejects.
  */
 export function useRemoveCartItem() {
   const qc = useQueryClient();
@@ -180,9 +227,11 @@ export function useRemoveCartItem() {
       await qc.cancelQueries({ queryKey: cartKeys.detail() });
       const previousCart = qc.getQueryData<Cart>(cartKeys.detail());
 
-      qc.setQueryData<Cart>(cartKeys.detail(), (old) =>
-        old ? { ...old, items: old.items.filter((i) => i.id !== itemId) } : old,
-      );
+      qc.setQueryData<Cart>(cartKeys.detail(), (old) => {
+        if (!old) return old;
+        const nextItems = old.items.filter((i) => i.id !== itemId);
+        return recomputeCartTotals({ ...old, items: nextItems });
+      });
 
       return { previousCart };
     },
@@ -212,6 +261,9 @@ export function useRemoveCartItem() {
  * they pause — not 5 separate PATCH calls. The 500ms debounce is invisible
  * to the user but saves ~80% of the server calls for quantity changes.
  *
+ * line_total and subtotal are recomputed in cache so the price panel stays
+ * accurate during the debounce window.
+ *
  * Usage:
  *   const { mutateDebounced } = useUpdateCartItem();
  *   mutateDebounced({ itemId, input: { quantity: 3 } });
@@ -233,16 +285,16 @@ export function useUpdateCartItem() {
       await qc.cancelQueries({ queryKey: cartKeys.detail() });
       const previousCart = qc.getQueryData<Cart>(cartKeys.detail());
 
-      qc.setQueryData<Cart>(cartKeys.detail(), (old) =>
-        old
-          ? {
-              ...old,
-              items: old.items.map((i) =>
-                i.id === itemId ? { ...i, quantity: input.quantity } : i,
-              ),
-            }
-          : old,
-      );
+      qc.setQueryData<Cart>(cartKeys.detail(), (old) => {
+        if (!old) return old;
+        const nextItems = old.items.map((i) => {
+          if (i.id !== itemId) return i;
+          const newQty = input.quantity;
+          const lineTotal = (toNumber(i.unit_price) * newQty).toFixed(2);
+          return { ...i, quantity: newQty, line_total: lineTotal };
+        });
+        return recomputeCartTotals({ ...old, items: nextItems });
+      });
 
       return { previousCart };
     },
@@ -263,18 +315,15 @@ export function useUpdateCartItem() {
   const mutateDebounced = useCallback(
     (vars: { itemId: string; input: UpdateCartItemInput }) => {
       // Apply optimistic update instantly on every call
-      qc.setQueryData<Cart>(cartKeys.detail(), (old) =>
-        old
-          ? {
-              ...old,
-              items: old.items.map((i) =>
-                i.id === vars.itemId
-                  ? { ...i, quantity: vars.input.quantity }
-                  : i,
-              ),
-            }
-          : old,
-      );
+      qc.setQueryData<Cart>(cartKeys.detail(), (old) => {
+        if (!old) return old;
+        const nextItems = old.items.map((i) => {
+          if (i.id !== vars.itemId) return i;
+          const lineTotal = (toNumber(i.unit_price) * vars.input.quantity).toFixed(2);
+          return { ...i, quantity: vars.input.quantity, line_total: lineTotal };
+        });
+        return recomputeCartTotals({ ...old, items: nextItems });
+      });
 
       // But only fire the API after a 500ms pause
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -286,6 +335,99 @@ export function useUpdateCartItem() {
   );
 
   return { ...mutation, mutateDebounced };
+}
+
+/**
+ * Optimistic clear-cart.
+ * Instantly empties the drawer. Rolls back if the server rejects.
+ */
+export function useClearCart() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: clearCart,
+
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: cartKeys.detail() });
+      const previousCart = qc.getQueryData<Cart>(cartKeys.detail());
+
+      qc.setQueryData<Cart>(cartKeys.detail(), (old) =>
+        old
+          ? { ...old, items: [], item_count: 0, subtotal: "0.00" }
+          : old,
+      );
+
+      return { previousCart };
+    },
+
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previousCart !== undefined) {
+        qc.setQueryData(cartKeys.detail(), ctx.previousCart);
+      }
+      toast.error("Could not clear cart.");
+    },
+
+    onSuccess: () => {
+      toast.success("Cart cleared.");
+    },
+
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: cartKeys.detail() });
+    },
+  });
+}
+
+/**
+ * Merge anonymous (guest) cart into the authenticated user cart.
+ *
+ * Call this once inside the auth login success handler. The mutation
+ * gives the caller proper `isPending` / `isError` states so the UI
+ * can show a spinner or error banner during the merge.
+ */
+export function useMergeCart() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: mergeAnonymousCommerce,
+    onSuccess: () => {
+      // Invalidate so the newly merged server cart is fetched immediately
+      void qc.invalidateQueries({ queryKey: cartKeys.all });
+    },
+    onError: () => {
+      toast.error("Could not sync your guest cart — items may be lost.");
+    },
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DERIVED STATE — Cart membership
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Returns `true` if the product is currently in the cart.
+ *
+ * Derives its answer from the existing cart query cache — zero extra
+ * network calls. The `select` option means this hook only re-renders
+ * a subscriber when THIS product's membership changes, not on every
+ * unrelated cart mutation.
+ *
+ * @param productId - The product UUID or slug to check.
+ *
+ * @example
+ *   const inCart = useIsInCart(product.id);
+ *   // → true after user clicks "Add to Cart"
+ */
+export function useIsInCart(productId: string): boolean {
+  return useQuery({
+    queryKey: cartKeys.detail(),
+    queryFn: fetchCart,
+    staleTime: 30_000,
+    gcTime: 10 * 60 * 1_000,
+    select: (cart) =>
+      cart.items.some(
+        (item) =>
+          item.product.id === productId ||
+          item.product.slug === productId,
+      ),
+  }).data ?? false;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -357,7 +499,6 @@ export function useSubmitCheckout(
     mutationFn: (idempotencyKey?: string) =>
       submitCheckout({ idempotency_key: idempotencyKey ?? uuidv4() }),
     onSuccess: (res) => {
-      // Evict all cart + checkout cache so the next visit starts clean
       void qc.invalidateQueries({ queryKey: cartKeys.all });
       toast.success(`Order ${res.order_number} placed! 🎊`);
       onSuccess?.(res.order_id, res.payment_url);

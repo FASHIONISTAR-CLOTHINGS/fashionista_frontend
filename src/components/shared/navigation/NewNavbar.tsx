@@ -14,7 +14,7 @@
  */
 "use client";
 
-import { useCallback, useId, useState } from "react";
+import { useCallback, useId, useState, useEffect } from "react";
 import { Search, UserRound, ShoppingCart, Phone } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
@@ -22,7 +22,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import AccountOptions from "@/components/shared/overlays/AccountOptions";
 import CartItems from "@/components/shared/overlays/CartItems";
-import { useCartStore } from "@/features/cart/store/cart.store";
+import { useCartBadge } from "@/features/cart/hooks/use-cart-badge";
 
 // ─── Nav link data ─────────────────────────────────────────────────────────────
 
@@ -59,8 +59,12 @@ const NewNavbar = () => {
   const searchId = useId();
   const closeOptions = useCallback(() => setShowOptions(false), []);
 
-  // Live cart count from persisted Zustand store
-  const cartCount = useCartStore((state) => state.getItemCount());
+  // Live cart count from TanStack Query cache (zero-cost cache read)
+  const cartCount = useCartBadge();
+
+  // Delay badge rendering until after hydration — prevents SSR/client mismatch
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const handleSearchSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -200,6 +204,7 @@ const NewNavbar = () => {
             type="button"
             id="navbar-cart-btn"
             aria-label={`Open cart — ${cartCount} item${cartCount !== 1 ? "s" : ""}`}
+            suppressHydrationWarning
             className={cn(
               "p-1.5 rounded-full transition-colors",
               "hover:bg-[hsl(var(--accent))]/10",
@@ -209,7 +214,7 @@ const NewNavbar = () => {
           >
             <ShoppingCart size={22} className="text-foreground" />
           </button>
-          {cartCount > 0 && (
+          {mounted && cartCount > 0 && (
             <span
               aria-hidden="true"
               className={cn(

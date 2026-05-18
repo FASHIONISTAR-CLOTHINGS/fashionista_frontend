@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file kyc.api.ts
  * @description KYC API client — full document submission lifecycle.
  *
@@ -34,7 +34,7 @@ import type {
 // ─── DRF Sync Endpoints — Status (legacy read) ────────────────────────────────
 
 export async function fetchKycStatus(): Promise<KycSubmission | null> {
-  const { data } = await apiSync.get<unknown>("/v1/kyc/status/");
+  const { data } = await apiSync.get<unknown>("v1/kyc/status/");
   const payload = unwrapApiData<unknown>(data);
   if (!payload) return null;
   return parseKycResponse(KycSubmissionSchema, payload, "fetchKycStatus") as KycSubmission;
@@ -51,7 +51,7 @@ export async function fetchKycStatus(): Promise<KycSubmission | null> {
  *  - APPROVED/PENDING/IN_REVIEW → idempotent, returns current state
  */
 export async function initiateKyc(input: KycSubmitInput = {}): Promise<KycSubmission> {
-  const { data } = await apiSync.post<unknown>("/v1/kyc/submit/", input);
+  const { data } = await apiSync.post<unknown>("v1/kyc/submit/", input);
   return parseKycResponse(
     KycSubmissionSchema,
     unwrapApiData(data),
@@ -83,7 +83,7 @@ export const submitKyc = initiateKyc;
 export async function recordKycDocument(
   input: KycDocumentUploadInput,
 ): Promise<KycDocument> {
-  const { data } = await apiSync.post<unknown>("/v1/kyc/documents/upload/", input);
+  const { data } = await apiSync.post<unknown>("v1/kyc/documents/upload/", input);
   return parseKycResponse(
     KycDocumentSchema,
     unwrapApiData(data),

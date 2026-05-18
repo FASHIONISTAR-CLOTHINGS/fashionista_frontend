@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file measurements.api.ts
  * @description Measurements domain API client.
  *
@@ -94,7 +94,7 @@ export async function fetchMeasurementProfileById(
 export async function createMeasurementProfile(
   input: CreateMeasurementProfileInput,
 ): Promise<MeasurementProfile> {
-  const { data } = await apiSync.post<unknown>("/v1/measurements/", input);
+  const { data } = await apiSync.post<unknown>("v1/measurements/", input);
   const raw = { data: unwrapApiData(data) };
   const parsed = parseMeasurementResponse(
     MeasurementDetailEnvelopeSchema,
@@ -112,7 +112,7 @@ export async function updateMeasurementProfile(
   profileId: string | number,
   input: UpdateMeasurementProfileInput,
 ): Promise<MeasurementProfile> {
-  const { data } = await apiSync.patch<unknown>(`/v1/measurements/${profileId}/`, input);
+  const { data } = await apiSync.patch<unknown>(`v1/measurements/${profileId}/`, input);
   const raw = { data: unwrapApiData(data) };
   const parsed = parseMeasurementResponse(
     MeasurementDetailEnvelopeSchema,
@@ -129,7 +129,7 @@ export async function updateMeasurementProfile(
 export async function setDefaultMeasurementProfile(
   profileId: string | number,
 ): Promise<MeasurementProfile> {
-  const { data } = await apiSync.post<unknown>(`/v1/measurements/${profileId}/set-default/`);
+  const { data } = await apiSync.post<unknown>(`v1/measurements/${profileId}/set-default/`);
   const raw = { data: unwrapApiData(data) };
   const parsed = parseMeasurementResponse(
     MeasurementDetailEnvelopeSchema,
@@ -146,13 +146,13 @@ export async function setDefaultMeasurementProfile(
 export async function deleteMeasurementProfile(
   profileId: string | number,
 ): Promise<void> {
-  await apiSync.delete(`/v1/measurements/${profileId}/`);
+  await apiSync.delete(`v1/measurements/${profileId}/`);
 }
 
 export async function createMirrorSizeSession(
   input: MirrorSizeSessionInput,
 ): Promise<MirrorSizeSession> {
-  const { data } = await apiSync.post<unknown>("/v1/measurements/mirrorsize/session/", input);
+  const { data } = await apiSync.post<unknown>("v1/measurements/mirrorsize/session/", input);
   const parsed = parseMeasurementResponse(
     MirrorSizeSessionEnvelopeSchema,
     { data: unwrapApiData(data) },
@@ -164,7 +164,7 @@ export async function createMirrorSizeSession(
 export async function importMirrorSizeMeasurement(
   input: MirrorSizeImportInput,
 ): Promise<MeasurementProfile> {
-  const { data } = await apiSync.post<unknown>("/v1/measurements/mirrorsize/import/", input);
+  const { data } = await apiSync.post<unknown>("v1/measurements/mirrorsize/import/", input);
   const raw = { data: unwrapApiData(data) };
   const parsed = parseMeasurementResponse(
     MeasurementDetailEnvelopeSchema,
