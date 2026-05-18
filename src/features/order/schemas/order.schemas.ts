@@ -4,28 +4,37 @@
  */
 import { z } from "zod";
 
-const OrderStatusSchema = z.enum([
-  "pending_payment",
-  "payment_confirmed",
-  "awaiting_cash_confirmation",
-  "processing",
-  "shipped",
-  "out_for_delivery",
-  "delivered",
-  "completed",
-  "cancelled",
-  "refund_requested",
-  "refunded",
-  "disputed",
-]);
+// ─── Enum schemas with .catch() to survive legacy / migrated DB values ────────
+// Backend may serve "pending" (legacy PAYMENT_STATUS tuple) or "standard" (old
+// delivery_mode) on orders created before the OrderStatus TextChoices migration.
+// Using .catch() coerces unknown strings to a safe default instead of crashing.
+const OrderStatusSchema = z
+  .enum([
+    "pending_payment",
+    "payment_confirmed",
+    "awaiting_cash_confirmation",
+    "processing",
+    "shipped",
+    "out_for_delivery",
+    "delivered",
+    "completed",
+    "cancelled",
+    "refund_requested",
+    "refunded",
+    "disputed",
+  ])
+  .catch("pending_payment"); // Coerce legacy "pending" / unknown → pending_payment
+
 const CashPaymentModeSchema = z.enum(["disabled", "cod", "pay_at_shop", "both"]);
-const OrderDeliveryModeSchema = z.enum([
-  "platform_courier",
-  "vendor_shop_pickup",
-  "cod",
-]);
-const EscrowStatusSchema = z.enum(["held", "released", "refunded", "disputed"]);
-const PaymentStatusSchema = z.enum(["unpaid", "paid", "failed", "refunded"]);
+
+const OrderDeliveryModeSchema = z
+  .enum(["platform_courier", "vendor_shop_pickup", "cod"])
+  .catch("platform_courier"); // Coerce legacy "standard" / unknown → platform_courier
+const EscrowStatusSchema = z.enum(["held", "released", "refunded", "disputed"]).catch("held");
+// Legacy PAYMENT_STATUS tuple includes "pending", "processing", "cancelled", "initiated", "expired"
+const PaymentStatusSchema = z
+  .enum(["unpaid", "paid", "failed", "refunded", "pending", "processing", "cancelled", "initiated", "expired", "refunding"])
+  .catch("unpaid");
 
 export const OrderItemSnapshotSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
@@ -163,16 +172,13 @@ export const PaginatedOrderListSchema = z.object({
   results: z.array(OrderListItemSchema),
 });
 
-/** Parse helper. */
+/** Parse helper — warns on mismatch but always returns data so UI can render. */
 export function parseOrderResponse<T>(schema: z.ZodType<T>, data: unknown, ctx?: string): T {
   const result = schema.safeParse(data);
   if (!result.success) {
     const msg = `[Zod/Order] Schema mismatch${ctx ? ` in ${ctx}` : ""}: ${result.error.message}`;
-    if (process.env.NODE_ENV === "development") {
-      console.error(msg, result.error.flatten(), data);
-      throw new Error(msg);
-    }
-    console.error(msg);
+    // Warn rather than throw — prevents a stale DB record from hard-crashing the page.
+    console.warn(msg, result.error.flatten(), data);
     return data as T;
   }
   return result.data;

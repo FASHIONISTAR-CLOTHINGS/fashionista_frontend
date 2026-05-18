@@ -18,6 +18,10 @@ export type {
   TransferRecipientInput,
   WalletFundPaymentInput,
   WalletFundPaymentResponse,
+  PaymentProvider,
+  PaymentPurpose,
+  OrderPaymentPath,
+  CashPaymentMode,
 } from "./types/payment.types";
 
 // ── Schemas ────────────────────────────────────────────────────────────────

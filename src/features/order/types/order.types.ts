@@ -23,7 +23,10 @@ export type OrderStatus =
   | "disputed";
 
 export type EscrowStatus = "held" | "released" | "refunded" | "disputed";
-export type PaymentStatus = "unpaid" | "paid" | "failed" | "refunded";
+/** Includes legacy PAYMENT_STATUS tuple values from pre-migration orders. */
+export type PaymentStatus =
+  | "unpaid" | "paid" | "failed" | "refunded"
+  | "pending" | "processing" | "cancelled" | "initiated" | "expired" | "refunding";
 export type RefundStatus = "pending" | "approved" | "rejected" | "processed";
 export type CashPaymentMode = "disabled" | "cod" | "pay_at_shop" | "both";
 export type OrderPaymentPath = "wallet" | "gateway" | "cod" | "pay_at_shop";
@@ -163,6 +166,8 @@ export interface OrderDetail extends OrderListItem {
   buyer_email: string;
   buyer_phone: string | null;
   buyer_address: Record<string, unknown>;
+  /** Legacy / alternative delivery address field sent by some serializer variants */
+  delivery_address?: string | Record<string, unknown> | null;
   items: OrderItemSnapshot[];
   status_history: OrderStatusHistory[];
   delivery_tracking: OrderDeliveryTracking | null;
@@ -179,6 +184,19 @@ export interface OrderDetail extends OrderListItem {
   commercial_transition_logs: OrderCommercialTransitionLog[];
   updated_at: string;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAYMENT PROVIDER
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Gateway / provider identifiers accepted by the payment mutation. */
+export type PaymentProvider =
+  | "wallet"
+  | "paystack"
+  | "flutterwave"
+  | "olive_pay"
+  | "cod"
+  | "pay_at_shop";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGINATED ENVELOPES

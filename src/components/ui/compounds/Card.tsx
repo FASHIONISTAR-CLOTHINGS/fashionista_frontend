@@ -1,5 +1,13 @@
 import Image from "next/image";
 
+interface CardProps {
+  image: string;
+  title: string;
+  vendor: string;
+  rating: number | string;
+  price: number | string;
+}
+
 type dataProps = {
   data: CardProps;
 };

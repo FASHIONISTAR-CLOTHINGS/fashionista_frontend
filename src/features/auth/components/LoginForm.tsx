@@ -204,7 +204,7 @@ export function LoginForm() {
       );
 
     },
-    onError: (error) => {
+    onError: () => {
     },
   });
 

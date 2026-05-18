@@ -1,5 +1,15 @@
 import { getServerAsyncApiBaseUrl } from "@/core/config/api-roots";
 
+interface VendorProp {
+  id: string;
+  image: string;
+  name: string;
+  rating: number;
+  address: string;
+  mobile: string;
+  slug: string;
+}
+
 const VENDOR_DIRECTORY_PATH = "/vendor/directory/";
 const REQUEST_TIMEOUT_MS = 3_000;
 
