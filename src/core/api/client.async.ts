@@ -10,8 +10,10 @@
  *  - Auto-retry: read-only 3x on 408, 429, 500-504 with exponential backoff
  *  - Bearer token injection before each request
  *  - ngrok-skip-browser-warning header in development
+ *  - Unified dedup sonner toast on errors (same IDs as client.sync.ts)
  */
-import ky, { type KyInstance } from "ky";
+import ky, { type KyInstance, HTTPError } from "ky";
+import { toast } from "sonner";
 import { readAccessToken } from "@/features/auth/lib/auth-session.client";
 import { getAsyncApiBaseUrl } from "@/core/config/api-roots";
 
@@ -61,7 +63,7 @@ export const apiAsync: KyInstance = ky.create({
       },
     ],
 
-    // ── After Response: normalize errors ─────────────────────────────────
+    // ── After Response: normalize errors + dedup toast ────────────────────
     afterResponse: [
       async (_request, _options, response) => {
         if (!response.ok) {
@@ -72,8 +74,55 @@ export const apiAsync: KyInstance = ky.create({
               `[apiAsync] ${response.status} ${response.url}\n${body}`,
             );
           }
+
+          // ── Dedup toast (mirrors client.sync.ts logic) ──────────────────
+          if (typeof window !== "undefined") {
+            const status = response.status;
+            // Only show for non-401 (401 handled by apiSync refresh flow)
+            if (status !== 401) {
+              let richMessage = "An unexpected error occurred. Please try again.";
+              try {
+                const body = await response.clone().json() as Record<string, unknown>;
+                if (typeof body.detail === "string" && body.detail) richMessage = body.detail;
+                else if (typeof body.message === "string" && body.message) richMessage = body.message;
+                else if (typeof body.error === "string" && body.error) richMessage = body.error;
+              } catch {
+                // Could not parse JSON — use default message
+              }
+
+              const statusLabel =
+                status === 400 ? "Validation Error" :
+                status === 403 ? "Access Denied" :
+                status === 404 ? "Not Found" :
+                status === 429 ? "Too Many Requests — Please Slow Down" :
+                status >= 500 ? "Server Error" :
+                `Request Failed (${status})`;
+
+              toast.error(statusLabel, {
+                id: `fashionistar-api-error-${status}`,
+                description: richMessage,
+                duration: 6000,
+              });
+            }
+          }
         }
         return response;
+      },
+    ],
+
+    // ── Before Error: handle network failures ─────────────────────────────
+    beforeError: [
+      (error) => {
+        if (typeof window !== "undefined" && !(error instanceof HTTPError)) {
+          // True network error (no response)
+          toast.error("Backend Unreachable 🔌", {
+            id: "fashionistar-network-error",
+            description:
+              "Cannot connect to the Fashionistar server. Please check your internet connection and try again.",
+            duration: 8000,
+          });
+        }
+        return error;
       },
     ],
   },

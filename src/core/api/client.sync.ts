@@ -8,7 +8,9 @@
  *  - JWT Bearer token injection from Zustand auth store
  *  - Automatic token refresh on 401 (with subscriber queue for concurrent requests)
  *  - Circuit breaker (auto-opens after 5 consecutive failures)
- *  - Sonner toast error on all failures with X-Trace-ID header
+ *  - Rich Sonner toast error on all failures with X-Trace-ID header
+ *  - Dedup toast IDs prevent stacking on retries
+ *  - Auth-form endpoints excluded from interceptor toast (they show AuthAlert inline)
  *  - ngrok-skip-browser-warning header injected in development
  */
 import axios, {
@@ -130,6 +132,9 @@ apiSync.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
+      /** Feature hooks that handle their own onError toast should set this to
+       * true to bypass the global interceptor toast and prevent duplication. */
+      _suppressGlobalToast?: boolean;
     };
 
     // ── 401: Auto Token Refresh ──────────────────────────────────────────────
@@ -224,30 +229,72 @@ apiSync.interceptors.response.use(
     }
 
     // ── Global Error Toast ───────────────────────────────────────────────────
-    if (typeof window !== "undefined") {
+    // ⚠️  AUTH-FORM ENDPOINTS ARE EXCLUDED:
+    // LoginForm / RegisterForm / OTPVerifyForm display an AuthAlert banner
+    // inline — firing a second toast from this interceptor would be the exact
+    // duplicate the user reported. Skip toasting for those routes.
+    const isAuthFormEndpoint = (
+      requestUrl.includes('/auth/login') ||
+      requestUrl.includes('/auth/register') ||
+      requestUrl.includes('/auth/verify-otp') ||
+      requestUrl.includes('/auth/resend-otp') ||
+      requestUrl.includes('/password/reset') ||
+      requestUrl.includes('/auth/token/refresh')
+    );
+
+    if (typeof window !== "undefined" && !isAuthFormEndpoint && !originalRequest._suppressGlobalToast) {
       const traceId = (error.response?.headers as Record<string, string>)?.[
         "x-trace-id"
       ];
-      const responseData = error.response?.data as
-        | { detail?: string; message?: string; error?: string }
-        | undefined;
-      const message =
-        responseData?.detail ||
-        responseData?.message ||
-        responseData?.error ||
-        error.message ||
-        "An unexpected error occurred";
 
       const isNetworkError = !error.response;
+
       if (isNetworkError) {
-        toast.error("Network Error", {
-          description: "Cannot reach the backend. Check your connection.",
+        // Fixed dedup ID — rapid retries never stack duplicate toasts
+        toast.error("Backend Unreachable 🔌", {
+          id: "fashionistar-network-error",
+          description:
+            "Cannot connect to the Fashionistar server. Please check your internet connection and try again.",
+          duration: 8000,
         });
       } else if (error.response?.status !== 401) {
-        // Don't show toast on 401 (handled by refresh logic)
-        toast.error(`Request Failed (${error.response?.status})`, {
-          description: traceId ? `${message} — Trace: ${traceId}` : message,
-          duration: 5000,
+        // Don't toast on 401 — handled by refresh / logout logic above.
+        // Extract the richest human-readable message from the Fashionistar envelope.
+        const responseData = error.response?.data as Record<string, unknown> | undefined;
+        let richMessage = "An unexpected error occurred. Please try again.";
+
+        if (responseData && typeof responseData === "object") {
+          const d = responseData;
+          if (typeof d.detail === "string" && d.detail) {
+            richMessage = d.detail;
+          } else if (typeof d.message === "string" && d.message) {
+            richMessage = d.message;
+          } else if (typeof d.error === "string" && d.error) {
+            richMessage = d.error;
+          } else if (d.errors && typeof d.errors === "object" && !Array.isArray(d.errors)) {
+            const firstErr = Object.values(d.errors as Record<string, unknown>).find(
+              (v) => typeof v === "string",
+            ) as string | undefined;
+            if (firstErr) richMessage = firstErr;
+          }
+        }
+
+        const status = error.response?.status;
+        const statusLabel =
+          status === 400 ? "Validation Error" :
+          status === 403 ? "Access Denied" :
+          status === 404 ? "Not Found" :
+          status === 429 ? "Too Many Requests — Please Slow Down" :
+          status === 500 ? "Server Error" :
+          `Request Failed (${status})`;
+
+        toast.error(statusLabel, {
+          // Dedup by status so rapid same-error retries don't stack
+          id: `fashionistar-api-error-${status}`,
+          description: traceId
+            ? `${richMessage} (Trace: ${traceId})`
+            : richMessage,
+          duration: 6000,
         });
       }
     }

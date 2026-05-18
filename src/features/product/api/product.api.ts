@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file product.api.ts
  * @description Product domain API client layer for Fashionistar frontend.
  *
@@ -99,6 +99,19 @@ function guestOptions() {
   return {
     headers: anonymousSessionHeaders(),
   };
+}
+
+/**
+ * Like guestOptions() but also sets _suppressGlobalToast: true.
+ * Use on all mutation calls where the feature hook (use-product.ts,
+ * use-cart.ts) already owns the user-facing toast.error.
+ * This prevents the global interceptor from firing a duplicate toast.
+ */
+function suppressedGuestOptions() {
+  return {
+    ...guestOptions(),
+    _suppressGlobalToast: true,
+  } as never;
 }
 
 function guestPayload() {
@@ -284,7 +297,7 @@ export async function toggleWishlist(
   const { data } = await apiSync.post<WishlistToggleResult>(
     `v1/products/${slug}/wishlist/toggle/`,
     guestPayload(),
-    guestOptions(),
+    suppressedGuestOptions(),
   );
   return parseApiResponse(
     WishlistToggleResultSchema,
@@ -342,7 +355,9 @@ export async function createCoupon(
  * Endpoint: DELETE /api/v1/products/coupons/<id>/
  */
 export async function deleteCoupon(couponId: string): Promise<void> {
-  await apiSync.delete(`v1/products/coupons/${couponId}/`);
+  await apiSync.delete(`v1/products/coupons/${couponId}/`, {
+    _suppressGlobalToast: true,
+  } as never);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -359,6 +374,7 @@ export async function createProduct(
   const { data } = await apiSync.post<ProductDetail>(
     "v1/products/vendor/",
     input,
+    { _suppressGlobalToast: true } as never,
   );
   return parseApiResponse(ProductDetailSchema, data, "createProduct") as ProductDetail;
 }
@@ -374,6 +390,7 @@ export async function updateProduct(
   const { data } = await apiSync.patch<ProductDetail>(
     `v1/products/vendor/${slug}/`,
     input,
+    { _suppressGlobalToast: true } as never,
   );
   return parseApiResponse(ProductDetailSchema, data, "updateProduct") as ProductDetail;
 }
@@ -385,6 +402,8 @@ export async function updateProduct(
 export async function publishProduct(slug: string): Promise<ProductDetail> {
   const { data } = await apiSync.post<ProductDetail>(
     `v1/products/vendor/${slug}/publish/`,
+    undefined,
+    { _suppressGlobalToast: true } as never,
   );
   return parseApiResponse(ProductDetailSchema, data, "publishProduct") as ProductDetail;
 }
@@ -394,7 +413,9 @@ export async function publishProduct(slug: string): Promise<ProductDetail> {
  * Endpoint: DELETE /api/v1/products/vendor/<slug>/
  */
 export async function deleteProduct(slug: string): Promise<void> {
-  await apiSync.delete(`v1/products/vendor/${slug}/`);
+  await apiSync.delete(`v1/products/vendor/${slug}/`, {
+    _suppressGlobalToast: true,
+  } as never);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -431,6 +452,7 @@ export async function adjustInventory(
   const { data } = await apiSync.post<ProductInventoryLog>(
     `v1/products/vendor/${slug}/inventory/adjust/`,
     input,
+    { _suppressGlobalToast: true } as never,
   );
   return parseApiResponse(
     ProductInventoryLogSchema,
@@ -455,6 +477,7 @@ export async function createProductReview(
   const { data } = await apiSync.post<ProductReview>(
     `v1/products/${slug}/reviews/`,
     input,
+    { _suppressGlobalToast: true } as never,
   );
   return parseApiResponse(ProductReviewSchema, data, "createProductReview") as ProductReview;
 }
@@ -470,6 +493,7 @@ export async function replyToReview(
   const { data } = await apiSync.patch<ProductReview>(
     `v1/products/reviews/${reviewId}/reply/`,
     input,
+    { _suppressGlobalToast: true } as never,
   );
   return parseApiResponse(ProductReviewSchema, data, "replyToReview") as ProductReview;
 }
@@ -501,6 +525,7 @@ export async function updateProductStatus(
   const { data } = await apiSync.post<ProductDetail | { status?: string }>(
     endpoint,
     body,
+    { _suppressGlobalToast: true } as never,
   );
   if (payload.status === "published") {
     const product = parseApiResponse(

@@ -142,6 +142,8 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
+      {/* Devtools are intentionally disabled here because Turbopack was
+          chunk-failing on the async devtools bundle during auth testing. */}
     </QueryClientProvider>
   );
 }
