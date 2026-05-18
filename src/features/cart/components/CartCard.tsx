@@ -1,5 +1,13 @@
 import { FashionistarImage } from "@/components/media";
 
+interface CardProps {
+  image: string;
+  title: string;
+  vendor: string;
+  rating: number | string;
+  price: number | string;
+}
+
 interface CartProp {
   data: CardProps & { quantity: number };
 }

@@ -8,3 +8,4 @@ export { default as OrderList } from "./OrderList";
 export { default as ClientOrderList } from "./ClientOrderList";
 export { default as OrderDetailView } from "./OrderDetailView";
 export { default as OrderPaymentView } from "./OrderPaymentView";
+export { default as OrderConfirmationView } from "./OrderConfirmationView";
