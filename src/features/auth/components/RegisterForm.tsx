@@ -96,10 +96,7 @@ export function RegisterForm({ role = "client" }: RegisterFormProps) {
     onError: (error) => {
       const parsed = parseApiError(error);
       setApiError(parsed);
-      toast.error("Registration Failed", {
-        description: parsed.message,
-        duration: 6000,
-      });
+
     },
   });
 
@@ -144,10 +141,8 @@ export function RegisterForm({ role = "client" }: RegisterFormProps) {
 
 
   const handleGoogleError = (error: string) => {
-    toast.error("Google Sign-In Failed", {
-      description: error,
-      duration: 6000,
-    });
+    // Google errors are surfaced via LoginForm/RegisterForm inline AuthAlert
+    console.warn("[RegisterForm] Google Sign-In Error:", error);
   };
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>

@@ -205,12 +205,6 @@ export function LoginForm() {
 
     },
     onError: (error) => {
-      const parsed = parseApiError(error);
-      setApiError(parsed);
-      toast.error("Sign In Failed", {
-        description: parsed.message,
-        duration: 6000,
-      });
     },
   });
 

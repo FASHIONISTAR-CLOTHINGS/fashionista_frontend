@@ -86,10 +86,7 @@ export function OTPVerifyForm() {
     onError: (error) => {
       const parsed = parseApiError(error, "Invalid or expired OTP. Please check the code and try again.");
       setVerifyError(parsed);
-      toast.error("Verification Failed", {
-        description: parsed.message,
-        duration: 6000,
-      });
+
       // Clear OTP inputs and refocus first box
       setOtp(Array(OTP_LENGTH).fill(""));
       requestAnimationFrame(() => {
@@ -116,10 +113,7 @@ export function OTPVerifyForm() {
     onError: (error) => {
       const parsed = parseApiError(error, "Could not resend OTP. Please try again.");
       setResendError(parsed);
-      toast.error("Resend Failed", {
-        description: parsed.message,
-        duration: 6000,
-      });
+
     },
   });
 

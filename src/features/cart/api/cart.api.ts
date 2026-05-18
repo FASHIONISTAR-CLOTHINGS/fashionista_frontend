@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file cart.api.ts
  * @description Cart domain API client — Fashionistar frontend (2027 Edition).
  *
@@ -7,6 +7,11 @@
  *    non-blocking, prefetch-friendly. Ninja returns the same CartOut schema.
  *  - Cart WRITES → `apiSync`  (Axios → DRF sync router). Strict transaction
  *    boundaries, atomic, idempotency-key echoed in response headers.
+ *
+ * Toast ownership:
+ *  - All write mutations set `_suppressGlobalToast: true` in their Axios config.
+ *  - The feature hooks (use-cart.ts) own all user-facing error toasts via onError.
+ *  - This prevents the global interceptor toast from firing alongside the hook toast.
  *
  * Changes (2027 modernization):
  *  • fetchCart now hits /v1/async/cart/ (Ninja) instead of DRF /v1/cart/current/.
@@ -149,6 +154,10 @@ export async function fetchCart(): Promise<Cart> {
 // apiSync base: http://host/api (Axios baseURL)
 // BASE_SYNC = "v1/cart" → Axios resolves to http://host/api/v1/cart
 // All paths below are relative to Axios baseURL (no leading slash).
+//
+// ⚠️  _suppressGlobalToast: true is set on ALL write configs.
+// The feature hooks (use-cart.ts) own the user-facing toast.error calls.
+// This prevents double-toast: interceptor + hook both firing simultaneously.
 
 /** Add a product/variant to the cart. Returns the updated cart. */
 export async function addCartItem(
@@ -162,7 +171,8 @@ export async function addCartItem(
     ...guestPayload(),
   }, {
     headers: writeHeaders(idempotencyKey),
-  });
+    _suppressGlobalToast: true,
+  } as never);
   return parseCartResponse(cartSchema, unwrapApiData(data) as unknown, "addCartItem");
 }
 
@@ -175,7 +185,7 @@ export async function updateCartItem(
   const { data } = await apiSync.patch<unknown>(
     `${BASE_SYNC}/items/${itemId}/quantity/`,
     { ...rest, ...guestPayload() },
-    { headers: writeHeaders(idempotencyKey) },
+    { headers: writeHeaders(idempotencyKey), _suppressGlobalToast: true } as never,
   );
   return parseCartResponse(cartSchema, unwrapApiData(data) as unknown, "updateCartItem");
 }
@@ -187,7 +197,8 @@ export async function removeCartItem(itemId: string): Promise<Cart> {
     {
       headers: writeHeaders(),
       params: guestPayload(),
-    },
+      _suppressGlobalToast: true,
+    } as never,
   );
   return parseCartResponse(cartSchema, unwrapApiData(data) as unknown, "removeCartItem");
 }
@@ -199,7 +210,7 @@ export async function applyCoupon(input: ApplyCouponInput): Promise<Cart> {
   const { data } = await apiSync.post<unknown>(
     `${BASE_SYNC}/coupon/`,
     { ...input, ...guestPayload() },
-    { headers: writeHeaders() },
+    { headers: writeHeaders(), _suppressGlobalToast: true } as never,
   );
   return parseCartResponse(cartSchema, unwrapApiData(data) as unknown, "applyCoupon");
 }
@@ -209,7 +220,8 @@ export async function removeCoupon(): Promise<Cart> {
   const { data } = await apiSync.delete<unknown>(`${BASE_SYNC}/coupon/`, {
     headers: writeHeaders(),
     params: guestPayload(),
-  });
+    _suppressGlobalToast: true,
+  } as never);
   return parseCartResponse(cartSchema, unwrapApiData(data) as unknown, "removeCoupon");
 }
 
@@ -218,7 +230,8 @@ export async function clearCart(): Promise<Cart> {
   const { data } = await apiSync.delete<unknown>(`${BASE_SYNC}/clear/`, {
     headers: writeHeaders(),
     params: guestPayload(),
-  });
+    _suppressGlobalToast: true,
+  } as never);
   return parseCartResponse(cartSchema, unwrapApiData(data) as unknown, "clearCart");
 }
 
@@ -234,6 +247,7 @@ export async function prepareCheckout(
   const { data } = await apiSync.post<unknown>(
     `${BASE_SYNC}/checkout/prepare/`,
     input,
+    { _suppressGlobalToast: true } as never,
   );
   return parseCartResponse(CheckoutSessionSchema, unwrapApiData(data), "prepareCheckout");
 }
@@ -253,8 +267,11 @@ export async function submitCheckout(
     `${BASE_SYNC}/checkout/submit/`,
     input,
     {
+      // Explicit idempotency key header (apiSync also auto-injects but we
+      // want the client-generated session key, not a random one per retry)
       headers: { "X-Idempotency-Key": input.idempotency_key },
-    },
+      _suppressGlobalToast: true,
+    } as never,
   );
   return parseCartResponse(
     SubmitCheckoutResponseSchema,

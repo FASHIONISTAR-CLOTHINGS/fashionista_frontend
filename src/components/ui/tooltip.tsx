@@ -1,7 +1,13 @@
 /**
  * @file tooltip.tsx
  * @description Fashionistar Tooltip primitive — Shadcn-compatible API.
+ *
  * Uses CSS-only hover tooltip (no Radix UI dependency).
+ *
+ * NOTE: This component is intentionally minimalist and CSS-only. It avoids
+ * React-context-based positioning logic (e.g., floating-ui/popper) in
+ * order to preserve SSR compatibility and avoid turbopack chunk-splitting bugs
+ * that occurred during local development with the full Radix Tooltip.
  */
 "use client";
 
