@@ -1,72 +1,51 @@
-/**
- * cn — Class Name Utility
- *
- * Combines clsx (conditional classes) with tailwind-merge (deduplication).
- * Standard pattern used by all Shadcn/ui components.
- *
- * Usage:
- *   cn("px-4 py-2", isActive && "bg-primary", "px-6") → "py-2 bg-primary px-6"
- */
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs))
 }
 
-/**
- * formatCurrency — Format a number as Nigerian Naira (₦)
- */
 export function formatCurrency(
-  amount: number,
-  currency: string = "NGN",
-  locale: string = "en-NG",
-): string {
+  value: number | string | null | undefined,
+  currency = "NGN",
+  locale = "en-NG",
+) {
+  const amount =
+    typeof value === "string" ? Number.parseFloat(value) : (value ?? 0)
+
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
-    maximumFractionDigits: 0,
-  }).format(amount);
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number.isFinite(amount) ? amount : 0)
 }
 
-/**
- * formatDate — Format a date string or Date object
- */
 export function formatDate(
-  date: string | Date,
-  options: Intl.DateTimeFormatOptions = {
-    day: "numeric",
-    month: "long",
+  value: string | number | Date | null | undefined,
+  locale = "en-NG",
+) {
+  if (!value) return ""
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return ""
+
+  return new Intl.DateTimeFormat(locale, {
     year: "numeric",
-  },
-): string {
-  return new Intl.DateTimeFormat("en-NG", options).format(
-    typeof date === "string" ? new Date(date) : date,
-  );
+    month: "short",
+    day: "numeric",
+  }).format(date)
 }
 
-/**
- * truncateText — Truncate text to a given character limit
- */
-export function truncateText(text: string, maxLength: number = 100): string {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength).trim() + "…";
+export function truncateText(value: string, maxLength = 100) {
+  if (value.length <= maxLength) return value
+  return `${value.slice(0, maxLength).trimEnd()}…`
 }
 
-/**
- * slug — Convert a string to URL-safe slug
- */
-export function slug(text: string): string {
-  return text
+export function slug(value: string) {
+  return value
     .toLowerCase()
-    .replace(/[^a-z0-9 -]/g, "")
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-}
-
-/**
- * sleep — Async delay utility for testing and rate limiting
- */
-export function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+    .replace(/-+/g, "-")
 }
