@@ -8,10 +8,7 @@ import { Preloader } from "@/components/shared/preloader/Preloader";
 import { GlobalToastProvider } from "@/shared";
 
 import "./globals.css";
-import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
-
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 
 // ── Local Fonts ───────────────────────────────────────────────────────────────
@@ -28,6 +25,8 @@ const satoshi = localFont({
     { path: "./fonts/Satoshi-Bold.otf", weight: "700", style: "normal" },
     { path: "./fonts/Satoshi-BoldItalic.otf", weight: "700", style: "italic" },
   ],
+  // --font-sans is the global sans-serif variable used by Shadcn/ui and Tailwind.
+  // Mapping it here to Satoshi removes any network dependency on Google Fonts.
   variable: "--font-satoshi",
   display: "swap",
 });
@@ -263,7 +262,7 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning // Required for next-themes
       data-scroll-behavior="smooth"
-      className={cn(bonFoyage.variable, satoshi.variable, "font-sans", geist.variable)}
+      className={cn(bonFoyage.variable, satoshi.variable, "font-sans")}
     >
       <head>
         {/*

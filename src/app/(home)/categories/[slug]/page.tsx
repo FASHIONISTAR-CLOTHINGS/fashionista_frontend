@@ -14,14 +14,7 @@ interface CategorySlugPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateStaticParams() {
-  try {
-    const categories = await getCatalogCategories();
-    return categories.slice(0, 100).map((c) => ({ slug: c.slug }));
-  } catch {
-    return [];
-  }
-}
+
 
 export async function generateMetadata({
   params,

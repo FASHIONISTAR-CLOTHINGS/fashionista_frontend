@@ -1,3 +1,6 @@
+// Prevent EmptyGenerateStaticParamsError with cacheComponents: true
+export const dynamic = 'force-dynamic';
+
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getProductDetailForMetadata } from "@/features/product/api/product.server";
