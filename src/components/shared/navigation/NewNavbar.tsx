@@ -17,7 +17,7 @@
 import { useCallback, useId, useState, useEffect } from "react";
 import { Search, UserRound, ShoppingCart } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import Image from "next/image";
+import { FashionistarImage } from "@/components/media";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import AccountOptions from "@/components/shared/overlays/AccountOptions";
@@ -32,7 +32,6 @@ const NAV_LINKS = [
   { href: "/vendors", label: "Vendors" },
   { href: "/products", label: "Shop" },
   { href: "/collections", label: "Collections" },
-  { href: "/about-us", label: "About" },
   { href: "/blog", label: "Blog" },
   { href: "/contact-us", label: "Contact" },
 ] as const;
@@ -84,14 +83,14 @@ const NewNavbar = () => {
         "hidden md:flex md:flex-wrap lg:flex-nowrap",
         "justify-between bg-background items-center",
         "py-4 px-2 lg:px-14 xl:px-20",
-        "sticky top-0 z-30 border-b border-border/60",
+        "sticky top-0 z-40 border-b border-border/60",
         "shadow-[0_4px_25px_0_hsl(var(--foreground)/0.06)]",
       )}
       suppressHydrationWarning
     >
       {/* ── Brand ─────────────────────────────────────────────────── */}
       <Link href="/" className="flex items-center gap-2 shrink-0">
-        <Image
+        <FashionistarImage
           src="/logo.svg"
           alt="Fashionistar"
           width={78}
@@ -100,7 +99,7 @@ const NewNavbar = () => {
           style={{ height: "auto" }}
           priority
         />
-        <span className="font-bon-foyage text-2xl md:text-3xl text-foreground">
+        <span className="font-bon_foyage text-2xl md:text-3xl text-foreground">
           Fashionistar
         </span>
       </Link>
