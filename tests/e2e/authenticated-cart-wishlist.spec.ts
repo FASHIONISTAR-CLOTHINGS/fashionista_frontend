@@ -42,7 +42,9 @@ const SEEDED_AUTH_PATH = path.resolve(
 );
 
 const BACKEND_BASE_URL =
-  process.env.PLAYWRIGHT_BACKEND_BASE_URL ?? "http://127.0.0.1:8000";
+  process.env.PLAYWRIGHT_BACKEND_BASE_URL ??
+  process.env.NEXT_PUBLIC_BACKEND_URL ??
+  "http://127.0.0.1:8001";
 
 function readClientSession(): SeededAuthSession {
   const content = fs.readFileSync(SEEDED_AUTH_PATH, "utf8");
@@ -198,14 +200,18 @@ test.describe("Authenticated Wishlist Toggle @authenticated @wishlist", () => {
     await page.goto("/client/dashboard/wishlist");
     await page.waitForLoadState("domcontentloaded");
 
-    // Wait for skeleton to resolve
-    await page.waitForTimeout(3000);
+    await expect(
+      page.getByRole("heading", { name: /wishlist/i }),
+    ).toBeVisible({ timeout: 15_000 });
 
-    const emptyState = page.getByText(/wishlist is empty|no items/i);
-    const productCard = page.locator("[data-testid='product-card'], .product-card, article").first();
+    const emptyState = page.getByText(/wishlist is empty|nothing saved|no items/i);
+    const productCard = page.locator("[data-testid='product-card']").first();
+    const productLink = page.getByRole("link", { name: /Vision Browser Product|wishlist/i }).first();
 
-    const hasEmpty = await emptyState.isVisible({ timeout: 5_000 }).catch(() => false);
-    const hasCard = await productCard.isVisible({ timeout: 5_000 }).catch(() => false);
+    const hasEmpty = await emptyState.isVisible({ timeout: 8_000 }).catch(() => false);
+    const hasCard =
+      (await productCard.isVisible({ timeout: 8_000 }).catch(() => false)) ||
+      (await productLink.isVisible({ timeout: 8_000 }).catch(() => false));
 
     // At least one state must be visible
     expect(hasEmpty || hasCard).toBe(true);

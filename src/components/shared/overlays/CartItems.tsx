@@ -228,7 +228,7 @@ const CartItems = ({ isOpen, onClose }: CartItemsProps) => {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 z-40 animate-in fade-in duration-200"
+        className="fixed inset-0 bg-black/40 z-50 animate-in fade-in duration-200"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -241,7 +241,7 @@ const CartItems = ({ isOpen, onClose }: CartItemsProps) => {
         aria-label={`Shopping cart — ${itemCount} item${itemCount !== 1 ? "s" : ""}`}
         className={cn(
           "bg-background h-screen w-4/5 sm:w-2/3 md:w-1/2 lg:w-[400px]",
-          "fixed right-0 top-0 z-50 flex flex-col",
+          "fixed right-0 top-0 z-[60] flex flex-col",
           "shadow-2xl border-l border-border",
           "animate-in slide-in-from-right duration-300",
         )}

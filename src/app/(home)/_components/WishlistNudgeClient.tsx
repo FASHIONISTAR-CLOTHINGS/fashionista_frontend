@@ -13,7 +13,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useClientWishlist } from "@/features/client/hooks/use-client-wishlist";
+import { useWishlist } from "@/features/product";
 import { WishlistNudge } from "@/features/catalog/components/WishlistNudge";
 
 const COMMERCE_ROUTE_PREFIXES = [
@@ -23,11 +23,11 @@ const COMMERCE_ROUTE_PREFIXES = [
 ] as const;
 
 /**
- * Reads the authenticated user's wishlist count and conditionally
+ * Reads the canonical wishlist count and conditionally
  * mounts the WishlistNudge sticky bar.
  *
- * If the user is unauthenticated or the query fails, returns null silently
- * (useClientWishlist will return { data: undefined }).
+ * Because the underlying product wishlist query supports guest session keys
+ * and authenticated users, the nudge stays in sync across login merges.
  */
 export function WishlistNudgeClient() {
   const pathname = usePathname();
@@ -35,10 +35,8 @@ export function WishlistNudgeClient() {
     prefix === "/" ? pathname === "/" : pathname.startsWith(prefix),
   );
 
-  const { data: wishlist } = useClientWishlist({ enabled: isCommerceRoute });
-
-  // getWishlist() returns WishlistItem[] — a plain array, not a paginated response.
-  const count = wishlist?.length ?? 0;
+  const { data: wishlist } = useWishlist();
+  const count = wishlist?.results?.length ?? 0;
 
   if (!isCommerceRoute) {
     return null;

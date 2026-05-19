@@ -96,6 +96,7 @@ const config: Config = {
         raleway: ["var(--font-satoshi)", "sans-serif"],
         satoshi: ["var(--font-satoshi)", "sans-serif"],
         "bon-foyage": ["var(--font-bon-foyage)", "serif"],
+        bon_foyage: ["var(--font-bon-foyage)", "serif"],
       },
 
       // ── Border Radius (Shadcn/ui) ─────────────────────────────────────────

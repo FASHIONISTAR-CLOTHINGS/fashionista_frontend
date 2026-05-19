@@ -111,12 +111,7 @@ export default function ProductCard({
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleWishlist(product.slug, {
-      onSuccess: () =>
-        isWishlisted
-          ? toast.success("Removed from wishlist.")
-          : toast.success("Added to wishlist! ❤️"),
-    });
+    toggleWishlist(product.slug);
   };
 
   return (

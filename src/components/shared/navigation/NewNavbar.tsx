@@ -15,7 +15,7 @@
 "use client";
 
 import { useCallback, useId, useState, useEffect } from "react";
-import { Search, UserRound, ShoppingCart, Phone } from "lucide-react";
+import { Search, UserRound, ShoppingCart } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -84,7 +84,7 @@ const NewNavbar = () => {
         "hidden md:flex md:flex-wrap lg:flex-nowrap",
         "justify-between bg-background items-center",
         "py-4 px-2 lg:px-14 xl:px-20",
-        "sticky top-0 z-40 border-b border-border/60",
+        "sticky top-0 z-30 border-b border-border/60",
         "shadow-[0_4px_25px_0_hsl(var(--foreground)/0.06)]",
       )}
       suppressHydrationWarning
@@ -100,7 +100,7 @@ const NewNavbar = () => {
           style={{ height: "auto" }}
           priority
         />
-        <span className="font-bon_foyage text-2xl md:text-3xl text-foreground">
+        <span className="font-bon-foyage text-2xl md:text-3xl text-foreground">
           Fashionistar
         </span>
       </Link>
@@ -166,17 +166,6 @@ const NewNavbar = () => {
           </div>
         </form>
 
-        {/* Phone widget */}
-        <div className="hidden xl:flex flex-col leading-none shrink-0 ml-1">
-          <a
-            href="tel:+2349000000000"
-            className="flex items-center gap-1 font-medium text-sm text-foreground whitespace-nowrap hover:text-[hsl(var(--accent))] transition-colors"
-          >
-            <Phone size={13} aria-hidden="true" />
-            +234 90 0000 000
-          </a>
-          <span className="text-[10px] text-muted-foreground text-right">24/7 support</span>
-        </div>
 
         {/* Account dropdown */}
         <div className="relative">

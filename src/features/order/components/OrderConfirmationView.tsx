@@ -13,8 +13,10 @@
  *  - Falls back to a fresh fetch if cache is cold (direct URL visit).
  */
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowRight,
   CheckCircle2,
@@ -25,7 +27,9 @@ import {
   ShoppingBag,
   Star,
 } from "lucide-react";
-import { useOrderDetail } from "../hooks/use-order";
+import { paymentKeys, useVerifyPayment } from "@/features/payment/hooks/use-payment";
+import { walletKeys } from "@/features/wallet/hooks/use-wallet";
+import { orderKeys, useOrderDetail } from "../hooks/use-order";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -121,12 +125,36 @@ function OrderStepper({ currentStatus }: { currentStatus: string }) {
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export default function OrderConfirmationView({ orderId }: { orderId: string }) {
+  const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const paymentReference =
+    searchParams.get("reference") ??
+    searchParams.get("trxref") ??
+    searchParams.get("tx_ref") ??
+    "";
+  const hasProcessedVerificationRef = useRef(false);
   const { data: order, isLoading, isError } = useOrderDetail(orderId);
+  const { data: verifiedPayment } = useVerifyPayment(paymentReference);
 
   const isPaid = useMemo(
     () => order?.is_fully_paid || order?.status === "payment_confirmed",
     [order],
   );
+
+  useEffect(() => {
+    if (!paymentReference || !verifiedPayment || hasProcessedVerificationRef.current) {
+      return;
+    }
+
+    hasProcessedVerificationRef.current = true;
+    void queryClient.invalidateQueries({ queryKey: orderKeys.detail(orderId) });
+    void queryClient.invalidateQueries({ queryKey: orderKeys.clientLists() });
+    void queryClient.invalidateQueries({ queryKey: orderKeys.clientCounts() });
+    void queryClient.invalidateQueries({ queryKey: walletKeys.all });
+    void queryClient.invalidateQueries({ queryKey: paymentKeys.ninjaDashboard() });
+    void queryClient.invalidateQueries({ queryKey: paymentKeys.ninjaSummary() });
+    void queryClient.invalidateQueries({ queryKey: paymentKeys.ninjaHistory(10) });
+  }, [orderId, paymentReference, queryClient, verifiedPayment]);
 
   if (isLoading) return <ConfirmationSkeleton />;
 

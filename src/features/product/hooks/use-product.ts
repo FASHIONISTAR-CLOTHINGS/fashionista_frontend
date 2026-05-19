@@ -252,6 +252,7 @@ export function useToggleWishlist() {
       void qc.invalidateQueries({ queryKey: productKeys.wishlist() });
       void qc.invalidateQueries({ queryKey: productKeys.bundle(slug) });
       void qc.invalidateQueries({ queryKey: productKeys.detail(slug) });
+      void qc.invalidateQueries({ queryKey: ["client", "wishlist"] });
       toast.success(res.added ? "Added to wishlist ❤️" : "Removed from wishlist");
     },
     onError: () => {

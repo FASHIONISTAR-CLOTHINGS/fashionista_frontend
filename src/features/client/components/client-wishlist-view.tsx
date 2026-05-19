@@ -5,8 +5,8 @@
  * @description Live authenticated wishlist view — 2027 Edition.
  *
  * Data flow:
- *  - Read:   useClientWishlist() → apiSync DRF /api/v1/client/wishlist/
- *  - Toggle: useToggleWishlist() → optimistic remove with instant UI feedback
+ *  - Read:   useWishlist()       → canonical Ninja /api/v1/ninja/products/wishlist/
+ *  - Toggle: useToggleWishlist() → canonical DRF /api/v1/products/<slug>/wishlist/toggle/
  *  - Add:    useAddCartItem()    → optimistic add-to-cart from wishlist card
  *
  * UX patterns:
@@ -28,11 +28,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  useClientWishlist,
+  useWishlist,
   useToggleWishlist,
-} from "@/features/client/hooks/use-client-wishlist";
+} from "@/features/product";
 import { useAddCartItem } from "@/features/cart/hooks/use-cart";
-import type { WishlistItem } from "@/features/client/types/client.types";
+import type { WishlistItem } from "@/features/product/types/product.types";
 import { FashionistarImage } from "@/components/media";
 import { formatCurrency } from "@/lib/formatting";
 
@@ -40,8 +40,8 @@ import { formatCurrency } from "@/lib/formatting";
 
 /**
  * Normalised wishlist row used internally by this view.
- * The backend's /v1/client/wishlist/ may return the canonical WishlistItem
- * shape OR a newer shape with product_id at root — we coerce to this.
+ * Uses the canonical product wishlist payload so dashboard rendering matches
+ * the public wishlist flow and the post-login merge contract.
  */
 interface WishlistRow {
   id: string;
@@ -58,7 +58,7 @@ interface WishlistRow {
   rating: number;
 }
 
-/** Coerce any WishlistItem to our flat WishlistRow. */
+/** Coerce canonical wishlist rows to the flattened card shape used here. */
 function toRow(item: WishlistItem): WishlistRow {
   const p = item.product;
   const price = typeof p.price === "number" ? p.price : parseFloat(String(p.price ?? 0));
@@ -73,13 +73,13 @@ function toRow(item: WishlistItem): WishlistRow {
     productId: p.id,
     slug: p.slug ?? p.id,
     title: p.title,
-    vendorName: p.vendor_name,
-    categoryName: undefined,
+    vendorName: p.vendor_name ?? undefined,
+    categoryName: p.category_name ?? undefined,
     price,
     oldPrice,
-    imageUrl: p.image ?? null,
-    inStock: true, // WishlistItem doesn't include in_stock; default to true
-    rating: 0,
+    imageUrl: p.image_url ?? null,
+    inStock: p.in_stock,
+    rating: p.computed_avg_rating ?? p.rating ?? 0,
   };
 }
 
@@ -119,8 +119,7 @@ function WishlistCard({ row }: { row: WishlistRow }) {
       : null;
 
   const handleRemove = () => {
-    toggleWishlist(productId, {
-      onSuccess: () => toast.success("Removed from wishlist."),
+    toggleWishlist(slug, {
       onError: () => toast.error("Could not remove from wishlist."),
     });
   };
@@ -136,7 +135,10 @@ function WishlistCard({ row }: { row: WishlistRow }) {
   };
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-[1.5rem] border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-[var(--card-shadow)] transition hover:shadow-[var(--card-hover-shadow)]">
+    <div
+      className="group relative flex flex-col overflow-hidden rounded-[1.5rem] border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-[var(--card-shadow)] transition hover:shadow-[var(--card-hover-shadow)]"
+      data-testid="product-card"
+    >
       {/* Image */}
       <Link
         href={`/products/${slug}`}
@@ -174,6 +176,7 @@ function WishlistCard({ row }: { row: WishlistRow }) {
         {/* Remove button */}
         <button
           type="button"
+          data-testid="wishlist-remove"
           onClick={(e) => {
             e.preventDefault();
             handleRemove();
@@ -251,13 +254,8 @@ type FilterTab = "all" | "in_stock" | "on_sale";
 
 export function ClientWishlistView() {
   const [filter, setFilter] = useState<FilterTab>("all");
-  const { data: rawData, isLoading, isError } = useClientWishlist();
-
-  // Normalize: coerce WishlistItem[] → flat WishlistRow[]
-  const rawItems = Array.isArray(rawData)
-    ? (rawData as WishlistItem[])
-    : ((rawData as unknown as { data?: WishlistItem[] })?.data ?? []);
-  const wishlist: WishlistRow[] = rawItems.map(toRow);
+  const { data, isLoading, isError } = useWishlist();
+  const wishlist: WishlistRow[] = (data?.results ?? []).map(toRow);
 
   const filtered = wishlist.filter((row) => {
     if (filter === "in_stock") return row.inStock;

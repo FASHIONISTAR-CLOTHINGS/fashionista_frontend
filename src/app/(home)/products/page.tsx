@@ -18,8 +18,10 @@
 
 import { Suspense, useState, useCallback } from "react";
 import { useProductFilters } from "@/features/product/hooks/use-product-filters";
+import { useToggleWishlist } from "@/features/product/hooks/use-product";
+import { useWishlistItemIds } from "@/features/client/hooks/use-client-wishlist";
 import ProductFilterPanel from "@/features/product/components/ProductFilterPanel";
-import { SlidersHorizontal, X, PackageSearch, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { SlidersHorizontal, X, PackageSearch, Loader2, ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import { useCatalogProducts } from "@/features/catalog/hooks/use-catalog-products";
 import Link from "next/link";
 import Image from "next/image";
@@ -33,11 +35,21 @@ function ProductCard({ product }: { product: CatalogProduct }) {
   const discountPct = hasDiscount
     ? Math.round((1 - parseFloat(product.price) / parseFloat(product.old_price!)) * 100)
     : 0;
+  const { mutate: toggleWishlist, isPending: wishlistLoading } = useToggleWishlist();
+  const wishlistIds = useWishlistItemIds();
+  const isWishlisted = wishlistIds.has(product.id) || wishlistIds.has(product.slug);
+
+  const handleWishlist = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleWishlist(product.slug);
+  };
 
   return (
     <Link
       href={`/products/${product.slug}`}
       className="group relative flex flex-col overflow-hidden rounded-2xl border border-border/40 bg-card transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl"
+      data-testid="product-card"
     >
       {/* Image */}
       <div className="relative aspect-[4/5] overflow-hidden bg-muted/20">
@@ -82,6 +94,25 @@ function ProductCard({ product }: { product: CatalogProduct }) {
             </span>
           </div>
         )}
+
+        <button
+          type="button"
+          data-testid="wishlist-btn"
+          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          onClick={handleWishlist}
+          disabled={wishlistLoading}
+          className={`absolute right-2 top-2 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border shadow-sm transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60 ${
+            isWishlisted
+              ? "border-rose-200 bg-rose-500 text-white"
+              : "border-white/70 bg-white/95 text-[hsl(var(--primary))]"
+          }`}
+        >
+          {wishlistLoading ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : (
+            <Heart size={17} fill={isWishlisted ? "currentColor" : "none"} />
+          )}
+        </button>
       </div>
 
       {/* Info */}

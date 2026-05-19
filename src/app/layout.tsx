@@ -292,7 +292,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
       </head>
 
-      <body className="min-h-screen bg-background font-raleway antialiased" suppressHydrationWarning>
+      <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
         {gaId ? (
           <>
             <Script

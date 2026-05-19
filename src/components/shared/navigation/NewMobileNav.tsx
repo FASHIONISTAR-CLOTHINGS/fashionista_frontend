@@ -339,7 +339,7 @@ const NewMobileNav = () => {
 
   return (
     <div
-      className="flex justify-between items-center bg-background md:hidden p-5 sticky top-0 z-40 border-b border-border shadow-[0_4px_25px_0_hsl(var(--foreground)/0.06)]"
+      className="flex justify-between items-center bg-background md:hidden p-5 sticky top-0 z-30 border-b border-border shadow-[0_4px_25px_0_hsl(var(--foreground)/0.06)]"
       suppressHydrationWarning
     >
       {/* ── Brand ────────────────────────────────────────────────── */}
@@ -353,7 +353,7 @@ const NewMobileNav = () => {
           className="h-auto w-9"
           imgClassName="h-auto w-full"
         />
-        <span className="font-bon_foyage text-2xl text-foreground">Fashionistar</span>
+        <span className="font-bon-foyage text-2xl text-foreground">Fashionistar</span>
       </Link>
 
       {/* ── Top-bar icon cluster ──────────────────────────────────── */}
@@ -424,7 +424,7 @@ const NewMobileNav = () => {
       {/* ── Backdrop ─────────────────────────────────────────────── */}
       {showNav && (
         <div
-          className="fixed inset-0 bg-black/40 z-40 animate-in fade-in duration-200"
+          className="fixed inset-0 bg-black/40 z-50 animate-in fade-in duration-200"
           onClick={closeDrawer}
           aria-hidden="true"
         />
@@ -438,14 +438,14 @@ const NewMobileNav = () => {
         aria-modal="true"
         aria-label="Navigation menu"
         className={cn(
-          "fixed top-0 w-full max-w-sm h-screen bg-background z-50",
+          "fixed top-0 w-full max-w-sm h-screen bg-background z-[60]",
           "flex flex-col overflow-y-auto shadow-2xl border-r border-border",
           "transition-all ease-in-out duration-300",
           showNav ? "left-0" : "-left-full",
         )}
       >
         {/* Drawer header */}
-        <div className="bg-[hsl(var(--sidebar-bg,_14_14_14))] py-5 px-6 flex items-center justify-between shrink-0 bg-foreground">
+        <div className="bg-[hsl(var(--sidebar-bg,_14_14_14))] py-5 px-6 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <FashionistarImage
               src="/logo.svg"
@@ -456,7 +456,7 @@ const NewMobileNav = () => {
               className="h-auto w-9"
               imgClassName="h-auto w-full"
             />
-            <span className="font-bon_foyage text-2xl text-background">Fashionistar</span>
+            <span className="font-bon-foyage text-2xl text-background">Fashionistar</span>
           </div>
           <button
             type="button"
@@ -531,7 +531,7 @@ const NewMobileNav = () => {
           </div>
 
           {isAuthenticated && roleQuickLinks.length > 0 && (
-            <div className="rounded-xl border border-border bg-white px-3 py-4">
+            <div className="rounded-xl border border-border bg-card px-3 py-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Quick Access
               </p>
