@@ -95,8 +95,11 @@ const config: Config = {
         sans: ["var(--font-satoshi)", ...defaultTheme.fontFamily.sans],
         raleway: ["var(--font-satoshi)", "sans-serif"],
         satoshi: ["var(--font-satoshi)", "sans-serif"],
-        "bon-foyage": ["var(--font-bon-foyage)", "serif"],
-        bon_foyage: ["var(--font-bon-foyage)", "serif"],
+        // ── Bon Foyage — brand display font (layout var is --font-bon-foyage)
+        // Both class forms (hyphen + underscore) resolve to the same variable
+        // so legacy `font-bon_foyage` classes in older components work correctly.
+        "bon-foyage": ["var(--font-bon-foyage)", "Georgia", "serif"],
+        bon_foyage: ["var(--font-bon-foyage)", "Georgia", "serif"],
       },
 
       // ── Border Radius (Shadcn/ui) ─────────────────────────────────────────

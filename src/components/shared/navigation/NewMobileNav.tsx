@@ -339,7 +339,7 @@ const NewMobileNav = () => {
 
   return (
     <div
-      className="flex justify-between items-center bg-background md:hidden p-5 sticky top-0 z-30 border-b border-border shadow-[0_4px_25px_0_hsl(var(--foreground)/0.06)]"
+      className="flex justify-between items-center bg-white md:hidden px-5 py-3 sticky top-0 z-30 border-b border-border shadow-[0_2px_12px_0_rgba(0,0,0,0.08)]"
       suppressHydrationWarning
     >
       {/* ── Brand ────────────────────────────────────────────────── */}
@@ -445,7 +445,7 @@ const NewMobileNav = () => {
         )}
       >
         {/* Drawer header */}
-        <div className="bg-[hsl(var(--sidebar-bg,_14_14_14))] py-5 px-6 flex items-center justify-between shrink-0">
+        <div className="bg-[#01454A] py-5 px-6 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <FashionistarImage
               src="/logo.svg"
