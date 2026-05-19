@@ -20,6 +20,7 @@ import {
   initializePayment,
   verifyPayment,
 } from "../api/payment.api";
+import { walletKeys } from "@/features/wallet/hooks/use-wallet";
 import type {
   InitializePaymentInput,
   TransferRecipientInput,
@@ -58,6 +59,7 @@ export function useFundWalletPayment() {
     onSuccess: (payload) => {
       qc.invalidateQueries({ queryKey: paymentKeys.ninjaDashboard() });
       qc.invalidateQueries({ queryKey: paymentKeys.ninjaSummary() });
+      qc.invalidateQueries({ queryKey: walletKeys.all });
       if (payload.order_id) {
         qc.invalidateQueries({ queryKey: ["order", "detail", payload.order_id] });
       }

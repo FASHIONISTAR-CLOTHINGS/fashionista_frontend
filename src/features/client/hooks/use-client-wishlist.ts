@@ -33,7 +33,11 @@ export const clientWishlistKeys = {
 /** Minimal shape of a wishlist row — used internally within this module. */
 type WishlistRow = {
   id: string;
-  product_id: string;
+  product_id?: string;
+  product?: {
+    id?: string;
+    slug?: string;
+  };
   [key: string]: unknown;
 };
 
@@ -68,9 +72,10 @@ export function useClientWishlist(options?: UseClientWishlistOptions) {
 export function useWishlistItemIds(): Set<string> {
   const { data } = useClientWishlist();
   if (!data || !Array.isArray(data)) return new Set<string>();
-  return new Set<string>(
-    (data as unknown as WishlistRow[]).map((item) => item.product_id),
-  );
+  const ids = (data as unknown as WishlistRow[])
+    .flatMap((item) => [item.product_id, item.product?.id, item.product?.slug])
+    .filter((value): value is string => Boolean(value));
+  return new Set<string>(ids);
 }
 
 /**
@@ -122,15 +127,29 @@ export function useToggleWishlist() {
         clientWishlistKeys.list,
         (old) => {
           if (!old) return old;
-          const exists = old.some((item) => item.product_id === product_id);
+          const exists = old.some(
+            (item) =>
+              item.product_id === product_id ||
+              item.product?.id === product_id ||
+              item.product?.slug === product_id,
+          );
           if (exists) {
-            return old.filter((item) => item.product_id !== product_id);
+            return old.filter(
+              (item) =>
+                item.product_id !== product_id &&
+                item.product?.id !== product_id &&
+                item.product?.slug !== product_id,
+            );
           }
           return [
             ...old,
             {
               id: `optimistic-${Date.now()}`,
               product_id,
+              product: {
+                id: product_id,
+                slug: product_id,
+              },
             },
           ];
         },

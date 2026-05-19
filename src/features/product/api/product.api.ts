@@ -35,7 +35,7 @@
  *     /api/v1/ninja/products/featured/          → featured products
  *     /api/v1/ninja/products/search/suggest/    → autocomplete suggestions
  *     /api/v1/ninja/products/wishlist/          → user wishlist list
- *     /api/v1/ninja/products/wishlist/bulk/     → bulk wishlist status
+ *     /api/v1/ninja/products/wishlist/bulk-check/ → bulk wishlist status
  *     /api/v1/ninja/products/coupon/validate/   → coupon validation
  *     /api/v1/ninja/products/vendor/            → vendor product list
  *     /api/v1/ninja/products/vendor/<slug>/inventory/ → inventory logs
@@ -267,14 +267,14 @@ export async function fetchWishlist(page = 1): Promise<PaginatedWishlist> {
 
 /**
  * Bulk check wishlist status for multiple products (for heart icons on cards).
- * Endpoint: POST /api/v1/ninja/products/wishlist/bulk/
+ * Endpoint: POST /api/v1/ninja/products/wishlist/bulk-check/
  * Body: { slugs: string[] }
  */
 export async function fetchWishlistBulkStatus(
   slugs: string[],
 ): Promise<WishlistBulkStatus> {
   const raw = await apiAsync
-    .post("products/wishlist/bulk/", { json: { slugs } })
+    .post("products/wishlist/bulk-check/", { json: { slugs } })
     .json();
   return parseApiResponse(
     WishlistBulkStatusSchema,

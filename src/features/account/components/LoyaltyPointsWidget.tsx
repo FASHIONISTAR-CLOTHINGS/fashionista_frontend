@@ -73,7 +73,7 @@ interface WalletSummary {
 }
 
 async function fetchWalletSummary(): Promise<WalletSummary> {
-  return apiAsync.get("client/wallet/balance/").json<WalletSummary>();
+  return apiAsync.get("wallet/balance/").json<WalletSummary>();
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
