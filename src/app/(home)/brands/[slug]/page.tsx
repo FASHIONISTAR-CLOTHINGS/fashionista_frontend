@@ -11,8 +11,6 @@ interface BrandDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
-
-
 export async function generateMetadata({
   params,
 }: BrandDetailPageProps): Promise<Metadata> {

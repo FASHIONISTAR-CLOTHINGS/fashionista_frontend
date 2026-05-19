@@ -1,15 +1,32 @@
-// Prevent EmptyGenerateStaticParamsError with cacheComponents: true
-export const dynamic = 'force-dynamic';
-
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { getProductDetailForMetadata } from "@/features/product/api/product.server";
+import {
+  getProductDetailForMetadata,
+  getProductSlugsServer,
+} from "@/features/product/api/product.server";
 import type { ProductDetail } from "@/features/product";
 import { ProductDetailClient } from "./ProductDetailClient";
 import { ProductDetailSkeleton } from "./ProductDetailSkeleton";
 
 interface ProductDetailPageProps {
   params: Promise<{ slug: string }>;
+}
+
+const PRODUCT_VALIDATION_SLUG = "__product_validation__";
+
+export async function generateStaticParams() {
+  try {
+    const slugs = await getProductSlugsServer();
+    const params = slugs
+      .slice(0, 48)
+      .filter(Boolean)
+      .map((slug) => ({ slug }));
+
+    return params.length > 0 ? params : [{ slug: PRODUCT_VALIDATION_SLUG }];
+  } catch {
+    return [{ slug: PRODUCT_VALIDATION_SLUG }];
+  }
 }
 
 /**
@@ -20,6 +37,11 @@ export async function generateMetadata({
   params,
 }: ProductDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
+  if (slug === PRODUCT_VALIDATION_SLUG) {
+    return {
+      title: "Product | FASHIONISTAR AI",
+    };
+  }
   const product = await getProductDetailForMetadata(slug);
   const cleanSlug =
     product?.title ??
@@ -58,6 +80,9 @@ export default async function ProductDetailPage({
   params,
 }: ProductDetailPageProps) {
   const { slug } = await params;
+  if (slug === PRODUCT_VALIDATION_SLUG) {
+    notFound();
+  }
   const initialProduct: ProductDetail | null = await getProductDetailForMetadata(slug);
 
   return (

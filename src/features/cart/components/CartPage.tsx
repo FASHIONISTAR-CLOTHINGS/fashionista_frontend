@@ -18,7 +18,7 @@
  */
 
 import Link from "next/link";
-import { useRef, useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -31,14 +31,12 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { v4 as uuidv4 } from "uuid";
 import {
   useCart,
   useUpdateCartItem,
   useRemoveCartItem,
   useApplyCoupon,
   useRemoveCoupon,
-  useSubmitCheckout,
 } from "@/features/cart/hooks/use-cart";
 import { useCartAbandonment } from "@/features/cart/hooks/use-cart-abandonment";
 import { CartPageSkeleton } from "./CartPageSkeleton";
@@ -47,7 +45,7 @@ import { FashionistarImage } from "@/components/media";
 
 export default function CartPage() {
   const router = useRouter();
-  const idempotencyKey = useRef(uuidv4());
+  const [mounted, setMounted] = useState(false);
 
   const [couponInput, setCouponInput] = useState("");
   const [showCouponInput, setShowCouponInput] = useState(false);
@@ -57,13 +55,6 @@ export default function CartPage() {
   const { mutate: removeItem, isPending: removingItem } = useRemoveCartItem();
   const { mutate: applyCoupon, isPending: applyingCoupon } = useApplyCoupon();
   const { mutate: removeCoupon } = useRemoveCoupon();
-  const { mutate: submit, isPending: submitting } = useSubmitCheckout((orderId, paymentUrl) => {
-    if (paymentUrl) {
-      window.location.href = paymentUrl;
-    } else {
-      router.push(`/client/dashboard/orders/${orderId}/payment`);
-    }
-  });
 
   // ── Revenue: Cart abandonment recovery (fires once per session after 3 min) ─
   const onCartAbandonment = useCallback(() => {
@@ -83,7 +74,11 @@ export default function CartPage() {
   });
   // ─────────────────────────────────────────────────────────────────────────────
 
-  if (isLoading) return <CartPageSkeleton />;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || isLoading) return <CartPageSkeleton />;
 
   if (isError || !cart) {
     return (
@@ -124,14 +119,14 @@ export default function CartPage() {
   };
 
   const handlePlaceOrder = () => {
-    submit(idempotencyKey.current);
+    router.push("/cart/checkout");
   };
 
   return (
     <div className="min-h-screen bg-background px-4 py-8 md:px-8 lg:px-20">
       {/* Header */}
       <div className="mb-8 border-b border-border pb-6">
-        <h1 className="font-bon_foyage text-[40px] leading-[1.1] text-foreground md:text-[72px]">
+        <h1 className="font-bon-foyage text-[40px] leading-[1.1] text-foreground md:text-[72px]">
           Your Cart
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -366,17 +361,13 @@ export default function CartPage() {
             {/* CTA */}
             <button
               onClick={handlePlaceOrder}
-              disabled={submitting || hasMeasurementItem}
+              disabled={hasMeasurementItem}
               className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[hsl(var(--accent))] py-4 text-base font-bold text-[hsl(var(--accent-foreground))] shadow-md transition hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {submitting ? (
-                <span className="animate-spin rounded-full border-2 border-black/20 border-t-black h-5 w-5" />
-              ) : (
-                <>
-                  <ShoppingBag size={18} />
-                  {hasMeasurementItem ? "Measurement required" : "Proceed to Checkout"}
-                </>
-              )}
+              <>
+                <ShoppingBag size={18} />
+                {hasMeasurementItem ? "Measurement required" : "Proceed to Checkout"}
+              </>
             </button>
 
             {hasMeasurementItem && (

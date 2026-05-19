@@ -19,7 +19,7 @@
  */
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -150,6 +150,7 @@ function FreeShippingBar({ subtotal }: { subtotal: number }) {
 export function CheckoutPage() {
   const router = useRouter();
   const idempotencyKey = useRef(uuidv4());
+  const [mounted, setMounted] = useState(false);
 
   const { data: cart, isLoading } = useCart();
   const { mutate: submit, isPending: submitting } = useSubmitCheckout(
@@ -176,7 +177,11 @@ export function CheckoutPage() {
   });
   const [errors, setErrors] = useState<Partial<DeliveryForm>>({});
 
-  if (isLoading) return <CheckoutPageSkeleton />;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || isLoading) return <CheckoutPageSkeleton />;
 
   // Redirect to cart if empty
   if (!cart || cart.items.length === 0) {
@@ -226,7 +231,22 @@ export function CheckoutPage() {
       toast.error("Please complete all required fields.");
       return;
     }
-    submit(idempotencyKey.current);
+    submit({
+      idempotency_key: idempotencyKey.current,
+      payment_method: paymentMethod,
+      fulfillment_type: "delivery",
+      notes: form.delivery_note.trim(),
+      delivery_address: {
+        full_name: form.full_name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        address_line_1: form.street_address.trim(),
+        city: form.city.trim(),
+        state: form.state.trim(),
+        country: form.country.trim() || "Nigeria",
+        postal_code: form.postal_code.trim() || undefined,
+      },
+    });
   };
 
   const field = (
@@ -264,7 +284,7 @@ export function CheckoutPage() {
         >
           <ChevronLeft size={16} /> Back to cart
         </Link>
-        <h1 className="font-bon_foyage text-[40px] leading-[1.1] text-[hsl(var(--foreground))] md:text-[64px]">
+        <h1 className="font-bon-foyage text-[40px] leading-[1.1] text-[hsl(var(--foreground))] md:text-[64px]">
           Checkout
         </h1>
         <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">

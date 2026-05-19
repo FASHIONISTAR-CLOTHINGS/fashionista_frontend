@@ -14,12 +14,31 @@ interface CollectionDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
+const COLLECTION_VALIDATION_SLUG = "__collection_validation__";
 
+export async function generateStaticParams() {
+  try {
+    const collections = await getCatalogCollections();
+    const params = collections
+      .slice(0, 24)
+      .filter((collection) => Boolean(collection.slug))
+      .map((collection) => ({ slug: collection.slug }));
+
+    return params.length > 0
+      ? params
+      : [{ slug: COLLECTION_VALIDATION_SLUG }];
+  } catch {
+    return [{ slug: COLLECTION_VALIDATION_SLUG }];
+  }
+}
 
 export async function generateMetadata({
   params,
 }: CollectionDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
+  if (slug === COLLECTION_VALIDATION_SLUG) {
+    return { title: "Collections | Fashionistar" };
+  }
   const collections = await getCatalogCollections();
   const collection = collections.find((c) => c.slug === slug);
 
@@ -47,6 +66,9 @@ export default async function CollectionDetailPage({
   params,
 }: CollectionDetailPageProps) {
   const { slug } = await params;
+  if (slug === COLLECTION_VALIDATION_SLUG) {
+    notFound();
+  }
   const [collections, categories] = await Promise.all([
     getCatalogCollections(),
     getCatalogCategories(),

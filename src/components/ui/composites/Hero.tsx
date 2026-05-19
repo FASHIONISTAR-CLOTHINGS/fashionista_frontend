@@ -131,7 +131,7 @@ function HeroSection({
 
         {/* Headline + form area */}
         <div className="w-full pl-5 md:pl-10 lg:pl-24 flex flex-col gap-5 justify-center">
-          <h1 className="font-bon_foyage lg:whitespace-nowrap text-[35px] leading-[44px] md:text-[75px] md:leading-[86px] text-black inline-block">
+          <h1 className="font-bon-foyage lg:whitespace-nowrap text-[35px] leading-[44px] md:text-[75px] md:leading-[86px] text-black inline-block">
             {" "}Unlock Your Fashion <br /> Essence With{" "}
             <span className="text-white bg-[#01454a] w-full px-2 pr-10 inline-block">
               Fashionistar

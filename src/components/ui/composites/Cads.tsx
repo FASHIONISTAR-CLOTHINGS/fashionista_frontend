@@ -120,7 +120,7 @@ const Cads = ({ data, onAddToCart, onWishlist }: CadsProps) => {
 
       {/* ── Product info ─────────────────────────────────────────── */}
       <div className="flex flex-col justify-between mt-2 gap-1">
-        <p className="font-bon_foyage md:text-[28px] text-lg py-1 leading-[17.82px] md:leading-7 text-black line-clamp-2">
+        <p className="font-bon-foyage md:text-[28px] text-lg py-1 leading-[17.82px] md:leading-7 text-black line-clamp-2">
           {data.title}
         </p>
 

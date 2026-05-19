@@ -53,6 +53,7 @@ import type {
   UpdateCartItemInput,
   ApplyCouponInput,
   PrepareCheckoutInput,
+  SubmitCheckoutInput,
 } from "../types/cart.types";
 import { prepareCheckout, submitCheckout } from "../api/cart.api";
 
@@ -496,8 +497,11 @@ export function useSubmitCheckout(
 ) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (idempotencyKey?: string) =>
-      submitCheckout({ idempotency_key: idempotencyKey ?? uuidv4() }),
+    mutationFn: (input: SubmitCheckoutInput) =>
+      submitCheckout({
+        ...input,
+        idempotency_key: input.idempotency_key ?? uuidv4(),
+      }),
     onSuccess: (res) => {
       void qc.invalidateQueries({ queryKey: cartKeys.all });
       toast.success(`Order ${res.order_number} placed! 🎊`);
