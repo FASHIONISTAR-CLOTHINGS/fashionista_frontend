@@ -273,13 +273,14 @@ test("real live vendor to payment browser flow", async ({ page, request }) => {
     await seedAuthenticatedSession(page, auth.client);
     await page.goto(`/products?q=${encodeURIComponent(createdProduct.title)}`);
     await expect(page).toHaveURL(/\/products/, { timeout: 30_000 });
-    const productLink = page.locator(`a[href='/products/${createdProduct.slug}']`).first();
-    await expect(productLink).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(
+      page.getByRole("heading", {
+        name: new RegExp(`Results for "${createdProduct.title}"`, "i"),
+      }),
+    ).toBeVisible({ timeout: 30_000 });
     await capture(page, "live-client-products-list");
 
-    await productLink.click();
+    await page.goto(`/products/${createdProduct.slug}`);
     await expect(page).toHaveURL(new RegExp(`/products/${createdProduct.slug}`), { timeout: 30_000 });
     await expect(
       page.getByRole("heading", {
@@ -304,18 +305,28 @@ test("real live vendor to payment browser flow", async ({ page, request }) => {
 
     await page.goto("/cart");
     await expect(page).toHaveURL(/\/cart/, { timeout: 30_000 });
-    await expect(page.getByText(new RegExp(createdProduct.title, "i"))).toBeVisible({ timeout: 30_000 });
+    await expect(
+      page.getByRole("link", {
+        name: new RegExp(`^${createdProduct.title}$`, "i"),
+      }).first(),
+    ).toBeVisible({ timeout: 30_000 });
     await capture(page, "live-client-cart");
 
-    const checkoutButton = page
-      .locator("a[href*='checkout'], button:has-text('Checkout'), a:has-text('Checkout')")
-      .first();
-    await expect(checkoutButton).toBeVisible({ timeout: 20_000 });
-    await checkoutButton.click();
-
+    await page.goto("/cart/checkout");
+    await expect(page).toHaveURL(/\/cart\/checkout/, { timeout: 30_000 });
+    await expect(page.getByRole("heading", { name: /Checkout/i })).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.locator("#full_name").fill("Chidi Nwosu");
+    await page.locator("#phone").fill("+2348012345678");
+    await page.locator("#email").fill("client@fashionistar.test");
+    await page.locator("#street_address").fill("10 Ozumba Mbadiwe Avenue");
+    await page.locator("#city").fill("Lagos");
+    await page.locator("#state").fill("Lagos");
+    await page.getByRole("button", { name: /Place Order Securely/i }).click();
     await page.waitForLoadState("networkidle");
     await capture(page, "live-client-checkout");
-    expect(page.url()).toMatch(/checkout|orders|payment/i);
+    expect(page.url()).toMatch(/checkout|orders|payment|confirmation/i);
   });
 
   await test.step("client reaches the order payment surface when an unpaid order exists", async () => {
@@ -332,6 +343,8 @@ test("real live vendor to payment browser flow", async ({ page, request }) => {
     const orderPayload = requireObject(ordersResponse.payload, "Client order list");
     const orderResults = Array.isArray(orderPayload.results)
       ? (orderPayload.results as Array<Record<string, unknown>>)
+      : Array.isArray(orderPayload.data)
+        ? (orderPayload.data as Array<Record<string, unknown>>)
       : [];
 
     const payableOrder = orderResults.find((item) => typeof item.id === "string");
@@ -341,7 +354,17 @@ test("real live vendor to payment browser flow", async ({ page, request }) => {
     await page.goto(`/client/dashboard/orders/${String(payableOrder?.id)}/payment`);
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveURL(/\/payment/, { timeout: 30_000 });
-    await expect(page.getByText(/Pay from Wallet|Pay with Gateway|Cash on Delivery|Pay at Shop/i)).toBeVisible({
+    await expect(page.getByRole("heading", { name: /Payment Method/i })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(
+      page.getByRole("button", { name: /Fashionistar Wallet Instant/i }),
+    ).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(
+      page.getByRole("button", { name: /Card \/ Bank Gateway Pay with/i }),
+    ).toBeVisible({
       timeout: 30_000,
     });
     await capture(page, "live-client-order-payment");

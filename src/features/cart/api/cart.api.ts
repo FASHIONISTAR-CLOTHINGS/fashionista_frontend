@@ -264,8 +264,13 @@ export async function submitCheckout(
   await mergeAnonymousCommerce();
 
   const { data } = await apiSync.post<unknown>(
-    `${BASE_SYNC}/checkout/submit/`,
-    input,
+    `v1/orders/place/`,
+    {
+      delivery_address: input.delivery_address,
+      fulfillment_type: input.fulfillment_type ?? "delivery",
+      measurement_profile_id: input.measurement_profile_id ?? null,
+      notes: input.notes ?? "",
+    },
     {
       // Explicit idempotency key header (apiSync also auto-injects but we
       // want the client-generated session key, not a random one per retry)
@@ -273,9 +278,19 @@ export async function submitCheckout(
       _suppressGlobalToast: true,
     } as never,
   );
+  const order = unwrapApiData<{
+    id: string;
+    order_number: string;
+  }>(data);
+
   return parseCartResponse(
     SubmitCheckoutResponseSchema,
-    unwrapApiData(data),
+    {
+      order_id: order.id,
+      order_number: order.order_number,
+      payment_url: null,
+      message: "Order placed successfully.",
+    },
     "submitCheckout",
   );
 }

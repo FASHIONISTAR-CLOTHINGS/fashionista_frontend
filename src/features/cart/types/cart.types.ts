@@ -130,6 +130,19 @@ export interface PrepareCheckoutInput {
 
 export interface SubmitCheckoutInput {
   idempotency_key: string;
+  delivery_address: {
+    full_name: string;
+    phone: string;
+    email: string;
+    address_line_1: string;
+    city: string;
+    state: string;
+    country: string;
+    postal_code?: string;
+  };
+  fulfillment_type?: "delivery" | "pickup" | "digital" | "custom";
+  measurement_profile_id?: string | null;
+  notes?: string;
   payment_method?: string;
 }
 

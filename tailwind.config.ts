@@ -89,8 +89,11 @@ const config: Config = {
 
       // ── Typography ────────────────────────────────────────────────────────
       fontFamily: {
-        sans: ["var(--font-inter)", ...defaultTheme.fontFamily.sans],
-        raleway: ["var(--font-raleway)", "sans-serif"],
+        // The root layout now ships local Satoshi as the canonical sans font.
+        // Keep shadcn/ui `font-sans` and legacy `font-raleway` utilities aligned
+        // to that same local source to avoid production-only font fallback drift.
+        sans: ["var(--font-satoshi)", ...defaultTheme.fontFamily.sans],
+        raleway: ["var(--font-satoshi)", "sans-serif"],
         satoshi: ["var(--font-satoshi)", "sans-serif"],
         "bon-foyage": ["var(--font-bon-foyage)", "serif"],
       },

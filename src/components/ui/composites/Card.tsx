@@ -232,7 +232,7 @@ const ProductCard = ({ data, onAddToCart, onWishlist }: ProductCardProps) => {
 
       {/* Info section */}
       <div className="flex flex-col justify-between mt-2 gap-1">
-        <p className="font-bon_foyage md:text-[28px] text-lg py-1 leading-[17.82px] md:leading-7 text-black">
+        <p className="font-bon-foyage md:text-[28px] text-lg py-1 leading-[17.82px] md:leading-7 text-black">
           {data.title}
         </p>
 

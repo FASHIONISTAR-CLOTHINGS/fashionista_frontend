@@ -1,11 +1,24 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { OrderConfirmationView } from "@/features/order";
 
 type PageProps = { params: Promise<{ order_id: string }> };
 
+const ORDER_CONFIRMATION_VALIDATION_ID = "__order_confirmation_validation__";
+
+export async function generateStaticParams() {
+  return [{ order_id: ORDER_CONFIRMATION_VALIDATION_ID }];
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { order_id } = await params;
+  if (order_id === ORDER_CONFIRMATION_VALIDATION_ID) {
+    return {
+      title: "Order Confirmed | Fashionistar",
+      robots: { index: false, follow: false },
+    };
+  }
   return {
     title: `Order Confirmed | #${order_id.slice(0, 8).toUpperCase()} | Fashionistar`,
     description:
@@ -16,6 +29,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ClientOrderConfirmationPage({ params }: PageProps) {
   const { order_id } = await params;
+  if (order_id === ORDER_CONFIRMATION_VALIDATION_ID) {
+    notFound();
+  }
   return (
     <Suspense
       fallback={

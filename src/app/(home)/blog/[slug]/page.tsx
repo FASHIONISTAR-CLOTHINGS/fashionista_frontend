@@ -12,8 +12,15 @@ interface BlogDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
+const BLOG_VALIDATION_SLUG = "__blog_validation__";
+
 export async function generateMetadata({ params }: BlogDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
+  if (slug === BLOG_VALIDATION_SLUG) {
+    return {
+      title: "Fashionistar Blog",
+    };
+  }
   const post = await getCatalogBlogPostBySlug(slug);
 
   if (!post) {
@@ -41,14 +48,22 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
 export async function generateStaticParams() {
   try {
     const posts = await getCatalogBlogPosts();
-    return posts.slice(0, 50).map((post) => ({ slug: post.slug }));
+    const params = posts
+      .slice(0, 50)
+      .filter((post) => Boolean(post.slug))
+      .map((post) => ({ slug: post.slug }));
+
+    return params.length > 0 ? params : [{ slug: BLOG_VALIDATION_SLUG }];
   } catch {
-    return [];
+    return [{ slug: BLOG_VALIDATION_SLUG }];
   }
 }
 
 export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
   const { slug } = await params;
+  if (slug === BLOG_VALIDATION_SLUG) {
+    notFound();
+  }
   const post = await getCatalogBlogPostBySlug(slug);
 
   if (!post) {

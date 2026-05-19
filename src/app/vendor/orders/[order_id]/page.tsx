@@ -1,6 +1,3 @@
-// Prevent EmptyGenerateStaticParamsError with cacheComponents: true
-export const dynamic = 'force-dynamic';
-
 import { OrderDetailView } from "@/features/order";
 
 export default async function VendorOrderDetailPage({
