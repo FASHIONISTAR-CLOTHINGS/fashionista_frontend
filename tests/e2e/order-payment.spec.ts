@@ -113,13 +113,17 @@ test.describe("Order payment route", () => {
     await expect(
       page.getByRole("heading", { name: /order payment/i }),
     ).toBeVisible();
-    await expect(page.getByText(/choose amount/i)).toBeVisible();
-    await expect(page.getByText(/choose payment method/i)).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /pay from wallet/i }),
+      page.getByRole("heading", { level: 2, name: /choose payment amount/i }),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /pay with gateway/i }),
+      page.getByRole("heading", { level: 2, name: /^payment method$/i }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /fashionistar wallet/i }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /card\s*\/\s*bank gateway/i }),
     ).toBeVisible();
 
     const mode = payableOrder!.cash_payment_mode_snapshot ?? "disabled";
