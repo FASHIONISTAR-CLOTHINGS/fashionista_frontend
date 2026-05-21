@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { ChooseRoleOptions } from "@/features/auth/components/ChooseRoleOptions";
 
 export const metadata: Metadata = {
@@ -16,9 +17,20 @@ export const metadata: Metadata = {
  *
  * Design: Two prominent cards — Vendor and Client — matching the Figma design.
  * Mobile-first, responsive.
+ *
+ * Wrapped in Suspense because ChooseRoleOptions calls useSearchParams()
+ * which requires a Suspense boundary in Next.js App Router.
  */
 export default function ChooseRolePage() {
   return (
-    <ChooseRoleOptions />
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-cream via-white to-secondary">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      }
+    >
+      <ChooseRoleOptions />
+    </Suspense>
   );
 }

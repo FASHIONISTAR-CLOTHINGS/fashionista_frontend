@@ -96,6 +96,29 @@ async function mergeEndpoint(path: string, sessionKey: string): Promise<void> {
 /**
  * Merge anonymous cart and wishlist rows into the newly authenticated account.
  *
+ * ROLE GUARD (CRITICAL SECURITY FIX):
+ * ─────────────────────────────────────────────────────────────────────────────
+ * This function MUST NOT merge guest commerce data for ADMIN or VENDOR users.
+ *
+ * The problem this fixes: Before this guard existed, when an admin or vendor
+ * logged in after browsing the site as a guest (and potentially adding items
+ * to cart/wishlist), their guest session cart would be merged into their DB
+ * record. Then when they later navigated to /cart (which shouldn't happen but
+ * did before the route guard was in place), they would see the items with ₦0
+ * amounts (because backend 403ed the quantity calculation but the items persisted
+ * in local state), leading to phantom orders with zero amounts.
+ *
+ * ROLE BEHAVIOUR:
+ *   • client  → Normal merge: cart + wishlist session data merged into DB.
+ *   • vendor  → Purge: guest session keys deleted, no API call made.
+ *   • admin   → Purge: guest session keys deleted, no API call made.
+ *   • staff   → Purge: guest session keys deleted, no API call made.
+ *
+ * DESIGN DECISION: We lazy-import useAuthStore here to avoid a circular
+ * dependency between the cart API layer and the auth store. The auth store
+ * must already be hydrated by the time this function is called (it's called
+ * from login/OTP-verify success handlers, which run after setUser()).
+ *
  * Guard: exits early when no anonymous session key exists to avoid a wasted
  * network round-trip on users who signed up fresh without browsing first.
  *
@@ -106,6 +129,47 @@ export async function mergeAnonymousCommerce(): Promise<void> {
   const sessionKey = peekFashionistarSessionKey();
   if (!sessionKeyExists() || !sessionKey || !readAccessToken()) return;
 
+  // ── Role Gate ──────────────────────────────────────────────────────────────
+  // Lazy import to avoid circular deps: auth store → cart → auth store
+  // At this point in the auth flow, useAuthStore is guaranteed to be hydrated
+  // because setUser() has already been called by the login/OTP success handler.
+  const { useAuthStore } = await import("@/features/auth/store/auth.store");
+  const user = useAuthStore.getState().user;
+  const userRole = user?.role ?? "";
+
+  // Canonical "non-client" roles that must NOT access commerce features.
+  // Matches the server-side RBAC policy in apps/cart/views.py CartMergeView.
+  const NON_CLIENT_ROLES = new Set([
+    "admin", "super_admin",
+    "vendor", "super_vendor",
+    "staff", "super_staff",
+    "support", "super_support",
+    "editor", "super_editor",
+    "assistant", "super_assistant",
+    "moderator", "super_moderator",
+    "sales",
+  ]);
+
+  const isNonClientRole =
+    user?.is_staff === true ||
+    NON_CLIENT_ROLES.has(userRole.toLowerCase());
+
+  if (isNonClientRole) {
+    // Purge guest session storage immediately — no API call, no merge.
+    // This discards any items the user may have added while browsing
+    // anonymously, preventing them from appearing in admin/vendor sessions.
+    clearFashionistarSessionKey();
+    if (process.env.NODE_ENV === "development") {
+      console.info(
+        `[cart.api] mergeAnonymousCommerce: skipping merge for role="${userRole}" (non-client). Guest session purged.`,
+      );
+    }
+    return;
+  }
+
+  // ── Client Merge ───────────────────────────────────────────────────────────
+  // Only CLIENT users reach this point. Merge their anonymous cart and
+  // wishlist into their authenticated account records.
   const results = await Promise.allSettled([
     mergeEndpoint(`${BASE_SYNC}/merge/`, sessionKey),
     mergeEndpoint("v1/products/wishlist/merge/", sessionKey),
@@ -119,6 +183,7 @@ export async function mergeAnonymousCommerce(): Promise<void> {
   // Clear the anonymous key post-merge — prevents key reuse across sessions.
   clearFashionistarSessionKey();
 }
+
 
 // ── CART READS ────────────────────────────────────────────────────────────────
 
