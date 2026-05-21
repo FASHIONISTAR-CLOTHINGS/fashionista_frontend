@@ -42,7 +42,10 @@ function RoleCard({
 
 export function ChooseRoleOptions() {
   const searchParams = useSearchParams();
-  const returnUrl = searchParams.get("returnUrl");
+  // Accept both 'returnUrl' and 'next' param names — the system uses both.
+  // Priority: returnUrl > next (Next.js convention uses ?next=)
+  const returnUrl =
+    searchParams.get("returnUrl") || searchParams.get("next");
   const encodedReturnUrl =
     returnUrl && returnUrl.startsWith("/")
       ? `&returnUrl=${encodeURIComponent(returnUrl)}`

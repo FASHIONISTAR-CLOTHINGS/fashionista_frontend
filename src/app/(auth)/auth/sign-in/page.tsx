@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { LoginForm } from "@/features/auth/components/LoginForm";
-
+import { Suspense } from "react";
+import { AuthAwareSignInPage } from "@/features/auth/components/AuthAwareSignInPage";
 
 export const metadata: Metadata = {
   title: "Sign In — FASHIONISTAR",
@@ -11,29 +11,29 @@ export const metadata: Metadata = {
 
 /**
  * Canonical sign-in page — /auth/sign-in
- * Enterprise URL naming convention (Stripe / Vercel / Shopify standard).
- * The legacy /login route redirects here permanently.
+ *
+ * AUTH-AWARENESS: Wrapped in AuthAwareSignInPage which detects already-
+ * authenticated users and redirects them immediately with a friendly toast.
+ * This prevents re-authentication and handles the case where admin/vendor
+ * users manually type /auth/sign-in into the URL bar while logged in.
+ *
+ * Wrapped in Suspense because AuthAwareSignInPage calls useSearchParams()
+ * which requires a Suspense boundary in Next.js App Router.
+ *
+ * URL naming: Enterprise convention (Stripe / Vercel / Shopify standard).
+ * The legacy /auth/login route redirects here permanently.
  */
 export default function SignInPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-cream via-white to-secondary p-4">
-      <div className="w-full max-w-md">
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-card p-8 animate-in fade-in-0 duration-300">
-          {/* Logo + Heading */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold font-bon-foyage text-primary tracking-wide mb-1">
-              FASHIONISTAR
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              Welcome back — sign in to continue
-            </p>
-          </div>
-
-          {/* Login Form — includes email/phone toggle, Google button, redirect logic */}
-          <LoginForm />
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-cream via-white to-secondary">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
         </div>
-      </div>
-    </div>
+      }
+    >
+      <AuthAwareSignInPage />
+    </Suspense>
   );
 }
+
