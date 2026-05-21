@@ -29,6 +29,7 @@ import { RichErrorMessage, FieldError } from "@/components/shared/feedback/RichE
 import { AuthAlert } from "@/components/shared/feedback/AuthAlert";
 import { GoogleSignInButton } from "@/features/auth/components/GoogleSignInButton";
 import { getPostAuthRedirectPath } from "@/features/auth/lib/auth-routing";
+import { normalizeAuthUser } from "@/features/auth/lib/normalize-auth-user";
 import { mergeAnonymousCommerce } from "@/features/cart";
 import { parseApiError } from "@/lib/api/parseApiError";
 
@@ -92,38 +93,14 @@ export function LoginForm() {
   // NOTE: All auth endpoints (Login, VerifyOTP, Google) now return user_id (not id)
   // for uniform API contract. AuthUser store uses .id — we bridge here.
   async function handleGoogleSuccess(data: LoginResponse) {
+    setApiError(null);
     setGoogleError(null);
     setGoogleSuccess("Google sign-in successful! Redirecting…");
     setTokens(data.access ?? "", data.refresh ?? "");
-
-    if (data.user) {
-      // ✅ Bridge: backend sends user_id but AuthUser.id is the canonical store field
-      setUser({
-        ...data.user,
-        id: (data.user as unknown as { user_id?: string }).user_id ?? "",
-        role: data.user.role ?? data.role,
-        // Coerce null → undefined so AuthUser types are satisfied
-        email: data.user.email ?? undefined,
-        phone: data.user.phone ?? undefined,
-        date_joined: data.user.date_joined ?? undefined,
-      });
-    } else {
-      // Fallback: flat-response shape (unlikely for Google but handled for safety)
-      setUser({
-        id: data.user_id ?? "",
-        email: data.identifying_info?.includes("@") ? data.identifying_info : undefined,
-        phone: data.identifying_info?.startsWith("+") ? data.identifying_info : undefined,
-        first_name: "User",
-        last_name: "",
-        role: data.role,
-        is_verified: true,
-        is_staff: (data.role ?? "").toLowerCase() === "admin" ||
-                  (data.role ?? "").toLowerCase() === "staff",
-      });
-    }
+    setUser(normalizeAuthUser(data));
 
     toast.success("Google Sign-In Successful!", {
-      description: `Welcome, ${data.user?.first_name ?? "User"}! 🎉`,
+      description: data.message ?? `Welcome, ${data.user?.first_name ?? "User"}! 🎉`,
       duration: 3000,
     });
     await mergeCommerceBeforeRedirect();
@@ -153,7 +130,8 @@ export function LoginForm() {
             : { email: pendingEmail },
         );
         toast.info("OTP Required", {
-          description: "A verification code has been sent to your email/phone.",
+          description:
+            data.message ?? "A verification code has been sent to your email/phone.",
         });
         const otpHref = returnUrl
           ? `/auth/verify-otp?returnUrl=${encodeURIComponent(returnUrl)}`
@@ -163,36 +141,11 @@ export function LoginForm() {
       }
 
       setTokens(data.access ?? "", data.refresh ?? "");
-
-      if (data.user) {
-        // LoginView/VerifyOTPView return flat top-level user_id + nested user object
-        // user.user_id maps to AuthUser.id
-        setUser({
-          ...data.user,
-          id: (data.user as unknown as { user_id?: string }).user_id ?? data.user_id ?? "",
-          role: data.user.role ?? data.role,
-          // Coerce null → undefined so AuthUser types are satisfied
-          email: data.user.email ?? undefined,
-          phone: data.user.phone ?? undefined,
-          date_joined: data.user.date_joined ?? undefined,
-        });
-      } else {
-        setUser({
-          id: data.user_id ?? "",
-          email: data.identifying_info?.includes("@") ? data.identifying_info : undefined,
-          phone: data.identifying_info?.startsWith("+") ? data.identifying_info : undefined,
-          first_name: data.identifying_info ?? "User",
-          last_name: "",
-          role: data.role,
-          is_verified: true,
-          is_staff: (data.role ?? "").toLowerCase() === "admin" ||
-                    (data.role ?? "").toLowerCase() === "staff",
-        });
-      }
+      setUser(normalizeAuthUser(data));
 
       const displayName = data.user?.first_name ?? data.identifying_info ?? "User";
       toast.success("Welcome back! 👋", {
-        description: `Hello, ${displayName}`,
+        description: data.message ?? `Hello, ${displayName}`,
         duration: 3000,
       });
 
@@ -204,7 +157,14 @@ export function LoginForm() {
       );
 
     },
-    onError: () => {
+    onError: (error) => {
+      setGoogleSuccess(null);
+      setApiError(
+        parseApiError(
+          error,
+          "We could not sign you in right now. Please check your details and try again.",
+        ),
+      );
     },
   });
 
@@ -387,7 +347,10 @@ export function LoginForm() {
       <GoogleSignInButton
         label="Continue with Google"
         onSuccess={handleGoogleSuccess}
-        onError={(msg) => { setGoogleError(msg); }}
+        onError={(msg) => {
+          setGoogleSuccess(null);
+          setGoogleError(msg);
+        }}
       />
 
       {/* ── Footer ───────────────────────────────────────────────────── */}

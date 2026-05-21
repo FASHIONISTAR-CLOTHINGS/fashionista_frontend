@@ -141,7 +141,7 @@ apiSync.interceptors.response.use(
     // IMPORTANT: Skip refresh for PUBLIC auth endpoints — these return 401 for
     // wrong credentials, NOT for expired tokens. Attempting refresh for these
     // would cause a hard redirect that prevents error alerts from showing.
-    const requestUrl = originalRequest.url ?? '';
+    const requestUrl = originalRequest?.url ?? '';
     const isPublicAuthEndpoint = (
       requestUrl.includes('/auth/login') ||
       requestUrl.includes('/auth/register') ||
@@ -154,14 +154,14 @@ apiSync.interceptors.response.use(
 
     if (
       error.response?.status === 401 &&
-      !originalRequest._retry &&
+      !originalRequest?._retry &&
       !isPublicAuthEndpoint
     ) {
       if (isRefreshing) {
         // Queue this request until refresh completes
         return new Promise((resolve) => {
           subscribeTokenRefresh((token: string) => {
-            if (originalRequest.headers) {
+            if (originalRequest?.headers) {
               originalRequest.headers.Authorization = `Bearer ${token}`;
             }
             resolve(apiSync(originalRequest));
@@ -200,7 +200,7 @@ apiSync.interceptors.response.use(
         syncMirrorCookies(buildAuthSessionMirror());
 
         onRefreshed(newToken);
-        if (originalRequest.headers) {
+        if (originalRequest?.headers) {
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
         }
         return apiSync(originalRequest);
@@ -236,13 +236,14 @@ apiSync.interceptors.response.use(
     const isAuthFormEndpoint = (
       requestUrl.includes('/auth/login') ||
       requestUrl.includes('/auth/register') ||
+      requestUrl.includes('/auth/google') ||
       requestUrl.includes('/auth/verify-otp') ||
       requestUrl.includes('/auth/resend-otp') ||
       requestUrl.includes('/password/reset') ||
       requestUrl.includes('/auth/token/refresh')
     );
 
-    if (typeof window !== "undefined" && !isAuthFormEndpoint && !originalRequest._suppressGlobalToast) {
+    if (typeof window !== "undefined" && !isAuthFormEndpoint && !originalRequest?._suppressGlobalToast) {
       const traceId = (error.response?.headers as Record<string, string>)?.[
         "x-trace-id"
       ];

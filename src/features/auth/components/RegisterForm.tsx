@@ -27,6 +27,7 @@ import {
 import { register } from "@/features/auth/services/auth.service";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { PhoneInputField } from "@/components/shared/forms/PhoneInputField";
+import { AuthAlert } from "@/components/shared/feedback/AuthAlert";
 import { GoogleSignInButton } from "@/features/auth/components/GoogleSignInButton";
 import { getPostAuthRedirectPath } from "@/features/auth/lib/auth-routing";
 import { normalizeAuthUser } from "@/features/auth/lib/normalize-auth-user";
@@ -48,6 +49,7 @@ export function RegisterForm({ role = "client" }: RegisterFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<RegistrationMode>("email");
   const [apiError, setApiError] = useState<ReturnType<typeof parseApiError> | null>(null);
+  const [googleError, setGoogleError] = useState<string | null>(null);
 
   // returnUrl — carry forward from the query string so OTP page can redirect back
   const returnUrl = searchParams.get("returnUrl") ?? "";
@@ -79,6 +81,7 @@ export function RegisterForm({ role = "client" }: RegisterFormProps) {
     mutationFn: register,
     onSuccess: (_, variables) => {
       setApiError(null);
+      setGoogleError(null);
       const identifier = mode === "email" ? variables.email : variables.phone;
       setPendingOTP(
         mode === "email" ? { email: identifier } : { phone: identifier },
@@ -109,17 +112,20 @@ export function RegisterForm({ role = "client" }: RegisterFormProps) {
 
   const onSubmit = (data: RegisterPayload) => {
     setApiError(null);
+    setGoogleError(null);
     mutate({ ...data, role });
   };
 
   // Helper for Google Auth success — with smart role-based redirect
   const handleGoogleSuccess = async (data: LoginResponse) => {
+    setApiError(null);
+    setGoogleError(null);
     setTokens(data.access ?? "", data.refresh ?? "");
     setUser(normalizeAuthUser(data));
 
     const displayName = data.user?.first_name ?? data.identifying_info ?? "User";
     toast.success("Account created successfully! 🎉", {
-      description: `Welcome, ${displayName}!`,
+      description: data.message ?? `Welcome, ${displayName}!`,
       duration: 3000,
     });
 
@@ -141,8 +147,7 @@ export function RegisterForm({ role = "client" }: RegisterFormProps) {
 
 
   const handleGoogleError = (error: string) => {
-    // Google errors are surfaced via LoginForm/RegisterForm inline AuthAlert
-    console.warn("[RegisterForm] Google Sign-In Error:", error);
+    setGoogleError(error);
   };
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
@@ -189,6 +194,14 @@ export function RegisterForm({ role = "client" }: RegisterFormProps) {
       {/* ── API-level error ─────────────────────────────────────────── */}
       {apiError && (
         <RichErrorMessage parsed={apiError} />
+      )}
+      {googleError && (
+        <AuthAlert
+          variant="error"
+          message={googleError}
+          autoDismissMs={6000}
+          onDismiss={() => setGoogleError(null)}
+        />
       )}
 
       {/* ── Name fields ─────────────────────────────────────────────── */}

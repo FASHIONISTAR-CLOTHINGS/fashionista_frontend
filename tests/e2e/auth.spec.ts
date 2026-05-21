@@ -136,7 +136,7 @@ test.describe('Login Flow', () => {
 
   test('create account link navigates to choose-role', async ({ page }) => {
     await goToLogin(page)
-    await page.getByRole('link', { name: /create account/i }).click()
+    await page.getByRole('link', { name: /create one/i }).click()
     await expect(page).toHaveURL(/choose-role/, { timeout: 15_000 })
   })
 })
@@ -169,8 +169,8 @@ test.describe('Registration Flow', () => {
 
   test('choose-role navigates to correct register page', async ({ page }) => {
     await page.goto('/auth/choose-role')
-    const clientBtn = page.getByRole('button', { name: /client|shopper|buyer/i }).first()
-    const vendorBtn = page.getByRole('button', { name: /vendor|seller/i }).first()
+    const clientBtn = page.locator('#choose-role-client')
+    const vendorBtn = page.locator('#choose-role-vendor')
 
     const clientVisible = await clientBtn.isVisible()
     const vendorVisible = await vendorBtn.isVisible()
@@ -178,7 +178,7 @@ test.describe('Registration Flow', () => {
 
     if (clientVisible) {
       await clientBtn.click()
-      await expect(page).toHaveURL(/register.*role=client|register\/client/, { timeout: 15_000 })
+      await expect(page).toHaveURL(/sign-up\?role=client/, { timeout: 15_000 })
     }
   })
 })
@@ -213,9 +213,8 @@ test.describe('Password Reset Flow', () => {
 
 test.describe('Protected Route Guards', () => {
   test('unauthenticated dashboard access redirects to login', async ({ page }) => {
-    await page.goto('/dashboard', { waitUntil: 'networkidle' })
-    const url = page.url()
-    expect(url.includes('/auth/sign-in') || url.includes('/login')).toBe(true)
+    await page.goto('/client/dashboard')
+    await expect(page).toHaveURL(/\/auth\/sign-in|\/login/, { timeout: 15_000 })
   })
 
   test('unauthenticated /verify-otp redirects or stays on page', async ({ page }) => {

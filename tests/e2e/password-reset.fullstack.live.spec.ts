@@ -1,8 +1,14 @@
 import fs from "node:fs/promises";
+import path from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 
 import { expect, test, type Page } from "@playwright/test";
 
 const LIVE_CELERY_LOG = process.env.PW_LIVE_CELERY_LOG ?? "";
+const execFileAsync = promisify(execFile);
+const backendRoot = path.resolve(process.cwd(), "..", "fashionistar_backend");
+const backendPython = path.join(backendRoot, ".venv", "Scripts", "python.exe");
 
 const INITIAL_PASSWORD = "InitPass123!";
 const EMAIL_RESET_PASSWORD = "EmailReset123!";
@@ -32,21 +38,85 @@ async function getLogOffset(logPath: string) {
   }
 }
 
+async function readOtpFromBackend(
+  identifier: string,
+  purpose: "verify" | "password_reset",
+) {
+  const query = JSON.stringify(identifier);
+  const otpPurpose = JSON.stringify(purpose);
+  const script = [
+    "from django.db.models import Q",
+    "from apps.authentication.models import UnifiedUser",
+    "from apps.common.utils import get_redis_connection_safe, decrypt_otp",
+    `identifier = ${query}`,
+    "user = UnifiedUser.objects.filter(Q(email=identifier) | Q(phone=identifier)).order_by('-date_joined').first()",
+    "if not user:",
+    "    print('')",
+    "    raise SystemExit(0)",
+    "redis_conn = get_redis_connection_safe()",
+    "if not redis_conn:",
+    "    print('')",
+    "    raise SystemExit(0)",
+    `purpose = ${otpPurpose}`,
+    "keys = sorted(redis_conn.keys(f'otp:{user.id}:{purpose}:*'), reverse=True)",
+    "if not keys:",
+    "    print('')",
+    "    raise SystemExit(0)",
+    "raw = redis_conn.get(keys[0])",
+    "if not raw:",
+    "    print('')",
+    "    raise SystemExit(0)",
+    "payload = raw.decode()",
+    "encrypted = payload.rsplit('|', 1)[0]",
+    "print(decrypt_otp(encrypted))",
+  ].join("\n");
+
+  try {
+    const { stdout } = await execFileAsync(
+      backendPython,
+      ["manage.py", "shell", "-c", script],
+      {
+        cwd: backendRoot,
+        env: {
+          ...process.env,
+          PYTHONIOENCODING: "utf-8",
+        },
+      },
+    );
+    const otp = stdout.trim().match(/\b\d{6}\b/)?.[0];
+    return otp ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function waitForEmailOtp(logPath: string, offset: number, email: string, timeoutMs = 90_000) {
   const startedAt = Date.now();
+  const escapedEmail = email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const recipientBlockPattern = new RegExp(
+    `recipients:\\s*\\['${escapedEmail}'\\][\\s\\S]*?Enter this OTP[\\s\\S]*?(\\d{6})[\\s\\S]*?Expires in`,
+    "i",
+  );
+  const fallbackPattern = /Enter this OTP[\s\S]*?(\d{6})[\s\S]*?Expires in/i;
 
   while (Date.now() - startedAt < timeoutMs) {
     const content = await fs.readFile(logPath, "utf8");
     const appended = content.slice(offset);
-    const emailIndex = appended.lastIndexOf(email);
+    const recipientScopedMatch = appended.match(recipientBlockPattern);
+    if (recipientScopedMatch?.[1]) {
+      return recipientScopedMatch[1];
+    }
 
-    if (emailIndex !== -1) {
-      const relevantChunk = appended.slice(emailIndex);
-      const otpMatch = relevantChunk.match(/Enter this OTP[\s\S]*?(\d{6})[\s\S]*?Expires in/i);
-
-      if (otpMatch?.[1]) {
-        return otpMatch[1];
+    if (appended.includes(email)) {
+      const fallbackMatch = appended.match(fallbackPattern);
+      if (fallbackMatch?.[1]) {
+        return fallbackMatch[1];
       }
+    }
+
+    const backendOtp = await readOtpFromBackend(email, "verify");
+    if (backendOtp) {
+      return backendOtp;
     }
 
     await new Promise((resolve) => setTimeout(resolve, 1_000));
@@ -80,6 +150,11 @@ async function waitForSmsOtp(
       if (smsMatch?.[1]) {
         return smsMatch[1];
       }
+    }
+
+    const backendOtp = await readOtpFromBackend(phone, marker);
+    if (backendOtp) {
+      return backendOtp;
     }
 
     await new Promise((resolve) => setTimeout(resolve, 1_000));
@@ -145,6 +220,32 @@ async function registerEmailClient(page: Page, email: string, password: string, 
   await page.waitForURL(/\/client\/dashboard/, { timeout: 30_000 });
   await page.screenshot({
     path: test.info().outputPath("email-registration-dashboard.png"),
+    fullPage: true,
+  });
+}
+
+async function registerEmailVendor(page: Page, email: string, password: string, logPath: string) {
+  const logOffset = await getLogOffset(logPath);
+
+  await page.goto("/auth/sign-up?role=vendor");
+  await page.locator("#reg-fname").fill("Vendor");
+  await page.locator("#reg-lname").fill("Reset");
+  await page.locator("#reg-email").fill(email);
+  await page.locator("#reg-password").fill(password);
+  await page.locator("#reg-password-confirm").fill(password);
+  await page.screenshot({
+    path: test.info().outputPath("vendor-register-form.png"),
+    fullPage: true,
+  });
+  await page.locator("#register-submit-btn").click();
+
+  await page.waitForURL(/\/auth\/verify-otp/, { timeout: 20_000 });
+  const otp = await waitForEmailOtp(logPath, logOffset, email);
+  await fillOtpBoxes(page, otp);
+
+  await page.waitForURL(/\/vendor\/(setup|dashboard)/, { timeout: 30_000 });
+  await page.screenshot({
+    path: test.info().outputPath("vendor-registration-redirect.png"),
     fullPage: true,
   });
 }
@@ -296,5 +397,13 @@ test.describe("Auth — Live Fullstack Register and Password Reset", () => {
       path: test.info().outputPath("phone-reset-login-success.png"),
       fullPage: true,
     });
+  });
+
+  test("vendor email registration and OTP verification redirect into the vendor journey live", async ({
+    page,
+  }) => {
+    const email = uniqueEmail("vendor-reset");
+
+    await registerEmailVendor(page, email, INITIAL_PASSWORD, LIVE_CELERY_LOG);
   });
 });
