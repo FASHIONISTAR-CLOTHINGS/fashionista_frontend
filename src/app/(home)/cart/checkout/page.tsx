@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { CommerceRouteGuard } from "@/features/auth/components/CommerceRouteGuard";
 import { CheckoutPage } from "@/features/cart/components/CheckoutPage";
 import { CheckoutPageSkeleton } from "@/features/cart/components/CheckoutPageSkeleton";
 
@@ -21,8 +22,10 @@ export const metadata: Metadata = {
  */
 export default function CheckoutRoutePage() {
   return (
-    <Suspense fallback={<CheckoutPageSkeleton />}>
-      <CheckoutPage />
-    </Suspense>
+    <CommerceRouteGuard fallback={<CheckoutPageSkeleton />}>
+      <Suspense fallback={<CheckoutPageSkeleton />}>
+        <CheckoutPage />
+      </Suspense>
+    </CommerceRouteGuard>
   );
 }

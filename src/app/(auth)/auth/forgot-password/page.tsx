@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AuthAwareGuestPage } from "@/features/auth/components/AuthAwareGuestPage";
 import { PasswordResetForm } from "@/features/auth/components/PasswordResetForm";
 
 export const metadata: Metadata = {
@@ -19,25 +20,26 @@ export const metadata: Metadata = {
  */
 export default function ForgotPasswordPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-cream via-white to-secondary p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-card p-8 animate-in fade-in-0 duration-300">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold font-bon-foyage text-primary tracking-wide mb-1">
-              FASHIONISTAR
-            </h1>
-            <h2 className="text-lg font-semibold text-foreground">
-              Forgot Password
-            </h2>
-            <p className="text-muted-foreground text-sm">
-              Reset your password — choose a method below
-            </p>
-          </div>
+    <AuthAwareGuestPage>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-cream via-white to-secondary p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-card p-8 animate-in fade-in-0 duration-300">
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-bold font-bon-foyage text-primary tracking-wide mb-1">
+                FASHIONISTAR
+              </h1>
+              <h2 className="text-lg font-semibold text-foreground">
+                Forgot Password
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Reset your password — choose a method below
+              </p>
+            </div>
 
-          <PasswordResetForm />
+            <PasswordResetForm />
+          </div>
         </div>
       </div>
-    </div>
+    </AuthAwareGuestPage>
   );
 }

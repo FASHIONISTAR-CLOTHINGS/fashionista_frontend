@@ -70,6 +70,7 @@ import type {
   CouponValidateInput,
   ProductFilterParams,
 } from "../types/product.types";
+import { ensureCommerceAccess } from "@/features/auth/lib/commerce-access";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // QUERY KEY FACTORY
@@ -243,8 +244,23 @@ export function useWishlistBulkStatus(
 export function useToggleWishlist() {
   const qc = useQueryClient();
   return useMutation<WishlistToggleResult, Error, string>({
-    mutationFn: toggleWishlist,
+    mutationFn: async (slug) => {
+      if (!ensureCommerceAccess({ actionLabel: "Wishlist actions" })) {
+        throw new Error("CLIENT_ROLE_REQUIRED");
+      }
+
+      return toggleWishlist(slug);
+    },
     onMutate: async (slug) => {
+      if (
+        !ensureCommerceAccess({
+          actionLabel: "Wishlist actions",
+          redirect: false,
+        })
+      ) {
+        throw new Error("CLIENT_ROLE_REQUIRED");
+      }
+
       // Optimistic: cancel outgoing refetches
       await qc.cancelQueries({ queryKey: productKeys.bundle(slug) });
     },
@@ -255,7 +271,11 @@ export function useToggleWishlist() {
       void qc.invalidateQueries({ queryKey: ["client", "wishlist"] });
       toast.success(res.added ? "Added to wishlist ❤️" : "Removed from wishlist");
     },
-    onError: () => {
+    onError: (err) => {
+      if (err instanceof Error && err.message === "CLIENT_ROLE_REQUIRED") {
+        return;
+      }
+
       toast.error("Failed to update wishlist. Please try again.");
     },
   });

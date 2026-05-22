@@ -1,14 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const AUTH_PAGES = new Set([
-  "/auth/sign-in",
-  "/auth/choose-role",
-  "/auth/sign-up",
-  "/auth/forgot-password",
-  "/auth/verify-otp",
-]);
-
 const LEGACY_REDIRECTS = new Map<string, string>([
   ["/auth", "/auth/sign-in"],
   ["/login", "/auth/sign-in"],
@@ -99,29 +91,9 @@ export function proxy(request: NextRequest) {
     if (canonicalRole === "admin" || canonicalRole === "vendor") {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = getDashboardPath(canonicalRole);
-      // Inform the dashboard that this was a blocked commerce redirect
-      redirectUrl.searchParams.set("_blocked_commerce", "1");
-      redirectUrl.search = redirectUrl.search;
+      redirectUrl.search = ""; // Clean redirect — no extra params
       return withSecurityHeaders(NextResponse.redirect(redirectUrl));
     }
-  }
-
-  // ── Auth Pages Bounce (Already Logged In) ────────────────────────────────────
-  // If an authenticated user navigates to any auth page (sign-up, choose-role,
-  // verify-otp, forgot-password), redirect them to their dashboard.
-  //
-  // EXCEPTION: /auth/sign-in is excluded from this bounce because
-  // AuthAwareSignInPage handles it client-side with a returnUrl-aware redirect
-  // AND a user-friendly toast showing their name. If we bounce at the proxy
-  // level, we lose the returnUrl from the ?returnUrl= query param and the toast.
-  //
-  // All other auth pages ARE bounced here because they have no returnUrl logic
-  // and showing them to already-logged-in users is unnecessary.
-  if (isAuthenticated && AUTH_PAGES.has(pathname) && pathname !== "/auth/sign-in") {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = getDashboardPath(roleHint);
-    redirectUrl.search = "";
-    return withSecurityHeaders(NextResponse.redirect(redirectUrl));
   }
 
   return withSecurityHeaders(NextResponse.next());

@@ -36,6 +36,7 @@ import {
   keepPreviousData,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { ensureCommerceAccess } from "@/features/auth/lib/commerce-access";
 import { v4 as uuidv4 } from "uuid";
 import {
   fetchCart,
@@ -140,6 +141,10 @@ export function useAddCartItem() {
     mutationFn: (input: AddCartItemInput) => addCartItem(input),
 
     onMutate: async (input) => {
+      if (!ensureCommerceAccess({ actionLabel: "Adding items to cart" })) {
+        throw new Error("CLIENT_ROLE_REQUIRED");
+      }
+
       await qc.cancelQueries({ queryKey: cartKeys.detail() });
       const previousCart = qc.getQueryData<Cart>(cartKeys.detail());
 
@@ -197,7 +202,11 @@ export function useAddCartItem() {
       return { previousCart };
     },
 
-    onError: (_err, _input, ctx) => {
+    onError: (err, _input, ctx) => {
+      if (err instanceof Error && err.message === "CLIENT_ROLE_REQUIRED") {
+        return;
+      }
+
       if (ctx?.previousCart !== undefined) {
         qc.setQueryData(cartKeys.detail(), ctx.previousCart);
       }
