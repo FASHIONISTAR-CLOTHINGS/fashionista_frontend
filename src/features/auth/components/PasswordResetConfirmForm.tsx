@@ -19,7 +19,8 @@ import {
   confirmPasswordResetEmail,
   confirmPasswordResetPhone,
 } from "@/features/auth/services/auth.service";
-import { AuthAlert, FieldError } from "@/components/shared/feedback/AuthAlert";
+import { FieldError } from "@/components/shared/feedback/AuthAlert";
+import { RichErrorMessage } from "@/components/shared/feedback/RichErrorMessage";
 import { parseApiError } from "@/lib/api/parseApiError";
 
 // ── Unified Props ─────────────────────────────────────────────────────────────
@@ -49,7 +50,7 @@ export function PasswordResetConfirmForm(props: PasswordResetConfirmFormProps) {
   const [showPw, setShowPw] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<ReturnType<typeof parseApiError> | null>(null);
   const redirectTimeoutRef = useRef<number | null>(null);
 
   const isEmailMode = props.mode === "email";
@@ -94,8 +95,7 @@ export function PasswordResetConfirmForm(props: PasswordResetConfirmFormProps) {
       scheduleSignInRedirect();
     },
     onError: (err) => {
-      const parsed = parseApiError(err);
-      setErrorMsg(parsed.message);
+      setErrorMsg(parseApiError(err));
     },
   });
 
@@ -107,8 +107,7 @@ export function PasswordResetConfirmForm(props: PasswordResetConfirmFormProps) {
       scheduleSignInRedirect();
     },
     onError: (err) => {
-      const parsed = parseApiError(err);
-      setErrorMsg(parsed.message);
+      setErrorMsg(parseApiError(err));
     },
   });
 
@@ -136,16 +135,11 @@ export function PasswordResetConfirmForm(props: PasswordResetConfirmFormProps) {
       )}
 
       {successMsg && (
-        <AuthAlert variant="success" message={successMsg} autoDismissMs={3000} />
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          {successMsg}
+        </div>
       )}
-      {errorMsg && (
-        <AuthAlert
-          variant="error"
-          message={errorMsg}
-          autoDismissMs={8000}
-          onDismiss={() => setErrorMsg(null)}
-        />
-      )}
+      {errorMsg && <RichErrorMessage parsed={errorMsg} />}
 
       {/* OTP Code (Only for phone mode) */}
       {!isEmailMode && (

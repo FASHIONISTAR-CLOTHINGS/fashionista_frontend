@@ -108,6 +108,8 @@ const nextConfig = {
   allowedDevOrigins,
   experimental: {
     // cpus: 1,   // Uncomment for debugging: force single-threaded builds to avoid worker spawning issues in Windows/OneDrive setups.
+    //   // cpus: 1 intentionally REMOVED — caused 404s on first route request and 
+    // 3+ minute compilation times in Turbopack. workerThreads alone is stable.
     workerThreads: true,
   },
   typescript: {

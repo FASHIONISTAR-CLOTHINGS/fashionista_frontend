@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heart, ShoppingCart, Trash2, AlertCircle } from "lucide-react";
+import { CommerceRouteGuard } from "@/features/auth/components/CommerceRouteGuard";
 import { useWishlist, useToggleWishlist } from "@/features/product";
 import type { WishlistItem } from "@/features/product";
 import { ProductGridSkeleton } from "@/features/product";
@@ -124,39 +125,41 @@ function WishlistClient() {
 // ── Page Export ──────────────────────────────────────────────────────────────
 export default function WishlistPage() {
   return (
-    <div className="py-10 px-5 md:px-10 lg:px-24 space-y-8">
-      {/* Breadcrumb */}
-      <div className="flex items-center justify-between">
-        <div className="font-raleway font-medium text-[#475367] text-sm">
-          <Link href="/" className="hover:text-[#fda600] transition-colors">
-            Home
-          </Link>{" "}
-          &gt;{" "}
-          <span className="text-[#fda600]">Wishlist</span>
+    <CommerceRouteGuard fallback={<ProductGridSkeleton count={4} />}>
+      <div className="py-10 px-5 md:px-10 lg:px-24 space-y-8">
+        {/* Breadcrumb */}
+        <div className="flex items-center justify-between">
+          <div className="font-raleway font-medium text-[#475367] text-sm">
+            <Link href="/" className="hover:text-[#fda600] transition-colors">
+              Home
+            </Link>{" "}
+            &gt;{" "}
+            <span className="text-[#fda600]">Wishlist</span>
+          </div>
+          <Link
+            href="/get-measured"
+            className="px-6 py-2.5 rounded-full bg-[#01454A] text-white text-sm font-semibold font-raleway hover:bg-[#012e32] transition-colors"
+          >
+            Get Measured
+          </Link>
         </div>
-        <Link
-          href="/get-measured"
-          className="px-6 py-2.5 rounded-full bg-[#01454A] text-white text-sm font-semibold font-raleway hover:bg-[#012e32] transition-colors"
-        >
-          Get Measured
-        </Link>
-      </div>
 
-      {/* Header */}
-      <div>
-        <h1 className="font-bon_foyage text-4xl md:text-5xl text-[#141414] flex items-center gap-3">
-          Your Wishlist
-          <Heart size={36} className="text-[#fda600]" />
-        </h1>
-        <p className="font-raleway text-base text-[#475367] mt-2">
-          Save items you love and come back for them anytime.
-        </p>
-      </div>
+        {/* Header */}
+        <div>
+          <h1 className="font-bon_foyage text-4xl md:text-5xl text-[#141414] flex items-center gap-3">
+            Your Wishlist
+            <Heart size={36} className="text-[#fda600]" />
+          </h1>
+          <p className="font-raleway text-base text-[#475367] mt-2">
+            Save items you love and come back for them anytime.
+          </p>
+        </div>
 
-      {/* Live wishlist grid via TanStack Query */}
-      <Suspense fallback={<ProductGridSkeleton count={4} />}>
-        <WishlistClient />
-      </Suspense>
-    </div>
+        {/* Live wishlist grid via TanStack Query */}
+        <Suspense fallback={<ProductGridSkeleton count={4} />}>
+          <WishlistClient />
+        </Suspense>
+      </div>
+    </CommerceRouteGuard>
   );
 }

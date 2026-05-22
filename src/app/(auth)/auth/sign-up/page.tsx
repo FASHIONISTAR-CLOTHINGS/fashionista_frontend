@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { AuthAwareGuestPage } from "@/features/auth/components/AuthAwareGuestPage";
 import { RegisterForm } from "@/features/auth/components/RegisterForm";
 
 export const metadata: Metadata = {
@@ -34,27 +35,27 @@ export default async function SignUpPage({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-cream via-white to-secondary p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-card p-8 animate-in fade-in-0 duration-300">
-          {/* Header */}
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold font-bon-foyage text-primary tracking-wide mb-1">
-              FASHIONISTAR
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {role === "vendor"
-                ? "Create your Vendor account — start selling"
-                : "Create your account — start shopping"}
-            </p>
+    <AuthAwareGuestPage>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-cream via-white to-secondary p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-card p-8 animate-in fade-in-0 duration-300">
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-bold font-bon-foyage text-primary tracking-wide mb-1">
+                FASHIONISTAR
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                {role === "vendor"
+                  ? "Create your Vendor account — start selling"
+                  : "Create your account — start shopping"}
+              </p>
+            </div>
+
+            <RegisterForm
+              role={role as "vendor" | "client"}
+            />
           </div>
-
-          <RegisterForm
-            role={role as "vendor" | "client"}
-          />
-
         </div>
       </div>
-    </div>
+    </AuthAwareGuestPage>
   );
 }
