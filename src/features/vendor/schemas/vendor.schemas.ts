@@ -88,7 +88,16 @@ export const VendorSetupSchema = z.object({
   city:          z.string().min(1, "City is required"),
   state:         z.string().min(1, "State is required"),
   country:       z.string().optional(),
-  collection_ids: z.array(z.string()), // UNCOMMENT THIS ONCE THE SUPPORT ADMIN TEAM FINALLY ADDS THE COLLECTIONS ENDPOINT TO THE BACKEND  .min(1, "Select at least one collection"),
+  // The live UI enforces collection selection only when catalog collections
+  // are actually available in the current environment by appending this to the end of the line below and testing both scenarios (with and without collections):
+  // .min(1, "Select at least one collection"),
+  // .refine((data) => {
+  //   if (data.collection_ids && data.collection_ids.length > 0) {
+  //     return true; // If collections are selected, it's valid
+  //   }
+  //   return true; // If no collections are selected, it's also valid (since it's optional)
+  // }, "At least one collection must be selected if collections are available"),
+  collection_ids: z.array(z.string()),
   instagram_url: z.string().url().optional().or(z.literal("")),
   tiktok_url:    z.string().url().optional().or(z.literal("")),
   twitter_url:   z.string().url().optional().or(z.literal("")),

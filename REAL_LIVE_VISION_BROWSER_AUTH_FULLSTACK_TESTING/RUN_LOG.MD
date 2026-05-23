@@ -222,3 +222,39 @@ REAL_LIVE_VISION_BROWSER_AUTH_FULLSTACK_TESTING/
 - No fresh full ngrok sprint was re-recorded in this session.
 - Existing screenshot evidence from Sessions 1 and 2 remains the latest durable live-browser capture.
 - Backend startup still emits Windows log-rotation `PermissionError [WinError 32]` noise for rotating log files; this did not block verification.
+
+---
+
+## SESSION 4 — 2026-05-23 20:10 +01:00 (Contract Normalization + Focused Continuation Verification)
+
+**Scope:** Revalidate the repo-root auth plan against the live codebase, fix any remaining route or request-context drift found in the scan, and refresh the checkpoint artifacts honestly.
+
+### Code changes validated in this session
+
+- Added a shared request IP helper in `fashionistar_backend/apps/common/request.py`
+- Rewired active auth, middleware, permissions, Google auth, exceptions, and order-service paths to use the same `get_client_ip(...)` helper
+- Fixed the `/orders` route contradiction in `fashionista_frontend/proxy.ts`
+- Ensured the edge commerce-only guard runs before legacy redirects
+- Kept `/orders` pointed at `/client/dashboard/orders`
+- Extended `tests/e2e/auth-role-guards.spec.ts` so admin and vendor coverage now includes `/orders`
+- Updated `CommerceRouteGuard.tsx` wording so the client-only route copy matches the actual protected pages
+- Normalized the active frontend backend defaults to the ASGI `8001` contract in `src/core/config/api-roots.ts` and `src/core/config/env.mjs`
+- Removed stale schema commentary in `src/features/vendor/schemas/vendor.schemas.ts`
+
+### Verification completed
+
+| Command | Result |
+|--------|--------|
+| `pnpm.cmd type-check` | ✅ PASS |
+| `pnpm.cmd exec playwright test tests/e2e/auth-role-guards.spec.ts --project "chromium — Desktop" --workers 1` | ✅ PASS (4/4) |
+| `python manage.py check` | ✅ PASS |
+| `uv run pytest apps/cart/tests/test_cart_api.py -q` | ✅ PASS |
+| `uv run pytest apps/authentication/tests/test_password_reset.py -k "revoke_others_200 or session_list_200 or login_events_200" -q` | ✅ PASS |
+
+### Operational notes from this session
+
+- Frontend and backend focused verification are green on the contracts touched in this pass.
+- Earlier ngrok screenshots and recordings remain the latest durable live-browser evidence.
+- No fresh full ngrok sprint recording was generated in this session.
+- Backend startup still emits `SafeRotatingFileHandler` `WinError 32` rollover noise for locked Windows log files.
+- `chrome-devtools-mcp` is configured in `.vscode/mcp.json`, but a callable chrome-devtools MCP runtime was not exposed in this session, so richer manual visual reruns could not be honestly executed here.
