@@ -33,7 +33,7 @@ export function CommerceRouteGuard({
     toast.error("Client access is required for this page.", {
       id: "fashionistar-commerce-route-guard",
       description:
-        "Cart, checkout, and wishlist pages are reserved for client accounts.",
+        "Cart, checkout, wishlist, and order pages are reserved for client accounts.",
       duration: 4500,
     });
     router.replace(getCanonicalDashboardPath(user.role, user.is_staff === true));

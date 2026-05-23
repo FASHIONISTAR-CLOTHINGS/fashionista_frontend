@@ -1,4 +1,4 @@
-const DEFAULT_BACKEND_ROOT = "http://127.0.0.1:8000";
+const DEFAULT_BACKEND_ROOT = "http://127.0.0.1:8001";
 
 function stripTrailingSlash(value: string): string {
   return value.replace(/\/+$/, "");
