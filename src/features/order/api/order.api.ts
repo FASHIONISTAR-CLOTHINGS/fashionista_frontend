@@ -33,7 +33,7 @@ export interface VendorOrderFinancialSummary {
   order_count: number;
 }
 
-const BASE = "/orders";
+const BASE = "v1/orders";
 
 type NinjaListEnvelope = {
   count?: number;

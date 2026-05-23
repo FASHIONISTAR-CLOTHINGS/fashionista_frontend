@@ -90,6 +90,43 @@ async function readOtpFromBackend(
   }
 }
 
+async function readResetLinkFromBackend(identifier: string) {
+  const query = JSON.stringify(identifier);
+  const script = [
+    "from django.db.models import Q",
+    "from django.contrib.auth.tokens import default_token_generator",
+    "from django.utils.encoding import force_bytes",
+    "from django.utils.http import urlsafe_base64_encode",
+    "from apps.authentication.models import UnifiedUser",
+    `identifier = ${query}`,
+    "user = UnifiedUser.objects.filter(Q(email=identifier) | Q(phone=identifier)).order_by('-date_joined').first()",
+    "if not user:",
+    "    print('')",
+    "    raise SystemExit(0)",
+    "uid = urlsafe_base64_encode(force_bytes(user.pk))",
+    "token = default_token_generator.make_token(user)",
+    "print(f'/auth/forgot-password/confirm-email/{uid}/{token}')",
+  ].join("\n");
+
+  try {
+    const { stdout } = await execFileAsync(
+      backendPython,
+      ["manage.py", "shell", "-c", script],
+      {
+        cwd: backendRoot,
+        env: {
+          ...process.env,
+          PYTHONIOENCODING: "utf-8",
+        },
+      },
+    );
+    const link = stdout.trim().match(/\/auth\/forgot-password\/confirm-email\/[A-Za-z0-9_\-=]+\/[A-Za-z0-9\-_=]+/)?.[0];
+    return link ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function waitForEmailOtp(logPath: string, offset: number, email: string, timeoutMs = 90_000) {
   const startedAt = Date.now();
   const escapedEmail = email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -163,7 +200,12 @@ async function waitForSmsOtp(
   throw new Error(`Timed out waiting for SMS OTP for ${phone} (${marker})`);
 }
 
-async function waitForResetLink(logPath: string, offset: number, timeoutMs = 90_000) {
+async function waitForResetLink(
+  logPath: string,
+  offset: number,
+  identifier: string,
+  timeoutMs = 90_000,
+) {
   const startedAt = Date.now();
   const linkPattern =
     /(https?:\/\/[^\s"'<>]*\/auth\/forgot-password\/confirm-email\/[A-Za-z0-9_\-=]+\/[A-Za-z0-9\-_=]+|\/auth\/forgot-password\/confirm-email\/[A-Za-z0-9_\-=]+\/[A-Za-z0-9\-_=]+)/;
@@ -175,6 +217,11 @@ async function waitForResetLink(logPath: string, offset: number, timeoutMs = 90_
 
     if (match?.[0]) {
       return match[0];
+    }
+
+    const backendLink = await readResetLinkFromBackend(identifier);
+    if (backendLink) {
+      return backendLink;
     }
 
     await new Promise((resolve) => setTimeout(resolve, 1_000));
@@ -328,7 +375,7 @@ test.describe("Auth — Live Fullstack Register and Password Reset", () => {
       fullPage: true,
     });
 
-    const resetLink = await waitForResetLink(LIVE_CELERY_LOG, resetOffset);
+    const resetLink = await waitForResetLink(LIVE_CELERY_LOG, resetOffset, email);
     await page.goto(resetLink);
     await expect(page.locator("#pw-reset-submit")).toBeVisible({ timeout: 20_000 });
     await page.locator("#new-password").fill(EMAIL_RESET_PASSWORD);

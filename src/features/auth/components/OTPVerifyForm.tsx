@@ -20,6 +20,7 @@ import { Loader2, RefreshCw } from "lucide-react";
 import { verifyOTP, resendOTP } from "@/features/auth/services/auth.service";
 import { getPostAuthRedirectPath } from "@/features/auth/lib/auth-routing";
 import { normalizeAuthUser } from "@/features/auth/lib/normalize-auth-user";
+import { shouldMergeAnonymousCommerceForRole } from "@/features/auth/lib/post-auth-commerce";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { mergeAnonymousCommerce } from "@/features/cart";
 import { RichErrorMessage } from "@/components/shared/feedback/RichErrorMessage";
@@ -70,18 +71,25 @@ export function OTPVerifyForm() {
         duration: 4000,
       });
 
-      try {
-        await mergeAnonymousCommerce();
-      } catch (error) {
-        const parsed = parseApiError(
-          error,
-          "Verification succeeded, but we could not restore your guest cart and wishlist yet.",
-        );
-        toast.warning("Verified with limited restore", {
-          id: "fashionistar-otp-merge-warning",
-          description: parsed.message,
-          duration: 4500,
-        });
+      if (
+        shouldMergeAnonymousCommerceForRole({
+          role: data.role ?? data.user?.role,
+          isStaff: data.user?.is_staff,
+        })
+      ) {
+        try {
+          await mergeAnonymousCommerce();
+        } catch (error) {
+          const parsed = parseApiError(
+            error,
+            "Verification succeeded, but we could not restore your guest cart and wishlist yet.",
+          );
+          toast.warning("Verified with limited restore", {
+            id: "fashionistar-otp-merge-warning",
+            description: parsed.message,
+            duration: 4500,
+          });
+        }
       }
 
       router.push(
