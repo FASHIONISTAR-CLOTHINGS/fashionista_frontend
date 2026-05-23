@@ -187,3 +187,38 @@ REAL_LIVE_VISION_BROWSER_AUTH_FULLSTACK_TESTING/
 | uv run pytest apps/audit_logs/ apps/authentication/ apps/cart/ | 216 passed |
 
 **Total Screenshots: 35 across both sessions**
+
+---
+
+## SESSION 3 — 2026-05-23 14:59 +01:00 (Code Stabilization + Focused Re-Verification)
+
+**Scope:** Post-implementation verification after the latest frontend/backend auth hardening edits.
+
+### Code changes validated in this session
+
+- Added `/orders` to edge-level commerce-only blocking in `proxy.ts`
+- Added visible warning toasts for guest cart and wishlist restore failures in login, register, and OTP verification flows
+- Removed silent logout API swallowing so the auth hook can warn properly
+- Removed vendor setup double redirect and added inline setup failure feedback
+- Updated Playwright seeded-auth refresh fallback to prefer active backend envs and `8001`
+- Added request propagation to cart audit writes
+- Added dedicated authenticated wishlist client audit logging
+- Enriched `UserSession` creation with geo and frontend platform context
+- Moved revoke-all session audit dispatch to `transaction.on_commit(...)`
+
+### Verification completed
+
+| Command | Result |
+|--------|--------|
+| `pnpm.cmd type-check` | ✅ PASS |
+| `pnpm.cmd exec vitest run tests/unit/auth-routing.test.ts` | ✅ PASS |
+| `pnpm.cmd exec playwright test tests/e2e/auth-role-guards.spec.ts --project "chromium — Desktop" --workers 1` | ✅ PASS |
+| `python manage.py check` | ✅ PASS |
+| `uv run pytest apps/cart/tests/test_cart_api.py -q` | ✅ PASS |
+| `uv run pytest apps/authentication/tests/test_password_reset.py -k "revoke_others_200 or session_list_200 or login_events_200" -q` | ✅ PASS |
+
+### Notes
+
+- No fresh full ngrok sprint was re-recorded in this session.
+- Existing screenshot evidence from Sessions 1 and 2 remains the latest durable live-browser capture.
+- Backend startup still emits Windows log-rotation `PermissionError [WinError 32]` noise for rotating log files; this did not block verification.

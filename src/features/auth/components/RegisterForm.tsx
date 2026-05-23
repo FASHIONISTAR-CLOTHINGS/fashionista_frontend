@@ -134,8 +134,16 @@ export function RegisterForm({ role = "client" }: RegisterFormProps) {
 
     try {
       await mergeAnonymousCommerce();
-    } catch {
-      // Checkout submit performs the same idempotent merge before placing an order.
+    } catch (error) {
+      const parsed = parseApiError(
+        error,
+        "Your account is ready, but we could not restore your guest cart and wishlist yet.",
+      );
+      toast.warning("Account created with limited restore", {
+        id: "fashionistar-google-register-merge-warning",
+        description: parsed.message,
+        duration: 4500,
+      });
     }
 
     router.push(

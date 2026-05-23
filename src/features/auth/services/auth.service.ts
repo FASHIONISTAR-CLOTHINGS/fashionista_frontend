@@ -140,18 +140,12 @@ export async function googleAuth(
  * Caller (AccountOptions) MUST also call clearAuth() from the Zustand store
  * to clear local state — regardless of whether this API call succeeds.
  */
-export async function logout(): Promise<void> {
-  try {
-    const store = await import("@/features/auth/store/auth.store");
-    const refreshToken = store.useAuthStore.getState().refreshToken;
-    if (refreshToken) {
-      await apiSync.post(AUTH_ENDPOINTS.LOGOUT, { refresh: refreshToken });
-    } else {
-      await apiSync.post(AUTH_ENDPOINTS.LOGOUT, {});
-    }
-  } catch {
-    // Silently ignore — local auth is cleared regardless of API response
-  }
+export async function logout(): Promise<{ message?: string }> {
+  const store = await import("@/features/auth/store/auth.store");
+  const refreshToken = store.useAuthStore.getState().refreshToken;
+  const payload = refreshToken ? { refresh: refreshToken } : {};
+  const { data } = await apiSync.post(AUTH_ENDPOINTS.LOGOUT, payload);
+  return data as { message?: string };
 }
 
 // ── Token Refresh ─────────────────────────────────────────────────────────────

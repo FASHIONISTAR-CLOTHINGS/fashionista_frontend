@@ -30,7 +30,7 @@ const LEGACY_REDIRECTS = new Map<string, string>([
  * This is the first line of defence (edge-level). A second defence exists
  * client-side via RoleGuard + auth-routing.ts resolveRoleCompatibleReturnUrl.
  */
-const COMMERCE_ONLY_PREFIXES = ["/cart", "/checkout", "/wishlist"] as const;
+const COMMERCE_ONLY_PREFIXES = ["/cart", "/checkout", "/wishlist", "/orders"] as const;
 
 function getDashboardPath(roleCookie?: string | null) {
   const role = (roleCookie ?? "").trim().toLowerCase();

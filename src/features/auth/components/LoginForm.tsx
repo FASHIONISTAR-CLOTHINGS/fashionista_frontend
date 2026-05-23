@@ -57,8 +57,16 @@ export function LoginForm() {
   async function mergeCommerceBeforeRedirect() {
     try {
       await mergeAnonymousCommerce();
-    } catch {
-      // Checkout submit retries the same idempotent merge, so login redirect can continue.
+    } catch (error) {
+      const parsed = parseApiError(
+        error,
+        "We signed you in, but your guest cart and wishlist could not be restored right away.",
+      );
+      toast.warning("Signed in with limited restore", {
+        id: "fashionistar-auth-merge-warning",
+        description: parsed.message,
+        duration: 4500,
+      });
     }
   }
 
