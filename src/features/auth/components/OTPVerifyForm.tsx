@@ -72,8 +72,16 @@ export function OTPVerifyForm() {
 
       try {
         await mergeAnonymousCommerce();
-      } catch {
-        // Checkout submit repeats the idempotent merge before order creation.
+      } catch (error) {
+        const parsed = parseApiError(
+          error,
+          "Verification succeeded, but we could not restore your guest cart and wishlist yet.",
+        );
+        toast.warning("Verified with limited restore", {
+          id: "fashionistar-otp-merge-warning",
+          description: parsed.message,
+          duration: 4500,
+        });
       }
 
       router.push(

@@ -74,7 +74,9 @@ export default async function globalSetup(_config: FullConfig) {
   if (!fs.existsSync(seededAuthPath)) return;
 
   const backendBaseUrl =
-    process.env.PLAYWRIGHT_BACKEND_BASE_URL ?? "http://127.0.0.1:8000";
+    process.env.PLAYWRIGHT_BACKEND_BASE_URL ??
+    process.env.NEXT_PUBLIC_BACKEND_URL ??
+    "http://127.0.0.1:8001";
 
   const content = fs.readFileSync(seededAuthPath, "utf8");
   const sessions = JSON.parse(content) as SeededAuthMap;

@@ -15,7 +15,9 @@ import {
 } from "lucide-react";
 
 import { Transactions } from "@/features/account/components";
+import { AuthAlert } from "@/components/shared/feedback/AuthAlert";
 import { useAuthStore } from "@/features/auth/store/auth.store";
+import { parseApiError } from "@/lib/api/parseApiError";
 import {
   ProductBuilder,
   ProductBuilderProvider,
@@ -93,7 +95,6 @@ function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
 }
 
 export function VendorSetupView() {
-  const router = useRouter();
   const hasVendorProfile = useAuthStore(
     (state) => state.user?.has_vendor_profile === true,
   );
@@ -166,8 +167,14 @@ export function VendorSetupView() {
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     await submitSetup.mutateAsync(payload);
-    router.push("/vendor/dashboard");
   };
+
+  const setupError = submitSetup.error
+    ? parseApiError(
+        submitSetup.error,
+        "We could not save your vendor profile right now. Please review the form and try again.",
+      )
+    : null;
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 py-4">
@@ -235,6 +242,12 @@ export function VendorSetupView() {
         onSubmit={onSubmit}
         className="grid gap-8 rounded-[32px] bg-white p-8 shadow-card_shadow md:grid-cols-2 md:p-10"
       >
+        {setupError ? (
+          <div className="md:col-span-2">
+            <AuthAlert variant="error" message={setupError.message} />
+          </div>
+        ) : null}
+
         <div className="space-y-3">
           <FieldLabel htmlFor="store_name">Store name</FieldLabel>
           <TextInput
