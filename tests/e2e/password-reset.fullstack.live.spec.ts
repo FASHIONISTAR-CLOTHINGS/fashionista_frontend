@@ -129,12 +129,12 @@ async function waitForSmsOtp(
   logPath: string,
   offset: number,
   phone: string,
-  marker: "verification" | "password_reset",
+  marker: "verify" | "password_reset",
   timeoutMs = 90_000,
 ) {
   const startedAt = Date.now();
   const phrase =
-    marker === "verification" ? "verification OTP" : "Password Reset Code";
+    marker === "verify" ? "verification OTP" : "Password Reset Code";
 
   while (Date.now() - startedAt < timeoutMs) {
     const content = await fs.readFile(logPath, "utf8");
@@ -267,7 +267,7 @@ async function registerPhoneClient(page: Page, phone: string, password: string, 
   await page.locator("#register-submit-btn").click();
 
   await page.waitForURL(/\/auth\/verify-otp/, { timeout: 20_000 });
-  const otp = await waitForSmsOtp(logPath, logOffset, phone, "verification");
+  const otp = await waitForSmsOtp(logPath, logOffset, phone, "verify");
   await fillOtpBoxes(page, otp);
 
   await page.waitForURL(/\/client\/dashboard/, { timeout: 30_000 });

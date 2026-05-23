@@ -30,6 +30,7 @@ import {
   syncMirrorCookies,
 } from "@/features/auth/lib/auth-session.client";
 import { getClientBackendRootUrl, getSyncApiBaseUrl } from "@/core/config/api-roots";
+import { buildAuditHeadersSync } from "@/lib/audit-headers";
 
 // ── Circuit Breaker State ─────────────────────────────────────────────────────
 let circuitOpen = false;
@@ -81,6 +82,12 @@ apiSync.interceptors.request.use(
     // Skip ngrok browser warning page in development
     if (process.env.NODE_ENV === "development" && config.headers) {
       config.headers["ngrok-skip-browser-warning"] = "true";
+    }
+
+    // Inject audit context headers (device ID, timezone, locale, platform)
+    if (typeof window !== "undefined" && config.headers) {
+      const auditHeaders = buildAuditHeadersSync();
+      Object.assign(config.headers, auditHeaders);
     }
 
     // Inject Idempotency-Key for write operations

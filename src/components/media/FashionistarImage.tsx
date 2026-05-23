@@ -156,14 +156,15 @@ export interface FashionistarImageProps {
    * (Merged from FashionImage v1)
    */
   dataProductId?: string;
-  /**
-   * Enable drag-and-drop affordance on this image.
+  /** Enable drag-and-drop affordance on this image.
    * Useful in product galleries and KYC upload panels.
    * (Merged from FashionImage v1)
    */
   draggable?: boolean;
   /** Called when the user starts dragging the image. */
   onDragStart?: React.DragEventHandler<HTMLImageElement>;
+  /** Inline style applied to the wrapping container div. */
+  style?: React.CSSProperties;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -194,6 +195,7 @@ export function FashionistarImage({
   dataProductId,
   draggable = false,
   onDragStart,
+  style,
 }: FashionistarImageProps) {
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
@@ -288,7 +290,7 @@ export function FashionistarImage({
     <div
       ref={containerRef}
       className={cn("relative overflow-hidden", className)}
-      style={{ aspectRatio }}
+      style={{ aspectRatio, ...style }}
     >
       {/* LQIP blur placeholder */}
       {lqipSrc && showBlurUp && !loaded && (

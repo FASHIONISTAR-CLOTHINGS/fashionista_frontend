@@ -63,7 +63,10 @@ export function OTPVerifyForm() {
 
       const displayName = data.user?.first_name ?? data.identifying_info ?? "User";
       toast.success("✅ Verification successful!", {
-        description: `Welcome to Fashionistar, ${displayName}! 🎉`,
+        // T4.4: Surface the backend's own message (e.g. "Email verified successfully.")
+        // so the toast copy matches exactly what the platform administrator configured.
+        description:
+          data.message ?? `Welcome to Fashionistar, ${displayName}! 🎉`,
         duration: 4000,
       });
 
@@ -102,11 +105,14 @@ export function OTPVerifyForm() {
       const email_or_phone = pendingOTPEmail ?? pendingOTPPhone ?? "";
       return resendOTP({ email_or_phone });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setResendError(null);
       setCountdown(RESEND_COOLDOWN_SECONDS);
       toast.info("OTP Resent ✉️", {
-        description: `A new 6-digit code has been sent to ${pendingOTPEmail ?? pendingOTPPhone}.`,
+        // Surface backend resend message if provided
+        description:
+          (data as { message?: string } | undefined)?.message ??
+          `A new 6-digit code has been sent to ${pendingOTPEmail ?? pendingOTPPhone}.`,
         duration: 4000,
       });
     },

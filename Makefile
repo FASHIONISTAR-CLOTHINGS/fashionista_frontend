@@ -46,15 +46,15 @@ install: ## Install Node.js dependencies with pnpm
 	pnpm install
 	@echo "$(GREEN)✓ Dependencies installed$(NC)"
 
-dev: ## Start Next.js development server (Turbopack — port 3000)
-	@echo "$(CYAN)Starting Next.js dev server with Turbopack...$(NC)"
+dev: ## Start Next.js development server (Turbopack default in v16 — port 3000)
+	@echo "$(CYAN)Starting Next.js dev server (Turbopack is default in Next.js 16)...$(NC)"
 	@echo "$(YELLOW)  Node memory: $(NEXT_DEV_MEMORY_MB)MB$(NC)"
 	@echo "$(YELLOW)  URL: http://localhost:$(NEXT_DEV_PORT)$(NC)"
-	$(NEXT_DEV_ENV) $(PNPM) exec next dev --turbo --hostname $(NEXT_DEV_HOST) --port $(NEXT_DEV_PORT)
-
-dev-stable: ## Start Next.js dev server without Turbopack (fallback for live QA)
-	@echo "$(CYAN)Starting Next.js dev server without Turbopack...$(NC)"
 	$(NEXT_DEV_ENV) $(PNPM) exec next dev --hostname $(NEXT_DEV_HOST) --port $(NEXT_DEV_PORT)
+
+dev-webpack: ## Start Next.js dev server with Webpack (fallback — use --webpack flag)
+	@echo "$(CYAN)Starting Next.js dev server with Webpack (Turbopack disabled)...$(NC)"
+	$(NEXT_DEV_ENV) $(PNPM) exec next dev --webpack --hostname $(NEXT_DEV_HOST) --port $(NEXT_DEV_PORT)
 
 build: ## Build production bundle
 	@echo "$(CYAN)Building for production...$(NC)"
