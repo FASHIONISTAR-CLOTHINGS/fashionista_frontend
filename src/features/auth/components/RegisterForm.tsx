@@ -79,7 +79,7 @@ export function RegisterForm({ role = "client" }: RegisterFormProps) {
 
   const { mutate, isPending } = useMutation({
     mutationFn: register,
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
       setApiError(null);
       setGoogleError(null);
       const identifier = mode === "email" ? variables.email : variables.phone;
@@ -87,7 +87,11 @@ export function RegisterForm({ role = "client" }: RegisterFormProps) {
         mode === "email" ? { email: identifier } : { phone: identifier },
       );
       toast.success("Account created! 🎉", {
-        description: "Check your email/phone for the 6-digit verification code.",
+        // Surface the backend message (e.g. "Check your email for a verification code")
+        // so the user sees the exact copy the backend sends — not a hardcoded fallback.
+        description:
+          (data as { message?: string } | undefined)?.message ??
+          "Check your email/phone for the 6-digit verification code.",
         duration: 5000,
       });
       // Pass returnUrl through to OTP page
@@ -99,7 +103,6 @@ export function RegisterForm({ role = "client" }: RegisterFormProps) {
     onError: (error) => {
       const parsed = parseApiError(error);
       setApiError(parsed);
-
     },
   });
 

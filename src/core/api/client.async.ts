@@ -16,6 +16,7 @@ import ky, { type KyInstance, HTTPError } from "ky";
 import { toast } from "sonner";
 import { readAccessToken } from "@/features/auth/lib/auth-session.client";
 import { getAsyncApiBaseUrl } from "@/core/config/api-roots";
+import { buildAuditHeadersSync } from "@/lib/audit-headers";
 
 // ── Async Client Instance ─────────────────────────────────────────────────────
 export const apiAsync: KyInstance = ky.create({
@@ -48,6 +49,14 @@ export const apiAsync: KyInstance = ky.create({
         // Skip ngrok browser warning page in development
         if (process.env.NODE_ENV === "development") {
           request.headers.set("ngrok-skip-browser-warning", "true");
+        }
+
+        // Inject audit context headers (device ID, timezone, locale, platform)
+        if (typeof window !== "undefined") {
+          const auditHeaders = buildAuditHeadersSync();
+          for (const [key, value] of Object.entries(auditHeaders)) {
+            request.headers.set(key, value);
+          }
         }
         // Ninja writes are intentionally outside the canonical frontend client.
         // Mutations use apiSync -> DRF so transaction/idempotency semantics stay sync.
