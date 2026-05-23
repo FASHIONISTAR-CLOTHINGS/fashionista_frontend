@@ -30,6 +30,7 @@ import { AuthAlert } from "@/components/shared/feedback/AuthAlert";
 import { GoogleSignInButton } from "@/features/auth/components/GoogleSignInButton";
 import { getPostAuthRedirectPath } from "@/features/auth/lib/auth-routing";
 import { normalizeAuthUser } from "@/features/auth/lib/normalize-auth-user";
+import { shouldMergeAnonymousCommerceForRole } from "@/features/auth/lib/post-auth-commerce";
 import { mergeAnonymousCommerce } from "@/features/cart";
 import { parseApiError } from "@/lib/api/parseApiError";
 
@@ -54,7 +55,11 @@ export function LoginForm() {
       ? `/auth/choose-role?returnUrl=${encodeURIComponent(returnUrl)}`
       : "/auth/choose-role";
 
-  async function mergeCommerceBeforeRedirect() {
+  async function mergeCommerceBeforeRedirect(role?: string, isStaff?: boolean) {
+    if (!shouldMergeAnonymousCommerceForRole({ role, isStaff })) {
+      return;
+    }
+
     try {
       await mergeAnonymousCommerce();
     } catch (error) {
@@ -111,7 +116,7 @@ export function LoginForm() {
       description: data.message ?? `Welcome, ${data.user?.first_name ?? "User"}! 🎉`,
       duration: 3000,
     });
-    await mergeCommerceBeforeRedirect();
+    await mergeCommerceBeforeRedirect(data.role ?? data.user?.role, data.user?.is_staff);
     setTimeout(() => {
       handlePostAuthRedirect(
         data.role ?? data.user?.role,
@@ -157,7 +162,7 @@ export function LoginForm() {
         duration: 3000,
       });
 
-      await mergeCommerceBeforeRedirect();
+      await mergeCommerceBeforeRedirect(data.role ?? data.user?.role, data.user?.is_staff);
       handlePostAuthRedirect(
         data.role ?? data.user?.role,
         data.has_vendor_profile,

@@ -31,6 +31,7 @@ import { AuthAlert } from "@/components/shared/feedback/AuthAlert";
 import { GoogleSignInButton } from "@/features/auth/components/GoogleSignInButton";
 import { getPostAuthRedirectPath } from "@/features/auth/lib/auth-routing";
 import { normalizeAuthUser } from "@/features/auth/lib/normalize-auth-user";
+import { shouldMergeAnonymousCommerceForRole } from "@/features/auth/lib/post-auth-commerce";
 import { mergeAnonymousCommerce } from "@/features/cart";
 import { RichErrorMessage, FieldError } from "@/components/shared/feedback/RichErrorMessage";
 import { parseApiError } from "@/lib/api/parseApiError";
@@ -132,18 +133,25 @@ export function RegisterForm({ role = "client" }: RegisterFormProps) {
       duration: 3000,
     });
 
-    try {
-      await mergeAnonymousCommerce();
-    } catch (error) {
-      const parsed = parseApiError(
-        error,
-        "Your account is ready, but we could not restore your guest cart and wishlist yet.",
-      );
-      toast.warning("Account created with limited restore", {
-        id: "fashionistar-google-register-merge-warning",
-        description: parsed.message,
-        duration: 4500,
-      });
+    if (
+      shouldMergeAnonymousCommerceForRole({
+        role: data.role ?? data.user?.role,
+        isStaff: data.user?.is_staff,
+      })
+    ) {
+      try {
+        await mergeAnonymousCommerce();
+      } catch (error) {
+        const parsed = parseApiError(
+          error,
+          "Your account is ready, but we could not restore your guest cart and wishlist yet.",
+        );
+        toast.warning("Account created with limited restore", {
+          id: "fashionistar-google-register-merge-warning",
+          description: parsed.message,
+          duration: 4500,
+        });
+      }
     }
 
     router.push(

@@ -6,7 +6,7 @@ const LIVE_EMAIL = process.env.PW_RESET_EMAIL ?? "";
 const LIVE_NEW_PASSWORD = process.env.PW_RESET_NEW_PASSWORD ?? "";
 const LIVE_CELERY_LOG = process.env.PW_RESET_CELERY_LOG ?? "";
 const LIVE_PHONE = process.env.PW_RESET_PHONE ?? "+2348012345678";
-const LIVE_FRONTEND_URL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3100";
+const LIVE_FRONTEND_URL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
 
 async function getLogOffset(logPath: string) {
   try {
