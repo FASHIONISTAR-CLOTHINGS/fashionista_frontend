@@ -17,7 +17,7 @@ const LEGACY_REDIRECTS = new Map<string, string>([
   ["/pages", "/blog"],
   ["/client", "/client/dashboard"],
   ["/wallet", "/client/dashboard/wallet"],
-  ["/orders", "/vendor/orders"],
+  ["/orders", "/client/dashboard/orders"],
 ]);
 
 /**
@@ -62,6 +62,24 @@ function withSecurityHeaders(response: NextResponse) {
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
+  const authHint = request.cookies.get("fashionistar_auth_hint")?.value;
+  const roleHint = request.cookies.get("fashionistar_role")?.value;
+  const isAuthenticated = authHint === "1";
+  const canonicalRole = (roleHint ?? "").trim().toLowerCase();
+
+  // ── Commerce-Only Route Guard (Admin/Vendor → Dashboard) ────────────────────
+  // Blocks admin and vendor users from accessing cart, checkout, wishlist,
+  // and the legacy `/orders` client-commerce route at the EDGE — before any
+  // redirect map or React route can take over.
+  if (isAuthenticated && isCommerceOnlyPath(pathname)) {
+    if (canonicalRole === "admin" || canonicalRole === "vendor") {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = getDashboardPath(canonicalRole);
+      redirectUrl.search = "";
+      return withSecurityHeaders(NextResponse.redirect(redirectUrl));
+    }
+  }
+
   // ── Legacy URL redirects (permanent) ────────────────────────────────────────
   const legacyDestination = LEGACY_REDIRECTS.get(pathname);
   if (legacyDestination) {
@@ -69,31 +87,6 @@ export function proxy(request: NextRequest) {
     redirectUrl.pathname = legacyDestination;
     redirectUrl.search = search;
     return withSecurityHeaders(NextResponse.redirect(redirectUrl));
-  }
-
-  const authHint = request.cookies.get("fashionistar_auth_hint")?.value;
-  const roleHint = request.cookies.get("fashionistar_role")?.value;
-  const isAuthenticated = authHint === "1";
-  const canonicalRole = (roleHint ?? "").trim().toLowerCase();
-
-  // ── Commerce-Only Route Guard (Admin/Vendor → Dashboard) ────────────────────
-  // Blocks admin and vendor users from accessing cart, checkout, and wishlist
-  // at the EDGE — before any React renders. This is the first line of defence.
-  //
-  // Client-side second defence: auth-routing.ts resolveRoleCompatibleReturnUrl
-  // ensures returnUrl to commerce paths is rejected for non-client roles.
-  //
-  // WHY EDGE-LEVEL:
-  //   • Client-side RoleGuard has a brief flash between render and redirect.
-  //   • Edge enforcement is instant — zero flash, zero form exposure.
-  //   • Prevents cart mutation attempts by non-client users before JS loads.
-  if (isAuthenticated && isCommerceOnlyPath(pathname)) {
-    if (canonicalRole === "admin" || canonicalRole === "vendor") {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = getDashboardPath(canonicalRole);
-      redirectUrl.search = ""; // Clean redirect — no extra params
-      return withSecurityHeaders(NextResponse.redirect(redirectUrl));
-    }
   }
 
   return withSecurityHeaders(NextResponse.next());

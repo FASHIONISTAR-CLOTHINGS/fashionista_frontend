@@ -93,27 +93,27 @@ test.describe("Auth-aware guest pages and commerce role guards", () => {
     await expect(page.locator("body")).toBeVisible();
   });
 
-  test("authenticated admin cannot open cart, checkout, or wishlist", async ({
+  test("authenticated admin cannot open cart, checkout, wishlist, or orders", async ({
     page,
     context,
   }) => {
     const auth = readSeededAuth();
     await seedAuthenticatedSession(page, context, auth.admin);
 
-    for (const route of ["/cart", "/cart/checkout", "/wishlist"]) {
+    for (const route of ["/cart", "/cart/checkout", "/wishlist", "/orders"]) {
       await page.goto(route);
       await expect(page).toHaveURL(/\/admin-dashboard/, { timeout: 20_000 });
     }
   });
 
-  test("authenticated vendor cannot open cart, checkout, or wishlist", async ({
+  test("authenticated vendor cannot open cart, checkout, wishlist, or orders", async ({
     page,
     context,
   }) => {
     const auth = readSeededAuth();
     await seedAuthenticatedSession(page, context, auth.vendor);
 
-    for (const route of ["/cart", "/cart/checkout", "/wishlist"]) {
+    for (const route of ["/cart", "/cart/checkout", "/wishlist", "/orders"]) {
       await page.goto(route);
       await expect(page).toHaveURL(/\/vendor\/(dashboard|setup)/, {
         timeout: 20_000,
