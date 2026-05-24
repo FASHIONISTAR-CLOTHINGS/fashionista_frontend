@@ -257,8 +257,8 @@ See `.env.example` for all required variables:
 
 ```dotenv
 # Backend APIs
-NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
-NEXT_PUBLIC_BACKEND_V2_URL=http://localhost:8000/api/v2
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8001
+NEXT_PUBLIC_BACKEND_V2_URL=http://localhost:8001/api/v2
 
 # Cloudinary CDN
 NEXT_PUBLIC_CLOUDINARY_CLOUD=dgpdlknc1

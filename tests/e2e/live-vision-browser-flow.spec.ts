@@ -27,7 +27,7 @@ const seededAuthPath = path.resolve(
   "tests/e2e/.tmp/seeded-auth.json",
 );
 
-const backendBaseUrl = process.env.PLAYWRIGHT_BACKEND_URL ?? "http://127.0.0.1:8000";
+const backendBaseUrl = process.env.PLAYWRIGHT_BACKEND_URL ?? "http://127.0.0.1:8001";
 const frontendBaseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
 
 function readSeededAuth(): SeededAuth {
