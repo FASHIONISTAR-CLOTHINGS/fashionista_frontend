@@ -12,7 +12,7 @@ import { expect, request as apiRequest, test } from "@playwright/test";
 const BACKEND_URL =
   process.env.PLAYWRIGHT_BACKEND_URL ??
   process.env.NEXT_PUBLIC_BACKEND_URL ??
-  "http://127.0.0.1:8000";
+  "http://127.0.0.1:8001";
 
 const CHAT_EMAIL = process.env.PLAYWRIGHT_CHAT_EMAIL;
 const CHAT_PASSWORD = process.env.PLAYWRIGHT_CHAT_PASSWORD;

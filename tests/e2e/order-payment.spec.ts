@@ -64,7 +64,7 @@ async function fetchPayableOrder(
   session: SeededAuthSession,
 ): Promise<OrderDetail | null> {
   const backendBaseUrl =
-    process.env.PLAYWRIGHT_BACKEND_BASE_URL ?? "http://127.0.0.1:8000";
+    process.env.PLAYWRIGHT_BACKEND_BASE_URL ?? "http://127.0.0.1:8001";
   const response = await fetch(`${backendBaseUrl}/api/v1/ninja/orders/`, {
     headers: {
       Authorization: `Bearer ${session.accessToken}`,

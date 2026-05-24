@@ -341,7 +341,7 @@ export function useCloudinaryUpload(assetType: string) {
 Add to your `.env.local`:
 
 ```bash
-NEXT_PUBLIC_BACKEND_URL=http://localhost:8000   # or production URL
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8001   # or production URL
 # No Cloudinary keys needed in frontend — all signing is done server-side
 ```
 

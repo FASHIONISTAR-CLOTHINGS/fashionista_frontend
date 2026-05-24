@@ -23,7 +23,7 @@ import { useNetworkStatus } from "@/shared";
 
 const WS_BASE =
   process.env.NEXT_PUBLIC_WS_URL?.replace(/^http/, "ws") ??
-  "ws://localhost:8000";
+  "ws://localhost:8001";
 
 const BACKOFF_BASE_MS = 1_000;
 const BACKOFF_MAX_MS = 30_000;

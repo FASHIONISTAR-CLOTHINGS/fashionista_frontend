@@ -41,7 +41,7 @@ import type {
 
 const WS_BASE =
   process.env.NEXT_PUBLIC_WS_URL?.replace(/^http/, "ws") ??
-  "ws://localhost:8000";
+  "ws://localhost:8001";
 
 /** Close codes that indicate a permanent auth/access failure — never reconnect. */
 const NON_RECOVERABLE_CODES = new Set([4401, 4403, 4404]);

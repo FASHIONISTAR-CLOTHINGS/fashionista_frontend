@@ -10,7 +10,7 @@ FROM base AS deps
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 
 RUN pnpm fetch --frozen-lockfile
 
@@ -19,7 +19,7 @@ FROM base AS builder
 WORKDIR /app
 
 COPY --from=deps /pnpm /pnpm
-COPY --from=deps /app/package.json /app/pnpm-lock.yaml ./
+COPY --from=deps /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/.npmrc ./
 RUN pnpm install --frozen-lockfile --offline
 
 COPY . .

@@ -42,7 +42,7 @@ const {
 // MSW SERVER SETUP
 // ─────────────────────────────────────────────────────────────────────────────
 
-const BASE = 'http://localhost:8000'
+const BASE = 'http://localhost:8001'
 
 const handlers = [
   // POST /api/v1/auth/login/

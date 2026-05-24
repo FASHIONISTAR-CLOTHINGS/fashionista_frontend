@@ -172,8 +172,8 @@ docker-dev-shell: ## Open shell in development container
 docker-build: ## Build production Docker image
 	@echo "$(CYAN)Building production Docker image...$(NC)"
 	docker build -t fashionistar-frontend:latest \
-		--build-arg NEXT_PUBLIC_BACKEND_URL=$${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8000} \
-		--build-arg BACKEND_INTERNAL_URL=$${BACKEND_INTERNAL_URL:-http://localhost:8000} \
+		--build-arg NEXT_PUBLIC_BACKEND_URL=$${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8001} \
+		--build-arg BACKEND_INTERNAL_URL=$${BACKEND_INTERNAL_URL:-http://localhost:8001} \
 		--build-arg NEXT_PUBLIC_APP_URL=$${NEXT_PUBLIC_APP_URL:-http://localhost:3000} \
 		-f Dockerfile .
 	@echo "$(GREEN)✓ Production image built$(NC)"
@@ -264,7 +264,7 @@ clean-all: clean clean-deps docker-clean ## Nuclear clean (build + deps + Docker
 
 env-setup: ## Create .env.local from .env.example (safe — won't overwrite)
 	@if [ ! -f .env.local ]; then \
-		cp .env.example .env.local 2>/dev/null || echo "NEXT_PUBLIC_API_V1_URL=http://localhost:8000/api" > .env.local; \
+		cp .env.example .env.local 2>/dev/null || echo "NEXT_PUBLIC_API_V1_URL=http://localhost:8001/api" > .env.local; \
 		echo "$(GREEN)✓ Created .env.local — edit with your values$(NC)"; \
 	else \
 		echo "$(YELLOW)⚠ .env.local already exists$(NC)"; \
@@ -337,20 +337,20 @@ env-check: ## Display current environment configuration
 
 backend-check: ## Check if backend API is running
 	@echo "$(CYAN)Checking backend connection...$(NC)"
-	@curl -sf http://localhost:8000/api/ > /dev/null 2>&1 && \
-		echo "$(GREEN)✓ Backend is running at http://localhost:8000$(NC)" || \
-		echo "$(RED)✗ Backend not available — run 'make dev' in fashionistar_backend/$(NC)"
+	@curl -sf http://localhost:8001/api/ > /dev/null 2>&1 && \
+		echo "$(GREEN)✓ Backend is running at http://localhost:8001$(NC)" || \
+		echo "$(RED)✗ Backend not available — run 'make uvicorn' in fashionistar_backend/$(NC)"
 
 full-stack: ## Display instructions for full-stack development
 	@echo "$(BOLD)$(CYAN)━━━ Full-Stack Development ━━━$(NC)"
-	@echo "  $(CYAN)Terminal 1 (Backend):$(NC)  cd ../fashionistar_backend && make dev"
+	@echo "  $(CYAN)Terminal 1 (Backend):$(NC)  cd ../fashionistar_backend && make uvicorn"
 	@echo "  $(CYAN)Terminal 2 (Frontend):$(NC) make dev"
 	@echo "  $(CYAN)Terminal 3 (Workers):$(NC)  cd ../fashionistar_backend && make celery"
 	@echo ""
 	@echo "$(BOLD)  URLs:$(NC)"
 	@echo "  $(CYAN)Frontend:$(NC)  http://localhost:3000"
-	@echo "  $(CYAN)Backend:$(NC)   http://localhost:8000"
-	@echo "  $(CYAN)Swagger:$(NC)   http://localhost:8000/swagger/"
+	@echo "  $(CYAN)Backend:$(NC)   http://localhost:8001"
+	@echo "  $(CYAN)Swagger:$(NC)   http://localhost:8001/swagger/"
 
 # ═══════════════════════════════════════════════════════════════
 ##@ Project Information
