@@ -4,7 +4,10 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
+const backendUrl =
+  process.env.BACKEND_INTERNAL_URL ||
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  "http://127.0.0.1:8001";
 const distDir = process.env.NEXT_DIST_DIR || ".next";
 
 function unique(values) {
@@ -80,13 +83,13 @@ const imageRemotePatterns = unique([
   {
     protocol: "http",
     hostname: "127.0.0.1",
-    port: "8000",
+    port: "8001",
     pathname: "/media/**",
   },
   {
     protocol: "http",
     hostname: "localhost",
-    port: "8000",
+    port: "8001",
     pathname: "/media/**",
   },
   {
