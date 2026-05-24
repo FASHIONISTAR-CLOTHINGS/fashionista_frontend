@@ -144,26 +144,26 @@ test-stress: ## Run cURL stress tests (Pillar 1)
 
 docker-dev-build: ## Build development Docker image
 	@echo "$(CYAN)Building dev Docker image...$(NC)"
-	docker build -t fashionista-frontend:dev -f Dockerfile.dev .
+	docker build -t fashionistar-frontend:dev -f Dockerfile.dev .
 	@echo "$(GREEN)✓ Dev image built$(NC)"
 
 docker-dev: ## Start development container with hot reload
 	@echo "$(CYAN)Starting dev container...$(NC)"
-	docker-compose -f docker-compose.dev.yml up
+	docker-compose -f ../docker-compose.yml up
 	@echo "$(GREEN)✓ Dev server at http://localhost:3000$(NC)"
 
 docker-dev-d: ## Start development container (detached)
-	docker-compose -f docker-compose.dev.yml up -d
+	docker-compose -f ../docker-compose.yml up -d
 	@echo "$(GREEN)✓ Dev server at http://localhost:3000$(NC)"
 
 docker-dev-stop: ## Stop development container
-	docker-compose -f docker-compose.dev.yml down
+	docker-compose -f ../docker-compose.yml down
 
 docker-dev-logs: ## Tail development container logs
-	docker-compose -f docker-compose.dev.yml logs -f
+	docker-compose -f ../docker-compose.yml logs -f frontend
 
 docker-dev-shell: ## Open shell in development container
-	docker exec -it fashionista-frontend-dev sh
+	docker exec -it fashionistar-frontend sh
 
 # ═══════════════════════════════════════════════════════════════
 ##@ Docker — Production
@@ -171,26 +171,26 @@ docker-dev-shell: ## Open shell in development container
 
 docker-build: ## Build production Docker image
 	@echo "$(CYAN)Building production Docker image...$(NC)"
-	docker build -t fashionista-frontend:latest \
+	docker build -t fashionistar-frontend:latest \
 		--build-arg NEXT_PUBLIC_API_URL=$${NEXT_PUBLIC_API_URL:-http://localhost:8000} \
 		-f Dockerfile .
 	@echo "$(GREEN)✓ Production image built$(NC)"
 
 docker-up: ## Start production container (detached)
 	@echo "$(CYAN)Starting production container...$(NC)"
-	docker-compose up -d
+	docker-compose -f ../docker-compose.prod.yml up -d
 	@echo "$(GREEN)✓ Production at http://localhost:3000$(NC)"
 
 docker-down: ## Stop production container
-	docker-compose down
+	docker-compose -f ../docker-compose.prod.yml down
 
 docker-restart: docker-down docker-up ## Restart production container
 
 docker-logs: ## Tail production container logs
-	docker-compose logs -f fashionista-frontend
+	docker-compose -f ../docker-compose.prod.yml logs -f frontend
 
 docker-shell: ## Open shell in production container
-	docker exec -it fashionista-frontend sh
+	docker exec -it fashionistar-frontend-prod sh
 
 # ═══════════════════════════════════════════════════════════════
 ##@ Docker — Maintenance
@@ -198,16 +198,16 @@ docker-shell: ## Open shell in production container
 
 docker-clean: ## Remove all Docker containers and images
 	@echo "$(YELLOW)Cleaning Docker containers and images...$(NC)"
-	docker-compose down -v 2>/dev/null || true
-	docker-compose -f docker-compose.dev.yml down -v 2>/dev/null || true
-	docker rmi fashionista-frontend:latest fashionista-frontend:dev 2>/dev/null || true
+	docker-compose -f ../docker-compose.yml down -v 2>/dev/null || true
+	docker-compose -f ../docker-compose.prod.yml down -v 2>/dev/null || true
+	docker rmi fashionistar-frontend:latest fashionistar-frontend:dev 2>/dev/null || true
 	@echo "$(GREEN)✓ Docker cleaned$(NC)"
 
 docker-stats: ## Show container resource usage
-	docker stats fashionista-frontend
+	docker stats fashionistar-frontend
 
 docker-inspect: ## Inspect production container
-	docker inspect fashionista-frontend
+	docker inspect fashionistar-frontend-prod
 
 # ═══════════════════════════════════════════════════════════════
 ##@ CI/CD Pipeline

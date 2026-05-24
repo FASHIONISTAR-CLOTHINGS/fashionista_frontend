@@ -1,21 +1,31 @@
 # Multi-stage build for optimized production frontend image
-
 # ═══════════════════════════════════════════════════════════
-# Stage 1: Builder - Build Next.js application
+# Stage 1: Dependencies installer
 # ═══════════════════════════════════════════════════════════
-FROM node:20-alpine AS builder
-
+FROM node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
+# Install pnpm
+RUN npm install -g pnpm
+
 # Copy package files
-COPY package*.json ./
-COPY pnpm-lock.yaml* ./
+COPY package.json pnpm-lock.yaml* ./
 
 # Install dependencies
-RUN npm install -g pnpm && \
-    pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
-# Copy source code
+# ═══════════════════════════════════════════════════════════
+# Stage 2: Application Builder
+# ═══════════════════════════════════════════════════════════
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Copy dependencies and source code
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build arguments for environment variables
@@ -25,56 +35,50 @@ ARG VITE_GOOGLE_CLIENT_ID=
 ARG VITE_ENVIRONMENT=production
 
 # Set environment variables for build
-ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
-ENV VITE_APP_NAME=${VITE_APP_NAME}
-ENV VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
-ENV VITE_ENVIRONMENT=${VITE_ENVIRONMENT}
-ENV NODE_ENV=production
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL} \
+    VITE_APP_NAME=${VITE_APP_NAME} \
+    VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID} \
+    VITE_ENVIRONMENT=${VITE_ENVIRONMENT} \
+    NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1
 
 # Build the application
-RUN pnpm build && \
-    pnpm prune --prod && \
-    rm -rf .next/cache
+RUN pnpm build
 
 # ═══════════════════════════════════════════════════════════
-# Stage 2: Production - Nginx serving
+# Stage 3: Minimal Node Production Runner
 # ═══════════════════════════════════════════════════════════
-FROM nginx:1.27-alpine
+FROM node:20-alpine AS runner
+WORKDIR /app
 
-# Install curl for health checks
-RUN apk add --no-cache curl
+ENV NODE_ENV=production \
+    PORT=3000 \
+    HOSTNAME="0.0.0.0" \
+    NEXT_TELEMETRY_DISABLED=1
 
-# Create non-root user for nginx
-RUN addgroup -g 1000 appuser && \
-    adduser -D -u 1000 -G appuser appuser
+# Create non-root user and group
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy public static files
+COPY --from=builder /app/public ./public
 
-# Create required directories with correct permissions
-RUN mkdir -p /app/static /app/media && \
-    chown -R appuser:appuser /app /var/cache/nginx /var/log/nginx /var/run
+# Set the correct permission for prerender cache
+RUN mkdir .next && \
+    chown nextjs:nodejs .next
 
-# Copy built Next.js assets from builder stage
-COPY --from=builder --chown=appuser:appuser /app/.next/static /usr/share/nginx/html/_next/static
-COPY --from=builder --chown=appuser:appuser /app/public /usr/share/nginx/html
-
-# Copy entrypoint script
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+# Copy built standalone folder and static files
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Switch to non-root user
-USER appuser
+USER nextjs
 
-# Expose port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:3000/ || exit 1
+# Health check (Node-based standalone verification)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD node -e "const http = require('http'); const req = http.request({ host: 'localhost', port: 3000, path: '/', timeout: 2000 }, (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }); req.on('error', () => process.exit(1)); req.end();"
 
-# Set entrypoint
-ENTRYPOINT ["/docker-entrypoint.sh"]
-
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start the standalone Next.js server
+CMD ["node", "server.js"]
