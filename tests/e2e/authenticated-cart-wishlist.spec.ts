@@ -44,7 +44,7 @@ const SEEDED_AUTH_PATH = path.resolve(
 const BACKEND_BASE_URL =
   process.env.PLAYWRIGHT_BACKEND_BASE_URL ??
   process.env.NEXT_PUBLIC_BACKEND_URL ??
-  "http://127.0.0.1:8001";
+  "http://127.0.0.1:8000";
 
 function readClientSession(): SeededAuthSession {
   const content = fs.readFileSync(SEEDED_AUTH_PATH, "utf8");

@@ -172,7 +172,9 @@ docker-dev-shell: ## Open shell in development container
 docker-build: ## Build production Docker image
 	@echo "$(CYAN)Building production Docker image...$(NC)"
 	docker build -t fashionistar-frontend:latest \
-		--build-arg NEXT_PUBLIC_API_URL=$${NEXT_PUBLIC_API_URL:-http://localhost:8000} \
+		--build-arg NEXT_PUBLIC_BACKEND_URL=$${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8000} \
+		--build-arg BACKEND_INTERNAL_URL=$${BACKEND_INTERNAL_URL:-http://localhost:8000} \
+		--build-arg NEXT_PUBLIC_APP_URL=$${NEXT_PUBLIC_APP_URL:-http://localhost:3000} \
 		-f Dockerfile .
 	@echo "$(GREEN)✓ Production image built$(NC)"
 
