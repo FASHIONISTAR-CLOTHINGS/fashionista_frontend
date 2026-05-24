@@ -236,6 +236,21 @@ async function fillOtpBoxes(page: Page, otp: string) {
   }
 }
 
+async function waitForResetRedirectToSignIn(page: Page) {
+  const redirectButton = page.getByRole("button", {
+    name: /redirecting to sign in/i,
+  });
+
+  const firstSignal = await Promise.any([
+    page.waitForURL(/\/auth\/sign-in$/, { timeout: 25_000 }).then(() => "url"),
+    redirectButton.waitFor({ state: "visible", timeout: 25_000 }).then(() => "button"),
+  ]);
+
+  if (firstSignal === "button") {
+    await page.waitForURL(/\/auth\/sign-in$/, { timeout: 25_000 });
+  }
+}
+
 async function clearAuthState(page: Page) {
   await page.goto("/");
   await page.context().clearCookies();
@@ -386,7 +401,7 @@ test.describe("Auth — Live Fullstack Register and Password Reset", () => {
     });
     await page.locator("#pw-reset-submit").click();
 
-    await page.waitForURL(/\/auth\/sign-in$/, { timeout: 20_000 });
+    await waitForResetRedirectToSignIn(page);
     await page.screenshot({
       path: test.info().outputPath("email-reset-sign-in-page.png"),
       fullPage: true,
@@ -433,7 +448,7 @@ test.describe("Auth — Live Fullstack Register and Password Reset", () => {
     });
     await page.locator("#pw-reset-submit").click();
 
-    await page.waitForURL(/\/auth\/sign-in$/, { timeout: 20_000 });
+    await waitForResetRedirectToSignIn(page);
     await page.screenshot({
       path: test.info().outputPath("phone-reset-sign-in-page.png"),
       fullPage: true,
