@@ -103,6 +103,7 @@ const imageRemotePatterns = unique([
 /** @type {import('next').NextConfig} */
 // Force Turbopack environment variable reload!
 const nextConfig = {
+  output: "standalone",
   distDir,
   cacheComponents: true,
   allowedDevOrigins,
