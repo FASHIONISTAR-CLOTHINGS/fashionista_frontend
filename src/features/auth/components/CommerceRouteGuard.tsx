@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { getCanonicalDashboardPath, normalizeCanonicalRole } from "@/features/auth/lib/auth-routing";
@@ -17,7 +16,6 @@ export function CommerceRouteGuard({
   children,
   fallback = null,
 }: CommerceRouteGuardProps) {
-  const router = useRouter();
   const hydrated = useIsHydrated();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
@@ -36,8 +34,11 @@ export function CommerceRouteGuard({
         "Cart, checkout, wishlist, and order pages are reserved for client accounts.",
       duration: 4500,
     });
-    router.replace(getCanonicalDashboardPath(user.role, user.is_staff === true));
-  }, [hydrated, isAuthenticated, isBlockedRole, router, user]);
+    const destination = getCanonicalDashboardPath(user.role, user.is_staff === true);
+    window.setTimeout(() => {
+      window.location.replace(destination);
+    }, 150);
+  }, [hydrated, isAuthenticated, isBlockedRole, user]);
 
   if (!hydrated) {
     return <>{fallback}</>;

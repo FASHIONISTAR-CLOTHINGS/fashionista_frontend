@@ -258,3 +258,79 @@ REAL_LIVE_VISION_BROWSER_AUTH_FULLSTACK_TESTING/
 - No fresh full ngrok sprint recording was generated in this session.
 - Backend startup still emits `SafeRotatingFileHandler` `WinError 32` rollover noise for locked Windows log files.
 - `chrome-devtools-mcp` is configured in `.vscode/mcp.json`, but a callable chrome-devtools MCP runtime was not exposed in this session, so richer manual visual reruns could not be honestly executed here.
+
+---
+
+## SESSION 5 — 2026-05-24 00:20 +01:00 (Fresh ngrok Auth Reruns + Durable Artifact Preservation)
+
+**Scope:** Finish the interrupted live continuation by rerunning the admin and password-reset auth proofs on the current ngrok URLs, fix the remaining auth-flow blockers exposed by that proof, and preserve the resulting artifacts under stable folders.
+
+### Code changes validated in this session
+
+- Added `src/features/auth/lib/post-auth-commerce.ts`
+- Updated:
+  - `src/features/auth/components/LoginForm.tsx`
+  - `src/features/auth/components/RegisterForm.tsx`
+  - `src/features/auth/components/OTPVerifyForm.tsx`
+  so anonymous cart and wishlist merge now runs only for canonical client sessions
+- Updated `src/features/auth/components/CommerceRouteGuard.tsx` to hard-redirect blocked admin/vendor users after the toast
+- Updated `tests/e2e/password-reset.fullstack.live.spec.ts` to:
+  - derive reset links from backend primitives when log scraping is insufficient,
+  - accept the real reset-confirm success contract before the sign-in redirect,
+  - remain stable on both email and phone branches
+
+### Fresh browser verification completed
+
+| Command | Result |
+|--------|--------|
+| `pnpm.cmd exec playwright test tests/e2e/admin-auth.live.spec.ts --project "chromium — Desktop" --workers 1` | ✅ PASS |
+| `pnpm.cmd exec playwright test tests/e2e/password-reset.fullstack.live.spec.ts --project "chromium — Desktop" --workers 1` | ✅ PASS (3/3 on final rerun) |
+
+### Fresh scenario results
+
+- Admin real login:
+  - `/auth/sign-in` → `/admin-dashboard` ✅
+  - `/cart`, `/cart/checkout`, `/wishlist`, `/orders` → blocked and redirected away ✅
+- Email client flow:
+  - register → OTP verify → dashboard ✅
+  - forgot password email flow → reset confirm → sign-in → relogin ✅
+- Phone client flow:
+  - register → OTP verify → dashboard ✅
+  - forgot password phone flow → OTP confirm → sign-in → relogin ✅
+- Vendor flow:
+  - register → OTP verify → redirect into `/vendor/setup` or `/vendor/dashboard` ✅
+
+### Durable Session 5 evidence
+
+- `session5_admin_live/`
+  - `admin-login-form.png`
+  - `admin-dashboard-after-login.png`
+  - `admin-commerce-blocked.png`
+  - `video.webm`
+- `session5_password_reset_live/email_reset_client/`
+  - `email-register-form.png`
+  - `email-registration-dashboard.png`
+  - `email-reset-request-form.png`
+  - `email-reset-request-success.png`
+  - `email-reset-confirm-form.png`
+  - `email-reset-sign-in-page.png`
+  - `email-reset-login-success.png`
+  - `video.webm`
+- `session5_password_reset_live/phone_reset_client/`
+  - `phone-register-form.png`
+  - `phone-registration-dashboard.png`
+  - `phone-reset-request-form.png`
+  - `phone-reset-confirm-form.png`
+  - `phone-reset-sign-in-page.png`
+  - `phone-reset-login-success.png`
+  - `video.webm`
+- `session5_password_reset_live/vendor_reset_vendor/`
+  - `vendor-register-form.png`
+  - `vendor-registration-redirect.png`
+  - `video.webm`
+
+### Notes
+
+- The first fresh email reset rerun exposed a timing mismatch between the test and the real success contract of `PasswordResetConfirmForm`; that was fixed in-session and the final rerun passed cleanly.
+- The richer chrome-devtools or Browser Use runtime still was not callable in this session.
+- Backend startup still emits Windows `WinError 32` rollover noise, but it did not block the live verification wave.
