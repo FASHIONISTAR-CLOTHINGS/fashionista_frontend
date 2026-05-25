@@ -1,0 +1,10 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '--build-arg', 'NEXT_PUBLIC_BACKEND_URL=$_NEXT_PUBLIC_BACKEND_URL',
+      '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/fashionistar-repo/frontend:latest',
+      '.'
+    ]
+images:
+  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/fashionistar-repo/frontend:latest'
