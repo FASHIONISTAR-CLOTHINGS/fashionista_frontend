@@ -3,8 +3,9 @@
  * TanStack Query hooks for vendor analytics.
  * Aligned with: /api/v1/vendor/analytics/* and /api/v1/vendor/earnings/
  */
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { vendorApi } from "@/features/vendor/api/vendor.api";
+import { toast } from "sonner";
 
 export const vendorAnalyticsKeys = {
   summary:      ["vendor", "analytics", "summary"] as const,
@@ -96,5 +97,41 @@ export function useVendorCoupons() {
     queryKey:  vendorAnalyticsKeys.coupons,
     queryFn:   vendorApi.getCoupons,
     staleTime: 60_000,
+  });
+}
+
+export function useCreateCoupon() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      code: string;
+      discount_type: "percentage" | "fixed";
+      discount_value: number;
+      minimum_order: number;
+      valid_from: string;
+      valid_to: string;
+      active: boolean;
+    }) => vendorApi.createCoupon(input),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: vendorAnalyticsKeys.coupons });
+      toast.success("Coupon created successfully!");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || err.message || "Failed to create coupon.");
+    },
+  });
+}
+
+export function useDeactivateCoupon() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (couponId: string) => vendorApi.deleteCoupon(couponId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: vendorAnalyticsKeys.coupons });
+      toast.success("Coupon deactivated successfully.");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || err.message || "Failed to deactivate coupon.");
+    },
   });
 }

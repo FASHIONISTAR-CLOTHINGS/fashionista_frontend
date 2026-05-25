@@ -346,11 +346,12 @@ export const VendorReviewListSchema = z.object({
 
 // ── Coupons ───────────────────────────────────────────────────────────────────
 export const VendorCouponSchema = z.object({
-  id:          z.number(),
-  code:        z.string(),
-  discount:    z.coerce.number(),
-  active:      z.boolean(),
-  valid_until: z.string().optional(),
+  id:            z.union([z.string(), z.number()]),
+  code:          z.string(),
+  discount:      z.coerce.number(),
+  discount_type: z.string().optional().default("percentage"),
+  active:        z.boolean(),
+  valid_until:   z.string().optional(),
 });
 
 export const VendorCouponListSchema = z.object({

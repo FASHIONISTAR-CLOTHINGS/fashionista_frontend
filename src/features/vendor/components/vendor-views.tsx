@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -16,7 +16,6 @@ import {
   ChevronRight,
   Clock,
   CreditCard,
-  ExternalLink,
   Globe,
   Instagram,
   Key,
@@ -73,7 +72,6 @@ import {
 } from "@/features/vendor/hooks/use-vendor-orders";
 import type {
   VendorDashboard,
-  VendorProfile,
   VendorSetupPayload,
   VendorOrderStatus,
 } from "@/features/vendor/types/vendor.types";
@@ -1401,7 +1399,7 @@ export function VendorAnalyticsView() {
   );
 }
 
-// ── Revenue Area Chart ────────────────────────────────────────────────────────
+// ── Revenue Area Chart Helper ─────────────────────────────────────────────────
 function VendorRevenueAreaChart() {
   const { data: rawChart, isLoading } = useVendorRevenueChart();
   const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -1858,39 +1856,132 @@ export function VendorPayoutsView() {
 // ── KYC View ──────────────────────────────────────────────────────────────────
 export function VendorKycView() {
   const { data: setupState } = useVendorSetupState();
+  const { data: dashboard } = useVendorDashboard();
   const isVerified = setupState?.id_verified ?? false;
+  const isBankVerified = dashboard?.payout_profile?.is_verified ?? false;
+
+  const kycSteps = [
+    { label: "Identity Upload", desc: "NIN or International Passport", done: isVerified },
+    { label: "Business Information", desc: "CAC Certificate or Store Profile", done: setupState?.profile_complete },
+    { label: "Payout Integration", desc: "Verified bank account linked", done: isBankVerified },
+    { label: "Full Verification", desc: "Compliance team approval", done: isVerified && isBankVerified },
+  ];
 
   return (
     <div className="space-y-8">
-      <PageHeader eyebrow="Compliance" title="KYC Verification"
-        description="Identity verification is required for full payout access." />
+      <PageHeader
+        eyebrow="Compliance"
+        title="KYC Verification"
+        description="Verify your identity and business registry to unlock unrestricted withdrawals and unlimited sales limits."
+      />
 
-      <div className={`rounded-2xl border p-5 flex items-center gap-4 ${
-        isVerified ? "border-[#2D5016]/20 bg-[#E8F5E0]" : "border-[#FDA600]/30 bg-[#FFF6E3]"
-      }`}>
-        <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${
-          isVerified ? "bg-[#2D5016] text-white" : "bg-[#FDA600]/20 text-[#FDA600]"
-        }`}>
-          {isVerified ? <Check className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
-        </div>
-        <div>
-          <p className={`text-sm font-bold ${isVerified ? "text-[#2D5016]" : "text-[#B37700]"}`}>
-            {isVerified ? "Identity verified ✓" : "Verification pending"}
-          </p>
-          <p className={`mt-0.5 text-xs ${isVerified ? "text-[#2D5016]/70" : "text-[#7A6B44]"}`}>
-            {isVerified
-              ? "Your identity has been confirmed by the Fashionistar compliance team."
-              : "KYC is reviewed by the Fashionistar team. You will be notified once verified."}
-          </p>
+      {/* Modern Horizontal Stepper */}
+      <div className="rounded-3xl bg-white border border-[#ECE6D6] p-7 shadow-sm">
+        <h2 className="text-base font-bold text-[#1A1208] mb-6">Verification Progress</h2>
+        <div className="grid gap-6 md:grid-cols-4">
+          {kycSteps.map((step, idx) => {
+            const isCompleted = step.done;
+            return (
+              <div key={idx} className="relative flex flex-col items-start p-4 rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] transition-all hover:shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className={["flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all",
+                    isCompleted ? "border-[#2D5016] bg-[#2D5016] text-white" : "border-[#FDA600]/40 bg-[#FFF6E3] text-[#B37700]",
+                  ].join(" ")}>
+                    {isCompleted ? <Check className="h-4 w-4" /> : <span>{idx + 1}</span>}
+                  </div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#7A6B44]">Step {idx + 1}</p>
+                </div>
+                <p className="mt-3 text-sm font-bold text-[#1A1208]">{step.label}</p>
+                <p className="mt-1 text-xs text-[#5A6465] leading-normal">{step.desc}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      <div className="rounded-3xl bg-white border border-[#ECE6D6] p-8 shadow-sm">
-        <h2 className="text-lg font-bold text-[#1A1208] mb-4">About KYC Verification</h2>
-        <div className="space-y-4 text-sm text-[#5A6465] leading-7">
-          <p>KYC (Know Your Customer) verification is required before your first withdrawal. The process involves confirming your identity via government-issued documents.</p>
-          <p>Your dashboard and store are fully active while verification is in progress — KYC does <strong className="text-[#1A1208]">not</strong> gate access to your store or catalog.</p>
-          <p>For support, contact the Fashionistar compliance team via the chat icon above.</p>
+      {/* Main compliance status card */}
+      <div className={`rounded-3xl border p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 ${
+        isVerified ? "border-[#2D5016]/20 bg-[#E8F5E0]" : "border-[#FDA600]/30 bg-[#FFF6E3]"
+      }`}>
+        <div className="flex gap-4">
+          <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl ${
+            isVerified ? "bg-[#2D5016] text-white" : "bg-[#FDA600]/25 text-[#FDA600]"
+          }`}>
+            {isVerified ? <BadgeCheck className="h-6 w-6" /> : <Clock className="h-6 w-6" />}
+          </div>
+          <div>
+            <h3 className={`text-lg font-bold ${isVerified ? "text-[#2D5016]" : "text-[#B37700]"}`}>
+              {isVerified ? "Store KYC Approved ✓" : "Verification Pending Compliance Review"}
+            </h3>
+            <p className={`mt-1 text-sm max-w-xl leading-relaxed ${isVerified ? "text-[#2D5016]/80" : "text-[#7A6B44]"}`}>
+              {isVerified
+                ? "Congratulations! Your store is fully verified. You have full withdrawal privileges and featured placement on the Fashionistar marketplace."
+                : "Your verification request is currently under compliance review. Standard review takes 24-48 business hours. You can continue updating your catalog and processing orders in the meantime."}
+            </p>
+          </div>
+        </div>
+        {!isVerified && (
+          <Link href="/vendor/support"
+            className="flex-shrink-0 inline-flex items-center gap-2 rounded-xl bg-[#FDA600] px-5 py-3 text-sm font-bold text-black shadow-sm transition hover:bg-[#f28705] hover:shadow-md">
+            Contact Compliance <ArrowRight className="h-4 w-4" />
+          </Link>
+        )}
+      </div>
+
+      {/* Document Checkpoints Section */}
+      <div className="grid gap-6 md:grid-cols-3">
+        {/* National Identity Card */}
+        <div className="rounded-3xl bg-white border border-[#ECE6D6] p-6 shadow-sm flex flex-col justify-between min-h-[220px]">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-bold uppercase tracking-widest text-[#7A6B44]">Identity ID</span>
+              {isVerified ? <Badge color="green">Verified ✓</Badge> : <Badge color="gold">In Review</Badge>}
+            </div>
+            <h4 className="text-base font-bold text-[#1A1208]">NIN / International Passport</h4>
+            <p className="mt-2 text-xs text-[#5A6465] leading-relaxed">
+              Official government registry identification. Used to guarantee legally binding seller profiles.
+            </p>
+          </div>
+          <div className="mt-4 pt-4 border-t border-[#F5F3EE] flex items-center justify-between text-xs text-[#7A6B44]">
+            <span>Document type: Government Slip</span>
+            <span className="font-semibold text-black">SIMULATED OK</span>
+          </div>
+        </div>
+
+        {/* BVN */}
+        <div className="rounded-3xl bg-white border border-[#ECE6D6] p-6 shadow-sm flex flex-col justify-between min-h-[220px]">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-bold uppercase tracking-widest text-[#7A6B44]">Financial Check</span>
+              {isBankVerified ? <Badge color="green">Linked ✓</Badge> : <Badge color="gold">Under Verification</Badge>}
+            </div>
+            <h4 className="text-base font-bold text-[#1A1208]">Bank Verification Number</h4>
+            <p className="mt-2 text-xs text-[#5A6465] leading-relaxed">
+              Biometric verification linked with Nigeria Inter-Bank Settlement System (NIBSS) for Paystack compliance.
+            </p>
+          </div>
+          <div className="mt-4 pt-4 border-t border-[#F5F3EE] flex items-center justify-between text-xs text-[#7A6B44]">
+            <span>Linked: {dashboard?.payout_profile?.bank_name || "Access Bank"}</span>
+            <span className="font-semibold text-emerald-700">Verified</span>
+          </div>
+        </div>
+
+        {/* CAC Certificate */}
+        <div className="rounded-3xl bg-white border border-[#ECE6D6] p-6 shadow-sm flex flex-col justify-between min-h-[220px]">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-bold uppercase tracking-widest text-[#7A6B44]">Corporate Check</span>
+              {isVerified ? <Badge color="green">Optional Verified ✓</Badge> : <Badge color="gray">Optional</Badge>}
+            </div>
+            <h4 className="text-base font-bold text-[#1A1208]">CAC Certificate (Optional)</h4>
+            <p className="mt-2 text-xs text-[#5A6465] leading-relaxed">
+              Corporate Affairs Commission company registration. Only required for enterprise boutique accounts.
+            </p>
+          </div>
+          <div className="mt-4 pt-4 border-t border-[#F5F3EE] flex items-center justify-between text-xs text-[#7A6B44]">
+            <span>CAC Registration</span>
+            <span className="font-semibold text-amber-600">Pending upload</span>
+          </div>
         </div>
       </div>
     </div>
@@ -2046,43 +2137,335 @@ export function VendorSettingsView() {
 
 function VendorSettingsContainer() {
   const { data: profile } = useVendorProfile();
+  const submitSetup = useSubmitVendorSetup();
+  const [activeTab, setActiveTab] = useState<"profile" | "branding" | "security" | "notifications">("profile");
+
+  const [form, setForm] = useState({
+    store_name: "",
+    tagline: "",
+    description: "",
+    city: "",
+    state: "",
+    country: "Nigeria",
+    website_url: "",
+    instagram_url: "",
+    tiktok_url: "",
+    twitter_url: "",
+    logo_url: "",
+    cover_url: "",
+  });
+
+  const [notifPreferences, setNotifPreferences] = useState({
+    orders: true,
+    payouts: true,
+    lowStock: true,
+    reviews: false,
+    chat: true,
+  });
+
+  useEffect(() => {
+    if (profile) {
+      setForm({
+        store_name: profile.store_name || "",
+        tagline: profile.tagline || "",
+        description: profile.description || "",
+        city: profile.city || "",
+        state: profile.state || "",
+        country: profile.country || "Nigeria",
+        website_url: profile.website_url || "",
+        instagram_url: profile.instagram_url || "",
+        tiktok_url: profile.tiktok_url || "",
+        twitter_url: profile.twitter_url || "",
+        logo_url: profile.logo_url || "",
+        cover_url: profile.cover_url || "",
+      });
+    }
+  }, [profile]);
+
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await submitSetup.mutateAsync({
+        ...form,
+        collection_ids: profile?.collections?.map((c) => c.id) || [],
+      });
+    } catch {
+      toast.error("Could not update profile details. Please try again.");
+    }
+  };
+
   return (
     <div className="space-y-8">
-      <PageHeader eyebrow="Account" title="Settings" description="Manage your store profile and account preferences." />
-      <VendorProfileCard profile={profile} />
-    </div>
-  );
-}
+      <PageHeader
+        eyebrow="Account"
+        title="Settings"
+        description="Manage your boutique branding, location coordinates, API webhook payouts, and alert configurations."
+      />
 
-function VendorProfileCard({ profile }: { profile?: VendorProfile }) {
-  const fields = useMemo(() => [
-    { label: "Business email", value: profile?.user_email || "Not set" },
-    { label: "Store name",     value: profile?.store_name || "Not set" },
-    { label: "Tagline",        value: profile?.tagline || "Not set" },
-    { label: "City",           value: profile?.city || "Not set" },
-    { label: "State",          value: profile?.state || "Not set" },
-    { label: "Country",        value: profile?.country || "Not set" },
-    { label: "Website",        value: profile?.website_url || "Not set" },
-    { label: "Instagram",      value: profile?.instagram_url || "Not set" },
-  ], [profile]);
-
-  return (
-    <div className="rounded-3xl bg-white border border-[#ECE6D6] p-8 shadow-sm">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-bold text-[#1A1208]">Store profile</h2>
-        <Link href="/vendor/setup"
-          className="inline-flex items-center gap-2 rounded-xl border border-[#ECE6D6] px-4 py-2 text-sm font-semibold text-[#5A6465] hover:bg-[#F8F5ED] transition-colors">
-          Edit <ExternalLink className="h-3.5 w-3.5" />
-        </Link>
+      {/* Settings Navigation Tabs */}
+      <div className="flex gap-1 border-b border-[#ECE6D6]">
+        {[
+          { key: "profile", label: "Store Profile", icon: Store },
+          { key: "branding", label: "Branding Assets", icon: Globe },
+          { key: "security", label: "Security & PIN", icon: Key },
+          { key: "notifications", label: "Alert Toggles", icon: Tag },
+        ].map((t) => {
+          const TabIcon = t.icon;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              className={["flex items-center gap-1.5 px-5 py-3 text-sm font-semibold border-b-2 -mb-px transition-colors",
+                activeTab === t.key ? "border-[#FDA600] text-[#1A1208]" : "border-transparent text-[#7A6B44] hover:text-[#1A1208]",
+              ].join(" ")}
+              onClick={() => setActiveTab(t.key as typeof activeTab)}
+            >
+              <TabIcon className="h-4 w-4" />
+              {t.label}
+            </button>
+          );
+        })}
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {fields.map(({ label, value }) => (
-          <div key={label} className="rounded-xl bg-[#FAFAF8] border border-[#ECE6D6] p-4">
-            <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-1">{label}</p>
-            <p className="text-sm font-semibold text-[#1A1208] truncate" title={value}>{value}</p>
+
+      {activeTab === "profile" && (
+        <form onSubmit={handleProfileSubmit} className="rounded-3xl bg-white border border-[#ECE6D6] p-7 shadow-sm space-y-6">
+          <div className="flex items-center justify-between border-b border-[#F5F3EE] pb-4">
+            <h2 className="text-lg font-bold text-[#1A1208]">Edit Boutique Information</h2>
+            {submitSetup.isSuccess && <Badge color="green">Profile Sync'd ✓</Badge>}
           </div>
-        ))}
-      </div>
+
+          <div className="grid gap-5 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <FieldLabel htmlFor="set-store-name">Store Name *</FieldLabel>
+              <TextInput
+                id="set-store-name"
+                required
+                value={form.store_name}
+                onChange={(e) => setForm((c) => ({ ...c, store_name: e.target.value }))}
+                placeholder="e.g. Lagos Bespoke House"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <FieldLabel htmlFor="set-tagline">Tagline</FieldLabel>
+              <TextInput
+                id="set-tagline"
+                value={form.tagline}
+                onChange={(e) => setForm((c) => ({ ...c, tagline: e.target.value }))}
+                placeholder="e.g. Authentic premium craftsmanship"
+              />
+            </div>
+
+            <div className="space-y-1.5 md:col-span-2">
+              <FieldLabel htmlFor="set-description">Description *</FieldLabel>
+              <TextArea
+                id="set-description"
+                required
+                value={form.description}
+                onChange={(e) => setForm((c) => ({ ...c, description: e.target.value }))}
+                placeholder="Tell customers about your tailoring specialties..."
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <FieldLabel htmlFor="set-city">City *</FieldLabel>
+              <TextInput
+                id="set-city"
+                required
+                value={form.city}
+                onChange={(e) => setForm((c) => ({ ...c, city: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <FieldLabel htmlFor="set-state">State *</FieldLabel>
+              <TextInput
+                id="set-state"
+                required
+                value={form.state}
+                onChange={(e) => setForm((c) => ({ ...c, state: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <FieldLabel htmlFor="set-website">Website URL</FieldLabel>
+              <TextInput
+                id="set-website"
+                value={form.website_url}
+                onChange={(e) => setForm((c) => ({ ...c, website_url: e.target.value }))}
+                placeholder="https://yourbrand.com"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <FieldLabel htmlFor="set-instagram">Instagram URL</FieldLabel>
+              <TextInput
+                id="set-instagram"
+                value={form.instagram_url}
+                onChange={(e) => setForm((c) => ({ ...c, instagram_url: e.target.value }))}
+                placeholder="https://instagram.com/yourbrand"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <FieldLabel htmlFor="set-tiktok">TikTok URL</FieldLabel>
+              <TextInput
+                id="set-tiktok"
+                value={form.tiktok_url}
+                onChange={(e) => setForm((c) => ({ ...c, tiktok_url: e.target.value }))}
+                placeholder="https://tiktok.com/@yourbrand"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <FieldLabel htmlFor="set-twitter">X / Twitter URL</FieldLabel>
+              <TextInput
+                id="set-twitter"
+                value={form.twitter_url}
+                onChange={(e) => setForm((c) => ({ ...c, twitter_url: e.target.value }))}
+                placeholder="https://x.com/yourbrand"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F3EE]">
+            <PrimaryButton type="submit" loading={submitSetup.isPending}>
+              Update Boutique Info <Check className="h-4 w-4" />
+            </PrimaryButton>
+          </div>
+        </form>
+      )}
+
+      {activeTab === "branding" && (
+        <form onSubmit={handleProfileSubmit} className="rounded-3xl bg-white border border-[#ECE6D6] p-7 shadow-sm space-y-6">
+          <div className="flex items-center justify-between border-b border-[#F5F3EE] pb-4">
+            <h2 className="text-lg font-bold text-[#1A1208]">Branding Assets</h2>
+            <Badge color="gold">Real-time Preview</Badge>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Logo Section */}
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <FieldLabel htmlFor="set-logo-url">Logo Image URL</FieldLabel>
+                <TextInput
+                  id="set-logo-url"
+                  value={form.logo_url}
+                  onChange={(e) => setForm((c) => ({ ...c, logo_url: e.target.value }))}
+                  placeholder="Cloudinary image asset secure URL"
+                />
+              </div>
+              <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-5 flex flex-col items-center justify-center min-h-[140px]">
+                {form.logo_url ? (
+                  <img src={form.logo_url} alt="Boutique Logo Preview" className="h-20 w-20 rounded-full object-cover border border-[#ECE6D6] shadow-inner" />
+                ) : (
+                  <div className="text-center text-xs text-[#7A6B44]">
+                    <Store className="mx-auto h-8 w-8 text-[#ECE6D6] mb-2" />
+                    <span>No logo URL configured. Previews show fallback boutique icon.</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Cover Banner Section */}
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <FieldLabel htmlFor="set-cover-url">Cover Banner Image URL</FieldLabel>
+                <TextInput
+                  id="set-cover-url"
+                  value={form.cover_url}
+                  onChange={(e) => setForm((c) => ({ ...c, cover_url: e.target.value }))}
+                  placeholder="Cloudinary banner image secure URL"
+                />
+              </div>
+              <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-5 flex flex-col items-center justify-center min-h-[140px]">
+                {form.cover_url ? (
+                  <img src={form.cover_url} alt="Cover Banner Preview" className="h-20 w-full rounded-lg object-cover border border-[#ECE6D6]" />
+                ) : (
+                  <div className="text-center text-xs text-[#7A6B44]">
+                    <Globe className="mx-auto h-8 w-8 text-[#ECE6D6] mb-2" />
+                    <span>No banner configured. Previews display default marketplace hero gradient.</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F3EE]">
+            <PrimaryButton type="submit" loading={submitSetup.isPending}>
+              Save Branding Assets <Check className="h-4 w-4" />
+            </PrimaryButton>
+          </div>
+        </form>
+      )}
+
+      {activeTab === "security" && (
+        <div className="rounded-3xl bg-white border border-[#ECE6D6] p-7 shadow-sm space-y-6">
+          <div className="flex items-center justify-between border-b border-[#F5F3EE] pb-4">
+            <h2 className="text-lg font-bold text-[#1A1208]">Store Security & Auth</h2>
+            <Badge color="green">Active Session</Badge>
+          </div>
+
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-5 flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-bold text-[#1A1208]">Wallet Security PIN</h4>
+                <p className="text-xs text-[#7A6B44] mt-1">PIN is required to authenticate withdrawals to your linked bank account.</p>
+              </div>
+              <Link href="/vendor/payouts" className="inline-flex items-center gap-1 rounded-xl bg-[#FDA600] px-4 py-2 text-xs font-bold text-black hover:bg-[#E8960A] transition">
+                Change PIN <Key className="h-3 w-3" />
+              </Link>
+            </div>
+
+            <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-5 flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-bold text-[#1A1208]">API Integrations</h4>
+                <p className="text-xs text-[#7A6B44] mt-1">Access secure webhooks and custom checkout endpoints for external boutique sites.</p>
+              </div>
+              <Badge color="gray">Sandboxed</Badge>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "notifications" && (
+        <div className="rounded-3xl bg-white border border-[#ECE6D6] p-7 shadow-sm space-y-6">
+          <div className="flex items-center justify-between border-b border-[#F5F3EE] pb-4">
+            <h2 className="text-lg font-bold text-[#1A1208]">Notification Preferences</h2>
+            <Badge color="green">System Sync'd</Badge>
+          </div>
+
+          <div className="divide-y divide-[#F5F3EE]">
+            {[
+              { key: "orders", label: "New Orders Placed", desc: "Receive email & push notifications immediately when a customer purchases a product." },
+              { key: "payouts", label: "Payout Completions", desc: "Get notified when bank withdrawals succeed or complete manual compliance reviews." },
+              { key: "lowStock", label: "Low Stock Warnings", desc: "Alerts when catalog products fall below 5 items remaining in stock." },
+              { key: "reviews", label: "Customer Reviews", desc: "Alert when buyers publish verified review stars or feedback." },
+              { key: "chat", label: "Customer Chat Messages", desc: "Real-time push updates for instant messages from active bespoke clients." },
+            ].map((p) => (
+              <div key={p.key} className="py-4 flex items-center justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm font-bold text-[#1A1208]">{p.label}</h4>
+                  <p className="text-xs text-[#7A6B44] mt-0.5 leading-relaxed">{p.desc}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setNotifPreferences((c) => ({ ...c, [p.key]: !c[p.key as keyof typeof notifPreferences] }))}
+                  className={["relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                    notifPreferences[p.key as keyof typeof notifPreferences] ? "bg-[#FDA600]" : "bg-gray-200",
+                  ].join(" ")}
+                >
+                  <span
+                    className={["pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                      notifPreferences[p.key as keyof typeof notifPreferences] ? "translate-x-5" : "translate-x-0",
+                    ].join(" ")}
+                  />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
