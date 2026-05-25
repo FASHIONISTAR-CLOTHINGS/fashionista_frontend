@@ -1,116 +1,209 @@
 // features/vendor/schemas/vendor.schemas.ts
-// Zero-trust Zod validation aligned with /api/v1/vendor/* backend contracts.
+// Zero-trust Zod validation aligned with /api/v1/ninja/vendor/* (async Ninja)
+// and /api/v1/vendor/* (DRF sync) backend contracts.
+// Last synced with: apps/vendor/types/vendor_schemas.py
 import { z } from "zod";
 
 // ── Setup State ───────────────────────────────────────────────────────────────
 export const VendorSetupStateSchema = z.object({
-  current_step:          z.number(),
+  current_step:          z.number().default(1),
   profile_complete:      z.boolean(),
   bank_details:          z.boolean(),
   id_verified:           z.boolean(),
   first_product:         z.boolean(),
   onboarding_done:       z.boolean(),
-  completion_percentage: z.number(),
+  completion_percentage: z.number().default(0),
 });
 
 // ── Profile ───────────────────────────────────────────────────────────────────
 export const VendorProfileSchema = z.object({
   id:             z.string().uuid(),
-  user_id:        z.string().uuid(),
+  user_id:        z.string(),
   user_email:     z.string(),
   store_name:     z.string(),
   store_slug:     z.string(),
-  tagline:        z.string(),
-  description:    z.string(),
-  logo_url:       z.string(),
-  cover_url:      z.string(),
-  city:           z.string(),
-  state:          z.string(),
-  country:        z.string(),
-  instagram_url:  z.string(),
-  tiktok_url:     z.string(),
-  twitter_url:    z.string(),
-  website_url:    z.string(),
+  tagline:        z.string().default(""),
+  description:    z.string().default(""),
+  logo_url:       z.string().default(""),
+  cover_url:      z.string().default(""),
+  city:           z.string().default(""),
+  state:          z.string().default(""),
+  country:        z.string().default(""),
+  whatsapp:       z.string().default(""),
+  instagram_url:  z.string().default(""),
+  tiktok_url:     z.string().default(""),
+  twitter_url:    z.string().default(""),
+  website_url:    z.string().default(""),
   collections:    z.array(
     z.object({
-      id: z.string(),
+      id:    z.string(),
       title: z.string(),
-      slug: z.string(),
+      slug:  z.string(),
     }),
   ).optional(),
-  whatsapp:       z.string().optional(),
-  total_products: z.number(),
-  total_sales:    z.number(),
-  total_revenue:  z.coerce.number(),
-  average_rating: z.coerce.number(),
-  review_count:   z.number(),
-  wallet_balance: z.coerce.number().optional(),
+  total_products: z.coerce.number().default(0),
+  total_sales:    z.coerce.number().default(0),
+  total_revenue:  z.coerce.number().default(0),
+  average_rating: z.coerce.number().default(0),
+  review_count:   z.coerce.number().default(0),
+  wallet_balance: z.coerce.number().default(0),
   is_verified:    z.boolean(),
   is_active:      z.boolean(),
   is_featured:    z.boolean(),
   setup_state:    VendorSetupStateSchema.optional(),
 });
 
-// ── Dashboard ─────────────────────────────────────────────────────────────────
+// ── Dashboard Sub-Schemas ─────────────────────────────────────────────────────
+
+/**
+ * Aligned with apps/vendor/types/vendor_schemas.py: PayoutProfileOut
+ * NOTE: backend uses `account_last4` (masked), NOT `account_number`.
+ *       `is_verified` (not `is_complete`) is the field name on the backend.
+ */
+export const VendorDashboardPayoutProfileSchema = z.object({
+  bank_name:               z.string().default(""),
+  bank_code:               z.string().default(""),
+  account_name:            z.string().default(""),
+  account_last4:           z.string().default(""),           // masked last 4 digits
+  paystack_recipient_code: z.string().default(""),
+  is_verified:             z.boolean().default(false),        // was `is_complete` — now aligned
+});
+
+export const VendorDashboardOrderSchema = z.object({
+  id:              z.number(),
+  oid:             z.string().optional(),
+  buyer_email:     z.string().optional().default(""),
+  buyer_full_name: z.string().optional().default(""),
+  order_status:    z.string(),
+  payment_status:  z.string(),
+  total_price:     z.coerce.number().optional(),
+  total:           z.coerce.number().optional(),
+  date:            z.string(),
+});
+
+export const VendorDashboardProductSchema = z.object({
+  id:             z.string().optional(),
+  pid:            z.string().optional(),
+  title:          z.string(),
+  price:          z.coerce.number(),
+  stock_qty:      z.coerce.number(),
+  status:         z.string(),
+  category__name: z.string().optional(),
+  date:           z.string().optional(),
+  total_qty:      z.coerce.number().nullable().optional(),
+});
+
+export const VendorDashboardReviewSchema = z.object({
+  id:            z.number(),
+  product_title: z.string(),
+  product_pid:   z.string(),
+  buyer_email:   z.string(),
+  rating:        z.coerce.number().min(1).max(5),
+  review:        z.string(),
+  date:          z.string(),
+});
+
+/**
+ * Dashboard coupon stats.
+ * IMPORTANT: The dashboard endpoint returns CouponStatsOut {active, inactive} counts —
+ * NOT the full coupon list array. The full list comes from /api/v1/vendor/coupons/.
+ */
+export const VendorDashboardCouponStatsSchema = z.object({
+  active:   z.number().default(0),
+  inactive: z.number().default(0),
+});
+
+export const VendorWalletTransactionSchema = z.object({
+  amount:           z.coerce.number(),
+  transaction_type: z.string(),
+  date:             z.string(),
+  description:      z.string().default(""),
+  reference_code:   z.string().optional(),
+});
+
+export const VendorDashboardWalletSchema = z.object({
+  balance:             z.coerce.number().default(0),
+  recent_transactions: z.array(VendorWalletTransactionSchema).default([]),
+});
+
+export const VendorDashboardActivitySchema = z.object({
+  type:  z.string().optional(),
+  label: z.string().optional(),
+  date:  z.string().optional(),
+}).passthrough();
+
+/**
+ * Full vendor dashboard payload.
+ * Aligned with: VendorDashboardOut in apps/vendor/types/vendor_schemas.py
+ *
+ * Key contract rules:
+ *  - profile   → dict (not full VendorProfile; includes description, social, whatsapp)
+ *  - analytics → AnalyticsOut (5 numeric fields only)
+ *  - coupons   → CouponStatsOut {active, inactive} — NOT an array
+ *  - wallet    → WalletOut with balance + recent_transactions
+ */
 export const VendorDashboardSchema = z.object({
   profile: z.object({
-    id:          z.string(),
-    store_name:  z.string(),
-    store_slug:  z.string(),
-    tagline:     z.string(),
-    logo_url:    z.string(),
-    cover_url:   z.string(),
-    city:        z.string(),
-    state:       z.string(),
-    country:     z.string(),
-    is_verified: z.boolean(),
-    is_active:   z.boolean(),
-    is_featured: z.boolean(),
+    id:            z.string(),
+    store_name:    z.string(),
+    store_slug:    z.string(),
+    tagline:       z.string().default(""),
+    description:   z.string().default(""),
+    logo_url:      z.string().default(""),
+    cover_url:     z.string().default(""),
+    city:          z.string().default(""),
+    state:         z.string().default(""),
+    country:       z.string().default(""),
+    whatsapp:      z.string().default(""),
+    instagram_url: z.string().default(""),
+    tiktok_url:    z.string().default(""),
+    twitter_url:   z.string().default(""),
+    website_url:   z.string().default(""),
+    is_verified:   z.boolean(),
+    is_active:     z.boolean(),
+    is_featured:   z.boolean(),
   }),
   analytics: z.object({
-    total_products: z.number(),
-    total_sales:    z.number(),
-    total_revenue:  z.number(),
-    average_rating: z.number(),
-    review_count:   z.number(),
+    total_products: z.coerce.number(),
+    total_sales:    z.coerce.number(),
+    total_revenue:  z.coerce.number(),
+    average_rating: z.coerce.number(),
+    review_count:   z.coerce.number(),
   }),
   setup_state:     VendorSetupStateSchema,
-  recent_activity: z.array(z.unknown()),
+  payout_profile:  VendorDashboardPayoutProfileSchema.nullable().default(null),
+  recent_orders:   z.array(VendorDashboardOrderSchema).default([]),
+  products:        z.array(VendorDashboardProductSchema).default([]),
+  reviews:         z.array(VendorDashboardReviewSchema).default([]),
+  coupons:         VendorDashboardCouponStatsSchema.default({ active: 0, inactive: 0 }),
+  wallet:          VendorDashboardWalletSchema.nullable().default(null),
+  recent_activity: z.array(VendorDashboardActivitySchema).default([]),
 });
 
 // ── Setup Form ────────────────────────────────────────────────────────────────
 export const VendorSetupSchema = z.object({
-  store_name:    z.string().min(1, "Store name is required"),
-  description:   z.string().min(1, "Description is required"),
-  tagline:       z.string().optional(),
-  logo_url:      z.string().url().optional().or(z.literal("")),
-  cover_url:     z.string().url().optional().or(z.literal("")),
-  city:          z.string().min(1, "City is required"),
-  state:         z.string().min(1, "State is required"),
-  country:       z.string().optional(),
-  // The live UI enforces collection selection only when catalog collections
-  // are actually available in the current environment by appending this to the end of the line below and testing both scenarios (with and without collections):
-  // .min(1, "Select at least one collection"),
-  // .refine((data) => {
-  //   if (data.collection_ids && data.collection_ids.length > 0) {
-  //     return true; // If collections are selected, it's valid
-  //   }
-  //   return true; // If no collections are selected, it's also valid (since it's optional)
-  // }, "At least one collection must be selected if collections are available"),
+  store_name:     z.string().min(1, "Store name is required"),
+  description:    z.string().min(1, "Description is required"),
+  tagline:        z.string().optional(),
+  logo_url:       z.string().url().optional().or(z.literal("")),
+  cover_url:      z.string().url().optional().or(z.literal("")),
+  city:           z.string().min(1, "City is required"),
+  state:          z.string().min(1, "State is required"),
+  country:        z.string().optional(),
   collection_ids: z.array(z.string()),
-  instagram_url: z.string().url().optional().or(z.literal("")),
-  tiktok_url:    z.string().url().optional().or(z.literal("")),
-  twitter_url:   z.string().url().optional().or(z.literal("")),
-  website_url:   z.string().url().optional().or(z.literal("")),
+  instagram_url:  z.string().url().optional().or(z.literal("")),
+  tiktok_url:     z.string().url().optional().or(z.literal("")),
+  twitter_url:    z.string().url().optional().or(z.literal("")),
+  website_url:    z.string().url().optional().or(z.literal("")),
 });
 
 // ── Payout ────────────────────────────────────────────────────────────────────
 export const VendorPayoutSchema = z.object({
-  bank_name:                z.string().min(1),
-  bank_code:                z.string().optional(),
-  account_name:             z.string().min(1),
-  account_number:           z.string().min(10, "Account number must be at least 10 digits"),
-  paystack_recipient_code:  z.string().optional(),
+  bank_name:               z.string().min(1),
+  bank_code:               z.string().optional(),
+  account_name:            z.string().min(1),
+  account_number:          z.string().min(10, "Account number must be at least 10 digits"),
+  paystack_recipient_code: z.string().optional(),
 });
 
 // ── PIN ───────────────────────────────────────────────────────────────────────
@@ -130,19 +223,19 @@ export const VendorPinVerifySchema = z.object({
 
 // ── Product List Item ─────────────────────────────────────────────────────────
 export const VendorProductListItemSchema = z.object({
-  pid:             z.string(),
-  title:           z.string(),
-  price:           z.number(),
-  stock_qty:       z.number(),
-  status:          z.enum(["published", "draft", "disabled", "in-review"]),
-  category__name:  z.string().optional(),
-  date:            z.string(),
+  pid:            z.string(),
+  title:          z.string(),
+  price:          z.coerce.number(),
+  stock_qty:      z.coerce.number(),
+  status:         z.enum(["published", "draft", "disabled", "in-review"]),
+  category__name: z.string().optional(),
+  date:           z.string(),
 });
 
 export const VendorProductListSchema = z.object({
-  status:  z.string(),
-  count:   z.number(),
-  data:    z.array(VendorProductListItemSchema),
+  status: z.string(),
+  count:  z.number(),
+  data:   z.array(VendorProductListItemSchema),
 });
 
 // ── Product Create / Update ───────────────────────────────────────────────────
@@ -161,12 +254,12 @@ export const VendorProductUpdateSchema = VendorProductCreateSchema.partial();
 
 // ── Order ─────────────────────────────────────────────────────────────────────
 export const VendorOrderItemSchema = z.object({
-  id:             z.number(),
-  product_title:  z.string(),
-  product_pid:    z.string(),
-  qty:            z.number(),
-  price:          z.number(),
-  subtotal:       z.number(),
+  id:            z.number(),
+  product_title: z.string(),
+  product_pid:   z.string(),
+  qty:           z.number(),
+  price:         z.coerce.number(),
+  subtotal:      z.coerce.number(),
 });
 
 export const VendorOrderSchema = z.object({
@@ -176,30 +269,30 @@ export const VendorOrderSchema = z.object({
   buyer_full_name: z.string(),
   order_status:    z.enum(["Pending", "Processing", "Shipped", "Fulfilled", "Cancelled"]),
   payment_status:  z.enum(["paid", "pending", "failed"]),
-  total_price:     z.number(),
+  total_price:     z.coerce.number(),
   date:            z.string(),
   items:           z.array(VendorOrderItemSchema).optional(),
 });
 
 export const VendorOrderListSchema = z.object({
-  status:  z.string(),
-  count:   z.number(),
-  data:    z.array(VendorOrderSchema),
+  status: z.string(),
+  count:  z.number(),
+  data:   z.array(VendorOrderSchema),
 });
 
 // ── Analytics ─────────────────────────────────────────────────────────────────
 export const VendorAnalyticsSummarySchema = z.object({
-  total_revenue:    z.number(),
-  total_orders:     z.number(),
-  total_products:   z.number(),
-  avg_order_value:  z.number(),
-  revenue_trend:    z.number(),
-  conversion_rate:  z.number(),
+  total_revenue:   z.coerce.number(),
+  total_orders:    z.coerce.number(),
+  total_products:  z.coerce.number(),
+  avg_order_value: z.coerce.number(),
+  revenue_trend:   z.coerce.number(),
+  conversion_rate: z.coerce.number(),
 });
 
 export const VendorChartPointSchema = z.object({
   label: z.string(),
-  value: z.number(),
+  value: z.coerce.number(),
 });
 
 export const VendorChartResponseSchema = z.object({
@@ -208,70 +301,73 @@ export const VendorChartResponseSchema = z.object({
 });
 
 export const VendorTopCategorySchema = z.object({
-  category:      z.string(),
-  total_orders:  z.number(),
-  revenue:       z.number(),
+  category:     z.string(),
+  total_orders: z.coerce.number(),
+  revenue:      z.coerce.number(),
 });
 
 export const VendorPaymentDistributionSchema = z.object({
   method:     z.string(),
-  count:      z.number(),
-  percentage: z.number(),
+  count:      z.coerce.number(),
+  percentage: z.coerce.number(),
 });
 
 // ── Earnings ──────────────────────────────────────────────────────────────────
 export const VendorEarningTrackerSchema = z.object({
-  total_revenue:    z.number(),
-  pending_revenue:  z.number().optional().default(0),
+  total_revenue:    z.coerce.number(),
+  pending_revenue:  z.coerce.number().optional().default(0),
   monthly_earnings: z.array(z.object({
     month:   z.string(),
-    revenue: z.number(),
-    orders:  z.number(),
+    revenue: z.coerce.number(),
+    orders:  z.coerce.number(),
   })),
 });
 
 // ── Reviews ───────────────────────────────────────────────────────────────────
 export const VendorReviewItemSchema = z.object({
-  id:             z.number(),
-  product_title:  z.string(),
-  product_pid:    z.string(),
-  buyer_email:    z.string(),
-  rating:         z.number().min(1).max(5),
-  review:         z.string(),
-  date:           z.string(),
+  id:            z.number(),
+  product_title: z.string(),
+  product_pid:   z.string(),
+  buyer_email:   z.string(),
+  rating:        z.coerce.number().min(1).max(5),
+  review:        z.string(),
+  date:          z.string(),
 });
 
 export const VendorReviewListSchema = z.object({
-  status:  z.string(),
-  count:   z.number(),
-  data:    z.array(VendorReviewItemSchema),
+  status: z.string(),
+  count:  z.number(),
+  data:   z.array(VendorReviewItemSchema),
 });
 
 // ── Coupons ───────────────────────────────────────────────────────────────────
 export const VendorCouponSchema = z.object({
   id:          z.number(),
   code:        z.string(),
-  discount:    z.number(),
+  discount:    z.coerce.number(),
   active:      z.boolean(),
   valid_until: z.string().optional(),
 });
 
 export const VendorCouponListSchema = z.object({
-  status:  z.string(),
-  count:   z.number(),
-  data:    z.array(VendorCouponSchema),
+  status: z.string(),
+  count:  z.number(),
+  data:   z.array(VendorCouponSchema),
 });
 
 // ── Inferred Types ────────────────────────────────────────────────────────────
-export type VendorSetupStateInput         = z.infer<typeof VendorSetupStateSchema>;
-export type VendorProfileInput            = z.infer<typeof VendorProfileSchema>;
-export type VendorDashboardInput          = z.infer<typeof VendorDashboardSchema>;
-export type VendorSetupInput              = z.infer<typeof VendorSetupSchema>;
-export type VendorPayoutInput             = z.infer<typeof VendorPayoutSchema>;
-export type VendorProductListItemInput    = z.infer<typeof VendorProductListItemSchema>;
-export type VendorProductCreateInput      = z.infer<typeof VendorProductCreateSchema>;
-export type VendorOrderInput              = z.infer<typeof VendorOrderSchema>;
-export type VendorAnalyticsSummaryInput   = z.infer<typeof VendorAnalyticsSummarySchema>;
-export type VendorEarningTrackerInput     = z.infer<typeof VendorEarningTrackerSchema>;
-export type VendorReviewItemInput         = z.infer<typeof VendorReviewItemSchema>;
-export type VendorCouponInput             = z.infer<typeof VendorCouponSchema>;
+export type VendorSetupStateInput           = z.infer<typeof VendorSetupStateSchema>;
+export type VendorProfileInput              = z.infer<typeof VendorProfileSchema>;
+export type VendorDashboardInput            = z.infer<typeof VendorDashboardSchema>;
+export type VendorDashboardPayoutInput      = z.infer<typeof VendorDashboardPayoutProfileSchema>;
+export type VendorDashboardCouponStatsInput = z.infer<typeof VendorDashboardCouponStatsSchema>;
+export type VendorWalletTransactionInput    = z.infer<typeof VendorWalletTransactionSchema>;
+export type VendorSetupInput                = z.infer<typeof VendorSetupSchema>;
+export type VendorPayoutInput               = z.infer<typeof VendorPayoutSchema>;
+export type VendorProductListItemInput      = z.infer<typeof VendorProductListItemSchema>;
+export type VendorProductCreateInput        = z.infer<typeof VendorProductCreateSchema>;
+export type VendorOrderInput                = z.infer<typeof VendorOrderSchema>;
+export type VendorAnalyticsSummaryInput     = z.infer<typeof VendorAnalyticsSummarySchema>;
+export type VendorEarningTrackerInput       = z.infer<typeof VendorEarningTrackerSchema>;
+export type VendorReviewItemInput           = z.infer<typeof VendorReviewItemSchema>;
+export type VendorCouponInput               = z.infer<typeof VendorCouponSchema>;

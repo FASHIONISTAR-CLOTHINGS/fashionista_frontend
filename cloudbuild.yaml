@@ -3,6 +3,10 @@ steps:
     args: [
       'build',
       '--build-arg', 'NEXT_PUBLIC_BACKEND_URL=$_NEXT_PUBLIC_BACKEND_URL',
+      '--build-arg', 'BACKEND_INTERNAL_URL=$_BACKEND_INTERNAL_URL',
+      '--build-arg', 'NEXT_PUBLIC_APP_URL=$_NEXT_PUBLIC_APP_URL',
+      '--build-arg', 'NEXT_PUBLIC_APP_NAME=$_NEXT_PUBLIC_APP_NAME',
+      '--build-arg', 'NEXT_PUBLIC_GOOGLE_CLIENT_ID=$_NEXT_PUBLIC_GOOGLE_CLIENT_ID',
       '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/fashionistar-repo/frontend:latest',
       '.'
     ]
