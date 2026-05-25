@@ -16,6 +16,10 @@
 
 
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import Image from "next/image";
+import { toast } from "sonner";
+import { useVendorCatalogProducts } from "@/features/product";
 import {
   AlertCircle,
   Bell,
@@ -29,6 +33,7 @@ import {
   Loader2,
   MessageSquare,
   Package,
+  Plus,
   RefreshCw,
   Send,
   Shield,
@@ -508,6 +513,23 @@ export function VendorSupportView() {
     title: "", description: "", category: "general", priority: "medium",
   });
 
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const pCategory = searchParams.get("category");
+    const pTitle = searchParams.get("title") || searchParams.get("subject");
+    const pBody = searchParams.get("body") || searchParams.get("description");
+
+    if (pCategory || pTitle || pBody) {
+      setForm({
+        title: pTitle || "",
+        description: pBody || "",
+        category: (pCategory as TicketCategory) || "general",
+        priority: "high",
+      });
+      setActiveTab("new");
+    }
+  }, [searchParams]);
+
   const { data: tickets, isLoading, isError } = useMyTickets(
     category ? { category } : undefined
   );
@@ -720,6 +742,10 @@ export function VendorChatView() {
   const [draft,        setDraft]        = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  const [showCatalogModal, setShowCatalogModal] = useState(false);
+  const { data: catalogData } = useVendorCatalogProducts();
+  const catalogProducts = catalogData?.results ?? [];
+
   const authToken = useAuthStore(selectToken);
 
   // 1. WebSocket — connect first so wsConnected is available for REST polling fallbacks
@@ -771,7 +797,7 @@ export function VendorChatView() {
       </div>
 
       {/* Chat workspace */}
-      <div className="flex flex-1 gap-0 overflow-hidden rounded-3xl border border-[#ECE6D6] bg-white shadow-sm">
+      <div className="flex flex-1 gap-0 overflow-hidden rounded-3xl border border-[#ECE6D6] bg-white shadow-sm font-sans">
         {/* ── Conversation List ── */}
         <aside
           className={[
@@ -877,21 +903,59 @@ export function VendorChatView() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-[#FAFAF9]">
                 {messages.map((msg) => {
                   const isMine = msg.is_own === true;
+                  let isProductAttachment = false;
+                  let attachedProduct: any = null;
+                  try {
+                    if (msg.body.startsWith('{"type":"product_attachment"')) {
+                      attachedProduct = JSON.parse(msg.body);
+                      isProductAttachment = true;
+                    }
+                  } catch {}
+
                   return (
                     <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
                       <div
                         className={[
-                          "max-w-[70%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                          "max-w-[70%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm",
                           isMine
-                            ? "text-black"
-                            : "border border-[#ECE6D6] bg-[#F8F5ED] text-[#1A1208]",
+                            ? "text-black bg-[#FDA600]/10"
+                            : "border border-[#ECE6D6] bg-white text-[#1A1208]",
                         ].join(" ")}
-                        style={isMine ? { background: `linear-gradient(135deg, ${C.gold} 0%, ${C.goldD} 100%)` } : undefined}
+                        style={isMine && !isProductAttachment ? { background: `linear-gradient(135deg, ${C.gold} 0%, ${C.goldD} 100%)` } : undefined}
                       >
-                        {msg.body}
+                        {isProductAttachment ? (
+                          <div className="flex flex-col gap-2 rounded-xl bg-white border border-[#ECE6D6] p-3 max-w-[280px]">
+                            {attachedProduct.image_url && (
+                              <div className="relative h-32 w-full overflow-hidden rounded-lg bg-[#F8F5ED]">
+                                <Image
+                                  src={attachedProduct.image_url}
+                                  alt={attachedProduct.title}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-[#FDA600]">Catalog Share</span>
+                              <h4 className="text-xs font-bold text-[#1A1208] truncate mt-0.5">{attachedProduct.title}</h4>
+                              <p className="text-xs font-semibold text-[#1a2e14] mt-1">₦{Number(attachedProduct.price).toLocaleString("en-NG")}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                toast.success(`Opening customization flow for ${attachedProduct.title}`);
+                              }}
+                              className="mt-1 w-full rounded-lg bg-[#1a2e14] text-white py-1.5 text-[10px] font-bold hover:bg-[#2d5016] transition cursor-pointer"
+                            >
+                              Customize Order
+                            </button>
+                          </div>
+                        ) : (
+                          msg.body
+                        )}
                         <div className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${isMine ? "text-black/50" : "text-[#7A6B44]/60"}`}>
                           {new Date(msg.created_at).toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit" })}
                           {isMine && <Check className="h-3 w-3" />}
@@ -904,8 +968,16 @@ export function VendorChatView() {
               </div>
 
               {/* Composer */}
-              <div className="border-t border-[#ECE6D6] p-3">
+              <div className="border-t border-[#ECE6D6] p-3 relative bg-white">
                 <div className="flex items-center gap-2 rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] px-4 py-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowCatalogModal((c) => !c)}
+                    className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#ECE6D6] bg-white text-[#7A6B44] hover:bg-[#F8F5ED] hover:text-black transition-all cursor-pointer"
+                    title="Attach product snapshot"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
                   <input
                     type="text"
                     id="vendor-chat-input"
@@ -926,6 +998,66 @@ export function VendorChatView() {
                     {sendMsg.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                   </button>
                 </div>
+
+                {/* Catalog Select Dropdown */}
+                {showCatalogModal && (
+                  <div className="absolute bottom-16 left-3 w-80 max-h-80 bg-white border border-[#ECE6D6] rounded-2xl shadow-xl z-10 overflow-y-auto p-3 space-y-2">
+                    <div className="flex items-center justify-between pb-2 border-b border-[#ECE6D6]">
+                      <span className="text-xs font-bold text-[#1A1208]">Attach Catalog Product</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowCatalogModal(false)}
+                        className="text-[10px] font-bold text-[#7A6B44] hover:text-black"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    {catalogProducts.length === 0 ? (
+                      <p className="text-xs text-[#7A6B44] text-center py-4">No products in your catalog.</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {catalogProducts.map((prod) => (
+                          <button
+                            key={prod.id}
+                            type="button"
+                            onClick={() => {
+                              const payload = {
+                                type: "product_attachment",
+                                id: prod.id,
+                                title: prod.title,
+                                price: prod.price,
+                                image_url: prod.image_url,
+                                sku: prod.sku,
+                              };
+                              void sendMsg.mutateAsync({ body: JSON.stringify(payload) });
+                              setShowCatalogModal(false);
+                            }}
+                            className="flex w-full items-center gap-2.5 rounded-xl p-2 hover:bg-[#FAFAF8] text-left border border-transparent hover:border-[#ECE6D6] transition"
+                          >
+                            {prod.image_url ? (
+                              <div className="relative h-10 w-10 overflow-hidden rounded-lg bg-[#F8F5ED] flex-shrink-0">
+                                <Image
+                                  src={prod.image_url}
+                                  alt={prod.title}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[#F8F5ED] border border-[#ECE6D6] text-[#FDA600]">
+                                <ShoppingCart className="h-5 w-5" />
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-bold text-[#1A1208] truncate leading-tight">{prod.title}</p>
+                              <p className="text-[10px] text-[#7A6B44] mt-0.5">₦{Number(prod.price).toLocaleString("en-NG")}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </>
           )}

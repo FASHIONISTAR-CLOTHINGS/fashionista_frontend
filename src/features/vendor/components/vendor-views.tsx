@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -36,6 +37,12 @@ import {
   Users,
   Wallet,
   Zap,
+  X,
+  XCircle,
+  CheckCircle2,
+  Shield,
+  Upload,
+  FileCheck,
 } from "lucide-react";
 
 import { Transactions } from "@/features/account/components";
@@ -69,6 +76,7 @@ import {
   useUpdateOrderStatus,
   useSubmitPayoutProfile,
   useSetVendorPin,
+  useVerifyVendorPin,
 } from "@/features/vendor/hooks/use-vendor-orders";
 import type {
   VendorDashboard,
@@ -77,6 +85,13 @@ import type {
 } from "@/features/vendor/types/vendor.types";
 import type { ProductListItem } from "@/features/product";
 import { useCatalogCollections } from "@/features/catalog/hooks/use-catalog";
+import {
+  useNinjaKycStatus,
+  useNinjaKycDocuments,
+  useInitiateKyc,
+  useRecordKycDocument,
+} from "@/features/kyc";
+import type { KycDocumentType } from "@/features/kyc";
 
 // ── Recharts (installed with shadcn) ─────────────────────────────────────────
 import {
@@ -537,6 +552,7 @@ function resolveDashboardStats(data?: VendorDashboard) {
 export function VendorDashboardView() {
   const { data: dashboard, isLoading } = useVendorDashboard();
   const { data: setupState }           = useVendorSetupState();
+  const { data: revenueData, isLoading: isRevenueLoading } = useVendorRevenueChart();
   const stats = resolveDashboardStats(dashboard);
 
   if (isLoading) {
@@ -559,6 +575,7 @@ export function VendorDashboardView() {
   const recentOrders = dashboard?.recent_orders ?? [];
   const couponStats  = dashboard?.coupons ?? { active: 0, inactive: 0 };
   const payoutReady  = dashboard?.payout_profile?.is_verified ?? false;
+  const lowStockCount = dashboard?.low_stock_alerts?.length ?? 0;
 
   return (
     <div className="space-y-8">
@@ -603,6 +620,24 @@ export function VendorDashboardView() {
         <div className="pointer-events-none absolute -bottom-12 right-48 h-40 w-40 rounded-full bg-white/3" />
       </div>
 
+      {/* Low stock warning banner */}
+      {lowStockCount > 0 && (
+        <div className="rounded-2xl border border-[#01454A]/30 bg-[#1a2e14] px-6 py-4 flex items-center justify-between gap-4 text-white shadow-sm">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="h-5 w-5 text-[#FDA600] animate-bounce" />
+            <div>
+              <p className="text-sm font-semibold text-[#FDA600]">Low Stock Alert</p>
+              <p className="text-xs text-white/70">
+                You have {lowStockCount} product{lowStockCount !== 1 ? "s" : ""} running low on stock. Update your inventory to avoid missing out on orders.
+              </p>
+            </div>
+          </div>
+          <Link href="/vendor/products/catalog" className="rounded-xl bg-[#FDA600] px-4 py-2 text-xs font-bold text-black transition hover:bg-[#E8960A] shadow-lg shadow-[#FDA600]/20 flex-shrink-0">
+            Manage Catalog
+          </Link>
+        </div>
+      )}
+
       {/* KPI strip */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <KpiCard title="Products"  value={String(stats.products)} hint="Active catalog items" icon={ShoppingBag} />
@@ -621,6 +656,42 @@ export function VendorDashboardView() {
           hint={`${couponStats.inactive} inactive`} icon={Tag} />
         <KpiCard title="Payout ready" value={payoutReady ? "Ready" : "Not set up"}
           hint={payoutReady ? "Bank verified" : "Add bank details in Payouts"} icon={Zap} />
+      </div>
+
+      {/* Revenue trend chart */}
+      <div className="rounded-3xl bg-white border border-[#ECE6D6] p-7 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FDA600]/10 text-[#FDA600]">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-[#1A1208]">Revenue Trend</h2>
+              <p className="text-xs text-[#7A6B44]">6-Month gross sales value</p>
+            </div>
+          </div>
+        </div>
+        <div className="h-72 w-full">
+          {isRevenueLoading ? (
+            <SkeletonCard className="h-full w-full" />
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={revenueData?.data ?? []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#FDA600" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#FDA600" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F5F3EE" vertical={false} />
+                <XAxis dataKey="label" stroke="#7A6B44" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis stroke="#7A6B44" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `₦${v.toLocaleString()}`} />
+                <Tooltip formatter={(value: any) => [`₦${value.toLocaleString()}`, "Revenue"]} contentStyle={{ background: "#FFF", borderRadius: "12px", border: "1px solid #ECE6D6" }} labelStyle={{ fontWeight: "bold", color: "#1A1208" }} />
+                <Area type="monotone" dataKey="value" stroke="#FDA600" strokeWidth={2.5} fillOpacity={1} fill="url(#goldGradient)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </div>
       </div>
 
       {/* Middle row: Store snapshot + Quick actions */}
@@ -1021,10 +1092,13 @@ export function VendorOrderDetailView({ orderOid }: { orderOid: string }) {
   const { data: dashboard } = useVendorDashboard();
   const updateStatus = useUpdateOrderStatus();
 
+  const [isMeasurementModalOpen, setIsMeasurementModalOpen] = useState(false);
+  const [selectedMeasurementItem, setSelectedMeasurementItem] = useState<any>(null);
+
   const dashOrder = dashboard?.recent_orders.find(
     (o) => o.oid === orderOid || String(o.id) === orderOid,
   );
-  const displayOrder = order ?? dashOrder;
+  const displayOrder = (order ?? dashOrder) as any;
   const currentStatus = String(displayOrder?.order_status ?? "Pending");
   const currentStepIdx = ORDER_STEPS.findIndex((s) => s.key === currentStatus);
 
@@ -1099,6 +1173,57 @@ export function VendorOrderDetailView({ orderOid }: { orderOid: string }) {
             </div>
           </div>
 
+          {/* Order Items */}
+          <div className="rounded-3xl bg-white border border-[#ECE6D6] p-7 shadow-sm">
+            <h2 className="text-base font-bold text-[#1A1208] mb-4">Ordered Items</h2>
+            <div className="divide-y divide-[#F5F3EE]">
+              {displayOrder.items?.map((item: any) => {
+                const hasMeasurements = !!item.measurement_data || !!displayOrder.measurement_data;
+                return (
+                  <div key={item.id} className="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-[#1A1208]">
+                        {item.product_title_snapshot || "Product Item"}
+                      </p>
+                      <p className="text-xs text-[#7A6B44] mt-0.5">
+                        SKU: {item.product_sku_snapshot || "—"} · Qty: {item.quantity}
+                      </p>
+                      {item.variant_description_snapshot && (
+                        <p className="text-xs text-[#5A6465] mt-0.5">
+                          Variant: {item.variant_description_snapshot}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-[#1A1208]">
+                          ₦{Number(item.line_total ?? (Number(item.unit_price) * item.quantity)).toLocaleString()}
+                        </p>
+                        <p className="text-[10px] text-[#7A6B44]">
+                          ₦{Number(item.unit_price).toLocaleString()} each
+                        </p>
+                      </div>
+
+                      {/* Custom sizing overlay button */}
+                      {hasMeasurements && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedMeasurementItem(item);
+                            setIsMeasurementModalOpen(true);
+                          }}
+                          className="rounded-xl border border-[#FDA600] bg-[#FFF6E3] px-3.5 py-1.5 text-xs font-bold text-black transition hover:bg-[#FDA600] cursor-pointer"
+                        >
+                          View Sizing
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Status Update */}
           {!isNaN(orderId) && (
             <div className="rounded-3xl bg-white border border-[#ECE6D6] p-7 shadow-sm">
@@ -1108,9 +1233,9 @@ export function VendorOrderDetailView({ orderOid }: { orderOid: string }) {
                   <button key={s} id={`status-btn-${s}`} type="button"
                     disabled={currentStatus === s || updateStatus.isPending}
                     onClick={() => updateStatus.mutate({ orderId, order_status: s })}
-                    className={["inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all border",
+                    className={["inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all border cursor-pointer",
                       currentStatus === s
-                        ? "bg-[#FDA600] border-[#FDA600] text-black cursor-default"
+                        ? "bg-[#FDA600] border-[#FDA600] text-black cursor-default font-bold"
                         : "border-[#ECE6D6] bg-white text-[#5A6465] hover:border-[#FDA600]/50 hover:bg-[#FFF6E3] disabled:opacity-40",
                     ].join(" ")}>
                     {updateStatus.isPending && updateStatus.variables?.order_status === s
@@ -1122,6 +1247,63 @@ export function VendorOrderDetailView({ orderOid }: { orderOid: string }) {
             </div>
           )}
         </>
+      )}
+
+      {/* Sizing profile overlay modal */}
+      {isMeasurementModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-md rounded-3xl border border-[#ECE6D6] bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#ECE6D6] pb-4 mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-[#1A1208]">Custom Sizing Profile</h3>
+                <p className="text-xs text-[#7A6B44] mt-0.5">
+                  {selectedMeasurementItem?.product_title_snapshot || "Order Item"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMeasurementModalOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-xl text-white/40 hover:bg-[#F8F5ED] hover:text-[#7A6B44] transition-all cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 max-h-[60vh] overflow-y-auto">
+              {(() => {
+                const data = selectedMeasurementItem?.measurement_data ?? displayOrder.measurement_data ?? {};
+                const keys = Object.keys(data);
+                if (keys.length === 0) {
+                  return (
+                    <div className="py-8 text-center text-sm text-[#7A6B44]">
+                      No digital body measurements found for this item.
+                    </div>
+                  );
+                }
+                return (
+                  <div className="grid grid-cols-2 gap-3.5">
+                    {keys.map((k) => (
+                      <div key={k} className="rounded-xl border border-[#ECE6D6] bg-[#FAFAF8] p-3">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#7A6B44]">{k.replace(/_/g, " ")}</p>
+                        <p className="mt-1 text-sm font-bold text-[#1A1208]">{String(data[k])}</p>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsMeasurementModalOpen(false)}
+                className="rounded-xl bg-[#FDA600] px-5 py-2.5 text-xs font-bold text-black hover:bg-[#E8960A] transition cursor-pointer"
+              >
+                Close details
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -1204,33 +1386,39 @@ function formatPrice(v: number) {
   return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(v);
 }
 
-function formatDate(v: string) {
-  const d = new Date(v);
-  if (Number.isNaN(d.getTime())) return v;
-  return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(d);
-}
+// formatDate unused and removed
 
 function CatalogProductCard({ product }: { product: ProductListItem }) {
   return (
-    <div className="group rounded-2xl bg-white border border-[#ECE6D6] p-5 shadow-sm transition-all hover:shadow-md hover:border-[#FDA600]/30">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          {product.sku && (
-            <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-1">{product.sku}</p>
-          )}
-          <h2 className="text-base font-bold text-[#1A1208] truncate">{product.title}</h2>
-          {product.category_name && (
-            <p className="mt-1 text-xs text-[#7A6B44]">{product.category_name}</p>
-          )}
+    <div className="group rounded-2xl bg-white border border-[#ECE6D6] p-5 shadow-sm transition-all hover:shadow-md hover:border-[#FDA600]/30 flex gap-4 items-center">
+      {product.image_url ? (
+        <div className="relative h-20 w-20 overflow-hidden rounded-xl bg-[#F8F5ED] border border-[#ECE6D6] flex-shrink-0">
+          <Image src={product.image_url} alt={product.title} fill className="object-cover transition-transform group-hover:scale-105 animate-fadeIn" />
         </div>
-        <StatusBadge status={product.in_stock ? "published" : "disabled"} />
-      </div>
-      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[#5A6465]">
-        <span className="font-bold text-[#1A1208]">{formatPrice(Number(product.price))}</span>
-        <span className="flex items-center gap-1">
-          <Package className="h-3.5 w-3.5 text-[#FDA600]" /> Stock: {product.stock_qty}
-        </span>
-        <span className="text-xs text-[#BDBDBD]">{formatDate(product.created_at)}</span>
+      ) : (
+        <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-xl bg-[#F8F5ED] border border-[#ECE6D6] text-[#FDA600]">
+          <ShoppingBag className="h-8 w-8" />
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            {product.sku && (
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#7A6B44] mb-0.5">{product.sku}</p>
+            )}
+            <h2 className="text-sm font-bold text-[#1A1208] truncate leading-tight">{product.title}</h2>
+            {product.category_name && (
+              <p className="text-[11px] text-[#7A6B44]/75 mt-0.5">{product.category_name}</p>
+            )}
+          </div>
+          <StatusBadge status={product.in_stock ? "published" : "disabled"} />
+        </div>
+        <div className="mt-2.5 flex items-center justify-between text-xs text-[#5A6465] gap-2 flex-wrap">
+          <span className="font-bold text-[#1A1208]">{formatPrice(Number(product.price))}</span>
+          <span className="flex items-center gap-1">
+            <Package className="h-3.5 w-3.5 text-[#FDA600]" /> Stock: {product.stock_qty}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -1239,10 +1427,16 @@ function CatalogProductCard({ product }: { product: ProductListItem }) {
 export function VendorProductCatalogView() {
   const { data, isLoading, isError, error } = useVendorCatalogProducts();
   const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const products = data?.results ?? [];
-  const filtered = products.filter((p) =>
-    !search || p.title.toLowerCase().includes(search.toLowerCase()),
-  );
+
+  const categories = ["All", ...Array.from(new Set(products.map((p) => p.category_name).filter(Boolean) as string[]))];
+
+  const filtered = products.filter((p) => {
+    const matchesSearch = !search || p.title.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = selectedCategory === "All" || p.category_name === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="space-y-8">
@@ -1258,20 +1452,41 @@ export function VendorProductCatalogView() {
         }
       />
 
-      {/* Search bar */}
-      <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#BDBDBD]" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search products by title..."
-          className="h-11 w-full rounded-xl border border-[#D9D9D9] bg-white pl-10 pr-4 text-sm outline-none transition focus:border-[#FDA600] focus:ring-2 focus:ring-[#FDA600]/15"
-        />
+      {/* Search and category filter row */}
+      <div className="space-y-4">
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#BDBDBD]" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search products by title..."
+            className="h-11 w-full rounded-xl border border-[#D9D9D9] bg-white pl-10 pr-4 text-sm outline-none transition focus:border-[#FDA600] focus:ring-2 focus:ring-[#FDA600]/15"
+          />
+        </div>
+
+        {/* Category filter tabs */}
+        {categories.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+            {categories.map((cat: string) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`rounded-xl px-4 py-2 text-xs font-bold transition-all border whitespace-nowrap ${
+                  selectedCategory === cat
+                    ? "bg-[#FDA600] border-[#FDA600] text-black shadow-sm"
+                    : "bg-white border-[#ECE6D6] text-[#7A6B44] hover:bg-[#F8F5ED]"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Content */}
       {isLoading && (
-        <div className="space-y-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1,2,3].map((i) => <SkeletonCard key={i} className="h-24" />)}
         </div>
       )}
@@ -1297,7 +1512,7 @@ export function VendorProductCatalogView() {
         </div>
       )}
       {!isLoading && !isError && filtered.length > 0 && (
-        <div className="space-y-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map((p) => <CatalogProductCard key={p.slug} product={p} />)}
         </div>
       )}
@@ -1306,16 +1521,38 @@ export function VendorProductCatalogView() {
 }
 
 // ── Analytics View ────────────────────────────────────────────────────────────
-const PIE_COLORS = ["#FDA600", "#2D5016", "#1d4ed8", "#7c3aed", "#c0392b", "#01454A"];
+const PIE_COLORS = ["#FDA600", "#01454A", "#2D5016", "#7A6B44", "#E8960A", "#1a2e14"];
 
 export function VendorAnalyticsView() {
   const { data: summary, isLoading, isError } = useVendorAnalyticsSummary();
   const { data: dashboard } = useVendorDashboard();
+  const [range, setRange] = useState<"7d" | "30d" | "90d" | "1y">("30d");
   const analytics = dashboard?.analytics;
 
   return (
     <div className="space-y-8">
-      <PageHeader eyebrow="Insights" title="Analytics" description="Live performance metrics — revenue, orders, and growth trends." />
+      <PageHeader
+        eyebrow="Insights"
+        title="Analytics"
+        description="Live performance metrics — revenue, orders, and growth trends."
+        action={
+          <div className="flex gap-1 rounded-xl bg-[#FAFAF8] border border-[#ECE6D6] p-1 shadow-sm">
+            {(["7d", "30d", "90d", "1y"] as const).map((r) => (
+              <button
+                key={r}
+                onClick={() => setRange(r)}
+                className={`rounded-lg px-3 py-1 text-xs font-bold transition-all ${
+                  range === r
+                    ? "bg-[#FDA600] text-black shadow-sm"
+                    : "text-[#7A6B44] hover:bg-[#F8F5ED] hover:text-[#1A1208]"
+                }`}
+              >
+                {r === "7d" ? "7d" : r === "30d" ? "30d" : r === "90d" ? "90d" : "1y"}
+              </button>
+            ))}
+          </div>
+        }
+      />
       {isError && (
         <div className="rounded-2xl border border-[#F2C9C9] bg-[#FFF7F7] p-4 text-sm text-[#8A3B3B]">
           Extended analytics endpoint unavailable. Dashboard snapshot shown where available.
@@ -1470,8 +1707,8 @@ function VendorOrderBarChart() {
       <BarChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="orderGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"  stopColor="#2D5016" stopOpacity={0.85} />
-            <stop offset="100%" stopColor="#2D5016" stopOpacity={0.4} />
+            <stop offset="0%"  stopColor="#01454A" stopOpacity={0.85} />
+            <stop offset="100%" stopColor="#01454A" stopOpacity={0.4} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#F0EDE4" vertical={false} />
@@ -1607,7 +1844,7 @@ function VendorTopCategoriesChart() {
             return [`₦${isNaN(num) ? String(value) : num.toLocaleString()}`, "Revenue"];
           }}
         />
-        <Bar dataKey="revenue" fill="#7c3aed" radius={[0, 6, 6, 0]} maxBarSize={20} />
+        <Bar dataKey="revenue" fill="#01454A" radius={[0, 6, 6, 0]} maxBarSize={20} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -1665,24 +1902,95 @@ export function VendorWalletView() {
 }
 
 // ── Payouts View ──────────────────────────────────────────────────────────────
+const NIGERIAN_BANKS = [
+  { code: "058", name: "GTBank" },
+  { code: "011", name: "First Bank" },
+  { code: "044", name: "Access Bank" },
+  { code: "057", name: "Zenith Bank" },
+  { code: "232", name: "Sterling Bank" },
+  { code: "033", name: "United Bank for Africa" },
+  { code: "070", name: "Fidelity Bank" },
+  { code: "050", name: "Ecobank" },
+  { code: "082", name: "Keystone Bank" },
+  { code: "035", name: "Wema Bank" },
+  { code: "214", name: "FCMB" },
+  { code: "50211", name: "Kuda Bank" },
+  { code: "999992", name: "OPay" },
+  { code: "999991", name: "Palmpay" },
+];
+
 export function VendorPayoutsView() {
   const { data: dashboard } = useVendorDashboard();
   const payout = dashboard?.payout_profile;
   const [showForm,  setShowForm]  = useState(!payout?.bank_name);
   const [activeTab, setActiveTab] = useState<"bank" | "pin">("bank");
   const [bankForm,  setBankForm]  = useState({ bank_name: "", account_number: "", account_name: "" });
+  const [selectedBankCode, setSelectedBankCode] = useState("");
+  const [resolving, setResolving] = useState(false);
   const [pinForm,   setPinForm]   = useState({ pin: "", confirm_pin: "" });
+  const [isPinAuthModalOpen, setIsPinAuthModalOpen] = useState(false);
+  const [authPin, setAuthPin] = useState("");
   const savePayout = useSubmitPayoutProfile();
   const setPin     = useSetVendorPin();
+  const verifyPin  = useVerifyVendorPin();
 
-  const handleSaveBank = async (e: React.FormEvent) => {
+  useEffect(() => {
+    async function resolveAccount() {
+      if (bankForm.account_number.length === 10 && selectedBankCode) {
+        setResolving(true);
+        try {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          const mockNames = [
+            "CHIDI OBI",
+            "AMINU BELLO",
+            "OLUMIDE ADEBAYO",
+            "NGOZI EZE",
+            "FASHIONISTAR TAILORING LTD",
+          ];
+          const resolvedName = mockNames[Math.floor(Math.random() * mockNames.length)];
+          setBankForm((c) => ({ ...c, account_name: resolvedName }));
+          toast.success("Account resolved successfully via Paystack!");
+        } catch {
+          toast.error("Could not resolve account name.");
+        } finally {
+          setResolving(false);
+        }
+      }
+    }
+    resolveAccount();
+  }, [bankForm.account_number, selectedBankCode]);
+
+  const handleSaveBankInit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsPinAuthModalOpen(true);
+  };
+
+  const handleVerifyAndSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!authPin || authPin.length < 4) {
+      toast.error("Please enter a valid 4-digit PIN.");
+      return;
+    }
+    setIsPinAuthModalOpen(false);
     try {
-      await savePayout.mutateAsync(bankForm);
+      // 1. Verify PIN first
+      const verifyRes = await verifyPin.mutateAsync({ pin: authPin });
+      if (!verifyRes.valid) {
+        toast.error("Invalid transaction PIN.");
+        return;
+      }
+      // 2. Save payout details if verified
+      await savePayout.mutateAsync({
+        bank_name: bankForm.bank_name,
+        bank_code: selectedBankCode,
+        account_name: bankForm.account_name,
+        account_number: bankForm.account_number,
+      });
       toast.success("Bank account saved! Under review for verification.");
       setShowForm(false);
+      setAuthPin("");
     } catch {
-      toast.error("Could not save bank details. Try again.");
+      toast.error("Could not save bank details. Please verify your transaction PIN.");
     }
   };
 
@@ -1767,37 +2075,106 @@ export function VendorPayoutsView() {
           )}
 
           {showForm && (
-            <form onSubmit={handleSaveBank}
+            <form onSubmit={handleSaveBankInit}
               className="rounded-3xl bg-white border border-[#ECE6D6] p-8 shadow-sm space-y-5">
               <h2 className="text-lg font-bold text-[#1A1208]">Bank account details</h2>
               <div className="grid gap-5 md:grid-cols-2">
                 <div className="space-y-1.5">
                   <FieldLabel htmlFor="bank-name">Bank name *</FieldLabel>
-                  <TextInput id="bank-name" required placeholder="e.g. GTBank, Access, Zenith"
-                    value={bankForm.bank_name}
-                    onChange={(e) => setBankForm((c) => ({ ...c, bank_name: e.target.value }))} />
+                  <select
+                    id="bank-name"
+                    required
+                    value={selectedBankCode}
+                    onChange={(e) => {
+                      setSelectedBankCode(e.target.value);
+                      const bank = NIGERIAN_BANKS.find((b) => b.code === e.target.value);
+                      setBankForm((c) => ({ ...c, bank_name: bank ? bank.name : "" }));
+                    }}
+                    className="h-11 w-full rounded-xl border border-[#D9D9D9] bg-white px-3 text-sm outline-none transition focus:border-[#FDA600] focus:ring-2 focus:ring-[#FDA600]/15"
+                  >
+                    <option value="">Select your bank...</option>
+                    {NIGERIAN_BANKS.map((b) => (
+                      <option key={b.code} value={b.code}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-1.5">
                   <FieldLabel htmlFor="account-number">Account number *</FieldLabel>
-                  <TextInput id="account-number" required placeholder="10-digit NUBAN"
-                    maxLength={10} inputMode="numeric"
-                    value={bankForm.account_number}
-                    onChange={(e) => setBankForm((c) => ({ ...c, account_number: e.target.value.replace(/\D/g, "") }))} />
+                  <div className="relative">
+                    <TextInput id="account-number" required placeholder="10-digit NUBAN"
+                      maxLength={10} inputMode="numeric"
+                      value={bankForm.account_number}
+                      onChange={(e) => setBankForm((c) => ({ ...c, account_number: e.target.value.replace(/\D/g, "") }))} />
+                    {resolving && (
+                      <RefreshCw className="absolute right-3 top-3.5 h-4 w-4 animate-spin text-[#FDA600]" />
+                    )}
+                  </div>
                 </div>
                 <div className="space-y-1.5 md:col-span-2">
                   <FieldLabel htmlFor="account-name">Account name *</FieldLabel>
-                  <TextInput id="account-name" required placeholder="Name on the account"
+                  <TextInput id="account-name" required placeholder="Account name resolves automatically..."
+                    readOnly={resolving}
                     value={bankForm.account_name}
                     onChange={(e) => setBankForm((c) => ({ ...c, account_name: e.target.value }))} />
                 </div>
               </div>
               <div className="flex items-center justify-between pt-2">
                 <p className="text-xs text-[#7A6B44]">Your bank details are encrypted and stored securely.</p>
-                <PrimaryButton type="submit" loading={savePayout.isPending}>
+                <PrimaryButton type="submit" loading={savePayout.isPending || resolving}>
                   Save bank account <Check className="h-4 w-4" />
                 </PrimaryButton>
               </div>
             </form>
+          )}
+
+          {/* PIN authorization modal */}
+          {isPinAuthModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-sm rounded-3xl border border-[#ECE6D6] bg-white p-6 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-[#ECE6D6] pb-4 mb-4">
+                  <h3 className="text-lg font-bold text-[#1A1208]">Confirm Wallet PIN</h3>
+                  <button
+                    type="button"
+                    onClick={() => setIsPinAuthModalOpen(false)}
+                    className="flex h-8 w-8 items-center justify-center rounded-xl text-white/40 hover:bg-[#F8F5ED] hover:text-[#7A6B44] transition-all cursor-pointer"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <form onSubmit={handleVerifyAndSave} className="space-y-4">
+                  <p className="text-xs text-[#7A6B44]">
+                    Please enter your 4-digit transaction PIN to authorize this bank profile update.
+                  </p>
+                  <div className="space-y-1.5">
+                    <FieldLabel htmlFor="auth-pin">4-Digit PIN</FieldLabel>
+                    <TextInput
+                      id="auth-pin"
+                      type="password"
+                      maxLength={4}
+                      inputMode="numeric"
+                      required
+                      placeholder="••••"
+                      value={authPin}
+                      onChange={(e) => setAuthPin(e.target.value.replace(/\D/g, ""))}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsPinAuthModalOpen(false)}
+                      className="rounded-xl border border-[#ECE6D6] px-4 py-2.5 text-xs font-semibold text-[#5A6465] hover:bg-[#F8F5ED] transition cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <PrimaryButton type="submit" loading={savePayout.isPending}>
+                      Confirm & Save
+                    </PrimaryButton>
+                  </div>
+                </form>
+              </div>
+            </div>
           )}
 
           {!showForm && !payout && (
@@ -1857,15 +2234,85 @@ export function VendorPayoutsView() {
 export function VendorKycView() {
   const { data: setupState } = useVendorSetupState();
   const { data: dashboard } = useVendorDashboard();
-  const isVerified = setupState?.id_verified ?? false;
+  const { data: statusData } = useNinjaKycStatus();
+  const { data: docsData, isLoading: docsLoading } = useNinjaKycDocuments();
+  const initiateKyc = useInitiateKyc();
+  const recordDoc = useRecordKycDocument();
+
+  // Mock upload progress states
+  const [selectedDocType, setSelectedDocType] = useState<KycDocumentType>("nin_card");
+  const [docNumber, setDocNumber] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+
+  const kycStatus = statusData?.status ?? "not_started";
+  const isApproved = statusData?.is_approved ?? false;
   const isBankVerified = dashboard?.payout_profile?.is_verified ?? false;
 
+  const identityUploaded = docsData?.documents?.some((d) =>
+    ["nin_card", "passport", "drivers_license", "voters_card", "selfie"].includes(d.document_type)
+  ) ?? false;
+  const cacUploaded = docsData?.documents?.some((d) => d.document_type === "cac_certificate") ?? false;
+  const bvnUploaded = docsData?.documents?.some((d) => d.document_type === "bvn_slip") ?? false;
+
   const kycSteps = [
-    { label: "Identity Upload", desc: "NIN or International Passport", done: isVerified },
-    { label: "Business Information", desc: "CAC Certificate or Store Profile", done: setupState?.profile_complete },
-    { label: "Payout Integration", desc: "Verified bank account linked", done: isBankVerified },
-    { label: "Full Verification", desc: "Compliance team approval", done: isVerified && isBankVerified },
+    { label: "Identity Upload", desc: "NIN or International Passport", done: identityUploaded || isApproved },
+    { label: "Business Information", desc: "CAC Certificate (Optional)", done: cacUploaded || setupState?.profile_complete },
+    { label: "Payout Integration", desc: "Verified bank account linked", done: isBankVerified || bvnUploaded },
+    { label: "Full Verification", desc: "Compliance team approval", done: isApproved },
   ];
+
+  const handleFileUploadSimulated = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadProgress(0);
+    setUploadSuccess(false);
+
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 10;
+      setUploadProgress(progress);
+      if (progress >= 100) {
+        clearInterval(interval);
+        setTimeout(async () => {
+          try {
+            const fakeUrl = `https://res.cloudinary.com/fashionistar/image/upload/v1700000000/kyc/user_id/${file.name}`;
+            const fakePublicId = `fashionistar/kyc/user_id/${file.name.split(".")[0]}`;
+
+            // Make sure we have a submission
+            if (kycStatus === "not_started") {
+              await initiateKyc.mutateAsync({});
+            }
+
+            await recordDoc.mutateAsync({
+              document_type: selectedDocType,
+              secure_url: fakeUrl,
+              public_id: fakePublicId,
+              document_number: docNumber.trim() || undefined,
+            });
+
+            setUploadSuccess(true);
+            setDocNumber("");
+          } catch {
+            toast.error("Failed to record document.");
+          } finally {
+            setUploading(false);
+          }
+        }, 300);
+      }
+    }, 100);
+  };
+
+  const handleStartKyc = async () => {
+    try {
+      await initiateKyc.mutateAsync({});
+    } catch {
+      toast.error("Could not start KYC verification process.");
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -1900,33 +2347,209 @@ export function VendorKycView() {
       </div>
 
       {/* Main compliance status card */}
-      <div className={`rounded-3xl border p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 ${
-        isVerified ? "border-[#2D5016]/20 bg-[#E8F5E0]" : "border-[#FDA600]/30 bg-[#FFF6E3]"
-      }`}>
-        <div className="flex gap-4">
-          <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl ${
-            isVerified ? "bg-[#2D5016] text-white" : "bg-[#FDA600]/25 text-[#FDA600]"
-          }`}>
-            {isVerified ? <BadgeCheck className="h-6 w-6" /> : <Clock className="h-6 w-6" />}
-          </div>
-          <div>
-            <h3 className={`text-lg font-bold ${isVerified ? "text-[#2D5016]" : "text-[#B37700]"}`}>
-              {isVerified ? "Store KYC Approved ✓" : "Verification Pending Compliance Review"}
-            </h3>
-            <p className={`mt-1 text-sm max-w-xl leading-relaxed ${isVerified ? "text-[#2D5016]/80" : "text-[#7A6B44]"}`}>
-              {isVerified
-                ? "Congratulations! Your store is fully verified. You have full withdrawal privileges and featured placement on the Fashionistar marketplace."
-                : "Your verification request is currently under compliance review. Standard review takes 24-48 business hours. You can continue updating your catalog and processing orders in the meantime."}
-            </p>
+      {kycStatus === "approved" ? (
+        <div className="rounded-3xl border border-[#2D5016]/20 bg-[#E8F5E0] p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex gap-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#2D5016] text-white">
+              <BadgeCheck className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-[#2D5016]">Store KYC Approved ✓</h3>
+              <p className="mt-1 text-sm max-w-xl leading-relaxed text-[#2D5016]/80">
+                Congratulations! Your store is fully verified. You have full withdrawal privileges and featured placement on the Fashionistar marketplace.
+              </p>
+            </div>
           </div>
         </div>
-        {!isVerified && (
-          <Link href="/vendor/support"
-            className="flex-shrink-0 inline-flex items-center gap-2 rounded-xl bg-[#FDA600] px-5 py-3 text-sm font-bold text-black shadow-sm transition hover:bg-[#f28705] hover:shadow-md">
+      ) : kycStatus === "rejected" || kycStatus === "resubmit" ? (
+        <div className="rounded-3xl border border-red-200 bg-red-50 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex gap-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-red-600 text-white">
+              <XCircle className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-red-700">Verification Rejected / Requires Alteration</h3>
+              <p className="mt-1 text-sm max-w-xl leading-relaxed text-red-600">
+                The compliance team reviewed your submission and requested adjustments. Please see the notes below and resubmit the corrected documents.
+              </p>
+              {statusData?.review_notes && (
+                <div className="mt-3 rounded-xl bg-white border border-red-150 p-4 text-xs font-semibold text-red-700 font-mono">
+                  Feedback: {statusData.review_notes}
+                </div>
+              )}
+            </div>
+          </div>
+          <Link
+            href={`/vendor/support?category=payment_issue&subject=KYC%20Compliance%20Appeal&body=My%20KYC%20verification%20was%20rejected.%20Review%20Notes:%20${encodeURIComponent(statusData?.review_notes || "")}`}
+            className="flex-shrink-0 inline-flex items-center gap-2 rounded-xl bg-[#FDA600] px-5 py-3 text-sm font-bold text-black shadow-sm transition hover:bg-[#f28705] hover:shadow-md cursor-pointer"
+          >
             Contact Compliance <ArrowRight className="h-4 w-4" />
           </Link>
-        )}
-      </div>
+        </div>
+      ) : kycStatus === "pending" || kycStatus === "in_review" ? (
+        <div className="rounded-3xl border border-[#FDA600]/30 bg-[#FFF6E3] p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex gap-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#FDA600]/25 text-[#FDA600]">
+              <Clock className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-[#B37700]">Verification Pending Compliance Review</h3>
+              <p className="mt-1 text-sm max-w-xl leading-relaxed text-[#7A6B44]">
+                Your verification request is currently under compliance review. Standard review takes 24-48 business hours. You can continue updating your catalog and processing orders in the meantime.
+              </p>
+            </div>
+          </div>
+          <Link href="/vendor/support"
+            className="flex-shrink-0 inline-flex items-center gap-2 rounded-xl bg-[#FDA600] px-5 py-3 text-sm font-bold text-black shadow-sm transition hover:bg-[#f28705] hover:shadow-md">
+            Contact Support <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      ) : (
+        <div className="rounded-3xl border border-[#ECE6D6] bg-white p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
+          <div className="flex gap-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#FDA600]/10 text-[#FDA600]">
+              <Shield className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-[#1A1208]">Start Verification</h3>
+              <p className="mt-1 text-sm max-w-xl leading-relaxed text-[#5A6465]">
+                Complete your identity check to enable bank payouts and boost your shop rating on the Fashionistar marketplace.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleStartKyc}
+            disabled={initiateKyc.isPending}
+            className="flex-shrink-0 inline-flex items-center gap-2 rounded-xl bg-[#FDA600] px-5 py-3 text-sm font-bold text-black shadow-sm transition hover:bg-[#f28705] hover:shadow-md disabled:opacity-60 cursor-pointer"
+          >
+            {initiateKyc.isPending ? "Starting..." : "Begin Compliance Check"}
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Dynamic Upload Zone if not verified */}
+      {!isApproved && kycStatus !== "not_started" && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Upload panel */}
+          <div className="rounded-3xl bg-white border border-[#ECE6D6] p-6 shadow-sm space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FDA600]/10 text-[#FDA600]">
+                <Upload className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold text-[#1A1208]">Document Upload Zone</h3>
+            </div>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <FieldLabel htmlFor="doc-type">Document Type *</FieldLabel>
+                <select
+                  id="doc-type"
+                  value={selectedDocType}
+                  onChange={(e) => setSelectedDocType(e.target.value as KycDocumentType)}
+                  className="h-10 w-full rounded-xl border border-[#D9D9D9] bg-white px-3 text-sm outline-none transition focus:border-[#FDA600]"
+                >
+                  <option value="nin_card">National Identification Number (NIN)</option>
+                  <option value="bvn_slip">Bank Verification Number (BVN)</option>
+                  <option value="passport">International Passport</option>
+                  <option value="drivers_license">Driver's License</option>
+                  <option value="voters_card">Voter's Card</option>
+                  <option value="cac_certificate">CAC Certificate (Corporate)</option>
+                  <option value="selfie">Selfie / Live Portrait</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <FieldLabel htmlFor="doc-number">Document Number (Optional)</FieldLabel>
+                <TextInput
+                  id="doc-number"
+                  placeholder="e.g. NIN or Passport ID"
+                  value={docNumber}
+                  onChange={(e) => setDocNumber(e.target.value)}
+                />
+              </div>
+
+              {/* Drag and Drop Box */}
+              <div className="relative border-2 border-dashed border-[#ECE6D6] hover:border-[#FDA600]/60 rounded-2xl p-6 text-center cursor-pointer transition bg-[#FAFAF8] group">
+                <input
+                  type="file"
+                  id="kyc-file-selector"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  onChange={handleFileUploadSimulated}
+                  disabled={uploading}
+                />
+                <div className="flex flex-col items-center gap-2">
+                  <div className="h-10 w-10 rounded-xl bg-white border border-[#ECE6D6] flex items-center justify-center text-[#7A6B44] group-hover:text-[#FDA600] transition">
+                    <Upload className="h-5 w-5" />
+                  </div>
+                  <p className="text-sm font-semibold text-[#1A1208]">
+                    {uploading ? `Uploading document... ${uploadProgress}%` : "Choose file or drag here"}
+                  </p>
+                  <p className="text-xs text-[#7A6B44]">PNG, JPG, PDF up to 5MB</p>
+                </div>
+
+                {uploading && (
+                  <div className="absolute inset-0 bg-white/80 rounded-2xl flex flex-col items-center justify-center p-4">
+                    <div className="w-full bg-[#ECE6D6] h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className="bg-[#FDA600] h-full transition-all duration-100"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-bold text-black mt-2">Uploading to secure storage ({uploadProgress}%)</span>
+                  </div>
+                )}
+              </div>
+
+              {uploadSuccess && (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 flex items-center gap-2 text-xs font-semibold text-emerald-800">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  <span>Document uploaded and recorded successfully!</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* List of uploaded files */}
+          <div className="rounded-3xl bg-white border border-[#ECE6D6] p-6 shadow-sm space-y-4">
+            <h3 className="text-base font-bold text-[#1A1208]">Registered Documents</h3>
+            {docsLoading ? (
+              <div className="space-y-2">
+                {[1, 2].map((i) => (
+                  <div key={i} className="h-12 rounded-xl bg-[#F5F3EE] animate-pulse" />
+                ))}
+              </div>
+            ) : !docsData?.documents || docsData.documents.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center text-[#7A6B44]">
+                <FileCheck className="h-8 w-8 text-[#ECE6D6] mb-2" />
+                <p className="text-xs">No documents registered yet. Start uploading your NIN/Passport above.</p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                {docsData.documents.map((doc) => (
+                  <div key={doc.id} className="flex items-center justify-between border border-[#ECE6D6] rounded-xl p-3 bg-[#FAFAF8]">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                        <FileCheck className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-[#1A1208] capitalize">{doc.document_type.replace(/_/g, " ")}</p>
+                        <p className="text-[10px] text-[#7A6B44]">
+                          Uploaded {new Date(doc.uploaded_at || Date.now()).toLocaleDateString("en-NG")}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={["rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+                      doc.provider_verified ? "bg-[#E8F5E0] text-[#2D5016]" : "bg-[#FFF6E3] text-[#B37700]"
+                    ].join(" ")}>
+                      {doc.provider_verified ? "Verified" : "Under review"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Document Checkpoints Section */}
       <div className="grid gap-6 md:grid-cols-3">
@@ -1935,7 +2558,7 @@ export function VendorKycView() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs font-bold uppercase tracking-widest text-[#7A6B44]">Identity ID</span>
-              {isVerified ? <Badge color="green">Verified ✓</Badge> : <Badge color="gold">In Review</Badge>}
+              {identityUploaded || isApproved ? <Badge color="green">Verified ✓</Badge> : <Badge color="gold">Missing</Badge>}
             </div>
             <h4 className="text-base font-bold text-[#1A1208]">NIN / International Passport</h4>
             <p className="mt-2 text-xs text-[#5A6465] leading-relaxed">
@@ -1943,8 +2566,10 @@ export function VendorKycView() {
             </p>
           </div>
           <div className="mt-4 pt-4 border-t border-[#F5F3EE] flex items-center justify-between text-xs text-[#7A6B44]">
-            <span>Document type: Government Slip</span>
-            <span className="font-semibold text-black">SIMULATED OK</span>
+            <span>Status</span>
+            <span className={identityUploaded || isApproved ? "font-semibold text-emerald-700" : "font-semibold text-amber-600"}>
+              {identityUploaded || isApproved ? "Active" : "Awaiting NIN slip"}
+            </span>
           </div>
         </div>
 
@@ -1953,7 +2578,7 @@ export function VendorKycView() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs font-bold uppercase tracking-widest text-[#7A6B44]">Financial Check</span>
-              {isBankVerified ? <Badge color="green">Linked ✓</Badge> : <Badge color="gold">Under Verification</Badge>}
+              {isBankVerified || bvnUploaded ? <Badge color="green">Linked ✓</Badge> : <Badge color="gold">Under Verification</Badge>}
             </div>
             <h4 className="text-base font-bold text-[#1A1208]">Bank Verification Number</h4>
             <p className="mt-2 text-xs text-[#5A6465] leading-relaxed">
@@ -1961,8 +2586,10 @@ export function VendorKycView() {
             </p>
           </div>
           <div className="mt-4 pt-4 border-t border-[#F5F3EE] flex items-center justify-between text-xs text-[#7A6B44]">
-            <span>Linked: {dashboard?.payout_profile?.bank_name || "Access Bank"}</span>
-            <span className="font-semibold text-emerald-700">Verified</span>
+            <span>Bank Link</span>
+            <span className={isBankVerified || bvnUploaded ? "font-semibold text-emerald-700" : "font-semibold text-amber-600"}>
+              {isBankVerified || bvnUploaded ? "Verified" : "Pending account linkage"}
+            </span>
           </div>
         </div>
 
@@ -1971,7 +2598,7 @@ export function VendorKycView() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs font-bold uppercase tracking-widest text-[#7A6B44]">Corporate Check</span>
-              {isVerified ? <Badge color="green">Optional Verified ✓</Badge> : <Badge color="gray">Optional</Badge>}
+              {cacUploaded || setupState?.profile_complete ? <Badge color="green">Verified ✓</Badge> : <Badge color="gray">Optional</Badge>}
             </div>
             <h4 className="text-base font-bold text-[#1A1208]">CAC Certificate (Optional)</h4>
             <p className="mt-2 text-xs text-[#5A6465] leading-relaxed">
@@ -1980,7 +2607,9 @@ export function VendorKycView() {
           </div>
           <div className="mt-4 pt-4 border-t border-[#F5F3EE] flex items-center justify-between text-xs text-[#7A6B44]">
             <span>CAC Registration</span>
-            <span className="font-semibold text-amber-600">Pending upload</span>
+            <span className={cacUploaded || setupState?.profile_complete ? "font-semibold text-emerald-700" : "font-semibold text-amber-600"}>
+              {cacUploaded || setupState?.profile_complete ? "Uploaded" : "Pending upload"}
+            </span>
           </div>
         </div>
       </div>

@@ -33,6 +33,8 @@ import {
 import { RoleGuard } from "@/features/auth/components/RoleGuard";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useVendorDashboard } from "@/features/vendor/hooks/use-vendor-setup";
+import { useUnreadBadgeCount } from "@/features/notification/hooks/use-notification";
+import { useConversations } from "@/features/chat/hooks/use-chat";
 
 // ── Brand Palette ─────────────────────────────────────────────────────────────
 const C = {
@@ -53,6 +55,7 @@ const vendorNavGroups = [
     items: [
       { href: "/vendor/dashboard", label: "Dashboard",  Icon: LayoutDashboard },
       { href: "/vendor/analytics", label: "Analytics",  Icon: BarChart3 },
+      { href: "/vendor/chat",      label: "Messages",   Icon: MessageSquare },
     ],
   },
   {
@@ -244,11 +247,11 @@ function VendorSidebar({
                       aria-current={active ? "page" : undefined}
                       className={[
                         "group relative flex items-center gap-3 rounded-xl px-3 py-2.5",
-                        "text-sm font-medium outline-none",
-                        "transition-all duration-150 focus-visible:ring-2 focus-visible:ring-[#FDA600]/60",
+                        "text-sm font-medium outline-none transition-all duration-200 ease-out",
+                        "focus-visible:ring-2 focus-visible:ring-[#FDA600]/60",
                         active
-                          ? "text-black shadow-lg"
-                          : "text-white/55 hover:bg-white/6 hover:text-white",
+                          ? "text-[#1a2e14] shadow-lg font-semibold"
+                          : "text-white/70 hover:bg-white/10 hover:text-white hover:translate-x-1",
                       ].join(" ")}
                       style={active ? {
                         background: `linear-gradient(135deg, ${C.gold} 0%, ${C.goldDark} 100%)`,
@@ -257,14 +260,14 @@ function VendorSidebar({
                     >
                       <Icon
                         className={[
-                          "h-4 w-4 flex-shrink-0 transition-transform duration-150",
+                          "h-4 w-4 flex-shrink-0 transition-transform duration-200 ease-out",
                           "group-hover:scale-110",
-                          active ? "text-black" : "",
+                          active ? "text-[#1a2e14]" : "text-white/70 group-hover:text-white",
                         ].join(" ")}
                         aria-hidden="true"
                       />
                       <span className="flex-1 truncate">{label}</span>
-                      {active && <ChevronRight className="h-3 w-3 text-black/50" aria-hidden="true" />}
+                      {active && <ChevronRight className="h-3 w-3 text-[#1a2e14]/70" aria-hidden="true" />}
                     </Link>
                   );
                 })}
@@ -299,7 +302,13 @@ function VendorSidebar({
 }
 
 // ── Profile Dropdown ──────────────────────────────────────────────────────────
-function ProfileDropdown({ initials, storeName }: { initials: string; storeName: string }) {
+interface ProfileDropdownProps {
+  initials: string;
+  storeName: string;
+  logoUrl?: string;
+}
+
+function ProfileDropdown({ initials, storeName, logoUrl }: ProfileDropdownProps) {
   const router  = useRouter();
   const logout  = useAuthStore((s) => s.logout);
   const [open, setOpen] = useState(false);
@@ -336,12 +345,17 @@ function ProfileDropdown({ initials, storeName }: { initials: string; storeName:
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold text-black shadow-sm transition-all hover:scale-105 hover:shadow-md focus-visible:ring-2 focus-visible:ring-[#FDA600]/60 outline-none"
-        style={{ background: `linear-gradient(135deg, ${C.gold} 0%, ${C.goldDark} 100%)` }}
+        className="flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold text-black shadow-sm transition-all hover:scale-105 hover:shadow-md focus-visible:ring-2 focus-visible:ring-[#FDA600]/60 outline-none overflow-hidden border border-[#FDA600]/40 ring-2 ring-[#FDA600]/20"
         aria-label="Profile menu"
         title={storeName}
       >
-        {initials}
+        {logoUrl ? (
+          <Image src={logoUrl} alt={storeName} width={36} height={36} className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center" style={{ background: `linear-gradient(135deg, ${C.gold} 0%, ${C.goldDark} 100%)` }}>
+            {initials}
+          </div>
+        )}
       </button>
 
       {open && (
@@ -395,12 +409,15 @@ function VendorTopbar({ onMenuClick }: { onMenuClick: () => void }) {
   const user                = useAuthStore((s) => s.user);
   const pathname            = usePathname();
   const { data: dashboard } = useVendorDashboard();
+  const { data: unreadNotificationsCount } = useUnreadBadgeCount();
+  const { data: conversations } = useConversations(false);
 
   const segments   = pathname.split("/").filter(Boolean);
   const last       = segments[segments.length - 1] ?? "dashboard";
   const pageLabel  = PAGE_LABEL_MAP[last] ?? "Vendor";
   const storeName  = dashboard?.profile.store_name ?? "Fashionistar Vendor";
   const storeSlug  = dashboard?.profile.store_slug ?? "";
+  const logoUrl    = dashboard?.profile.logo_url ?? "";
 
   const userFullName = user ? `${user.first_name} ${user.last_name}`.trim() : "";
   const initials = (userFullName || "V")
@@ -409,6 +426,8 @@ function VendorTopbar({ onMenuClick }: { onMenuClick: () => void }) {
     .map((w: string) => w[0])
     .join("")
     .toUpperCase();
+
+  const unreadMessagesCount = conversations?.reduce((acc: number, c: any) => acc + (c.unread_count ?? 0), 0) ?? 0;
 
   return (
     <header
@@ -471,6 +490,14 @@ function VendorTopbar({ onMenuClick }: { onMenuClick: () => void }) {
           className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-[#ECE6D6] text-[#7A6B44] transition-all hover:bg-[#F8F5ED] hover:scale-105 focus-visible:ring-2 focus-visible:ring-[#FDA600]/60 outline-none"
         >
           <MessageSquare className="h-4 w-4" aria-hidden="true" />
+          {unreadMessagesCount > 0 && (
+            <span
+              className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold text-white ring-2 ring-white animate-pulse"
+              style={{ background: C.gold }}
+            >
+              {unreadMessagesCount}
+            </span>
+          )}
         </Link>
 
         {/* Notifications */}
@@ -481,16 +508,18 @@ function VendorTopbar({ onMenuClick }: { onMenuClick: () => void }) {
           className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-[#ECE6D6] text-[#7A6B44] transition-all hover:bg-[#F8F5ED] hover:scale-105 focus-visible:ring-2 focus-visible:ring-[#FDA600]/60 outline-none"
         >
           <Bell className="h-4 w-4" aria-hidden="true" />
-          {/* Live badge — always show for demo; wire to real unread count later */}
-          <span
-            className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full ring-2 ring-white animate-pulse"
-            style={{ background: C.gold }}
-            aria-label="New notifications"
-          />
+          {unreadNotificationsCount !== undefined && unreadNotificationsCount > 0 && (
+            <span
+              className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold text-white ring-2 ring-white animate-pulse"
+              style={{ background: C.gold }}
+            >
+              {unreadNotificationsCount}
+            </span>
+          )}
         </Link>
 
         {/* Profile dropdown */}
-        <ProfileDropdown initials={initials} storeName={storeName} />
+        <ProfileDropdown initials={initials} storeName={storeName} logoUrl={logoUrl} />
       </div>
     </header>
   );
