@@ -70,3 +70,4 @@ export * from "./store/vendor.store";
 // ── Components ───────────────────────────────────────────────────────────────
 export * from "./components/vendor-shell";
 export * from "./components/vendor-views";
+export * from "./components/vendor-extra-views";

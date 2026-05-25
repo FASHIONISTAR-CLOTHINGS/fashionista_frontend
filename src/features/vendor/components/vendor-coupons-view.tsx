@@ -103,14 +103,24 @@ function mapCoupon(coupon: {
 export function VendorCouponsView() {
   const { data, isLoading, isError } = useVendorCoupons();
   const { data: dashboard } = useVendorDashboard();
-  const sourceCoupons = data?.data ?? [];
-  const coupons = sourceCoupons.map(mapCoupon);
+
+  // data from /api/v1/vendor/coupons/ comes back as { status, count, data: VendorCoupon[] }
+  // We must narrow carefully — never .map() on a non-array
+  const rawCouponList = Array.isArray((data as { data?: unknown } | undefined)?.data)
+    ? ((data as { data: { id: number; code: string; discount: number; active: boolean; valid_until?: string }[] }).data)
+    : [];
+  const coupons = rawCouponList.map(mapCoupon);
 
   const stats = {
-    total: data?.data ? coupons.length : ((dashboard?.coupons?.active ?? 0) + (dashboard?.coupons?.inactive ?? 0)),
-    active: data?.data ? coupons.filter((c: Coupon) => c.status === "active").length : (dashboard?.coupons?.active ?? 0),
+    total:     coupons.length > 0
+      ? coupons.length
+      : ((dashboard?.coupons?.active ?? 0) + (dashboard?.coupons?.inactive ?? 0)),
+    active:    coupons.length > 0
+      ? coupons.filter((c: Coupon) => c.status === "active").length
+      : (dashboard?.coupons?.active ?? 0),
     totalUses: coupons.reduce((sum: number, c: Coupon) => sum + c.uses, 0),
   };
+
 
   return (
     <div className="space-y-8 py-4">
