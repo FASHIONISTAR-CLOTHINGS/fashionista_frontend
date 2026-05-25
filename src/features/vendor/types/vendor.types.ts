@@ -363,3 +363,73 @@ export interface PublicVendorDetail extends PublicVendorCard {
     stock_qty: number;
   }>;
 }
+
+// ── Bank Account Payout Gate ───────────────────────────────────────────────────
+
+/** Verification status of a saved bank account. */
+export type BankAccountVerificationStatus = "pending" | "verified" | "failed";
+
+/**
+ * A saved vendor bank account.
+ * Aligned with VendorBankAccount model (apps/vendor/models/vendor_bank_account.py).
+ * account_number_enc is NEVER returned by the API — only masked_account / account_last4.
+ */
+export interface VendorBankAccount {
+  id:                      string;
+  bank_name:               string;
+  bank_code:               string;
+  account_name:            string;
+  account_last4:           string;   // e.g. "1234" — safe to display
+  masked_account:          string;   // e.g. "****1234"
+  paystack_recipient_code: string;
+  kyc_name_matched:        boolean;  // advisory: true if name matches KYC legal_name
+  is_default:              boolean;
+  verification_status:     BankAccountVerificationStatus;
+  is_verified:             boolean;
+  created_at:              string;   // ISO 8601
+}
+
+/**
+ * Response from POST /api/v1/vendor/bank-accounts/resolve/
+ * Returns the account holder name as resolved by Paystack.
+ */
+export interface BankAccountResolveResult {
+  account_name:   string;
+  account_number: string;   // echoed back for confirmation
+}
+
+/** Request body for POST /api/v1/vendor/bank-accounts/resolve/ */
+export interface ResolveAccountPayload {
+  account_number: string;   // 10 digits
+  bank_code:      string;   // e.g. "044"
+}
+
+/**
+ * Request body for POST /api/v1/vendor/bank-accounts/
+ * account_name should be pre-filled from the resolve step.
+ */
+export interface CreateBankAccountPayload {
+  account_number: string;   // 10 digits — write-only, encrypted on backend
+  bank_code:      string;
+  bank_name:      string;
+  account_name:   string;   // as resolved by Paystack
+}
+
+/** Request body for POST /api/v1/vendor/payout/request/ */
+export interface PayoutRequestPayload {
+  bank_account_id: string;   // UUID of VendorBankAccount
+  amount:          number;   // in NGN, minimum 1000
+  narration?:      string;
+}
+
+/** Response from POST /api/v1/vendor/payout/request/ */
+export interface PayoutRequestResult {
+  status:        string;
+  reference:     string;
+  transfer_code: string;
+  provider:      string;
+  amount:        string;
+  currency:      string;
+  message:       string;
+}
+

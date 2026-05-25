@@ -44,6 +44,13 @@ import type {
   VendorSetupState,
   PublicVendorCard,
   PublicVendorDetail,
+  // Bank Account Payout Gate
+  VendorBankAccount,
+  BankAccountResolveResult,
+  ResolveAccountPayload,
+  CreateBankAccountPayload,
+  PayoutRequestPayload,
+  PayoutRequestResult,
 } from "@/features/vendor/types/vendor.types";
 
 // ── Helper — unwrap { status, data } envelope ─────────────────────────────────
@@ -112,7 +119,81 @@ export const vendorApi = {
     return data as { valid: boolean };
   },
 
-  // ── Dashboard (Async / Ninja) ──────────────────────────────────────────────
+  // ── Bank Accounts (Multi-Account Payout Gate) ─────────────────────────────
+
+  /**
+   * Resolve account holder name via Paystack.
+   * Called by the "Resolve Name" button in AddBankAccountModal.
+   * POST /api/v1/vendor/bank-accounts/resolve/
+   */
+  async resolveAccountName(
+    payload: ResolveAccountPayload
+  ): Promise<BankAccountResolveResult> {
+    const { data } = await apiSync.post(
+      "v1/vendor/bank-accounts/resolve/",
+      payload
+    );
+    const inner = unwrapData<BankAccountResolveResult>(data);
+    return inner;
+  },
+
+  /**
+   * List all saved bank accounts (max 5).
+   * GET /api/v1/vendor/bank-accounts/
+   */
+  async listBankAccounts(): Promise<VendorBankAccount[]> {
+    const { data } = await apiSync.get("v1/vendor/bank-accounts/");
+    const inner = unwrapData<{ count: number; data: VendorBankAccount[] }>(data);
+    return inner.data ?? [];
+  },
+
+  /**
+   * Save a new bank account (calls Paystack recipient API internally).
+   * POST /api/v1/vendor/bank-accounts/
+   */
+  async createBankAccount(
+    payload: CreateBankAccountPayload
+  ): Promise<VendorBankAccount> {
+    const { data } = await apiSync.post("v1/vendor/bank-accounts/", payload);
+    const inner = unwrapData<{ message: string; data: VendorBankAccount }>(data);
+    return inner.data;
+  },
+
+  /**
+   * Delete a saved bank account (soft-delete + Paystack recipient cleanup).
+   * DELETE /api/v1/vendor/bank-accounts/{id}/
+   */
+  async deleteBankAccount(id: string): Promise<void> {
+    await apiSync.delete(`v1/vendor/bank-accounts/${id}/`);
+  },
+
+  /**
+   * Set a bank account as the default payout destination.
+   * PATCH /api/v1/vendor/bank-accounts/{id}/default/
+   */
+  async setDefaultBankAccount(id: string): Promise<VendorBankAccount> {
+    const { data } = await apiSync.patch(
+      `v1/vendor/bank-accounts/${id}/default/`,
+      {}
+    );
+    const inner = unwrapData<{ message: string; data: VendorBankAccount }>(data);
+    return inner.data;
+  },
+
+  // ── Payout Request ─────────────────────────────────────────────────────────
+
+  /**
+   * Submit a payout request to a saved bank account.
+   * Decrypts account details server-side and calls VendorPayoutService.
+   * POST /api/v1/vendor/payout/request/
+   */
+  async requestPayout(
+    payload: PayoutRequestPayload
+  ): Promise<PayoutRequestResult> {
+    const { data } = await apiSync.post("v1/vendor/payout/request/", payload);
+    return data as PayoutRequestResult;
+  },
+
   async getDashboard(): Promise<VendorDashboard> {
     const data = await apiAsync.get("vendor/dashboard/").json();
     // VendorDashboardSchema uses .default(null) for nullable fields,

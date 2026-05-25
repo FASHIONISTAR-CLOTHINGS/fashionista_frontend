@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   User, Lock, Bell, Shield, Wallet, Sun,
   Monitor, Tag, LogOut,
@@ -10,7 +10,7 @@ import {
   DashInput, DashTextarea, DashSelect, ToggleSwitch,
   RadioCard, PinInput, SaveBar, SessionCard, DangerZone, SettingSection,
 } from "@/components/settings/settings-ui";
-import { useVendorProfile } from "@/features/vendor/hooks/use-vendor-setup";
+import { useVendorProfile, useSubmitVendorSetup } from "@/features/vendor/hooks/use-vendor-setup";
 
 /* ── Tab definitions ─────────────────────────────────────────────────────────── */
 type TabId = "profile" | "security" | "notifications" | "privacy" | "wallet" | "appearance";
@@ -27,6 +27,7 @@ const TABS: { id: TabId; label: string; Icon: React.ElementType }[] = [
 /* ── Profile Tab ─────────────────────────────────────────────────────────────── */
 function ProfileTab() {
   const { data: profile } = useVendorProfile();
+  const updateProfile = useSubmitVendorSetup();
   const [form, setForm] = useState({
     store_name: (profile?.store_name ?? "") as string,
     tagline: (profile?.tagline ?? "") as string,
@@ -38,12 +39,46 @@ function ProfileTab() {
     language: "en",
     timezone: "Africa/Lagos",
   });
+
+  useEffect(() => {
+    if (profile) {
+      setForm({
+        store_name: profile.store_name ?? "",
+        tagline: profile.tagline ?? "",
+        description: profile.description ?? "",
+        city: profile.city ?? "",
+        state: profile.state ?? "",
+        country: profile.country ?? "Nigeria",
+        phone: profile.whatsapp ?? "",
+        language: "en",
+        timezone: "Africa/Lagos",
+      });
+    }
+  }, [profile]);
+
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setSaving(false);
+    try {
+      await updateProfile.mutateAsync({
+        store_name: form.store_name,
+        tagline: form.tagline,
+        description: form.description,
+        city: form.city,
+        state: form.state,
+        country: form.country,
+        collection_ids: profile?.collections?.map((c) => c.id) ?? [],
+        instagram_url: profile?.instagram_url ?? "",
+        tiktok_url: profile?.tiktok_url ?? "",
+        twitter_url: profile?.twitter_url ?? "",
+        website_url: profile?.website_url ?? "",
+      });
+    } catch {
+      // handled by mutation hook
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
