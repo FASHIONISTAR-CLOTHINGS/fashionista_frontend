@@ -147,3 +147,32 @@ export function useRequestPayout() {
     },
   });
 }
+
+// ── 7. Platform Settings ──────────────────────────────────────────────────────
+/**
+ * Fetch public platform configuration — withdrawal limits, support info.
+ * Stale for 10 minutes (these settings rarely change).
+ * No auth required — cached at backend for 60s via Redis.
+ */
+export function usePlatformSettings() {
+  return useQuery({
+    queryKey: ["platform", "settings", "public"] as const,
+    queryFn: () => vendorApi.getPlatformSettings(),
+    staleTime: 1000 * 60 * 10,  // 10 min
+    gcTime:    1000 * 60 * 30,  // 30 min
+    retry: 2,
+  });
+}
+
+/**
+ * Convenience hook: returns the parsed numeric withdrawal limits.
+ * Falls back to sensible defaults if the backend is unreachable.
+ */
+export function useWithdrawalLimits() {
+  const { data } = usePlatformSettings();
+  return {
+    minWithdrawal: parseFloat(data?.min_withdrawal_ngn ?? "1000"),
+    maxWithdrawal: parseFloat(data?.max_withdrawal_ngn ?? "2000000"),
+    maxDailyWithdrawal: parseFloat(data?.max_daily_withdrawal_ngn ?? "5000000"),
+  };
+}
