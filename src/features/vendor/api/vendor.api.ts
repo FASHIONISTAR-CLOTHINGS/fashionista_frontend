@@ -194,6 +194,40 @@ export const vendorApi = {
     return data as PayoutRequestResult;
   },
 
+  // ── Platform Settings ────────────────────────────────────────────────────────
+
+  /**
+   * Fetch public platform configuration (withdrawal limits, support info).
+   * GET /api/v1/platform/settings/public/
+   * No authentication required — cached at backend for 60s.
+   */
+  async getPlatformSettings(): Promise<{
+    platform_name: string;
+    min_withdrawal_ngn: string;
+    max_withdrawal_ngn: string;
+    max_daily_withdrawal_ngn: string;
+    min_wallet_topup_ngn: string;
+    max_wallet_topup_ngn: string;
+    support_email: string;
+    support_phone: string;
+    terms_url: string;
+    privacy_url: string;
+  }> {
+    const { data } = await apiSync.get("v1/platform/settings/public/");
+    return data as {
+      platform_name: string;
+      min_withdrawal_ngn: string;
+      max_withdrawal_ngn: string;
+      max_daily_withdrawal_ngn: string;
+      min_wallet_topup_ngn: string;
+      max_wallet_topup_ngn: string;
+      support_email: string;
+      support_phone: string;
+      terms_url: string;
+      privacy_url: string;
+    };
+  },
+
   async getDashboard(): Promise<VendorDashboard> {
     const data = await apiAsync.get("vendor/dashboard/").json();
     // VendorDashboardSchema uses .default(null) for nullable fields,
