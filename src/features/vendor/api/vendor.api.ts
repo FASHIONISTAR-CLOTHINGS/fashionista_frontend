@@ -347,6 +347,15 @@ export const vendorApi = {
     return VendorCouponListSchema.parse(data);
   },
 
+  async createCoupon(input: any) {
+    const { data } = await apiSync.post("v1/products/coupons/", input);
+    return data;
+  },
+
+  async deleteCoupon(couponId: string) {
+    await apiSync.delete(`v1/products/coupons/${couponId}/`);
+  },
+
   // ── Public Marketplace (AllowAny) ──────────────────────────────────────────
   async getPublicVendors(params?: {
     search?:      string;

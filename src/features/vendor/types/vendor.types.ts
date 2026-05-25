@@ -283,11 +283,12 @@ export interface VendorReviewItem {
 
 // ── Coupons (full list) ───────────────────────────────────────────────────────
 export interface VendorCoupon {
-  id:           number;
-  code:         string;
-  discount:     number;
-  active:       boolean;
-  valid_until?: string;
+  id:             string | number;
+  code:           string;
+  discount:       number;
+  discount_type?: string;
+  active:         boolean;
+  valid_until?:   string;
 }
 
 // ── Mutation Payloads ─────────────────────────────────────────────────────────
