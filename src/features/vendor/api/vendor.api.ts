@@ -1,4 +1,4 @@
-﻿// features/vendor/api/vendor.api.ts
+// features/vendor/api/vendor.api.ts
 /**
  * Vendor API Client — Full Production Contract.
  *
@@ -113,7 +113,11 @@ export const vendorApi = {
   // ── Dashboard (Async / Ninja) ──────────────────────────────────────────────
   async getDashboard(): Promise<VendorDashboard> {
     const data = await apiAsync.get("vendor/dashboard/").json();
-    return VendorDashboardSchema.parse(data);
+    // VendorDashboardSchema uses .default(null) for nullable fields,
+    // guaranteeing null (never undefined) — safe to cast to VendorDashboard.
+    return VendorDashboardSchema.parse(
+      unwrapData<VendorDashboard>(data),
+    ) as unknown as VendorDashboard;
   },
 
   // ── Ninja Async endpoints (backed by VendorProfile DB-layer classmethods) ──
