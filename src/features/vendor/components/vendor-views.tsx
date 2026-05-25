@@ -4,18 +4,25 @@ import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+
 import {
+  AlertTriangle,
   ArrowRight,
   ArrowUpRight,
+  BadgeCheck,
   BarChart3,
   Check,
   ChevronDown,
+  ChevronRight,
   Clock,
   CreditCard,
   ExternalLink,
   Filter,
   Globe,
   Instagram,
+  Key,
+  Landmark,
   MapPin,
   Package,
   PackageCheck,
@@ -57,14 +64,45 @@ import {
 import {
   useVendorAnalyticsSummary,
   useVendorCustomerBehavior,
+  useVendorRevenueChart,
+  useVendorTopCategories,
+  useVendorPaymentDistribution,
 } from "@/features/vendor/hooks/use-vendor-analytics";
+import {
+  useVendorOrders,
+  useVendorOrder,
+  useUpdateOrderStatus,
+  useSubmitPayoutProfile,
+  useSetVendorPin,
+} from "@/features/vendor/hooks/use-vendor-orders";
 import type {
   VendorDashboard,
   VendorProfile,
   VendorSetupPayload,
+  VendorPayoutPayload,
+  VendorPinSetPayload,
+  VendorOrderStatus,
 } from "@/features/vendor/types/vendor.types";
 import type { ProductListItem } from "@/features/product";
 import { useCatalogCollections } from "@/features/catalog/hooks/use-catalog";
+
+// ── Recharts (installed with shadcn) ─────────────────────────────────────────
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  BarChart,
+  Bar,
+} from "recharts";
+
 
 // ── Shared primitives ─────────────────────────────────────────────────────────
 function Badge({
@@ -738,11 +776,22 @@ export function VendorDashboardView() {
   );
 }
 
+// ── Status Tab Config ─────────────────────────────────────────────────────────
+const ORDER_STATUS_TABS = [
+  { key: "all",        label: "All" },
+  { key: "Pending",    label: "Pending" },
+  { key: "Processing", label: "Processing" },
+  { key: "Shipped",    label: "Shipped" },
+  { key: "Fulfilled",  label: "Fulfilled" },
+  { key: "Cancelled",  label: "Cancelled" },
+] as const;
+
 // ── Orders View ───────────────────────────────────────────────────────────────
 export function VendorOrdersView() {
-  const { data: dashboard, isLoading } = useVendorDashboard();
-  const orders = dashboard?.recent_orders ?? [];
-  const [search, setSearch] = useState("");
+  const [search, setSearch]       = useState("");
+  const [activeTab, setActiveTab] = useState<string>("all");
+  const filterKey = activeTab === "all" ? undefined : activeTab;
+  const { data: orders = [], isLoading, isError } = useVendorOrders(filterKey);
 
   const filtered = orders.filter((o) => {
     const q = search.toLowerCase();
@@ -750,7 +799,7 @@ export function VendorOrdersView() {
       !q ||
       (o.oid ?? "").toLowerCase().includes(q) ||
       (o.buyer_email ?? "").toLowerCase().includes(q) ||
-      (o.buyer_full_name ?? "").toLowerCase().includes(q)
+      String(o.buyer_full_name ?? "").toLowerCase().includes(q)
     );
   });
 
@@ -759,38 +808,44 @@ export function VendorOrdersView() {
       <PageHeader
         eyebrow="Commerce"
         title="Orders"
-        description="Manage and process customer orders from your store."
+        description="Every customer order from your store — search, filter by status, and click for full details."
         action={
           <Link href="/vendor/analytics"
             className="inline-flex items-center gap-2 rounded-xl border border-[#ECE6D6] bg-white px-5 py-2.5 text-sm font-semibold text-[#1A1208] transition hover:bg-[#F8F5ED] shadow-sm">
-            <BarChart3 className="h-4 w-4 text-[#FDA600]" /> View analytics
+            <BarChart3 className="h-4 w-4 text-[#FDA600]" /> Analytics
           </Link>
         }
       />
 
-      {/* Search + Filter bar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#BDBDBD]" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by order ID, customer email..."
-            className="h-11 w-full rounded-xl border border-[#D9D9D9] bg-white pl-10 pr-4 text-sm outline-none transition focus:border-[#FDA600] focus:ring-2 focus:ring-[#FDA600]/15"
-          />
-        </div>
-        <button type="button"
-          className="flex items-center gap-2 h-11 rounded-xl border border-[#D9D9D9] bg-white px-4 text-sm font-medium text-[#5A6465] hover:bg-[#F8F5ED] transition-colors">
-          <Filter className="h-4 w-4" /> Filter
-          <ChevronDown className="h-3 w-3" />
-        </button>
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#BDBDBD]" />
+        <input id="order-search" value={search} onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by order ID, customer name or email…"
+          className="h-11 w-full rounded-xl border border-[#D9D9D9] bg-white pl-10 pr-4 text-sm outline-none transition focus:border-[#FDA600] focus:ring-2 focus:ring-[#FDA600]/15" />
+      </div>
+
+      {/* Status tabs */}
+      <div className="flex gap-1.5 flex-wrap">
+        {ORDER_STATUS_TABS.map(({ key, label }) => (
+          <button key={key} type="button" id={`order-tab-${key}`} onClick={() => setActiveTab(key)}
+            className={["rounded-xl px-4 py-1.5 text-xs font-semibold transition-all",
+              activeTab === key ? "bg-[#FDA600] text-black shadow-sm" : "border border-[#ECE6D6] bg-white text-[#7A6B44] hover:bg-[#F8F5ED]",
+            ].join(" ")}>
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Table */}
       <div className="rounded-3xl bg-white border border-[#ECE6D6] shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="p-8 space-y-3">
-            {[1,2,3].map((i) => <SkeletonCard key={i} className="h-16" />)}
+          <div className="p-8 space-y-3">{[1,2,3,4,5].map((i) => <SkeletonCard key={i} className="h-16" />)}</div>
+        ) : isError ? (
+          <div className="p-10 text-center">
+            <AlertTriangle className="mx-auto mb-2 h-8 w-8 text-[#FDA600]" />
+            <p className="text-sm font-semibold text-[#1A1208]">Could not load orders</p>
+            <p className="mt-1 text-xs text-[#7A6B44]">Check your connection or refresh the page.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -799,40 +854,54 @@ export function VendorOrdersView() {
                 <tr className="text-left text-xs font-bold uppercase tracking-widest text-[#7A6B44]">
                   <th className="px-6 py-4">Order ID</th>
                   <th className="px-6 py-4">Customer</th>
-                  <th className="px-6 py-4">Order Status</th>
+                  <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4">Payment</th>
                   <th className="px-6 py-4 text-right">Total</th>
                   <th className="px-6 py-4">Date</th>
+                  <th className="px-6 py-4" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F5F3EE]">
                 {filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-sm text-[#7A6B44]">
-                      {search ? "No orders match your search." : "No orders yet — they'll appear here once customers start buying."}
-                    </td>
-                  </tr>
+                  <tr><td colSpan={7} className="px-6 py-14 text-center">
+                    <ShoppingCart className="mx-auto mb-3 h-10 w-10 text-[#ECE6D6]" />
+                    <p className="text-sm font-semibold text-[#1A1208]">
+                      {search ? "No orders match your search" : `No ${activeTab === "all" ? "" : activeTab + " "}orders yet`}
+                    </p>
+                    <p className="mt-1 text-xs text-[#7A6B44]">{"Orders appear here as customers purchase from your store."}</p>
+                  </td></tr>
                 ) : filtered.map((order) => (
-                  <tr key={order.id} className="hover:bg-[#FAFAF8] transition-colors group">
-                    <td className="px-6 py-4 font-mono text-sm font-bold text-[#1A1208]">
-                      {order.oid ?? `#${order.id}`}
-                    </td>
+                  <tr key={order.id}
+                    className="hover:bg-[#FFFBF0] transition-colors cursor-pointer group"
+                    onClick={() => window.location.assign(`/vendor/orders/${order.id}`)}>
+                    <td className="px-6 py-4 font-mono text-sm font-bold text-[#1A1208]">{order.oid ?? `#${order.id}`}</td>
                     <td className="px-6 py-4">
-                      <p className="text-sm font-medium text-[#1A1208]">{order.buyer_full_name || "—"}</p>
+                      <p className="text-sm font-semibold text-[#1A1208]">{String(order.buyer_full_name ?? "—")}</p>
                       <p className="text-xs text-[#7A6B44]">{order.buyer_email}</p>
                     </td>
                     <td className="px-6 py-4"><StatusBadge status={order.order_status} /></td>
-                    <td className="px-6 py-4"><StatusBadge status={order.payment_status} /></td>
+                    <td className="px-6 py-4"><StatusBadge status={String(order.payment_status ?? "pending")} /></td>
                     <td className="px-6 py-4 text-right text-sm font-bold text-[#1A1208]">
-                      ₦{(order.total_price ?? order.total ?? 0).toLocaleString()}
+                      ₦{Number(order.total_price ?? 0).toLocaleString()}
                     </td>
                     <td className="px-6 py-4 text-xs text-[#7A6B44]">
                       {new Date(order.date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                    </td>
+                    <td className="px-6 py-4">
+                      <ChevronRight className="h-4 w-4 text-[#D9D9D9] group-hover:text-[#FDA600] transition-colors" />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+        {!isLoading && !isError && filtered.length > 0 && (
+          <div className="border-t border-[#F5F3EE] px-6 py-3">
+            <p className="text-xs text-[#7A6B44]">
+              Showing <span className="font-bold text-[#1A1208]">{filtered.length}</span> order{filtered.length !== 1 ? "s" : ""}
+              {activeTab !== "all" ? ` · status: ${activeTab}` : ""}
+            </p>
           </div>
         )}
       </div>
@@ -841,41 +910,129 @@ export function VendorOrdersView() {
 }
 
 // ── Order Detail View ─────────────────────────────────────────────────────────
+const ORDER_STEPS = [
+  { key: "Pending",    label: "Order Placed" },
+  { key: "Processing", label: "Confirmed" },
+  { key: "Shipped",    label: "Shipped" },
+  { key: "Fulfilled",  label: "Delivered" },
+] as const;
+
 export function VendorOrderDetailView({ orderOid }: { orderOid: string }) {
+  const orderId = parseInt(orderOid, 10);
+  const { data: order, isLoading, isError } = useVendorOrder(isNaN(orderId) ? null : orderId);
   const { data: dashboard } = useVendorDashboard();
-  const order = dashboard?.recent_orders.find(
+  const updateStatus = useUpdateOrderStatus();
+
+  const dashOrder = dashboard?.recent_orders.find(
     (o) => o.oid === orderOid || String(o.id) === orderOid,
   );
+  const displayOrder = order ?? dashOrder;
+  const currentStatus = String(displayOrder?.order_status ?? "Pending");
+  const currentStepIdx = ORDER_STEPS.findIndex((s) => s.key === currentStatus);
 
   return (
     <div className="space-y-8">
-      <PageHeader eyebrow="Orders" title={`Order ${orderOid}`} />
-      {order ? (
-        <div className="rounded-3xl bg-white border border-[#ECE6D6] p-8 shadow-sm space-y-6">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-xl bg-[#FAFAF8] border border-[#ECE6D6] p-4">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-2">Customer</p>
-              <p className="text-sm font-semibold text-[#1A1208]">{order.buyer_full_name || "—"}</p>
-              <p className="text-xs text-[#7A6B44] mt-0.5">{order.buyer_email}</p>
-            </div>
-            <div className="rounded-xl bg-[#FAFAF8] border border-[#ECE6D6] p-4">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-2">Order Status</p>
-              <StatusBadge status={order.order_status} />
-            </div>
-            <div className="rounded-xl bg-[#FAFAF8] border border-[#ECE6D6] p-4">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-2">Total</p>
-              <p className="text-2xl font-bold text-[#1A1208]">₦{(order.total_price ?? order.total ?? 0).toLocaleString()}</p>
+      <div className="flex items-center gap-2">
+        <Link href="/vendor/orders"
+          className="flex items-center gap-1.5 text-sm font-semibold text-[#7A6B44] hover:text-[#FDA600] transition-colors">
+          <ChevronRight className="h-4 w-4 rotate-180" />All Orders
+        </Link>
+        <span className="text-[#D9D9D9]">/</span>
+        <span className="text-sm font-semibold text-[#1A1208]">{orderOid}</span>
+      </div>
+      <PageHeader eyebrow="Order Detail" title={`Order ${orderOid}`}
+        description={displayOrder ? `Placed ${new Date(displayOrder.date).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}` : ""} />
+
+      {isLoading && <div className="space-y-4"><SkeletonCard className="h-28" /><SkeletonCard className="h-48" /></div>}
+
+      {isError && !dashOrder && (
+        <div className="rounded-2xl border border-[#F2C9C9] bg-[#FFF7F7] p-6">
+          <p className="text-sm font-semibold text-[#8A3B3B]">Order not found or could not be loaded.</p>
+        </div>
+      )}
+
+      {displayOrder && (
+        <>
+          {/* Status Stepper */}
+          <div className="rounded-3xl bg-white border border-[#ECE6D6] p-7 shadow-sm">
+            <h2 className="text-base font-bold text-[#1A1208] mb-6">Order Progress</h2>
+            <div className="flex items-start">
+              {ORDER_STEPS.map((step, idx) => {
+                const done = idx <= currentStepIdx;
+                const active = idx === currentStepIdx;
+                const isLast = idx === ORDER_STEPS.length - 1;
+                return (
+                  <div key={step.key} className="flex flex-1 flex-col items-center">
+                    <div className="flex w-full items-center">
+                      <div className={["flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 font-bold text-xs transition-all",
+                        active ? "border-[#FDA600] bg-[#FDA600] text-black shadow-md shadow-[#FDA600]/30" :
+                        done   ? "border-[#2D5016] bg-[#2D5016] text-white" :
+                                 "border-[#D9D9D9] bg-white text-[#BDBDBD]",
+                      ].join(" ")}>
+                        {done && !active ? <Check className="h-4 w-4" /> : <span>{idx + 1}</span>}
+                      </div>
+                      {!isLast && <div className={"flex-1 h-0.5 mx-1 rounded-full " + (idx < currentStepIdx ? "bg-[#2D5016]" : "bg-[#ECE6D6]")} />}
+                    </div>
+                    <p className={"mt-2 text-xs font-semibold text-center " + (active ? "text-[#FDA600]" : done ? "text-[#2D5016]" : "text-[#BDBDBD]")}>
+                      {step.label}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </div>
-      ) : (
-        <div className="rounded-3xl bg-white border border-[#ECE6D6] p-8 shadow-sm">
-          <p className="text-sm text-[#5A6465]">Order details will load from the orders API once the dedicated orders domain is wired.</p>
-        </div>
+
+          {/* Customer / Payment / Total */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl bg-white border border-[#ECE6D6] p-5 shadow-sm">
+              <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-3">Customer</p>
+              <p className="text-sm font-bold text-[#1A1208]">{String(displayOrder.buyer_full_name ?? "—")}</p>
+              <p className="mt-0.5 text-xs text-[#7A6B44]">{displayOrder.buyer_email}</p>
+            </div>
+            <div className="rounded-2xl bg-white border border-[#ECE6D6] p-5 shadow-sm">
+              <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-3">Payment</p>
+              <StatusBadge status={displayOrder.payment_status} />
+            </div>
+            <div className="rounded-2xl bg-white border border-[#ECE6D6] p-5 shadow-sm">
+              <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-2">Total</p>
+              <p className="text-3xl font-bold text-[#1A1208]">
+                ₦{Number(displayOrder.total_price ?? (displayOrder as { total?: number }).total ?? 0).toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          {/* Status Update */}
+          {!isNaN(orderId) && (
+            <div className="rounded-3xl bg-white border border-[#ECE6D6] p-7 shadow-sm">
+              <h2 className="text-base font-bold text-[#1A1208] mb-4">Update Order Status</h2>
+              <div className="flex flex-wrap gap-2">
+                {(["Pending", "Processing", "Shipped", "Fulfilled", "Cancelled"] as VendorOrderStatus[]).map((s) => (
+                  <button key={s} id={`status-btn-${s}`} type="button"
+                    disabled={currentStatus === s || updateStatus.isPending}
+                    onClick={() => updateStatus.mutate({ orderId, order_status: s })}
+                    className={["inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all border",
+                      currentStatus === s
+                        ? "bg-[#FDA600] border-[#FDA600] text-black cursor-default"
+                        : "border-[#ECE6D6] bg-white text-[#5A6465] hover:border-[#FDA600]/50 hover:bg-[#FFF6E3] disabled:opacity-40",
+                    ].join(" ")}>
+                    {updateStatus.isPending && updateStatus.variables?.order_status === s
+                      ? <RefreshCw className="h-3 w-3 animate-spin" /> : null}
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
 }
+
+
+
+
+
 
 // ── Product Composer ──────────────────────────────────────────────────────────
 export function VendorProductComposerView() {
@@ -1091,21 +1248,55 @@ export function VendorAnalyticsView() {
           <h2 className="text-lg font-bold text-[#1A1208]">Revenue Trend</h2>
           <Badge color="gold">6-month view</Badge>
         </div>
-        <div className="flex items-end gap-2 h-40 px-4">
-          {[40, 65, 50, 80, 70, 90].map((h, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-1">
-              <div className="w-full rounded-t-lg bg-gradient-to-t from-[#FDA600] to-[#f28705] transition-all hover:opacity-80"
-                style={{ height: `${h}%` }} />
-              <p className="text-xs text-[#BDBDBD]">
-                {["Jan","Feb","Mar","Apr","May","Jun"][i]}
-              </p>
-            </div>
-          ))}
-        </div>
+        <VendorRevenueAreaChart />
       </div>
     </div>
   );
 }
+
+// ── Revenue Area Chart Helper ─────────────────────────────────────────────────
+function VendorRevenueAreaChart() {
+  const { data: rawChart, isLoading } = useVendorRevenueChart();
+  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  const chartArr = Array.isArray(rawChart)
+    ? rawChart
+    : Array.isArray((rawChart as { data?: unknown[] })?.data)
+    ? (rawChart as { data: unknown[] }).data
+    : [];
+
+  const points: { month: string; revenue: number; orders: number }[] = chartArr.length
+    ? chartArr.map((p) => ({
+        month:   String((p as { month?: string; label?: string }).month ?? (p as { label?: string }).label ?? "—"),
+        revenue: Number((p as { revenue?: number; value?: number }).revenue ?? (p as { value?: number }).value ?? 0),
+        orders:  Number((p as { orders?: number; count?: number }).orders ?? (p as { count?: number }).count ?? 0),
+      }))
+    : MONTHS.slice(0, 6).map((m) => ({ month: m, revenue: 0, orders: 0 }));
+
+  if (isLoading) return <SkeletonCard className="h-52" />;
+
+  return (
+    <ResponsiveContainer width="100%" height={220}>
+      <AreaChart data={points} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%"  stopColor="#FDA600" stopOpacity={0.28} />
+            <stop offset="95%" stopColor="#FDA600" stopOpacity={0.02} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" stroke="#F0EDE4" vertical={false} />
+        <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#7A6B44" }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fontSize: 11, fill: "#7A6B44" }} axisLine={false} tickLine={false}
+          tickFormatter={(v: number) => v >= 1000 ? `₦${(v/1000).toFixed(0)}k` : `₦${v}`} />
+        <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #ECE6D6", fontSize: "12px" }}
+          formatter={(value: number) => [`₦${value.toLocaleString()}`, "Revenue"]} />
+        <Area type="monotone" dataKey="revenue" stroke="#FDA600" strokeWidth={2.5}
+          fill="url(#revGrad)" dot={false} activeDot={{ r: 5, fill: "#FDA600" }} />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
 
 // ── Wallet View ───────────────────────────────────────────────────────────────
 export function VendorWalletView() {
@@ -1161,54 +1352,190 @@ export function VendorWalletView() {
 export function VendorPayoutsView() {
   const { data: dashboard } = useVendorDashboard();
   const payout = dashboard?.payout_profile;
+  const [showForm,  setShowForm]  = useState(!payout?.bank_name);
+  const [activeTab, setActiveTab] = useState<"bank" | "pin">("bank");
+  const [bankForm,  setBankForm]  = useState({ bank_name: "", account_number: "", account_name: "" });
+  const [pinForm,   setPinForm]   = useState({ pin: "", confirm_pin: "" });
+  const savePayout = useSubmitPayoutProfile();
+  const setPin     = useSetVendorPin();
+
+  const handleSaveBank = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await savePayout.mutateAsync(bankForm);
+      toast.success("Bank account saved! Under review for verification.");
+      setShowForm(false);
+    } catch {
+      toast.error("Could not save bank details. Try again.");
+    }
+  };
+
+  const handleSetPin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pinForm.pin !== pinForm.confirm_pin) return;
+    try {
+      await setPin.mutateAsync({ pin: pinForm.pin, confirm_pin: pinForm.confirm_pin });
+      toast.success("Wallet PIN set successfully.");
+      setPinForm({ pin: "", confirm_pin: "" });
+    } catch {
+      toast.error("Could not set PIN. Try again.");
+    }
+  };
 
   return (
     <div className="space-y-8">
       <PageHeader eyebrow="Finance" title="Payouts"
         description="Configure your bank account for receiving withdrawals." />
 
+
       {payout?.is_verified ? (
         <div className="rounded-2xl border border-[#2D5016]/20 bg-[#E8F5E0] p-5 flex items-center gap-3">
-          <PackageCheck className="h-5 w-5 text-[#2D5016] flex-shrink-0" />
-          <p className="text-sm font-semibold text-[#2D5016]">Your payout account is verified and active.</p>
+          <BadgeCheck className="h-5 w-5 text-[#2D5016] flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-bold text-[#2D5016]">Payout account verified ✓</p>
+            <p className="text-xs text-[#2D5016]/70 mt-0.5">
+              {payout?.bank_name} — Account ending ····{payout?.account_last4}
+            </p>
+          </div>
+          <button type="button" onClick={() => setShowForm((f) => !f)}
+            className="text-xs font-semibold text-[#2D5016] underline hover:no-underline">
+            {showForm ? "Hide" : "Update"}
+          </button>
         </div>
       ) : (
-        <div className="rounded-2xl border border-[#FDA600]/30 bg-[#FFF6E3] p-5 flex items-center gap-3">
-          <Clock className="h-5 w-5 text-[#FDA600] flex-shrink-0" />
-          <p className="text-sm font-semibold text-[#B37700]">Payout account not yet set up. Add your bank details below.</p>
+        <div className="flex items-center gap-4 rounded-2xl border border-[#FDA600]/30 bg-[#FFF6E3] p-5">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#FDA600]/20">
+            <Landmark className="h-5 w-5 text-[#FDA600]" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-[#B37700]">No payout account yet</p>
+            <p className="text-xs text-[#7A6B44] mt-0.5">Add your bank details below to receive withdrawals.</p>
+          </div>
         </div>
       )}
 
-      <div className="rounded-3xl bg-white border border-[#ECE6D6] p-8 shadow-sm space-y-6">
-        <h2 className="text-lg font-bold text-[#1A1208]">Bank account details</h2>
-        {payout && (payout.bank_name || payout.account_name) ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-xl bg-[#FAFAF8] border border-[#ECE6D6] p-4">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-1">Bank</p>
-              <p className="text-sm font-semibold text-[#1A1208]">{payout.bank_name || "—"}</p>
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-[#ECE6D6]">
+        {(["bank", "pin"] as const).map((t) => (
+          <button key={t} type="button"
+            className={["flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors",
+              activeTab === t ? "border-[#FDA600] text-[#1A1208]" : "border-transparent text-[#7A6B44] hover:text-[#1A1208]",
+            ].join(" ")}
+            onClick={() => setActiveTab(t)}>
+            {t === "bank" ? <Landmark className="h-4 w-4" /> : <Key className="h-4 w-4" />}
+            {t === "bank" ? "Bank Account" : "Wallet PIN"}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "bank" && (
+        <>
+          {/* Existing account display */}
+          {payout && (payout.bank_name || payout.account_name) && (
+            <div className="grid gap-4 md:grid-cols-2">
+              {[
+                { label: "Bank",           value: payout.bank_name || "—" },
+                { label: "Account Name",   value: payout.account_name || "—" },
+                { label: "Account Number", value: payout.account_last4 ? `·········${payout.account_last4}` : "—" },
+              ].map(({ label, value }) => (
+                <div key={label} className="rounded-xl bg-[#FAFAF8] border border-[#ECE6D6] p-4">
+                  <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-1">{label}</p>
+                  <p className="text-sm font-semibold text-[#1A1208] font-mono">{value}</p>
+                </div>
+              ))}
+              <div className="rounded-xl bg-[#FAFAF8] border border-[#ECE6D6] p-4">
+                <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-1">Status</p>
+                {payout.is_verified ? <Badge color="green">Verified ✓</Badge> : <Badge color="gold">Under review</Badge>}
+              </div>
             </div>
-            <div className="rounded-xl bg-[#FAFAF8] border border-[#ECE6D6] p-4">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-1">Account name</p>
-              <p className="text-sm font-semibold text-[#1A1208]">{payout.account_name || "—"}</p>
+          )}
+
+          {showForm && (
+            <form onSubmit={handleSaveBank}
+              className="rounded-3xl bg-white border border-[#ECE6D6] p-8 shadow-sm space-y-5">
+              <h2 className="text-lg font-bold text-[#1A1208]">Bank account details</h2>
+              <div className="grid gap-5 md:grid-cols-2">
+                <div className="space-y-1.5">
+                  <FieldLabel htmlFor="bank-name">Bank name *</FieldLabel>
+                  <TextInput id="bank-name" required placeholder="e.g. GTBank, Access, Zenith"
+                    value={bankForm.bank_name}
+                    onChange={(e) => setBankForm((c) => ({ ...c, bank_name: e.target.value }))} />
+                </div>
+                <div className="space-y-1.5">
+                  <FieldLabel htmlFor="account-number">Account number *</FieldLabel>
+                  <TextInput id="account-number" required placeholder="10-digit NUBAN"
+                    maxLength={10} inputMode="numeric"
+                    value={bankForm.account_number}
+                    onChange={(e) => setBankForm((c) => ({ ...c, account_number: e.target.value.replace(/\D/g, "") }))} />
+                </div>
+                <div className="space-y-1.5 md:col-span-2">
+                  <FieldLabel htmlFor="account-name">Account name *</FieldLabel>
+                  <TextInput id="account-name" required placeholder="Name on the account"
+                    value={bankForm.account_name}
+                    onChange={(e) => setBankForm((c) => ({ ...c, account_name: e.target.value }))} />
+                </div>
+              </div>
+              <div className="flex items-center justify-between pt-2">
+                <p className="text-xs text-[#7A6B44]">Your bank details are encrypted and stored securely.</p>
+                <PrimaryButton type="submit" loading={savePayout.isPending}>
+                  Save bank account <Check className="h-4 w-4" />
+                </PrimaryButton>
+              </div>
+            </form>
+          )}
+
+          {!showForm && !payout && (
+            <div className="flex justify-center">
+              <button type="button" onClick={() => setShowForm(true)}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#FDA600] px-6 py-3 text-sm font-bold text-black transition hover:bg-[#f28705] shadow-sm">
+                <Landmark className="h-4 w-4" /> Add bank account
+              </button>
             </div>
-            <div className="rounded-xl bg-[#FAFAF8] border border-[#ECE6D6] p-4">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-1">Account number</p>
-              <p className="text-sm font-mono font-semibold text-[#1A1208]">
-                {payout.account_last4 ? `·········${payout.account_last4}` : "—"}
-              </p>
+          )}
+        </>
+      )}
+
+      {activeTab === "pin" && (
+        <form onSubmit={handleSetPin}
+          className="rounded-3xl bg-white border border-[#ECE6D6] p-8 shadow-sm space-y-5">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FDA600]/10 text-[#FDA600]">
+              <Key className="h-5 w-5" />
             </div>
-            <div className="rounded-xl bg-[#FAFAF8] border border-[#ECE6D6] p-4">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-1">Status</p>
-              {payout.is_verified ? <Badge color="green">Verified</Badge> : <Badge color="gold">Pending</Badge>}
+            <div>
+              <h2 className="text-base font-bold text-[#1A1208]">Wallet PIN</h2>
+              <p className="text-xs text-[#7A6B44]">Set a 4-digit PIN to authorise wallet withdrawals.</p>
             </div>
           </div>
-        ) : (
-          <p className="text-sm text-[#7A6B44]">No payout account configured yet. Use the settings below to add one.</p>
-        )}
-      </div>
+          <div className="grid gap-5 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <FieldLabel htmlFor="pin-new">New PIN (4 digits)</FieldLabel>
+              <TextInput id="pin-new" type="password" maxLength={4} inputMode="numeric" required placeholder="••••"
+                value={pinForm.pin}
+                onChange={(e) => setPinForm((c) => ({ ...c, pin: e.target.value.replace(/\D/g, "") }))} />
+            </div>
+            <div className="space-y-1.5">
+              <FieldLabel htmlFor="pin-confirm">Confirm PIN</FieldLabel>
+              <TextInput id="pin-confirm" type="password" maxLength={4} inputMode="numeric" required placeholder="••••"
+                value={pinForm.confirm_pin}
+                onChange={(e) => setPinForm((c) => ({ ...c, confirm_pin: e.target.value.replace(/\D/g, "") }))} />
+            </div>
+          </div>
+          {pinForm.pin && pinForm.confirm_pin && pinForm.pin !== pinForm.confirm_pin && (
+            <p className="text-xs font-semibold text-red-500">PINs do not match.</p>
+          )}
+          <div className="flex justify-end">
+            <PrimaryButton type="submit" loading={setPin.isPending}
+              disabled={pinForm.pin !== pinForm.confirm_pin || pinForm.pin.length < 4}>
+              Set wallet PIN <Key className="h-4 w-4" />
+            </PrimaryButton>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
+
 
 // ── KYC View ──────────────────────────────────────────────────────────────────
 export function VendorKycView() {
