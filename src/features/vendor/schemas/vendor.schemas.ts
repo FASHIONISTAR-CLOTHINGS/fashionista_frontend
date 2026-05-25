@@ -178,6 +178,10 @@ export const VendorDashboardSchema = z.object({
   coupons:         VendorDashboardCouponStatsSchema.default({ active: 0, inactive: 0 }),
   wallet:          VendorDashboardWalletSchema.nullable().default(null),
   recent_activity: z.array(VendorDashboardActivitySchema).default([]),
+  low_stock_alerts: z.array(z.object({
+    title:     z.string(),
+    stock_qty: z.coerce.number(),
+  })).default([]),
 });
 
 // ── Setup Form ────────────────────────────────────────────────────────────────

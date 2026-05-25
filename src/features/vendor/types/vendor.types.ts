@@ -165,13 +165,18 @@ export interface VendorDashboard {
    * Note: This is coupon STATS (active/inactive count), not the full coupon list.
    * Use vendorApi.getCoupons() for the paginated list.
    */
-  coupons:         VendorCouponStats;
-  wallet:          VendorWallet | null;
-  recent_activity: Array<{
+  coupons:          VendorCouponStats;
+  wallet:           VendorWallet | null;
+  recent_activity:  Array<{
     type?:  string;
     label?: string;
     date?:  string;
     [key: string]: unknown;
+  }>;
+  /** Products below the low-stock threshold (stock_qty < 5). */
+  low_stock_alerts: Array<{
+    title:     string;
+    stock_qty: number;
   }>;
 }
 
@@ -317,4 +322,43 @@ export interface VendorPinSetPayload {
 
 export interface VendorPinVerifyPayload {
   pin: string;
+}
+
+// ── Public Marketplace Types ───────────────────────────────────────────────────
+
+/** Lightweight vendor card for the /vendors marketplace listing page. */
+export interface PublicVendorCard {
+  id:             string;
+  store_name:     string;
+  store_slug:     string;
+  tagline:        string;
+  description:    string;
+  logo_url:       string;
+  cover_url:      string;
+  city:           string;
+  state:          string;
+  country:        string;
+  is_verified:    boolean;
+  is_featured:    boolean;
+  average_rating: number;
+  review_count:   number;
+  total_products: number;
+  total_sales:    number;
+}
+
+/** Full vendor profile for the /vendors/[slug] public detail page. */
+export interface PublicVendorDetail extends PublicVendorCard {
+  whatsapp:      string;
+  instagram_url: string;
+  tiktok_url:    string;
+  twitter_url:   string;
+  website_url:   string;
+  collections:   Array<{ id: string; title: string; slug: string }>;
+  products:      Array<{
+    pid:       string;
+    title:     string;
+    price:     number;
+    old_price: number | null;
+    stock_qty: number;
+  }>;
 }

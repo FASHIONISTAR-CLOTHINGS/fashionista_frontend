@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
+  Activity,
   ArrowUpRight,
   BarChart3,
   Bell,
@@ -81,9 +82,10 @@ const vendorNavGroups = [
   {
     group: "Support",
     items: [
-      { href: "/vendor/kyc",      label: "KYC Verification", Icon: ClipboardCheck },
-      { href: "/vendor/support",  label: "Support Tickets",  Icon: Headphones     },
-      { href: "/vendor/settings", label: "Settings",         Icon: Settings       },
+      { href: "/vendor/kyc",          label: "KYC Verification", Icon: ClipboardCheck },
+      { href: "/vendor/support",      label: "Support Tickets",  Icon: Headphones     },
+      { href: "/vendor/audit-logs",   label: "Audit Log",        Icon: Activity       },
+      { href: "/vendor/settings",     label: "Settings",         Icon: Settings       },
     ],
   },
 ];
@@ -106,6 +108,7 @@ const PAGE_LABEL_MAP: Record<string, string> = {
   support:      "Support",
   chat:         "Messages",
   notifications:"Notifications",
+  "audit-logs": "Audit Log",
 };
 
 function isActivePath(pathname: string, href: string) {
