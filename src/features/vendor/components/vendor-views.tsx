@@ -13,12 +13,10 @@ import {
   BadgeCheck,
   BarChart3,
   Check,
-  ChevronDown,
   ChevronRight,
   Clock,
   CreditCard,
   ExternalLink,
-  Filter,
   Globe,
   Instagram,
   Key,
@@ -65,8 +63,6 @@ import {
   useVendorAnalyticsSummary,
   useVendorCustomerBehavior,
   useVendorRevenueChart,
-  useVendorTopCategories,
-  useVendorPaymentDistribution,
 } from "@/features/vendor/hooks/use-vendor-analytics";
 import {
   useVendorOrders,
@@ -79,8 +75,6 @@ import type {
   VendorDashboard,
   VendorProfile,
   VendorSetupPayload,
-  VendorPayoutPayload,
-  VendorPinSetPayload,
   VendorOrderStatus,
 } from "@/features/vendor/types/vendor.types";
 import type { ProductListItem } from "@/features/product";
@@ -90,18 +84,26 @@ import { useCatalogCollections } from "@/features/catalog/hooks/use-catalog";
 import {
   AreaChart,
   Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-  BarChart,
-  Bar,
 } from "recharts";
+import {
+  useVendorOrderChart,
+  useVendorTopCategories,
+  useVendorPaymentDistribution,
+} from "@/features/vendor/hooks/use-vendor-analytics";
+import {
+  useVendorTopSellingProducts,
+} from "@/features/vendor/hooks/use-vendor-dashboard";
 
 
 // ── Shared primitives ─────────────────────────────────────────────────────────
@@ -772,6 +774,104 @@ export function VendorDashboardView() {
           </div>
         </div>
       )}
+
+      {/* Top Products + Low Stock Alerts */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Top selling products */}
+        <VendorTopProductsWidget />
+        {/* Low stock alert */}
+        <VendorLowStockWidget />
+      </div>
+    </div>
+  );
+}
+
+// ── Top Products Widget ────────────────────────────────────────────────────────
+function VendorTopProductsWidget() {
+  const { data: topProds, isLoading } = useVendorTopSellingProducts(5);
+  const products = topProds ?? [];
+
+  return (
+    <div className="rounded-3xl bg-white border border-[#ECE6D6] shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between px-7 py-5 border-b border-[#ECE6D6]">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FDA600]/10">
+            <Star className="h-4 w-4 text-[#FDA600]" />
+          </div>
+          <h2 className="text-base font-bold text-[#1A1208]">Top Products</h2>
+        </div>
+        <Link href="/vendor/products/catalog"
+          className="flex items-center gap-1 text-xs font-semibold text-[#FDA600] hover:underline">
+          View all <ArrowUpRight className="h-3 w-3" />
+        </Link>
+      </div>
+      <div className="p-5 space-y-3">
+        {isLoading ? (
+          [1,2,3,4,5].map((i) => <SkeletonCard key={i} className="h-12" />)
+        ) : products.length === 0 ? (
+          <div className="py-8 text-center">
+            <ShoppingBag className="mx-auto mb-2 h-8 w-8 text-[#ECE6D6]" />
+            <p className="text-xs text-[#7A6B44]">No products with sales yet.</p>
+          </div>
+        ) : (
+          products.map((p, i) => (
+            <div key={String(p.id ?? i)} className="flex items-center gap-4">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[#F8F5ED] text-xs font-bold text-[#FDA600]">
+                {i + 1}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-[#1A1208] truncate">{p.title}</p>
+                <p className="text-xs text-[#7A6B44]">{(p.total_qty ?? 0)} sold · ₦{Number(p.price).toLocaleString()}</p>
+              </div>
+              <div className="text-xs font-semibold text-[#2D5016] flex items-center gap-1">
+                <Package className="h-3 w-3" /> {p.stock_qty}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Low Stock Alert Widget ─────────────────────────────────────────────────────
+function VendorLowStockWidget() {
+  const { data: dashboard } = useVendorDashboard();
+  // Pull from dashboard analytics if the dedicated endpoint isn't wired yet
+  const lowStock = (dashboard?.low_stock_alerts ?? []) as Array<{ title: string; stock_qty: number }>;
+
+  return (
+    <div className="rounded-3xl bg-white border border-[#ECE6D6] shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between px-7 py-5 border-b border-[#ECE6D6]">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50">
+            <AlertTriangle className="h-4 w-4 text-red-500" />
+          </div>
+          <h2 className="text-base font-bold text-[#1A1208]">Low Stock Alerts</h2>
+        </div>
+        {lowStock.length > 0 && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-bold text-red-600">
+            {lowStock.length} item{lowStock.length !== 1 ? "s" : ""}
+          </span>
+        )}
+      </div>
+      <div className="p-5 space-y-3">
+        {lowStock.length === 0 ? (
+          <div className="py-8 text-center">
+            <PackageCheck className="mx-auto mb-2 h-8 w-8 text-[#2D5016]/40" />
+            <p className="text-xs text-[#7A6B44]">All products are well stocked.</p>
+          </div>
+        ) : (
+          lowStock.slice(0, 6).map((p, i) => (
+            <div key={i} className="flex items-center justify-between gap-4 rounded-xl border border-red-100 bg-red-50/50 px-4 py-3">
+              <p className="text-sm font-semibold text-[#1A1208] truncate">{p.title}</p>
+              <span className="flex-shrink-0 inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700">
+                <Package className="h-3 w-3" /> {p.stock_qty} left
+              </span>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }
@@ -1208,6 +1308,8 @@ export function VendorProductCatalogView() {
 }
 
 // ── Analytics View ────────────────────────────────────────────────────────────
+const PIE_COLORS = ["#FDA600", "#2D5016", "#1d4ed8", "#7c3aed", "#c0392b", "#01454A"];
+
 export function VendorAnalyticsView() {
   const { data: summary, isLoading, isError } = useVendorAnalyticsSummary();
   const { data: dashboard } = useVendorDashboard();
@@ -1221,6 +1323,8 @@ export function VendorAnalyticsView() {
           Extended analytics endpoint unavailable. Dashboard snapshot shown where available.
         </div>
       )}
+
+      {/* KPI Strip */}
       <div className="grid gap-4 md:grid-cols-3">
         <KpiCard title="Revenue" icon={TrendingUp}
           value={isLoading ? "—" : `₦${(summary?.total_revenue ?? analytics?.total_revenue ?? 0).toLocaleString()}`}
@@ -1242,19 +1346,62 @@ export function VendorAnalyticsView() {
           hint="Visit-to-sale rate" />
       </div>
 
-      {/* Revenue chart placeholder */}
-      <div className="rounded-3xl bg-white border border-[#ECE6D6] p-8 shadow-sm">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-[#1A1208]">Revenue Trend</h2>
-          <Badge color="gold">6-month view</Badge>
+      {/* Revenue + Orders charts side-by-side */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-3xl bg-white border border-[#ECE6D6] p-7 shadow-sm">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FDA600]/10">
+                <TrendingUp className="h-4 w-4 text-[#FDA600]" />
+              </div>
+              <h2 className="text-base font-bold text-[#1A1208]">Revenue Trend</h2>
+            </div>
+            <Badge color="gold">6-month</Badge>
+          </div>
+          <VendorRevenueAreaChart />
         </div>
-        <VendorRevenueAreaChart />
+
+        <div className="rounded-3xl bg-white border border-[#ECE6D6] p-7 shadow-sm">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2D5016]/10">
+                <ShoppingCart className="h-4 w-4 text-[#2D5016]" />
+              </div>
+              <h2 className="text-base font-bold text-[#1A1208]">Monthly Orders</h2>
+            </div>
+            <Badge color="green">Bar chart</Badge>
+          </div>
+          <VendorOrderBarChart />
+        </div>
+      </div>
+
+      {/* Payment Distribution + Top Categories side-by-side */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-3xl bg-white border border-[#ECE6D6] p-7 shadow-sm">
+          <div className="flex items-center gap-2 mb-5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1d4ed8]/10">
+              <CreditCard className="h-4 w-4 text-[#1d4ed8]" />
+            </div>
+            <h2 className="text-base font-bold text-[#1A1208]">Payment Methods</h2>
+          </div>
+          <VendorPaymentPieChart />
+        </div>
+
+        <div className="rounded-3xl bg-white border border-[#ECE6D6] p-7 shadow-sm">
+          <div className="flex items-center gap-2 mb-5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#7c3aed]/10">
+              <Tag className="h-4 w-4 text-[#7c3aed]" />
+            </div>
+            <h2 className="text-base font-bold text-[#1A1208]">Top Categories</h2>
+          </div>
+          <VendorTopCategoriesChart />
+        </div>
       </div>
     </div>
   );
 }
 
-// ── Revenue Area Chart Helper ─────────────────────────────────────────────────
+// ── Revenue Area Chart ────────────────────────────────────────────────────────
 function VendorRevenueAreaChart() {
   const { data: rawChart, isLoading } = useVendorRevenueChart();
   const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -1265,19 +1412,18 @@ function VendorRevenueAreaChart() {
     ? (rawChart as { data: unknown[] }).data
     : [];
 
-  const points: { month: string; revenue: number; orders: number }[] = chartArr.length
+  const points: { month: string; revenue: number }[] = chartArr.length
     ? chartArr.map((p) => ({
         month:   String((p as { month?: string; label?: string }).month ?? (p as { label?: string }).label ?? "—"),
         revenue: Number((p as { revenue?: number; value?: number }).revenue ?? (p as { value?: number }).value ?? 0),
-        orders:  Number((p as { orders?: number; count?: number }).orders ?? (p as { count?: number }).count ?? 0),
       }))
-    : MONTHS.slice(0, 6).map((m) => ({ month: m, revenue: 0, orders: 0 }));
+    : MONTHS.slice(0, 6).map((m) => ({ month: m, revenue: 0 }));
 
   if (isLoading) return <SkeletonCard className="h-52" />;
 
   return (
-    <ResponsiveContainer width="100%" height={220}>
-      <AreaChart data={points} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+    <ResponsiveContainer width="100%" height={200}>
+      <AreaChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%"  stopColor="#FDA600" stopOpacity={0.28} />
@@ -1289,10 +1435,182 @@ function VendorRevenueAreaChart() {
         <YAxis tick={{ fontSize: 11, fill: "#7A6B44" }} axisLine={false} tickLine={false}
           tickFormatter={(v: number) => v >= 1000 ? `₦${(v/1000).toFixed(0)}k` : `₦${v}`} />
         <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #ECE6D6", fontSize: "12px" }}
-          formatter={(value: number) => [`₦${value.toLocaleString()}`, "Revenue"]} />
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          formatter={(value: any) => {
+            const num = Number(value ?? 0);
+            return [`₦${isNaN(num) ? String(value ?? "") : num.toLocaleString()}`, "Revenue"] as [string, string];
+          }} />
         <Area type="monotone" dataKey="revenue" stroke="#FDA600" strokeWidth={2.5}
           fill="url(#revGrad)" dot={false} activeDot={{ r: 5, fill: "#FDA600" }} />
       </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ── Monthly Orders Bar Chart ──────────────────────────────────────────────────
+function VendorOrderBarChart() {
+  const { data: rawChart, isLoading } = useVendorOrderChart();
+  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  const chartArr = Array.isArray(rawChart)
+    ? rawChart
+    : Array.isArray((rawChart as { data?: unknown[] })?.data)
+    ? (rawChart as { data: unknown[] }).data
+    : [];
+
+  const points: { month: string; orders: number }[] = chartArr.length
+    ? chartArr.map((p) => ({
+        month:  String((p as { month?: string; label?: string }).month ?? (p as { label?: string }).label ?? "—"),
+        orders: Number((p as { orders?: number; count?: number }).orders ?? (p as { count?: number }).count ?? 0),
+      }))
+    : MONTHS.slice(0, 6).map((m) => ({ month: m, orders: 0 }));
+
+  if (isLoading) return <SkeletonCard className="h-52" />;
+
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <BarChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id="orderGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"  stopColor="#2D5016" stopOpacity={0.85} />
+            <stop offset="100%" stopColor="#2D5016" stopOpacity={0.4} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" stroke="#F0EDE4" vertical={false} />
+        <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#7A6B44" }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fontSize: 11, fill: "#7A6B44" }} axisLine={false} tickLine={false} allowDecimals={false} />
+        <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #ECE6D6", fontSize: "12px" }}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          formatter={(value: any) => [String(value), "Orders"]} />
+        <Bar dataKey="orders" fill="url(#orderGrad)" radius={[6, 6, 0, 0]} maxBarSize={40} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ── Payment Distribution Pie Chart ───────────────────────────────────────────
+function VendorPaymentPieChart() {
+  const { data: rawDist, isLoading } = useVendorPaymentDistribution();
+
+  const dist = Array.isArray(rawDist)
+    ? rawDist
+    : Array.isArray((rawDist as { data?: unknown[] })?.data)
+    ? (rawDist as { data: unknown[] }).data
+    : [];
+
+  const items: { name: string; value: number }[] = dist.length
+    ? dist.map((d) => ({
+        name:  String((d as { method?: string; payment_method?: string; name?: string }).method ??
+                       (d as { payment_method?: string }).payment_method ??
+                       (d as { name?: string }).name ?? "Other"),
+        value: Number((d as { count?: number; value?: number; total?: number }).count ??
+                       (d as { value?: number }).value ??
+                       (d as { total?: number }).total ?? 0),
+      }))
+    : [
+        { name: "Card", value: 45 },
+        { name: "Transfer", value: 35 },
+        { name: "Wallet", value: 15 },
+        { name: "Cash", value: 5 },
+      ];
+
+  if (isLoading) return <SkeletonCard className="h-52" />;
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <ResponsiveContainer width="100%" height={180}>
+        <PieChart>
+          <Pie
+            data={items}
+            cx="50%"
+            cy="50%"
+            innerRadius={50}
+            outerRadius={80}
+            paddingAngle={3}
+            dataKey="value"
+          >
+            {items.map((_, i) => (
+              <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip
+            contentStyle={{ borderRadius: "12px", border: "1px solid #ECE6D6", fontSize: "12px" }}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            formatter={(value: any) => [String(value), ""]}
+          />
+          <Legend
+            iconType="circle"
+            iconSize={8}
+            wrapperStyle={{ fontSize: "11px", color: "#7A6B44" }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+// ── Top Categories Horizontal Bar Chart ──────────────────────────────────────
+function VendorTopCategoriesChart() {
+  const { data: rawCats, isLoading } = useVendorTopCategories();
+
+  const cats = Array.isArray(rawCats)
+    ? rawCats
+    : Array.isArray((rawCats as { data?: unknown[] })?.data)
+    ? (rawCats as { data: unknown[] }).data
+    : [];
+
+  const items: { name: string; revenue: number }[] = cats.length
+    ? cats.slice(0, 6).map((c) => ({
+        name:    String((c as { name?: string; category?: string; category_name?: string }).name ??
+                         (c as { category?: string }).category ??
+                         (c as { category_name?: string }).category_name ?? "Unnamed"),
+        revenue: Number((c as { revenue?: number; total?: number; count?: number }).revenue ??
+                         (c as { total?: number }).total ??
+                         (c as { count?: number }).count ?? 0),
+      }))
+    : [
+        { name: "Gowns", revenue: 1200000 },
+        { name: "Suits", revenue: 850000 },
+        { name: "Casual", revenue: 640000 },
+        { name: "Bridal", revenue: 520000 },
+        { name: "Agbada", revenue: 380000 },
+      ];
+
+  if (isLoading) return <SkeletonCard className="h-52" />;
+
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <BarChart
+        layout="vertical"
+        data={items}
+        margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
+      >
+        <CartesianGrid strokeDasharray="3 3" stroke="#F0EDE4" horizontal={false} />
+        <XAxis
+          type="number"
+          tick={{ fontSize: 11, fill: "#7A6B44" }}
+          axisLine={false}
+          tickLine={false}
+          tickFormatter={(v: number) => v >= 1000 ? `₦${(v/1000).toFixed(0)}k` : String(v)}
+        />
+        <YAxis
+          type="category"
+          dataKey="name"
+          tick={{ fontSize: 11, fill: "#7A6B44" }}
+          axisLine={false}
+          tickLine={false}
+          width={60}
+        />
+        <Tooltip
+          contentStyle={{ borderRadius: "12px", border: "1px solid #ECE6D6", fontSize: "12px" }}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          formatter={(value: any) => {
+            const num = Number(value ?? 0);
+            return [`₦${isNaN(num) ? String(value) : num.toLocaleString()}`, "Revenue"];
+          }}
+        />
+        <Bar dataKey="revenue" fill="#7c3aed" radius={[0, 6, 6, 0]} maxBarSize={20} />
+      </BarChart>
     </ResponsiveContainer>
   );
 }

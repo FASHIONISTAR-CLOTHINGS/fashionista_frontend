@@ -42,6 +42,8 @@ import type {
   VendorProfile,
   VendorSetupPayload,
   VendorSetupState,
+  PublicVendorCard,
+  PublicVendorDetail,
 } from "@/features/vendor/types/vendor.types";
 
 // ── Helper — unwrap { status, data } envelope ─────────────────────────────────
@@ -338,9 +340,84 @@ export const vendorApi = {
     return VendorReviewItemSchema.parse(unwrapData(data));
   },
 
+
   // ── Coupons ────────────────────────────────────────────────────────────────
   async getCoupons() {
     const { data } = await apiSync.get("v1/vendor/coupons/");
     return VendorCouponListSchema.parse(data);
   },
+
+  // ── Public Marketplace (AllowAny) ──────────────────────────────────────────
+  async getPublicVendors(params?: {
+    search?:      string;
+    city?:        string;
+    is_featured?: boolean;
+    limit?:       number;
+    offset?:      number;
+  }): Promise<{ count: number; results: PublicVendorCard[] }> {
+    const qp = new URLSearchParams();
+    if (params?.search)      qp.set("search",      params.search);
+    if (params?.city)        qp.set("city",         params.city);
+    if (params?.is_featured) qp.set("is_featured",  "true");
+    if (params?.limit)       qp.set("limit",        String(params.limit));
+    if (params?.offset)      qp.set("offset",       String(params.offset));
+    const url = `v1/vendor/public/${qp.toString() ? "?" + qp.toString() : ""}`;
+    const { data } = await apiSync.get(url);
+    const unwrapped = unwrapData<{ count: number; results: PublicVendorCard[] }>(data);
+    return unwrapped;
+  },
+
+  async getPublicVendorDetail(slug: string): Promise<PublicVendorDetail> {
+    const { data } = await apiSync.get(`v1/vendor/public/${slug}/`);
+    return unwrapData<PublicVendorDetail>(data);
+  },
 };
+
+// ── Audit Logs API ───────────────────────────────────────────────────────────
+
+export interface AuditLogEvent {
+  id: string;
+  event_type: string;
+  event_category: string;
+  severity: "debug" | "info" | "warning" | "error" | "critical";
+  action: string;
+  actor_email: string | null;
+  ip_address: string | null;
+  device_type: string | null;
+  browser_family: string | null;
+  os_family: string | null;
+  country: string | null;
+  request_method: string | null;
+  request_path: string | null;
+  response_status: number | null;
+  duration_ms: number | null;
+  resource_type: string | null;
+  resource_id: string | null;
+  is_compliance: boolean;
+  error_message: string | null;
+  created_at: string;
+}
+
+export interface AuditLogPage {
+  total: number;
+  page: number;
+  page_size: number;
+  has_more: boolean;
+  events: AuditLogEvent[];
+}
+
+export async function fetchVendorAuditLogs(
+  page = 1,
+  category = "",
+  severity = ""
+): Promise<AuditLogPage> {
+  const params = new URLSearchParams({
+    page: String(page),
+    page_size: "20",
+    ...(category ? { category } : {}),
+    ...(severity ? { severity } : {}),
+  });
+  const res = await apiAsync.get(`ninja/vendor/audit-logs/?${params.toString()}`);
+  return res.json<AuditLogPage>();
+}
+
