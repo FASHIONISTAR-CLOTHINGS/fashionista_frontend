@@ -137,6 +137,7 @@ export interface VendorDashboard {
   };
   setup_state:    VendorSetupState;
   payout_profile: VendorPayoutProfile | null;
+
   recent_orders:  Array<{
     id:              number;
     oid?:            string;

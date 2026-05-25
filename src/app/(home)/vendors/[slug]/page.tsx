@@ -1,150 +1,484 @@
+/**
+ * app/(home)/vendors/[slug]/page.tsx
+ *
+ * Public Vendor Storefront — Server Component shell.
+ *
+ * Architecture:
+ *  • Server Component fetches vendor profile from backend via direct fetch()
+ *    (cache-revalidated every 60s for ISR) — no client round-trip for the hero.
+ *  • VendorPublicProfileClient renders the live product grid + interaction layer.
+ *
+ * Performance:
+ *  • generateMetadata: rich OG / Twitter card from live vendor data.
+ *  • generateStaticParams: pre-renders featured vendor slugs at build time.
+ *  • Remaining slugs served via ISR on first request.
+ */
+
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { ProductGridSkeleton } from "@/features/product";
-import { FashionistarImage } from "@/components/media";
-import VendorStoreClient from "./VendorStoreClient";
+import {
+  Instagram,
+  MapPin,
+  MessageCircle,
+  Ruler,
+  ShoppingBag,
+  Star,
+  Twitter,
+  Verified,
+} from "lucide-react";
 
-interface VendorNamePageProps {
+import { ProductGridSkeleton } from "@/features/product";
+import VendorPublicProfileClient from "./VendorPublicProfileClient";
+
+// ── Types ──────────────────────────────────────────────────────────────────────
+interface VendorPublicOut {
+  id:             string;
+  store_name:     string;
+  store_slug:     string;
+  tagline:        string;
+  description:    string;
+  logo_url:       string;
+  cover_url:      string;
+  city:           string;
+  state:          string;
+  country:        string;
+  whatsapp:       string;
+  instagram_url:  string;
+  tiktok_url:     string;
+  twitter_url:    string;
+  website_url:    string;
+  is_verified:    boolean;
+  is_featured:    boolean;
+  total_products: number;
+  total_sales:    number;
+  average_rating: number;
+  review_count:   number;
+  collections:    Array<{ id: string; title: string; slug: string }>;
+}
+
+interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+// ── Data fetching ─────────────────────────────────────────────────────────────
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8001";
 
-export async function generateMetadata({
-  params,
-}: VendorNamePageProps): Promise<Metadata> {
+async function fetchVendorPublicProfile(
+  slug: string,
+): Promise<VendorPublicOut | null> {
+  try {
+    const res = await fetch(
+      `${API_BASE}/api/v1/ninja/vendor/public/${slug}/`,
+      {
+        next: { revalidate: 60, tags: [`vendor-${slug}`] },
+        headers: { Accept: "application/json" },
+      },
+    );
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Vendor API ${res.status}`);
+    const payload = await res.json();
+    // Unwrap { status, data } envelope if present
+    return (payload?.data ?? payload) as VendorPublicOut;
+  } catch {
+    // Fail gracefully — the client island will still render via client-side hooks
+    return null;
+  }
+}
+
+// ── Metadata ──────────────────────────────────────────────────────────────────
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const displayName = decodeURIComponent(slug).replace(/-/g, " ");
+  const vendor   = await fetchVendorPublicProfile(slug);
+  const name     = vendor?.store_name ?? decodeURIComponent(slug).replace(/-/g, " ");
+  const desc     = vendor?.tagline
+    ?? `Browse ${name}'s bespoke collection on Fashionistar — Nigeria's premier fashion marketplace.`;
 
   return {
-    title: `${displayName} | Fashionistar Vendors`,
-    description: `Browse products from ${displayName} on Fashionistar — AI-powered fashion commerce connecting you with professional tailors and designers.`,
-    alternates: { canonical: `/vendors/${slug}` },
+    title:       `${name} | Fashionistar`,
+    description: desc,
+    alternates:  { canonical: `/vendors/${slug}` },
     openGraph: {
-      title: `${displayName} | Fashionistar`,
-      description: `Shop ${displayName}'s curated collection on Fashionistar.`,
-      url: `/vendors/${slug}`,
-      type: "profile",
+      title:       `${name} | Fashionistar`,
+      description: desc,
+      url:         `/vendors/${slug}`,
+      type:        "profile",
+      images:      vendor?.cover_url
+        ? [{ url: vendor.cover_url, width: 1200, height: 630, alt: name }]
+        : [],
+    },
+    twitter: {
+      card:        "summary_large_image",
+      title:       `${name} | Fashionistar`,
+      description: desc,
+      images:      vendor?.cover_url ? [vendor.cover_url] : [],
     },
   };
 }
 
-export default async function VendorNamePage({ params }: VendorNamePageProps) {
+// ── Static params (ISR) ───────────────────────────────────────────────────────
+export async function generateStaticParams() {
+  // Pre-render featured vendors at build time; others are ISR on demand
+  try {
+    const res = await fetch(
+      `${API_BASE}/api/v1/ninja/vendor/public/?featured=true&limit=20`,
+      { next: { revalidate: 3600 } },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    const vendors: Array<{ store_slug: string }> =
+      data?.data?.results ?? data?.results ?? [];
+    return vendors.map((v) => ({ slug: v.store_slug }));
+  } catch {
+    return [];
+  }
+}
+
+// ── Store skeleton ─────────────────────────────────────────────────────────────
+function StoreSectionSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse">
+      <div className="h-40 rounded-3xl bg-[#F0EDE6]" />
+      <div className="h-32 rounded-3xl bg-[#F0EDE6]" />
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="h-64 rounded-2xl bg-[#F0EDE6]" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+export default async function VendorStorefrontPage({ params }: PageProps) {
   const { slug } = await params;
 
   if (!slug) notFound();
 
-  const displayName = decodeURIComponent(slug).replace(/-/g, " ");
+  const vendor = await fetchVendorPublicProfile(slug);
+
+  // If 404 from API — show Next.js not-found page
+  if (vendor === null) {
+    const displayName = decodeURIComponent(slug).replace(/-/g, " ");
+    // We don't hard 404 — backend may not have public endpoint yet; gracefully render
+    return <GracefulFallback slug={slug} displayName={displayName} />;
+  }
+
+  const {
+    store_name:     storeName,
+    tagline,
+    description,
+    logo_url:       logoUrl,
+    cover_url:      coverUrl,
+    city,
+    state:          vendorState,
+    country,
+    whatsapp,
+    instagram_url:  instagram,
+    tiktok_url:     tiktok,
+    twitter_url:    twitterUrl,
+    website_url:    website,
+    is_verified:    isVerified,
+    is_featured:    isFeatured,
+    total_products: totalProducts,
+    total_sales:    totalSales,
+    average_rating: avgRating,
+    review_count:   reviewCount,
+    collections,
+  } = vendor;
+
+  const location     = [city, vendorState, country].filter(Boolean).slice(0, 2).join(", ");
+  const initials     = storeName.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
   return (
-    <div className="bg-background text-foreground">
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <section className="relative min-h-[320px] md:min-h-[400px] bg-[#01454A] flex items-end overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#01454A] via-[#01454A]/80 to-[#fda600]/20" />
+    <div className="bg-[#FAFAF8] text-[#141414]">
+      {/* ── Parallax Hero Banner ─────────────────────────────────────────── */}
+      <section
+        className="relative min-h-[340px] md:min-h-[440px] flex items-end overflow-hidden"
+        style={{
+          background: coverUrl
+            ? undefined
+            : "linear-gradient(135deg, #01454A 0%, #1a6b72 60%, #012b2e 100%)",
+        }}
+        aria-label={`${storeName} storefront hero`}
+      >
+        {/* Cover image */}
+        {coverUrl && (
+          <Image
+            src={coverUrl}
+            alt={`${storeName} cover`}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+        )}
 
-        <div className="relative z-10 px-5 py-12 md:px-10 lg:px-20 w-full">
+        {/* Gradient overlay */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.25) 55%, transparent 100%)",
+          }}
+        />
+        {/* Gold shimmer accent */}
+        <div
+          className="absolute -bottom-24 -right-24 h-64 w-64 rounded-full blur-3xl opacity-30"
+          style={{ background: "#FDA600" }}
+          aria-hidden="true"
+        />
+
+        {/* Hero content */}
+        <div className="relative z-10 w-full px-5 pb-10 pt-20 md:px-10 lg:px-20">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-sm text-white/70 font-raleway mb-6">
-            <Link href="/" className="hover:text-[#fda600] transition-colors">Home</Link>
-            <span>/</span>
-            <Link href="/vendors" className="hover:text-[#fda600] transition-colors">Vendors</Link>
-            <span>/</span>
-            <span className="text-white capitalize">{displayName}</span>
+          <nav
+            className="mb-5 flex items-center gap-2 text-xs text-white/60 font-medium"
+            aria-label="Breadcrumb"
+          >
+            <Link href="/"       className="hover:text-[#FDA600] transition-colors">Home</Link>
+            <span aria-hidden="true">/</span>
+            <Link href="/vendors" className="hover:text-[#FDA600] transition-colors">Vendors</Link>
+            <span aria-hidden="true">/</span>
+            <span className="text-white" aria-current="page">{storeName}</span>
           </nav>
 
-          <div className="flex flex-col md:flex-row gap-6 md:items-end">
-            {/* Avatar placeholder */}
-            <div className="relative h-24 w-24 md:h-32 md:w-32 rounded-2xl border-4 border-[#fda600] bg-[#D9D9D9] overflow-hidden shrink-0">
-              <FashionistarImage
-                src="/gown.svg"
-                alt={displayName}
-                fill
-                sizes="128px"
-                className="h-full w-full"
-                imgClassName="object-contain p-2"
-              />
-            </div>
+          <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+            {/* Left: Avatar + store name */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+              {/* Logo/avatar */}
+              <div className="relative h-24 w-24 md:h-28 md:w-28 flex-shrink-0">
+                <div className="h-full w-full overflow-hidden rounded-2xl border-2 border-[#FDA600]/60 shadow-xl">
+                  {logoUrl ? (
+                    <Image
+                      src={logoUrl}
+                      alt={storeName}
+                      fill
+                      sizes="112px"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div
+                      className="flex h-full w-full items-center justify-center text-2xl font-bold text-black"
+                      style={{ background: "linear-gradient(135deg, #FDA600 0%, #E89500 100%)" }}
+                    >
+                      {initials}
+                    </div>
+                  )}
+                </div>
+                {isVerified && (
+                  <div
+                    className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white shadow-md"
+                    style={{ background: "#01454A" }}
+                    title="Verified Vendor"
+                  >
+                    <Verified className="h-4 w-4 text-[#FDA600]" />
+                  </div>
+                )}
+              </div>
 
-            <div className="space-y-2 flex-1">
-              <h1 className="font-bon_foyage text-3xl md:text-5xl lg:text-6xl text-white capitalize leading-none">
-                {displayName}
-                <span className="text-[#fda600] block text-2xl md:text-3xl">Store</span>
-              </h1>
-
-              <p className="font-raleway text-sm text-white/70 max-w-xl">
-                Artisan fashion craftsmanship — precise measurements, bespoke tailoring, and curated collections designed to fit you perfectly.
-              </p>
-
-              <div className="pt-2">
-                <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white/80">
-                  Verified storefront
-                </span>
+              {/* Store name + meta */}
+              <div className="space-y-2">
+                {isFeatured && (
+                  <div className="flex items-center gap-1.5">
+                    <Star className="h-3.5 w-3.5 fill-[#FDA600] text-[#FDA600]" />
+                    <span className="text-xs font-bold uppercase tracking-widest text-[#FDA600]">
+                      Featured Vendor
+                    </span>
+                  </div>
+                )}
+                <h1 className="font-bon_foyage text-3xl leading-tight text-white md:text-5xl lg:text-6xl">
+                  {storeName}
+                </h1>
+                {tagline && (
+                  <p className="text-sm text-white/70 max-w-md leading-relaxed">{tagline}</p>
+                )}
+                <div className="flex flex-wrap items-center gap-3 text-xs text-white/60">
+                  {location && (
+                    <span className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3" /> {location}
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1">
+                    <ShoppingBag className="h-3 w-3" /> {totalProducts} products
+                  </span>
+                  {avgRating > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Star className="h-3 w-3 fill-[#FDA600] text-[#FDA600]" />
+                      {avgRating.toFixed(1)} ({reviewCount} reviews)
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* CTA */}
-            <div className="flex flex-col gap-2 shrink-0">
+            {/* Right: CTAs */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center md:flex-col md:items-end">
               <Link
                 href="/get-measured"
-                className="rounded-full bg-[#fda600] px-7 py-3 font-raleway text-sm font-bold text-black shadow hover:bg-[#e09500] transition-colors text-center"
+                id="vendor-hero-get-measured"
+                className="inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold text-black shadow-lg transition-all hover:scale-105"
+                style={{
+                  background: "linear-gradient(135deg, #FDA600 0%, #E89500 100%)",
+                  boxShadow: "0 4px 20px rgba(253,166,0,0.45)",
+                }}
               >
-                Get Measured
+                <Ruler className="h-4 w-4" /> Get Measured
               </Link>
               <Link
                 href={`/contact-us?vendor=${slug}`}
-                className="rounded-full border border-white/40 px-7 py-3 font-raleway text-sm font-semibold text-white hover:bg-white/10 transition-colors text-center"
+                id="vendor-hero-contact"
+                className="inline-flex items-center gap-2 rounded-2xl border border-white/30 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-white/10"
               >
-                Contact Vendor
+                <MessageCircle className="h-4 w-4" /> Contact Vendor
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Info strip ────────────────────────────────────────────────────── */}
-      <section className="border-b border-border bg-[#F8F9FC] px-5 py-4 md:px-10 lg:px-20">
-        <div className="flex flex-wrap items-center gap-6 text-sm font-raleway text-[#475367]">
-          <span className="flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path fillRule="evenodd" clipRule="evenodd" d="M7.40945 17.5655L7.45512 17.6095L7.4587 17.613C8.29556 18.4149 9.10696 18.9646 10.0247 18.954C10.9383 18.9435 11.7464 18.3795 12.5827 17.5652C13.729 16.4545 15.2121 14.9563 16.2836 13.179C17.3592 11.395 18.0533 9.27425 17.531 6.94654C15.7665 -0.920188 4.24281 -0.929405 2.46901 6.93819C1.96156 9.19992 2.60266 11.2688 3.62503 13.0223C4.64356 14.7692 6.06871 16.2523 7.21166 17.3725C7.27826 17.4378 7.34398 17.5018 7.40866 17.5648L7.40945 17.5655ZM10 5.20835C8.50429 5.20835 7.29171 6.42092 7.29171 7.91669C7.29171 9.41242 8.50429 10.625 10 10.625C11.4958 10.625 12.7084 9.41242 12.7084 7.91669C12.7084 6.42092 11.4958 5.20835 10 5.20835Z" fill="#475367" />
-            </svg>
-            Lagos, Nigeria
-          </span>
-          <span className="flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12.5 10.0002C12.5 9.07966 13.2462 8.3335 14.1667 8.3335C16.0076 8.3335 17.5 9.82591 17.5 11.6668C17.5 13.5077 16.0076 15.0002 14.1667 15.0002C13.2462 15.0002 12.5 14.254 12.5 13.3335V10.0002Z" stroke="#475367" strokeWidth="1.5" />
-              <path d="M7.5 10.0002C7.5 9.07966 6.75381 8.3335 5.83333 8.3335C3.99238 8.3335 2.5 9.82591 2.5 11.6668C2.5 13.5077 3.99238 15.0002 5.83333 15.0002C6.75381 15.0002 7.5 14.254 7.5 13.3335V10.0002Z" stroke="#475367" strokeWidth="1.5" />
-              <path d="M2.5 11.6665V9.1665C2.5 5.02437 5.85787 1.6665 10 1.6665C14.1422 1.6665 17.5 5.02437 17.5 9.1665V13.205C17.5 14.8786 17.5 15.7153 17.2063 16.3679C16.8721 17.1106 16.2774 17.7053 15.5348 18.0395C14.8822 18.3332 14.0454 18.3332 12.3718 18.3332H10" stroke="#475367" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            +234 90 0000 000
-          </span>
-          <span className="ml-auto text-xs text-[#01454A] font-semibold uppercase tracking-wide">
-            ✓ Verified Vendor
-          </span>
+      {/* ── Quick Info Strip ─────────────────────────────────────────────── */}
+      <section className="border-b border-[#ECE6D6] bg-white">
+        <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 md:px-10 lg:px-20">
+          <div className="flex flex-wrap items-center gap-6 text-sm text-[#475367]">
+            {location && (
+              <span className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-[#01454A]" /> {location}
+              </span>
+            )}
+            {whatsapp && (
+              <a
+                href={`https://wa.me/${whatsapp.replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:text-[#01454A] transition-colors"
+              >
+                <MessageCircle className="h-4 w-4 text-[#01454A]" />
+                WhatsApp
+              </a>
+            )}
+            {instagram && (
+              <a
+                href={instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:text-[#FDA600] transition-colors"
+              >
+                <Instagram className="h-4 w-4" /> Instagram
+              </a>
+            )}
+            {twitterUrl && (
+              <a
+                href={twitterUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:text-[#1DA1F2] transition-colors"
+              >
+                <Twitter className="h-4 w-4" /> Twitter/X
+              </a>
+            )}
+          </div>
+          {isVerified && (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide"
+              style={{ background: "#E8F5E0", color: "#01454A" }}
+            >
+              <Verified className="h-3.5 w-3.5" /> Verified Vendor
+            </span>
+          )}
         </div>
       </section>
 
-      {/* ── Products section ──────────────────────────────────────────────── */}
-      <section className="px-5 py-10 md:px-10 lg:px-20">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-bon_foyage text-2xl text-foreground md:text-4xl capitalize">
-            {displayName}&apos;s Products
-          </h2>
-          <Link
-            href="/categories"
-            className="font-raleway text-sm text-[#475367] hover:text-[#01454A] transition-colors flex items-center gap-1"
-          >
-            Browse all
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M7.50004 5C7.50004 5 12.5 8.68242 12.5 10C12.5 11.3177 7.5 15 7.5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </Link>
-        </div>
-        <Suspense fallback={<ProductGridSkeleton count={8} />}>
-          <VendorStoreClient vendorSlug={slug} />
+      {/* ── Main Content ─────────────────────────────────────────────────── */}
+      <main className="px-5 py-10 md:px-10 lg:px-20">
+        <Suspense fallback={<StoreSectionSkeleton />}>
+          <VendorPublicProfileClient
+            vendorSlug={slug}
+            displayName={storeName}
+            tagline={tagline}
+            description={description}
+            city={city}
+            state={vendorState}
+            isVerified={isVerified}
+            isFeatured={isFeatured}
+            whatsapp={whatsapp}
+            instagram={instagram}
+            twitter={twitterUrl}
+            tiktok={tiktok}
+            website={website}
+            totalProducts={totalProducts}
+            totalSales={totalSales}
+            avgRating={avgRating}
+            reviewCount={reviewCount}
+            collections={collections}
+          />
         </Suspense>
+      </main>
+    </div>
+  );
+}
+
+// ── Graceful fallback (API unavailable at SSR time) ────────────────────────────
+function GracefulFallback({
+  slug,
+  displayName,
+}: {
+  slug:        string;
+  displayName: string;
+}) {
+  return (
+    <div className="bg-[#FAFAF8] text-[#141414]">
+      {/* Simple hero */}
+      <section
+        className="relative flex min-h-[340px] items-end overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #01454A 0%, #1a6b72 100%)" }}
+      >
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 60%)" }}
+        />
+        <div className="relative z-10 w-full px-5 pb-10 md:px-10 lg:px-20">
+          <nav className="mb-4 flex items-center gap-2 text-xs text-white/60">
+            <Link href="/" className="hover:text-[#FDA600] transition-colors">Home</Link>
+            <span>/</span>
+            <Link href="/vendors" className="hover:text-[#FDA600] transition-colors">Vendors</Link>
+            <span>/</span>
+            <span className="text-white">{displayName}</span>
+          </nav>
+          <h1 className="font-bon_foyage text-4xl text-white capitalize md:text-6xl">
+            {displayName}
+          </h1>
+          <p className="mt-2 text-sm text-white/70">
+            Bespoke fashion studio on Fashionistar
+          </p>
+          <div className="mt-5 flex gap-3">
+            <Link
+              href="/get-measured"
+              className="rounded-2xl px-6 py-3 text-sm font-bold text-black transition-all hover:scale-105"
+              style={{ background: "linear-gradient(135deg, #FDA600 0%, #E89500 100%)" }}
+            >
+              Get Measured
+            </Link>
+            <Link
+              href={`/contact-us?vendor=${slug}`}
+              className="rounded-2xl border border-white/30 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-white/10"
+            >
+              Contact Vendor
+            </Link>
+          </div>
+        </div>
       </section>
+
+      {/* Client island — fetches products client-side even without SSR data */}
+      <main className="px-5 py-10 md:px-10 lg:px-20">
+        <Suspense fallback={<ProductGridSkeleton count={8} />}>
+          <VendorPublicProfileClient
+            vendorSlug={slug}
+            displayName={displayName}
+          />
+        </Suspense>
+      </main>
     </div>
   );
 }

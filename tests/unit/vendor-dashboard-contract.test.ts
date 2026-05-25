@@ -132,6 +132,7 @@ describe("vendor dashboard contract", () => {
     expect(parsed.coupons.inactive).toBe(1);
     expect(parsed.wallet?.balance).toBe(125000);
     expect(parsed.recent_activity[0]).toMatchObject({ type: "order_paid" });
+
   });
 
   it("unwraps the backend envelope through vendorApi.getDashboard", async () => {
