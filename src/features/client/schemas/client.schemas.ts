@@ -9,6 +9,14 @@ import { z } from "zod";
 // ── Coerce helper — Django DecimalField serialises to string, not number ──────
 // Using z.coerce.number() safely converts "123.45" → 123.45 and 0 → 0.
 const coerceNumber = z.coerce.number();
+const nullableCoerceNumber = z.preprocess(
+  (value) => (value === null ? undefined : value),
+  coerceNumber.optional(),
+);
+const nullableString = z.preprocess(
+  (value) => (value === null ? undefined : value),
+  z.string().optional(),
+);
 
 // ── Address ───────────────────────────────────────────────────────────────────
 export const ClientAddressSchema = z.object({
@@ -63,16 +71,16 @@ export const ClientProfileUpdateSchema = z.object({
 // ── Measurement Snapshot ──────────────────────────────────────────────────────
 export const MeasurementSnapshotSchema = z
   .object({
-    id: z.string().optional(),
-    height_cm: coerceNumber.optional(),
-    weight_kg: coerceNumber.optional(),
-    chest_cm: coerceNumber.optional(),
-    waist_cm: coerceNumber.optional(),
-    hip_cm: coerceNumber.optional(),
-    shoulder_cm: coerceNumber.optional(),
-    arm_length_cm: coerceNumber.optional(),
-    inseam_cm: coerceNumber.optional(),
-    updated_at: z.string().optional(),
+    id: nullableString,
+    height_cm: nullableCoerceNumber,
+    weight_kg: nullableCoerceNumber,
+    chest_cm: nullableCoerceNumber,
+    waist_cm: nullableCoerceNumber,
+    hip_cm: nullableCoerceNumber,
+    shoulder_cm: nullableCoerceNumber,
+    arm_length_cm: nullableCoerceNumber,
+    inseam_cm: nullableCoerceNumber,
+    updated_at: nullableString,
   })
   .default({});
 

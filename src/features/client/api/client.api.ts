@@ -93,12 +93,12 @@ export const clientApi = {
     if (params?.status) searchParams.set("status", params.status);
     if (params?.limit) searchParams.set("limit", String(params.limit));
     const query = searchParams.toString();
-    const data = await apiAsync.get(`client/orders/${query ? `?${query}` : ""}`).json();
+    const data = await apiAsync.get(`orders/${query ? `?${query}` : ""}`).json();
     return unwrapData<ClientOrder[]>(data);
   },
 
   async getOrder(orderId: string): Promise<ClientOrder> {
-    const data = await apiAsync.get(`client/orders/${orderId}/`).json();
+    const data = await apiAsync.get(`orders/${orderId}/`).json();
     return unwrapData<ClientOrder>(data);
   },
 
