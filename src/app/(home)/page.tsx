@@ -7,6 +7,7 @@ import FeaturedProductsSection from "./FeaturedProductsSection";
 import { ProductGridSkeleton } from "@/features/product";
 import { RecentlyViewedSection } from "./_components/RecentlyViewedSection";
 import { DealsCountdown } from "./_components/DealsCountdown";
+import { NewsletterForm } from "./_components/NewsletterForm";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HOMEPAGE — Production 2027 Enterprise Design
@@ -165,19 +166,7 @@ export default async function Home(props: { searchParams?: Promise<Record<string
             Get exclusive deals, new arrivals and style tips delivered to your inbox.
           </p>
         </div>
-        <form className="flex w-full md:w-auto gap-2" onSubmit={(e) => e.preventDefault()}>
-          <input
-            type="email"
-            placeholder="Your email address"
-            className="flex-1 min-w-[220px] px-4 py-3 rounded-[100px] bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:border-[#FDA600] transition"
-          />
-          <button
-            type="submit"
-            className="px-6 py-3 rounded-[100px] bg-[#FDA600] text-black font-bold font-raleway hover:bg-[#FDA600]/90 transition-all shrink-0"
-          >
-            Subscribe
-          </button>
-        </form>
+        <NewsletterForm />
       </div>
     </div>
   );

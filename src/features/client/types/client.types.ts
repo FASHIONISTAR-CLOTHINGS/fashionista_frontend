@@ -1,6 +1,6 @@
 // features/client/types/client.types.ts
 // Aligned with: /api/v1/client/* (DRF sync) and /api/v1/ninja/client/* (Ninja async) backend contracts
-// Updated: 2026-05-26 — Extended with CustomOrder milestone flow, rich dashboard analytics
+// Updated: 2026-05-26 — Full schema alignment pass: WalletBalance, SupportTicket, TicketStatus, CustomOrder
 
 // ── Address ───────────────────────────────────────────────────────────────────
 export interface ClientAddress {
@@ -180,8 +180,35 @@ export interface ReviewCreatePayload {
 }
 
 // ── Wallet ────────────────────────────────────────────────────────────────────
+/**
+ * Matches Wallet.get_balance_snapshot() / aget_balance_snapshot() output.
+ * Backend: apps/wallet/models.py → WalletStatus choices: active | inactive | frozen | suspended | closed
+ */
 export interface WalletBalance {
-  balance: string; // decimal string from backend
+  /** UUID of the Wallet row */
+  id?: string;
+  name?: string;
+  account_number?: string;
+  account_name?: string;
+  bank_name?: string;
+  provider?: string;
+  /** Ledger balance — all confirmed credits minus all confirmed debits */
+  balance: string;
+  /** Immediately spendable (balance minus escrow/pending) */
+  available_balance: string;
+  /** Awaiting settlement */
+  pending_balance: string;
+  /** Locked in escrow for active orders */
+  escrow_balance: string;
+  /** One of: active | inactive | frozen | suspended | closed */
+  status: "active" | "inactive" | "frozen" | "suspended" | "closed";
+  /** True when wallet.pin_hash is non-empty */
+  has_pin: boolean;
+  currency_code: string;
+  currency_symbol?: string;
+  /** From WalletHold aggregation */
+  active_holds_count?: number;
+  total_held_amount?: string;
 }
 
 export interface WalletDashboardData {
@@ -216,6 +243,23 @@ export interface WalletTopUpResponse {
   status: string;
   payment_url?: string;
   reference: string;
+}
+
+export interface WalletWithdrawalPayload {
+  amount: number;
+  pin: string;
+  bank_code: string;
+  account_number: string;
+  account_name: string;
+}
+
+export interface WalletWithdrawalResponse {
+  transaction_id: string;
+  reference: string;
+  status: string;
+  amount: string;
+  available_balance: string;
+  pending_balance: string;
 }
 
 // ── Custom Orders (Bespoke / Made-to-Measure) ─────────────────────────────────
@@ -284,28 +328,75 @@ export interface Country {
 }
 
 // ── Support Tickets ───────────────────────────────────────────────────────────
-export type TicketStatus = "open" | "in_progress" | "resolved" | "closed" | "escalated";
+/**
+ * Matches backend TicketStatus TextChoices exactly:
+ *   open | awaiting_client | awaiting_vendor | in_review | resolved | closed
+ */
+export type TicketStatus =
+  | "open"
+  | "awaiting_client"
+  | "awaiting_vendor"
+  | "in_review"
+  | "resolved"
+  | "closed";
+
 export type TicketPriority = "low" | "medium" | "high" | "urgent";
+
+/**
+ * Matches TicketCategory TextChoices from backend support_ticket.py
+ */
+export type TicketCategory =
+  | "order_dispute"
+  | "payment_issue"
+  | "product_complaint"
+  | "vendor_conduct"
+  | "delivery_problem"
+  | "refund_request"
+  | "measurement_issue"
+  | "general";
+
+export interface TicketMessage {
+  id: string;
+  author_name: string;
+  body: string;
+  is_staff_reply: boolean;
+  attachments: string[];
+  created_at: string;
+}
 
 export interface SupportTicket {
   id: string;
-  reference: string;
-  subject: string;
+  /** Backend field name is `title` — matches SupportTicketWriteSerializer.title and SupportTicket model */
+  title: string;
   description: string;
   status: TicketStatus;
   priority: TicketPriority;
-  category: string;
+  category: TicketCategory;
+  order_id?: string | null;
+  submitter_email?: string | null;
+  assigned_to_name?: string | null;
+  resolution_notes?: string;
+  resolved_at?: string | null;
+  closed_at?: string | null;
+  messages?: TicketMessage[];
+  metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
-  last_reply_at?: string;
 }
 
 export interface SupportTicketCreatePayload {
-  subject: string;
+  /** Backend field: `title` (min 5, max 300 chars per SupportTicketWriteSerializer) */
+  title: string;
   description: string;
-  category: string;
+  category: TicketCategory;
   priority?: TicketPriority;
-  attachment_urls?: string[];
+  order_id?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface TicketMessageCreatePayload {
+  body: string;
+  attachments?: string[];
 }
 
 // ── Notifications ─────────────────────────────────────────────────────────────
@@ -326,5 +417,3 @@ export interface ClientNotification {
   action_url?: string;
   created_at: string;
 }
-
-

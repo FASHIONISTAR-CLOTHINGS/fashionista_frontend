@@ -51,6 +51,19 @@ async function seedAuthenticatedSession(
 async function expectStableShell(page: Page) {
   await expect(page.locator("body")).toBeVisible();
   await expect(page.locator("text=Something went wrong")).toHaveCount(0);
+  const rootPayload = await page.locator("#root").getAttribute("data-payload");
+  if (rootPayload) {
+    const decoded = JSON.parse(Buffer.from(rootPayload, "base64").toString("utf8")) as {
+      code?: string;
+      message?: string;
+      title?: string;
+    };
+    if (decoded.code === "3200" || /offline/i.test(decoded.message ?? "")) {
+      throw new Error(
+        `Frontend tunnel is offline: ${decoded.title ?? "Unavailable"}${decoded.message ? ` — ${decoded.message}` : ""}`,
+      );
+    }
+  }
 }
 
 test.describe.configure({ mode: "serial" });
@@ -62,7 +75,8 @@ test.describe("Seeded post-login role journeys", () => {
     await page.goto("/client/dashboard");
     await expect(page).toHaveURL(/\/client\/dashboard/, { timeout: 30_000 });
     await expectStableShell(page);
-    await expect(page.getByText(/dashboard/i).first()).toBeVisible();
+    await expect(page.getByTestId("client-dashboard-hero")).toBeVisible();
+    await expect(page.getByTestId("client-dashboard-welcome")).toBeVisible();
     await page.screenshot({
       path: "tests/e2e/screenshots/client-dashboard.png",
       fullPage: true,
@@ -73,7 +87,7 @@ test.describe("Seeded post-login role journeys", () => {
       timeout: 30_000,
     });
     await expectStableShell(page);
-    await expect(page.getByText(/wallet/i).first()).toBeVisible();
+    await expect(page.getByTestId("client-wallet-heading")).toBeVisible();
     await page.screenshot({
       path: "tests/e2e/screenshots/client-wallet.png",
       fullPage: true,
@@ -84,7 +98,7 @@ test.describe("Seeded post-login role journeys", () => {
       timeout: 30_000,
     });
     await expectStableShell(page);
-    await expect(page.getByText(/orders/i).first()).toBeVisible();
+    await expect(page.getByTestId("client-orders-heading")).toBeVisible();
     await page.screenshot({
       path: "tests/e2e/screenshots/client-orders.png",
       fullPage: true,

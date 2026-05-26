@@ -287,7 +287,10 @@ export function ClientDashboardView() {
   return (
     <div className="space-y-6">
       {/* ── Hero banner ────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#01454A] via-[#01454A] to-[#012d31] p-8 md:p-10">
+      <section
+        data-testid="client-dashboard-hero"
+        className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#01454A] via-[#01454A] to-[#012d31] p-8 md:p-10"
+      >
         <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/5" />
         <div className="pointer-events-none absolute bottom-0 right-0 h-32 w-32 rounded-tl-full bg-[#FDA600]/10" />
         <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
@@ -295,7 +298,10 @@ export function ClientDashboardView() {
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#FDA600]">
               Fashionistar Client
             </p>
-            <h1 className="mt-2 font-bon_foyage text-4xl leading-none text-white md:text-5xl">
+            <h1
+              data-testid="client-dashboard-welcome"
+              className="mt-2 font-bon_foyage text-4xl leading-none text-white md:text-5xl"
+            >
               Welcome back
             </h1>
             <p className="mt-3 max-w-lg text-sm leading-6 text-white/60">
@@ -496,7 +502,7 @@ export function ClientOrdersView() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-bon_foyage text-4xl text-black">My Orders</h1>
+          <h1 data-testid="client-orders-heading" className="font-bon_foyage text-4xl text-black">My Orders</h1>
           <p className="mt-1 text-sm text-[#5A6465]">{orders.length} order{orders.length !== 1 ? "s" : ""} found</p>
         </div>
         <div className="flex items-center gap-3">
@@ -1030,7 +1036,7 @@ export function ClientWalletView() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-bon_foyage text-4xl text-black">My Wallet</h1>
+        <h1 data-testid="client-wallet-heading" className="font-bon_foyage text-4xl text-black">My Wallet</h1>
         <p className="mt-1 text-sm text-[#5A6465]">
           Manage your balance, top up, and view transaction history.
         </p>
@@ -1275,7 +1281,7 @@ export function ClientNotificationsView() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-bon_foyage text-4xl text-black">Notifications</h1>
+            <h1 data-testid="client-notifications-heading" className="font-bon_foyage text-4xl text-black">Notifications</h1>
             {unreadCount > 0 && (
               <span className="flex h-6 min-w-[24px] items-center justify-center rounded-full bg-[#FDA600] px-1.5 text-xs font-bold text-black">
                 {unreadCount}
@@ -1490,7 +1496,7 @@ export function ClientSupportView() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-bon_foyage text-4xl text-black">Support Tickets</h1>
+          <h1 data-testid="client-support-heading" className="font-bon_foyage text-4xl text-black">Support Tickets</h1>
           <p className="mt-1 text-sm text-[#5A6465]">
             {tickets.length} ticket{tickets.length !== 1 ? "s" : ""} · {openCount} open
           </p>
@@ -1605,7 +1611,7 @@ export function ClientKycView() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-bon_foyage text-4xl text-black">KYC Verification</h1>
+        <h1 data-testid="client-kyc-heading" className="font-bon_foyage text-4xl text-black">KYC Verification</h1>
         <p className="mt-1 text-sm text-[#5A6465]">
           Complete identity verification to unlock full platform features.
         </p>

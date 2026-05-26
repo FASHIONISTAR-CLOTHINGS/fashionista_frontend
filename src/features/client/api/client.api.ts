@@ -31,11 +31,14 @@ import type {
   ReviewCreatePayload,
   SupportTicket,
   SupportTicketCreatePayload,
+  TicketMessageCreatePayload,
   WalletBalance,
   WalletTopUpPayload,
   WalletTopUpResponse,
   WalletTransferPayload,
   WalletTransferResponse,
+  WalletWithdrawalPayload,
+  WalletWithdrawalResponse,
   WishlistItem,
   WishlistToggleResponse,
 } from "@/features/client/types/client.types";
@@ -147,8 +150,15 @@ export const clientApi = {
   },
 
   // ── Wallet ─────────────────────────────────────────────────────────────────
+  /** Full balance snapshot: balance + available + pending + escrow + has_pin */
   async getWalletBalance(): Promise<WalletBalance> {
-    const { data } = await apiSync.get("v1/client/wallet/balance/");
+    const data = await apiAsync.get("client/wallet/balance/").json();
+    return unwrapData<WalletBalance>(data);
+  },
+
+  /** Full wallet dashboard: balance snapshot + hold aggregates */
+  async getWalletDashboard(): Promise<WalletBalance> {
+    const data = await apiAsync.get("client/wallet/dashboard/").json();
     return unwrapData<WalletBalance>(data);
   },
 
@@ -157,20 +167,39 @@ export const clientApi = {
     return data as WalletTransferResponse;
   },
 
+  async withdrawFunds(payload: WalletWithdrawalPayload): Promise<WalletWithdrawalResponse> {
+    const { data } = await apiSync.post("v1/client/wallet/withdraw/", payload);
+    return unwrapData<WalletWithdrawalResponse>(data);
+  },
+
   async initiateTopUp(payload: WalletTopUpPayload): Promise<WalletTopUpResponse> {
     const { data } = await apiSync.post("v1/client/wallet/topup/initiate/", payload);
     return unwrapData<WalletTopUpResponse>(data);
   },
 
   // ── Support Tickets ────────────────────────────────────────────────────────
-  async getSupportTickets(): Promise<SupportTicket[]> {
-    const data = await apiAsync.get("support/tickets/").json();
+  async getSupportTickets(params?: { status?: string; category?: string }): Promise<SupportTicket[]> {
+    const qs = new URLSearchParams();
+    if (params?.status) qs.set("status", params.status);
+    if (params?.category) qs.set("category", params.category);
+    const query = qs.toString();
+    const data = await apiAsync.get(`support/tickets/${query ? `?${query}` : ""}`).json();
     return unwrapData<SupportTicket[]>(data);
+  },
+
+  async getSupportTicket(id: string): Promise<SupportTicket> {
+    const data = await apiAsync.get(`support/tickets/${id}/`).json();
+    return unwrapData<SupportTicket>(data);
   },
 
   async createSupportTicket(payload: SupportTicketCreatePayload): Promise<SupportTicket> {
     const data = await apiAsync.post("support/tickets/", { json: payload }).json();
     return unwrapData<SupportTicket>(data);
+  },
+
+  async addTicketMessage(ticketId: string, payload: TicketMessageCreatePayload): Promise<{ id: string }> {
+    const data = await apiAsync.post(`support/tickets/${ticketId}/messages/`, { json: payload }).json();
+    return unwrapData<{ id: string }>(data);
   },
 
   // ── Notifications ──────────────────────────────────────────────────────────
