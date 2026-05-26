@@ -1,5 +1,6 @@
 // features/client/types/client.types.ts
-// Aligned with: /api/v1/client/* backend contracts
+// Aligned with: /api/v1/client/* (DRF sync) and /api/v1/ninja/client/* (Ninja async) backend contracts
+// Updated: 2026-05-26 — Extended with CustomOrder milestone flow, rich dashboard analytics
 
 // ── Address ───────────────────────────────────────────────────────────────────
 export interface ClientAddress {
@@ -13,6 +14,7 @@ export interface ClientAddress {
   country: string;
   postal_code: string;
   is_default: boolean;
+  created_at?: string;
 }
 
 export interface ClientAddressCreatePayload {
@@ -64,6 +66,23 @@ export interface ClientDashboardAnalytics {
   total_orders: number;
   total_spent_ngn: number;
   saved_addresses: number;
+  pending_orders: number;
+  active_orders: number;
+  completed_orders: number;
+  wishlist_count: number;
+}
+
+export interface MeasurementSnapshot {
+  id?: string;
+  height_cm?: number;
+  weight_kg?: number;
+  chest_cm?: number;
+  waist_cm?: number;
+  hip_cm?: number;
+  shoulder_cm?: number;
+  arm_length_cm?: number;
+  inseam_cm?: number;
+  updated_at?: string;
 }
 
 export interface ClientDashboard {
@@ -78,12 +97,24 @@ export interface ClientDashboard {
     is_profile_complete: boolean;
   };
   analytics: ClientDashboardAnalytics;
+  measurement_snapshot: MeasurementSnapshot;
   ai_recommendations: unknown[];
 }
 
 // ── Orders ────────────────────────────────────────────────────────────────────
-export type OrderPaymentStatus = "paid" | "pending" | "failed";
-export type OrderFulfillmentStatus = "Pending" | "Processing" | "Shipped" | "Fulfilled" | "Cancelled";
+export type OrderFulfillmentStatus =
+  | "pending_payment"
+  | "payment_confirmed"
+  | "processing"
+  | "shipped"
+  | "out_for_delivery"
+  | "delivered"
+  | "completed"
+  | "cancelled"
+  | "refunded"
+  | "disputed";
+
+export type OrderPaymentStatus = "paid" | "pending" | "failed" | "refunded";
 
 export interface ClientOrderItem {
   id: number;
@@ -97,12 +128,16 @@ export interface ClientOrderItem {
 }
 
 export interface ClientOrder {
-  id: number;
-  oid: string;
-  order_status: OrderFulfillmentStatus;
-  payment_status: OrderPaymentStatus;
-  total_price: number;
-  date: string;
+  id: string;
+  order_number: string;
+  status: OrderFulfillmentStatus;
+  total_amount: number;
+  currency: string;
+  fulfillment_type: string;
+  vendor__store_name: string;
+  tracking_number?: string;
+  paid_at?: string;
+  created_at: string;
   items?: ClientOrderItem[];
 }
 
@@ -145,16 +180,10 @@ export interface ReviewCreatePayload {
 }
 
 // ── Wallet ────────────────────────────────────────────────────────────────────
-/** Minimal balance response from /api/v1/client/wallet/balance/ */
 export interface WalletBalance {
   balance: string; // decimal string from backend
 }
 
-/**
- * Extended wallet dashboard type.
- * The frontend derives `total_amount_ngn`, `balance_ngn`, `transaction_count`
- * from the balance endpoint + transactions list for rendering wallet cards.
- */
 export interface WalletDashboardData {
   balance_ngn: number;
   total_amount_ngn: number;
@@ -175,4 +204,125 @@ export interface WalletTransferResponse {
     sender_balance: string;
     receiver_balance: string;
   };
+}
+
+export interface WalletTopUpPayload {
+  amount: number;
+  payment_method: "card" | "bank_transfer";
+  callback_url?: string;
+}
+
+export interface WalletTopUpResponse {
+  status: string;
+  payment_url?: string;
+  reference: string;
+}
+
+// ── Custom Orders (Bespoke / Made-to-Measure) ─────────────────────────────────
+export type CustomOrderStatus =
+  | "draft"
+  | "submitted"
+  | "approved"
+  | "in_production"
+  | "completed"
+  | "cancelled"
+  | "disputed";
+
+export type MilestonePaymentStatus = "pending" | "paid" | "failed" | "waived";
+
+export type MilestonePct = 30 | 50 | 70 | 100;
+
+export interface CustomOrderMilestone {
+  id: string;
+  milestone_pct: MilestonePct;
+  amount_ngn: number;
+  payment_status: MilestonePaymentStatus;
+  paid_at?: string;
+}
+
+export interface CustomOrder {
+  id: string;
+  reference: string;
+  status: CustomOrderStatus;
+  design_brief: string;
+  vendor_approval_note: string;
+  budget_ngn: number;
+  agreed_amount_ngn?: number;
+  product_snapshot_id?: string;
+  order_snapshot_id?: string;
+  vendor_store_name: string;
+  created_at: string;
+  updated_at: string;
+  milestones: CustomOrderMilestone[];
+}
+
+export interface CustomOrderCreatePayload {
+  vendor_id: string;
+  design_brief: string;
+  budget_ngn: number;
+  product_snapshot_id?: string;
+  order_snapshot_id?: string;
+  reference_images?: string[];
+}
+
+export interface CustomOrderApprovePayload {
+  vendor_approval_note: string;
+  agreed_amount_ngn: number;
+}
+
+export interface MilestonePayPayload {
+  milestone_pct: MilestonePct;
+  payment_method?: "wallet" | "card" | "bank_transfer";
+}
+
+// ── Reference Data ────────────────────────────────────────────────────────────
+export interface Country {
+  code: string;
+  name: string;
+  dial_code?: string;
+  flag?: string;
+}
+
+// ── Support Tickets ───────────────────────────────────────────────────────────
+export type TicketStatus = "open" | "in_progress" | "resolved" | "closed";
+export type TicketPriority = "low" | "medium" | "high" | "urgent";
+
+export interface SupportTicket {
+  id: string;
+  reference: string;
+  subject: string;
+  description: string;
+  status: TicketStatus;
+  priority: TicketPriority;
+  category: string;
+  created_at: string;
+  updated_at: string;
+  last_reply_at?: string;
+}
+
+export interface SupportTicketCreatePayload {
+  subject: string;
+  description: string;
+  category: string;
+  priority?: TicketPriority;
+  attachment_urls?: string[];
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+export type NotificationType =
+  | "order_update"
+  | "custom_order"
+  | "payment"
+  | "wallet"
+  | "system"
+  | "promo";
+
+export interface ClientNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  is_read: boolean;
+  action_url?: string;
+  created_at: string;
 }
