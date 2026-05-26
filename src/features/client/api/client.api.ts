@@ -1,6 +1,6 @@
 // features/client/api/client.api.ts
 /**
- * Client API — Full Production Contract v2.
+ * Client API — Full Production Contract.
  *
  * Aligns exactly with backend /api/v1/client/* (DRF sync) and
  * /api/v1/ninja/client/* (Ninja async) endpoints.
@@ -136,6 +136,7 @@ export const clientApi = {
 
   // ── Reviews ────────────────────────────────────────────────────────────────
   async getProductReviews(product_id: string): Promise<ProductReview[]> {
+    // Public endpoint — no auth required (falls under /api/v1/home/ on backend)
     const { data } = await apiSync.get(`v1/home/reviews/${product_id}/`);
     return unwrapData<ProductReview[]>(data);
   },
