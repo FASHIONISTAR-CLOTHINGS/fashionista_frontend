@@ -284,7 +284,7 @@ export interface Country {
 }
 
 // ── Support Tickets ───────────────────────────────────────────────────────────
-export type TicketStatus = "open" | "in_progress" | "resolved" | "closed";
+export type TicketStatus = "open" | "in_progress" | "resolved" | "closed" | "escalated";
 export type TicketPriority = "low" | "medium" | "high" | "urgent";
 
 export interface SupportTicket {
@@ -319,10 +319,12 @@ export type NotificationType =
 
 export interface ClientNotification {
   id: string;
-  type: NotificationType;
+  type: string;
   title: string;
   message: string;
   is_read: boolean;
   action_url?: string;
   created_at: string;
 }
+
+
