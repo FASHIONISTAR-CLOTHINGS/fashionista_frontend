@@ -25,6 +25,7 @@ import {
   Package,
   PackageCheck,
   Plus,
+  ReceiptText,
   RefreshCw,
   Search,
   ShoppingBag,
@@ -119,6 +120,18 @@ import {
 } from "@/features/vendor/hooks/use-vendor-dashboard";
 
 
+// ── Brand Palette (local) ────────────────────────────────────────────────────
+const BV = {
+  gold:     "#FDA600",
+  goldD:    "#E8960A",
+  green:    "#1a2e14",
+  greenM:   "#2d5016",
+  cream:    "#F8F5ED",
+  creamB:   "#ECE6D6",
+  muted:    "#7A6B44",
+  ink:      "#1A1208",
+} as const;
+
 // ── Shared primitives ─────────────────────────────────────────────────────────
 function Badge({
   children,
@@ -154,41 +167,63 @@ function StatusBadge({ status }: { status: string }) {
   return <Badge color="gray">{status}</Badge>;
 }
 
+// ── Premium KPI Card ──────────────────────────────────────────────────────────
 function KpiCard({
-  title, value, hint, icon: Icon, trend,
+  title, value, hint, icon: Icon, trend, accent = "gold",
 }: {
-  title: string;
-  value: string;
-  hint:  string;
-  icon?: React.ElementType;
-  trend?: number;
+  title:   string;
+  value:   string;
+  hint:    string;
+  icon?:   React.ElementType;
+  trend?:  number;
+  accent?: "gold" | "green" | "blue" | "red";
 }) {
+  const accentMap = {
+    gold:  { bg: "rgba(253,166,0,0.10)",  icon: "#FDA600", orb: "rgba(253,166,0,0.06)"  },
+    green: { bg: "rgba(45,80,22,0.08)",   icon: "#2D5016", orb: "rgba(45,80,22,0.05)"   },
+    blue:  { bg: "rgba(26,75,140,0.08)",  icon: "#1A4B8C", orb: "rgba(26,75,140,0.05)"  },
+    red:   { bg: "rgba(220,38,38,0.08)",  icon: "#DC2626", orb: "rgba(220,38,38,0.05)"  },
+  };
+  const ac = accentMap[accent];
   return (
-    <div className="group relative overflow-hidden rounded-2xl bg-white border border-[#ECE6D6] p-6 shadow-sm transition-shadow hover:shadow-md">
-      <div className="flex items-start justify-between">
+    <div
+      className="group relative overflow-hidden rounded-2xl bg-white border border-[#ECE6D6] p-5 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:border-[#ECE6D6]"
+      style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+    >
+      <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44]">{title}</p>
-          <p className="mt-2 text-3xl font-bold text-[#1A1208] leading-none">{value}</p>
-          <p className="mt-2 text-sm text-[#5A6465] leading-5">{hint}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: BV.muted }}>{title}</p>
+          <p className="mt-2.5 text-2xl font-bold leading-none" style={{ color: BV.ink }}>{value}</p>
+          <p className="mt-1.5 text-xs leading-5" style={{ color: "#5A6465" }}>{hint}</p>
         </div>
         {Icon && (
-          <div className="ml-4 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#FDA600]/10 text-[#FDA600] transition-transform group-hover:scale-110">
-            <Icon className="h-5 w-5" />
+          <div
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
+            style={{ background: ac.bg }}
+          >
+            <Icon className="h-5 w-5" style={{ color: ac.icon }} />
           </div>
         )}
       </div>
       {trend !== undefined && (
-        <div className={`mt-4 flex items-center gap-1.5 text-xs font-semibold ${trend >= 0 ? "text-[#2D5016]" : "text-red-500"}`}>
-          <TrendingUp className={`h-3.5 w-3.5 ${trend < 0 ? "rotate-180" : ""}`} />
-          <span>{trend >= 0 ? "+" : ""}{trend.toFixed(1)}% vs last period</span>
+        <div className={`mt-3 flex items-center gap-1.5 text-[11px] font-bold ${trend >= 0 ? "text-[#2D5016]" : "text-red-500"}`}>
+          <TrendingUp className={`h-3 w-3 ${trend < 0 ? "rotate-180" : ""}`} />
+          <span>{trend >= 0 ? "+" : ""}{trend.toFixed(1)}% vs prior period</span>
         </div>
       )}
-      {/* Decorative gradient */}
-      <div className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-[#FDA600]/5 transition-all group-hover:scale-150" />
+      {/* Decorative orb */}
+      <div
+        className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full transition-all duration-500 group-hover:scale-150 group-hover:opacity-70"
+        style={{ background: ac.orb }}
+      />
+      {/* Bottom shimmer on hover */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 rounded-b-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"
+        style={{ background: `linear-gradient(90deg, transparent, ${ac.icon}60, transparent)` }} />
     </div>
   );
 }
 
+// ── Premium Page Header ───────────────────────────────────────────────────────
 function PageHeader({
   eyebrow, title, description, action,
 }: {
@@ -201,11 +236,14 @@ function PageHeader({
     <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
       <div>
         {eyebrow && (
-          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-[#7A6B44]">{eyebrow}</p>
+          <div className="mb-2 flex items-center gap-2">
+            <div className="h-px w-4 rounded-full" style={{ background: BV.gold }} />
+            <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: BV.muted }}>{eyebrow}</p>
+          </div>
         )}
         <h1 className="font-bon_foyage text-4xl text-[#1A1208] lg:text-5xl">{title}</h1>
         {description && (
-          <p className="mt-2 max-w-2xl text-base leading-7 text-[#5A6465]">{description}</p>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5A6465]">{description}</p>
         )}
       </div>
       {action && <div className="flex-shrink-0">{action}</div>}
@@ -264,9 +302,17 @@ function PrimaryButton({
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 function SkeletonCard({ className = "" }: { className?: string }) {
   return (
-    <div className={`rounded-2xl bg-[#F5F3EE] animate-pulse ${className}`} />
+    <div
+      className={`rounded-2xl ${className}`}
+      style={{
+        background: "linear-gradient(90deg, #F5F3EE 25%, #ECE9E0 50%, #F5F3EE 75%)",
+        backgroundSize: "200% 100%",
+        animation: "shimmer 1.5s infinite",
+      }}
+    />
   );
 }
+// SkeletonCard uses a global keyframe. Add it once via style tag in VendorDashboardView.
 
 // ── Setup View ────────────────────────────────────────────────────────────────
 export function VendorSetupView() {
@@ -557,105 +603,184 @@ export function VendorDashboardView() {
 
   if (isLoading) {
     return (
-      <div className="space-y-8">
-        <SkeletonCard className="h-48" />
+      <div className="space-y-6">
+        <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
+        <SkeletonCard className="h-52" />
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          {[1,2,3,4,5].map((i) => <SkeletonCard key={i} className="h-36" />)}
+          {[1,2,3,4,5].map((i) => <SkeletonCard key={i} className="h-28" />)}
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {[1,2,3].map((i) => <SkeletonCard key={i} className="h-28" />)}
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
-          <SkeletonCard className="h-64" />
-          <SkeletonCard className="h-64" />
+          <SkeletonCard className="h-72" />
+          <SkeletonCard className="h-72" />
         </div>
       </div>
     );
   }
 
-  const completion   = setupState?.completion_percentage ?? 0;
-  const walletBal    = dashboard?.wallet?.balance ?? 0;
-  const recentOrders = dashboard?.recent_orders ?? [];
-  const couponStats  = dashboard?.coupons ?? { active: 0, inactive: 0 };
-  const payoutReady  = dashboard?.payout_profile?.is_verified ?? false;
+  const completion    = setupState?.completion_percentage ?? 0;
+  const walletBal     = dashboard?.wallet?.balance ?? 0;
+  const recentOrders  = dashboard?.recent_orders ?? [];
+  const couponStats   = dashboard?.coupons ?? { active: 0, inactive: 0 };
+  const payoutReady   = dashboard?.payout_profile?.is_verified ?? false;
   const lowStockCount = dashboard?.low_stock_alerts?.length ?? 0;
 
   return (
-    <div className="space-y-8">
-      {/* Hero banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a1208] via-[#2D1A00] to-[#1a1208] p-8 text-white shadow-xl md:p-10">
-        <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-[#FDA600]">
-              Vendor Command Centre
-            </p>
-            <h1 className="mt-2 font-bon_foyage text-4xl leading-tight md:text-5xl">
+    <div className="space-y-6">
+      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
+
+      {/* ── COMMAND CENTRE HERO ── */}
+      <div
+        className="relative overflow-hidden rounded-3xl text-white shadow-2xl"
+        style={{
+          background: "linear-gradient(135deg, #0f1d0b 0%, #1a2e14 38%, #2D1A00 68%, #1a1208 100%)",
+          boxShadow: "0 20px 60px rgba(15,29,11,0.4), 0 8px 24px rgba(253,166,0,0.08)",
+        }}
+      >
+        {/* Mesh blobs */}
+        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full opacity-20"
+          style={{ background: "radial-gradient(circle, #FDA600 0%, transparent 70%)" }} />
+        <div className="pointer-events-none absolute -bottom-16 left-1/3 h-48 w-48 rounded-full opacity-10"
+          style={{ background: "radial-gradient(circle, #FDA600 0%, transparent 70%)" }} />
+        <div className="pointer-events-none absolute bottom-0 right-0 h-32 w-32 opacity-5"
+          style={{ background: "radial-gradient(circle at bottom right, #fff 0%, transparent 70%)" }} />
+
+        <div className="relative z-10 flex flex-col gap-6 p-7 md:flex-row md:items-center md:justify-between md:p-10">
+          {/* Left: Store identity */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#FDA600]/80">Vendor Command Centre</p>
+            </div>
+            <h1 className="font-bon_foyage text-3xl leading-tight text-white md:text-5xl">
               {dashboard?.profile.store_name || "Welcome back"}
             </h1>
-            <p className="mt-2 text-sm text-white/60 max-w-md">
+            <p className="mt-2 text-sm text-white/50 max-w-sm leading-relaxed">
               {dashboard?.profile.tagline || "Track performance, grow your catalog, and manage payouts."}
             </p>
-            <div className="mt-4 flex items-center gap-3 flex-wrap">
+
+            {/* Store quick stats row */}
+            <div className="mt-4 flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-1.5 rounded-xl bg-white/8 px-3 py-1.5">
+                <ShoppingBag className="h-3.5 w-3.5 text-[#FDA600]" />
+                <span className="text-xs font-bold text-white">{stats.products} Products</span>
+              </div>
+              <div className="flex items-center gap-1.5 rounded-xl bg-white/8 px-3 py-1.5">
+                <ShoppingCart className="h-3.5 w-3.5 text-[#FDA600]" />
+                <span className="text-xs font-bold text-white">{stats.sales} Orders</span>
+              </div>
+              {dashboard?.profile.is_verified && (
+                <div className="flex items-center gap-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/20 px-3 py-1.5">
+                  <BadgeCheck className="h-3.5 w-3.5 text-emerald-400" />
+                  <span className="text-xs font-bold text-emerald-400">Verified</span>
+                </div>
+              )}
+            </div>
+
+            {/* CTAs */}
+            <div className="mt-5 flex items-center gap-3 flex-wrap">
               <Link href="/vendor/products"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#FDA600] px-5 py-2.5 text-sm font-bold text-black transition hover:bg-[#f28705] shadow-lg shadow-[#FDA600]/20">
+                className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-black transition-all hover:scale-105 shadow-lg"
+                style={{ background: "linear-gradient(135deg, #FDA600 0%, #E8960A 100%)", boxShadow: "0 4px 18px rgba(253,166,0,0.35)" }}
+              >
                 <Plus className="h-4 w-4" /> Add Product
               </Link>
               <Link href="/vendor/analytics"
-                className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-white/20 backdrop-blur-sm">
+                className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/8 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-white/15 backdrop-blur-sm"
+              >
                 <BarChart3 className="h-4 w-4" /> Analytics
               </Link>
             </div>
           </div>
-          {/* Onboarding widget */}
-          <div className="flex-shrink-0 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm min-w-[200px]">
-            <p className="text-xs font-bold uppercase tracking-wider text-white/50">Onboarding</p>
-            <p className="mt-2 text-4xl font-bold text-[#FDA600]">{completion}%</p>
-            <div className="mt-3 h-1.5 w-full rounded-full bg-white/10">
-              <div className="h-1.5 rounded-full bg-[#FDA600] transition-all" style={{ width: `${completion}%` }} />
+
+          {/* Right: Onboarding + Wallet tiles */}
+          <div className="flex gap-3 flex-shrink-0 flex-col sm:flex-row md:flex-col xl:flex-row">
+            {/* Onboarding */}
+            <div
+              className="rounded-2xl border border-white/10 p-5 min-w-[160px]"
+              style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(8px)" }}
+            >
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">Onboarding</p>
+              <p className="mt-1.5 text-3xl font-bold text-[#FDA600]">{completion}%</p>
+              <div className="mt-2.5 h-1 w-full rounded-full bg-white/10">
+                <div
+                  className="h-1 rounded-full transition-all duration-700"
+                  style={{ width: `${completion}%`, background: "linear-gradient(90deg, #FDA600, #E8960A)" }}
+                />
+              </div>
+              <p className="mt-2 text-[10px] text-white/30">
+                {completion === 100 ? "✓ Setup complete" : `${100 - completion}% remaining`}
+              </p>
             </div>
-            <p className="mt-2 text-xs text-white/40">
-              {completion === 100 ? "Setup complete!" : "Payout setup stays separate."}
-            </p>
+
+            {/* Wallet balance */}
+            <div
+              className="rounded-2xl border border-white/10 p-5 min-w-[160px]"
+              style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(8px)" }}
+            >
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">Wallet</p>
+              <p className="mt-1.5 text-2xl font-bold text-[#FDA600]">₦{walletBal.toLocaleString()}</p>
+              <Link href="/vendor/payouts"
+                className="mt-3 flex items-center gap-1 text-[10px] font-bold text-[#FDA600]/60 hover:text-[#FDA600] transition-colors"
+              >
+                <Zap className="h-2.5 w-2.5" /> {payoutReady ? "Ready to withdraw" : "Set up payouts"}
+              </Link>
+            </div>
           </div>
         </div>
-        {/* Background decorations */}
-        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#FDA600]/5" />
-        <div className="pointer-events-none absolute -bottom-12 right-48 h-40 w-40 rounded-full bg-white/3" />
       </div>
 
-      {/* Low stock warning banner */}
+      {/* ── LOW STOCK ALERT ── */}
       {lowStockCount > 0 && (
-        <div className="rounded-2xl border border-[#01454A]/30 bg-[#1a2e14] px-6 py-4 flex items-center justify-between gap-4 text-white shadow-sm">
+        <div
+          className="flex items-center justify-between gap-4 rounded-2xl border px-5 py-4"
+          style={{
+            background: "linear-gradient(135deg, #1a2e14 0%, #0f1d0b 100%)",
+            borderColor: "rgba(253,166,0,0.2)",
+            boxShadow: "0 2px 16px rgba(253,166,0,0.08)",
+          }}
+        >
           <div className="flex items-center gap-3">
-            <AlertTriangle className="h-5 w-5 text-[#FDA600] animate-bounce" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FDA600]/15 flex-shrink-0">
+              <AlertTriangle className="h-4 w-4 text-[#FDA600]" />
+            </div>
             <div>
-              <p className="text-sm font-semibold text-[#FDA600]">Low Stock Alert</p>
-              <p className="text-xs text-white/70">
-                You have {lowStockCount} product{lowStockCount !== 1 ? "s" : ""} running low on stock. Update your inventory to avoid missing out on orders.
+              <p className="text-sm font-bold text-[#FDA600]">Low Stock Alert</p>
+              <p className="text-xs text-white/50 mt-0.5">
+                {lowStockCount} product{lowStockCount !== 1 ? "s" : ""} running low — update inventory.
               </p>
             </div>
           </div>
-          <Link href="/vendor/products/catalog" className="rounded-xl bg-[#FDA600] px-4 py-2 text-xs font-bold text-black transition hover:bg-[#E8960A] shadow-lg shadow-[#FDA600]/20 flex-shrink-0">
+          <Link
+            href="/vendor/products/catalog"
+            className="flex-shrink-0 rounded-xl px-4 py-2 text-xs font-bold text-black transition-all hover:scale-105"
+            style={{ background: "linear-gradient(135deg, #FDA600 0%, #E8960A 100%)" }}
+          >
             Manage Catalog
           </Link>
         </div>
       )}
 
-      {/* KPI strip */}
+      {/* ── KPI STRIP (5 primary) ── */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <KpiCard title="Products"  value={String(stats.products)} hint="Active catalog items" icon={ShoppingBag} />
-        <KpiCard title="Sales"     value={String(stats.sales)}    hint="Total orders recorded" icon={ShoppingCart} />
-        <KpiCard title="Revenue"   value={`₦${stats.revenue.toLocaleString()}`} hint="Gross sales value" icon={TrendingUp} />
-        <KpiCard title="Rating"    value={stats.rating.toFixed(1)} hint={`${stats.reviews} review${stats.reviews === 1 ? "" : "s"}`} icon={Star} />
+        <KpiCard title="Products"  value={String(stats.products)} hint="Catalog items" icon={ShoppingBag} accent="gold" />
+        <KpiCard title="Sales"     value={String(stats.sales)}    hint="Orders recorded" icon={ShoppingCart} accent="green" />
+        <KpiCard title="Revenue"   value={`₦${stats.revenue.toLocaleString()}`} hint="Gross value" icon={TrendingUp} accent="gold" />
+        <KpiCard title="Rating"    value={stats.rating.toFixed(1)} hint={`${stats.reviews} review${stats.reviews === 1 ? "" : "s"}`} icon={Star} accent="gold" />
         <KpiCard title="Status"    value={dashboard?.profile.is_verified ? "Verified" : "Pending"}
-          hint={dashboard?.profile.is_verified ? "KYC approved" : "Verification pending"}
-          icon={PackageCheck} />
+          hint={dashboard?.profile.is_verified ? "KYC approved" : "Pending review"}
+          icon={PackageCheck} accent={dashboard?.profile.is_verified ? "green" : "gold"} />
       </div>
 
-      {/* Secondary KPIs */}
+      {/* ── SECONDARY KPIs (3 finance) ── */}
       <div className="grid gap-4 md:grid-cols-3">
-        <KpiCard title="Wallet balance" value={`₦${walletBal.toLocaleString()}`} hint="Available balance" icon={Wallet} />
-        <KpiCard title="Active coupons" value={String(couponStats.active)}
-          hint={`${couponStats.inactive} inactive`} icon={Tag} />
-        <KpiCard title="Payout ready" value={payoutReady ? "Ready" : "Not set up"}
-          hint={payoutReady ? "Bank verified" : "Add bank details in Payouts"} icon={Zap} />
+        <KpiCard title="Wallet Balance" value={`₦${walletBal.toLocaleString()}`} hint="Available balance" icon={Wallet} accent="gold" />
+        <KpiCard title="Active Coupons" value={String(couponStats.active)}
+          hint={`${couponStats.inactive} inactive`} icon={Tag} accent="blue" />
+        <KpiCard title="Payout Status" value={payoutReady ? "Ready" : "Not set up"}
+          hint={payoutReady ? "Bank verified" : "Add bank in Payouts"} icon={Zap} accent={payoutReady ? "green" : "red"} />
       </div>
 
       {/* Revenue trend chart */}
@@ -1854,44 +1979,109 @@ function VendorTopCategoriesChart() {
 // ── Wallet View ───────────────────────────────────────────────────────────────
 export function VendorWalletView() {
   const { data: dashboard, isLoading } = useVendorDashboard();
-  const wallet      = dashboard?.wallet;
-  const payout      = dashboard?.payout_profile;
-  const isVerified  = payout?.is_verified ?? false;
+  const wallet     = dashboard?.wallet;
+  const payout     = dashboard?.payout_profile;
+  const isVerified = payout?.is_verified ?? false;
+  const balance    = wallet?.balance ?? 0;
+  const txCount    = (wallet?.recent_transactions ?? []).length;
 
   return (
-    <div className="space-y-8">
-      <PageHeader eyebrow="Finance" title="Wallet" description="Your earnings, balance, and transaction history." />
+    <div className="space-y-6">
+      <PageHeader eyebrow="Finance" title="Wallet" description="Your earnings, live balance, and transaction history." />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <KpiCard title="Balance" icon={Wallet}
-          value={isLoading ? "—" : `₦${(wallet?.balance ?? 0).toLocaleString()}`}
-          hint="Available wallet balance" />
-        <KpiCard title="Payout Status" icon={Zap}
-          value={isVerified ? "Ready" : "Not set up"}
-          hint={isVerified ? "Bank verified — ready to withdraw" : "Add bank details in Payouts"} />
-        <KpiCard title="Bank" icon={CreditCard}
-          value={payout?.bank_name || "Not added"}
-          hint={payout?.account_last4 ? `Account ending ····${payout.account_last4}` : "Add bank account to enable payouts"} />
+      {/* Premium balance hero */}
+      <div
+        className="relative overflow-hidden rounded-3xl text-white"
+        style={{
+          background: "linear-gradient(135deg, #0f1d0b 0%, #1a2e14 50%, #0a2010 100%)",
+          boxShadow: "0 20px 60px rgba(15,29,11,0.35), 0 4px 20px rgba(253,166,0,0.08)",
+        }}
+      >
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-15"
+          style={{ background: "radial-gradient(circle, #FDA600 0%, transparent 70%)" }} />
+        <div className="pointer-events-none absolute -bottom-10 left-12 h-36 w-36 rounded-full opacity-8"
+          style={{ background: "radial-gradient(circle, #FDA600 0%, transparent 70%)" }} />
+        <div className="relative z-10 p-7 md:p-10">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30">Available Balance</p>
+              <p className="mt-2 text-4xl font-bold text-[#FDA600] md:text-5xl">
+                {isLoading ? "—" : `₦${balance.toLocaleString()}`}
+              </p>
+              <p className="mt-1.5 text-xs text-white/30">
+                {txCount} recent transaction{txCount !== 1 ? "s" : ""}
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row md:flex-col xl:flex-row">
+              <Link
+                href="/vendor/payouts"
+                className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-black transition-all hover:scale-105"
+                style={{ background: "linear-gradient(135deg, #FDA600 0%, #E8960A 100%)", boxShadow: "0 4px 18px rgba(253,166,0,0.35)" }}
+              >
+                <Zap className="h-4 w-4" /> {isVerified ? "Request Payout" : "Set Up Payouts"}
+              </Link>
+              <Link
+                href="/vendor/transactions"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/8 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-white/15 backdrop-blur-sm"
+              >
+                <ArrowRight className="h-4 w-4" /> All Transactions
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* KPI row */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <KpiCard title="Balance" icon={Wallet}
+          value={isLoading ? "—" : `₦${balance.toLocaleString()}`}
+          hint="Available wallet balance" accent="gold" />
+        <KpiCard title="Payout Status" icon={Zap}
+          value={isVerified ? "Ready" : "Not set up"}
+          hint={isVerified ? "Bank verified — ready to withdraw" : "Add bank details"}
+          accent={isVerified ? "green" : "red"} />
+        <KpiCard title="Bank" icon={CreditCard}
+          value={payout?.bank_name || "Not added"}
+          hint={payout?.account_last4 ? `Account ····${payout.account_last4}` : "Add bank account"}
+          accent="blue" />
+      </div>
+
+      {/* Payout setup nudge */}
       {!isVerified && (
-        <div className="flex items-center justify-between rounded-2xl bg-[#FFF6E3] border border-[#FDA600]/30 p-5">
-          <div>
-            <p className="text-sm font-bold text-[#B37700]">Complete payout setup</p>
-            <p className="mt-0.5 text-xs text-[#7A6B44]">Add your bank details to start receiving withdrawals.</p>
+        <div
+          className="flex items-center justify-between gap-4 rounded-2xl border px-5 py-4"
+          style={{ background: "#FFF6E3", borderColor: "rgba(253,166,0,0.3)" }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FDA600]/15 flex-shrink-0">
+              <Zap className="h-4 w-4 text-[#FDA600]" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-[#B37700]">Complete payout setup</p>
+              <p className="mt-0.5 text-xs text-[#7A6B44]">Add your bank details to start receiving withdrawals.</p>
+            </div>
           </div>
           <Link href="/vendor/payouts"
-            className="flex-shrink-0 inline-flex items-center gap-2 rounded-xl bg-[#FDA600] px-5 py-2.5 text-sm font-bold text-black transition hover:bg-[#f28705]">
+            className="flex-shrink-0 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-black transition hover:scale-105"
+            style={{ background: "linear-gradient(135deg, #FDA600 0%, #E8960A 100%)" }}>
             Set up <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       )}
 
       {/* Transaction history */}
-      <div className="rounded-3xl bg-white border border-[#ECE6D6] shadow-sm overflow-hidden">
+      <div
+        className="rounded-3xl bg-white border border-[#ECE6D6] shadow-sm overflow-hidden"
+        style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.04)" }}
+      >
         <div className="flex items-center justify-between px-7 py-5 border-b border-[#ECE6D6]">
-          <h2 className="text-base font-bold text-[#1A1208]">Transaction History</h2>
-          <Badge color="gold">{(wallet?.recent_transactions ?? []).length} recent</Badge>
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FDA600]/10">
+              <Wallet className="h-4 w-4 text-[#FDA600]" />
+            </div>
+            <h2 className="text-base font-bold text-[#1A1208]">Transaction History</h2>
+          </div>
+          <Badge color="gold">{txCount} recent</Badge>
         </div>
         <div className="p-4">
           <Transactions />
