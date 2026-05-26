@@ -29,6 +29,10 @@ import {
 import { RoleGuard } from "@/features/auth/components/RoleGuard";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useClientProfile } from "@/features/client/hooks/use-client-profile";
+import {
+  useClientNotifications,
+  useMarkAllNotificationsRead,
+} from "@/features/client/hooks/use-client-notifications";
 
 // ── Nav Item Config ──────────────────────────────────────────────────────────
 
@@ -108,7 +112,8 @@ function Avatar({ email, size = "md" }: { email: string; size?: "sm" | "md" | "l
 
 // ── Notification Bell ─────────────────────────────────────────────────────────
 function NotificationBell() {
-  const [unreadCount] = useState(3); // TODO: wire to useClientNotifications()
+  const { data: notifications = [], unreadCount } = useClientNotifications();
+  const markAllRead = useMarkAllNotificationsRead();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -120,11 +125,12 @@ function NotificationBell() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const MOCK_NOTIFS = [
-    { id: "1", title: "Order dispatched", message: "Your Agbada order is on its way!", time: "2m ago", read: false },
-    { id: "2", title: "Custom order approved", message: "Vendor approved your design brief.", time: "1h ago", read: false },
-    { id: "3", title: "Wallet credited", message: "₦5,000 has been added to your wallet.", time: "3h ago", read: true },
-  ];
+  const handleMarkAllRead = () => {
+    markAllRead.mutate();
+  };
+
+  // Fallback: show recent 5 notifications in dropdown
+  const recentNotifs = notifications.slice(0, 5);
 
   return (
     <div ref={ref} className="relative">
@@ -147,24 +153,41 @@ function NotificationBell() {
         <div className="absolute right-0 top-11 z-50 w-80 overflow-hidden rounded-[20px] border border-[#ECE6D6] bg-white shadow-xl">
           <div className="flex items-center justify-between border-b border-[#ECE6D6] px-4 py-3">
             <p className="text-sm font-semibold text-black">Notifications</p>
-            <button type="button" className="text-xs font-medium text-[#01454A] hover:underline">
-              Mark all read
-            </button>
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={handleMarkAllRead}
+                disabled={markAllRead.isPending}
+                className="text-xs font-medium text-[#01454A] hover:underline disabled:opacity-50"
+              >
+                Mark all read
+              </button>
+            )}
           </div>
           <div className="max-h-72 divide-y divide-[#F4F3EC] overflow-y-auto">
-            {MOCK_NOTIFS.map((n) => (
-              <div
-                key={n.id}
-                className={`flex gap-3 px-4 py-3 transition hover:bg-[#F8F5ED] ${!n.read ? "bg-[#FFFDF5]" : ""}`}
-              >
-                <div className={`mt-1 h-2 w-2 shrink-0 rounded-full ${!n.read ? "bg-[#FDA600]" : "bg-transparent"}`} />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-black">{n.title}</p>
-                  <p className="truncate text-xs leading-5 text-[#5A6465]">{n.message}</p>
-                  <p className="mt-1 text-[10px] text-[#A89A7A]">{n.time}</p>
-                </div>
+            {recentNotifs.length === 0 ? (
+              <div className="px-4 py-8 text-center">
+                <p className="text-sm text-[#5A6465]">No notifications yet.</p>
               </div>
-            ))}
+            ) : (
+              recentNotifs.map((n) => (
+                <div
+                  key={n.id}
+                  className={`flex gap-3 px-4 py-3 transition hover:bg-[#F8F5ED] ${!n.is_read ? "bg-[#FFFDF5]" : ""}`}
+                >
+                  <div className={`mt-1 h-2 w-2 shrink-0 rounded-full ${!n.is_read ? "bg-[#FDA600]" : "bg-transparent"}`} />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-black">{n.title}</p>
+                    <p className="truncate text-xs leading-5 text-[#5A6465]">{n.message}</p>
+                    <p className="mt-1 text-[10px] text-[#A89A7A]">
+                      {new Date(n.created_at).toLocaleDateString("en-NG", {
+                        day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
           <div className="border-t border-[#ECE6D6] px-4 py-3">
             <Link

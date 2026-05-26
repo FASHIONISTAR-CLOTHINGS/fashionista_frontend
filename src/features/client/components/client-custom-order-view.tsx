@@ -537,3 +537,135 @@ export function ClientCustomOrderView() {
     </div>
   );
 }
+
+// ── Detail View ───────────────────────────────────────────────────────────────
+export function ClientCustomOrderDetailView({ orderId }: { orderId: string }) {
+  const queryClient = useQueryClient();
+  const { data: order, isLoading, isError } = useQuery({
+    queryKey: ["client-custom-orders", "detail", orderId],
+    queryFn: () => clientApi.getCustomOrder(orderId),
+    staleTime: 30_000,
+  });
+
+  const payMutation = useMutation({
+    mutationFn: (pct: MilestonePct) =>
+      clientApi.payMilestone(orderId, { milestone_pct: pct, payment_method: "wallet" }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["client-custom-orders"] });
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="h-12 w-48 animate-pulse rounded-xl bg-white" />
+        <div className="h-64 animate-pulse rounded-[28px] bg-white" />
+      </div>
+    );
+  }
+
+  if (isError || !order) {
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-[32px] bg-white py-16 text-center shadow-sm">
+        <Palette className="h-12 w-12 text-[#D9D9D9]" />
+        <p className="text-base font-semibold text-black">Custom order not found</p>
+        <Link href="/client/dashboard/custom-orders" className="text-sm text-[#01454A] hover:underline">
+          ← Back to Custom Orders
+        </Link>
+      </div>
+    );
+  }
+
+  const nextMilestone = order.milestones.find((m) => m.payment_status === "pending");
+  const agreedAmt = order.agreed_amount_ngn ?? order.budget_ngn;
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Link
+          href="/client/dashboard/custom-orders"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#ECE6D6] bg-white text-[#5A6465] transition hover:bg-[#F8F5ED] hover:text-black"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="font-bon_foyage text-3xl text-black">{order.reference}</h1>
+            <StatusBadge status={order.status} />
+          </div>
+          <p className="text-sm text-[#5A6465]">Vendor: {order.vendor_store_name}</p>
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+        {/* Main info */}
+        <div className="space-y-4">
+          <div className="rounded-[28px] bg-white p-6 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#7A6B44]">Design Brief</p>
+            <p className="mt-3 text-sm leading-7 text-[#5A6465]">{order.design_brief}</p>
+          </div>
+          {order.vendor_approval_note && (
+            <div className="rounded-[28px] border border-[#ECE6D6] bg-[#FFFDF5] p-6">
+              <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#FDA600]">Vendor Response</p>
+              <p className="mt-2 text-sm leading-7 text-[#5A6465]">{order.vendor_approval_note}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Financial sidebar */}
+        <div className="space-y-4">
+          <div className="rounded-[28px] bg-white p-6 shadow-sm">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[#5A6465]">Your Budget</span>
+                <span className="font-semibold text-black">{fmtNgn(order.budget_ngn)}</span>
+              </div>
+              {order.agreed_amount_ngn && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-[#5A6465]">Agreed Amount</span>
+                  <span className="font-bold text-[#01454A]">{fmtNgn(order.agreed_amount_ngn)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {order.milestones.length > 0 && (
+            <div className="rounded-[28px] bg-white p-6 shadow-sm">
+              <MilestoneProgress milestones={order.milestones} agreedAmount={agreedAmt} />
+              {nextMilestone && (order.status === "approved" || order.status === "in_production") && (
+                <button
+                  type="button"
+                  onClick={() => payMutation.mutate(nextMilestone.milestone_pct as MilestonePct)}
+                  disabled={payMutation.isPending}
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#FDA600] px-5 py-3 text-sm font-bold text-black transition hover:bg-[#f28705] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {payMutation.isPending ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</>
+                  ) : (
+                    <><ZapIcon className="h-4 w-4" /> Pay {nextMilestone.milestone_pct}% — {fmtNgn(agreedAmt * nextMilestone.milestone_pct / 100)}</>
+                  )}
+                </button>
+              )}
+            </div>
+          )}
+
+          <div className="rounded-[28px] bg-white p-6 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#7A6B44]">Timeline</p>
+            <div className="mt-3 space-y-2 text-sm text-[#5A6465]">
+              <div className="flex justify-between">
+                <span>Submitted</span>
+                <span>{new Date(order.created_at).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Last updated</span>
+                <span>{new Date(order.updated_at).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
