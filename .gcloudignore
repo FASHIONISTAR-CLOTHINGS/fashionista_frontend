@@ -8,4 +8,8 @@ node_modules
 **/node_modules/
 **/.next/
 **/.pnpm-store/
+*.log
+.next-dev.err.log
+.next-dev.out.log
+
 

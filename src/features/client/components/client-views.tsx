@@ -55,6 +55,7 @@ import type {
   Country,
   SupportTicket,
   SupportTicketCreatePayload,
+  TicketCategory,
 } from "@/features/client/types/client.types";
 
 // ── Design Tokens ──────────────────────────────────────────────────────────────
@@ -287,7 +288,10 @@ export function ClientDashboardView() {
   return (
     <div className="space-y-6">
       {/* ── Hero banner ────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#01454A] via-[#01454A] to-[#012d31] p-8 md:p-10">
+      <section
+        data-testid="client-dashboard-hero"
+        className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#01454A] via-[#01454A] to-[#012d31] p-8 md:p-10"
+      >
         <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/5" />
         <div className="pointer-events-none absolute bottom-0 right-0 h-32 w-32 rounded-tl-full bg-[#FDA600]/10" />
         <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
@@ -295,7 +299,10 @@ export function ClientDashboardView() {
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#FDA600]">
               Fashionistar Client
             </p>
-            <h1 className="mt-2 font-bon_foyage text-4xl leading-none text-white md:text-5xl">
+            <h1
+              data-testid="client-dashboard-welcome"
+              className="mt-2 font-bon_foyage text-4xl leading-none text-white md:text-5xl"
+            >
               Welcome back
             </h1>
             <p className="mt-3 max-w-lg text-sm leading-6 text-white/60">
@@ -496,7 +503,7 @@ export function ClientOrdersView() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-bon_foyage text-4xl text-black">My Orders</h1>
+          <h1 data-testid="client-orders-heading" className="font-bon_foyage text-4xl text-black">My Orders</h1>
           <p className="mt-1 text-sm text-[#5A6465]">{orders.length} order{orders.length !== 1 ? "s" : ""} found</p>
         </div>
         <div className="flex items-center gap-3">
@@ -1030,7 +1037,7 @@ export function ClientWalletView() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-bon_foyage text-4xl text-black">My Wallet</h1>
+        <h1 data-testid="client-wallet-heading" className="font-bon_foyage text-4xl text-black">My Wallet</h1>
         <p className="mt-1 text-sm text-[#5A6465]">
           Manage your balance, top up, and view transaction history.
         </p>
@@ -1275,7 +1282,7 @@ export function ClientNotificationsView() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-bon_foyage text-4xl text-black">Notifications</h1>
+            <h1 data-testid="client-notifications-heading" className="font-bon_foyage text-4xl text-black">Notifications</h1>
             {unreadCount > 0 && (
               <span className="flex h-6 min-w-[24px] items-center justify-center rounded-full bg-[#FDA600] px-1.5 text-xs font-bold text-black">
                 {unreadCount}
@@ -1382,28 +1389,30 @@ export function ClientNotificationsView() {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const TICKET_STATUS_MAP: Record<string, { label: string; bg: string; text: string }> = {
-  open:        { label: "Open",        bg: "#DBEAFE", text: "#1E40AF" },
-  in_progress: { label: "In Progress", bg: "#EDE9FE", text: "#6D28D9" },
-  resolved:    { label: "Resolved",    bg: "#D1FAE5", text: "#065F46" },
-  closed:      { label: "Closed",      bg: "#F3F4F6", text: "#6B7280" },
-  escalated:   { label: "Escalated",   bg: "#FEE2E2", text: "#991B1B" },
+  open:            { label: "Open",            bg: "#DBEAFE", text: "#1E40AF" },
+  awaiting_client: { label: "Awaiting Client", bg: "#FEF3C7", text: "#92400E" },
+  awaiting_vendor: { label: "Awaiting Vendor", bg: "#EDE9FE", text: "#6D28D9" },
+  in_review:       { label: "In Review",       bg: "#FCE7F3", text: "#9D174D" },
+  resolved:        { label: "Resolved",        bg: "#D1FAE5", text: "#065F46" },
+  closed:          { label: "Closed",          bg: "#F3F4F6", text: "#6B7280" },
 };
 
-const TICKET_CATEGORIES = [
-  "Order Issue",
-  "Payment Problem",
-  "Custom Order Dispute",
-  "Delivery Issue",
-  "Account & KYC",
-  "Product Quality",
-  "General Enquiry",
+const TICKET_CATEGORIES: Array<{ value: TicketCategory; label: string }> = [
+  { value: "order_dispute", label: "Order Dispute" },
+  { value: "payment_issue", label: "Payment Issue" },
+  { value: "product_complaint", label: "Product Complaint" },
+  { value: "vendor_conduct", label: "Vendor Conduct" },
+  { value: "delivery_problem", label: "Delivery Problem" },
+  { value: "refund_request", label: "Refund Request" },
+  { value: "measurement_issue", label: "Measurement Issue" },
+  { value: "general", label: "General" },
 ];
 
 function CreateTicketModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState<SupportTicketCreatePayload>({
-    subject: "",
-    category: TICKET_CATEGORIES[0],
+    title: "",
+    category: TICKET_CATEGORIES[0].value,
     description: "",
   });
   const mutation = useMutation({
@@ -1431,8 +1440,8 @@ function CreateTicketModal({ onClose }: { onClose: () => void }) {
             <FieldLabel htmlFor="ticket-subject">Subject</FieldLabel>
             <TextInput
               id="ticket-subject"
-              value={form.subject}
-              onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
+              value={form.title}
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
               placeholder="Briefly describe your issue"
             />
           </div>
@@ -1441,10 +1450,10 @@ function CreateTicketModal({ onClose }: { onClose: () => void }) {
             <SelectInput
               id="ticket-category"
               value={form.category}
-              onChange={(v) => setForm((f) => ({ ...f, category: v }))}
+              onChange={(v) => setForm((f) => ({ ...f, category: v as TicketCategory }))}
             >
               {TICKET_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+                <option key={cat.value} value={cat.value}>{cat.label}</option>
               ))}
             </SelectInput>
           </div>
@@ -1465,7 +1474,7 @@ function CreateTicketModal({ onClose }: { onClose: () => void }) {
             variant="primary"
             onClick={() => mutation.mutate(form)}
             loading={mutation.isPending}
-            disabled={!form.subject || !form.description}
+            disabled={!form.title || !form.description}
           >
             <MessageSquarePlus className="h-4 w-4" /> Submit Ticket
           </ActionBtn>
@@ -1484,13 +1493,13 @@ export function ClientSupportView() {
     refetchInterval: 30_000,
   });
 
-  const openCount = tickets.filter((t) => t.status === "open" || t.status === "in_progress").length;
+  const openCount = tickets.filter((t) => t.status !== "resolved" && t.status !== "closed").length;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-bon_foyage text-4xl text-black">Support Tickets</h1>
+          <h1 data-testid="client-support-heading" className="font-bon_foyage text-4xl text-black">Support Tickets</h1>
           <p className="mt-1 text-sm text-[#5A6465]">
             {tickets.length} ticket{tickets.length !== 1 ? "s" : ""} · {openCount} open
           </p>
@@ -1534,7 +1543,7 @@ export function ClientSupportView() {
               return (
                 <div key={ticket.id} className="grid items-center gap-4 px-6 py-5 hover:bg-[#FFFDF5] md:grid-cols-[2fr_1fr_1fr_1fr]">
                   <div>
-                    <p className="font-semibold text-black">{ticket.subject}</p>
+                    <p className="font-semibold text-black">{ticket.title}</p>
                     <p className="text-xs text-[#5A6465] line-clamp-1">{ticket.description}</p>
                   </div>
                   <p className="text-sm text-[#5A6465]">{ticket.category}</p>
@@ -1605,7 +1614,7 @@ export function ClientKycView() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-bon_foyage text-4xl text-black">KYC Verification</h1>
+        <h1 data-testid="client-kyc-heading" className="font-bon_foyage text-4xl text-black">KYC Verification</h1>
         <p className="mt-1 text-sm text-[#5A6465]">
           Complete identity verification to unlock full platform features.
         </p>
