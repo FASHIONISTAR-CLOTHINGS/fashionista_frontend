@@ -4,33 +4,41 @@ import { chromium } from 'playwright';
   console.log("Launching headless browser...");
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();
+  
+  // Skip ngrok browser warning page
+  await context.setExtraHTTPHeaders({
+    'ngrok-skip-browser-warning': '69420'
+  });
+
   const page = await context.newPage();
 
-  console.log("Navigating to http://localhost:3000...");
+  page.on('console', msg => {
+    console.log(`[CONSOLE] [${msg.type()}] ${msg.text()}`);
+  });
+
+  page.on('pageerror', err => {
+    console.log(`[PAGE ERROR] ${err.message}`);
+  });
+
+  console.log("Navigating to http://127.0.0.1:3000...");
   try {
-    await page.goto('http://localhost:3000', { timeout: 30000 });
-    // wait for 2 seconds to make sure react hydrations and components render
-    await page.waitForTimeout(3000);
+    await page.goto('http://127.0.0.1:3000', { timeout: 30000, waitUntil: 'domcontentloaded' });
+    // wait for compilation and hydration
+    await page.waitForTimeout(5000);
     await page.screenshot({ path: 'localhost.png', fullPage: false });
     console.log("SUCCESS: Saved localhost.png");
   } catch (err) {
-    console.error("FAILED loading localhost:3000:", err);
+    console.error("FAILED loading localhost:3000:", err.message);
   }
 
   console.log("Navigating to https://aeration-scabby-navy.ngrok-free.dev...");
   try {
-    await page.goto('https://aeration-scabby-navy.ngrok-free.dev', { timeout: 30000 });
-    // In case ngrok warning page displays:
-    const ngrokBypass = await page.getByRole('button', { name: /visit site|skip/i }).or(page.locator('a:has-text("Skip")')).first();
-    if (await ngrokBypass.isVisible()) {
-      console.log("Clicking ngrok warning bypass...");
-      await ngrokBypass.click();
-      await page.waitForTimeout(3000);
-    }
+    await page.goto('https://aeration-scabby-navy.ngrok-free.dev', { timeout: 30000, waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(5000);
     await page.screenshot({ path: 'ngrok.png', fullPage: false });
     console.log("SUCCESS: Saved ngrok.png");
   } catch (err) {
-    console.error("FAILED loading ngrok URL:", err);
+    console.error("FAILED loading ngrok URL:", err.message);
   }
 
   await browser.close();

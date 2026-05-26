@@ -127,11 +127,18 @@ apiSync.interceptors.response.use(
     ) {
       // Unwrap: merge "data" inner payload with top-level fields
       // This allows services to access both access tokens AND message at root
-      response.data = {
-        ...response.data.data,
-        message: response.data.message,
-        _envelope: true, // Debug marker
-      };
+      if (Array.isArray(response.data.data)) {
+        const arr = response.data.data as any;
+        arr.message = response.data.message;
+        arr._envelope = true;
+        response.data = arr;
+      } else {
+        response.data = {
+          ...response.data.data,
+          message: response.data.message,
+          _envelope: true, // Debug marker
+        };
+      }
     }
 
     return response;

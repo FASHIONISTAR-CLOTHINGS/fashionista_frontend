@@ -1,0 +1,11 @@
+.gcloudignore
+.git
+.git_disabled
+.github
+.next
+node_modules
+.pnpm-store
+**/node_modules/
+**/.next/
+**/.pnpm-store/
+

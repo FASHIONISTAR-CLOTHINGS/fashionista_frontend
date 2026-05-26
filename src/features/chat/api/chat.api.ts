@@ -21,7 +21,7 @@ import type {
   StartConversationInput,
 } from "../types/chat.types";
 
-const BASE = "/chat";
+const BASE = "/v1/chat";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONVERSATIONS

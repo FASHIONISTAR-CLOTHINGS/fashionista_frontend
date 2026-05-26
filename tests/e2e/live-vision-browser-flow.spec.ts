@@ -301,7 +301,6 @@ test("real live vendor to payment browser flow", async ({ page, request }) => {
     await expect(addToCartButton).toBeVisible({ timeout: 20_000 });
     await addToCartButton.click();
     await page.waitForTimeout(22_000);
-    await seedAuthenticatedSession(page, auth.client);
 
     await page.goto("/cart");
     await expect(page).toHaveURL(/\/cart/, { timeout: 30_000 });
