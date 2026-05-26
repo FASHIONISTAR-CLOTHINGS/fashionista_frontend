@@ -23,10 +23,20 @@ const seededAuthPath = path.resolve(
   process.cwd(),
   "tests/e2e/.tmp/seeded-auth.json",
 );
+const DEFAULT_BACKEND_PUBLIC_URL =
+  "https://hydrographically-tawdrier-hayley.ngrok-free.dev";
 
 function readSeededAuth(): Record<string, SeededAuthSession> {
   const content = fs.readFileSync(seededAuthPath, "utf8");
   return JSON.parse(content) as Record<string, SeededAuthSession>;
+}
+
+function getBackendPublicUrl(): string {
+  return (
+    process.env.NEXT_PUBLIC_BACKEND_URL ??
+    process.env.PLAYWRIGHT_BACKEND_PUBLIC_URL ??
+    DEFAULT_BACKEND_PUBLIC_URL
+  ).replace(/\/+$/, "");
 }
 
 async function seedAuthenticatedSession(
@@ -74,6 +84,23 @@ async function gotoInAppShell(page: Page, url: string) {
   await page.goto(url, { waitUntil: "domcontentloaded" });
 }
 
+async function warmAuthenticatedRead(
+  page: Page,
+  session: SeededAuthSession,
+  endpoint: string,
+) {
+  const response = await page.request.get(
+    `${getBackendPublicUrl()}${endpoint}`,
+    {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+    },
+  );
+  expect(response.ok()).toBeTruthy();
+}
+
 test.describe.configure({ mode: "serial" });
 
 test.describe("Seeded post-login role journeys", () => {
@@ -82,6 +109,7 @@ test.describe("Seeded post-login role journeys", () => {
   test("client journey stays inside the client shell", async ({ page }) => {
     const auth = readSeededAuth();
     await seedAuthenticatedSession(page, auth.client);
+    await warmAuthenticatedRead(page, auth.client, "/api/v1/ninja/client/dashboard/");
     await gotoInAppShell(page, "/client/dashboard");
     await expect(page).toHaveURL(/\/client\/dashboard/, { timeout: 30_000 });
     await expectStableShell(page);
@@ -118,6 +146,7 @@ test.describe("Seeded post-login role journeys", () => {
   test("vendor journey stays inside the vendor shell", async ({ page }) => {
     const auth = readSeededAuth();
     await seedAuthenticatedSession(page, auth.vendor);
+    await warmAuthenticatedRead(page, auth.vendor, "/api/v1/ninja/vendor/dashboard/");
     await gotoInAppShell(page, "/vendor/dashboard");
     await expect(page).toHaveURL(/\/vendor\/(dashboard|setup)/, {
       timeout: 30_000,
@@ -159,6 +188,7 @@ test.describe("Seeded post-login role journeys", () => {
   test("admin journey stays inside the admin shell", async ({ page }) => {
     const auth = readSeededAuth();
     await seedAuthenticatedSession(page, auth.admin);
+    await warmAuthenticatedRead(page, auth.admin, "/api/v1/ninja/orders/admin/");
     await gotoInAppShell(page, "/admin-dashboard");
     await expect(page).toHaveURL(/\/admin-dashboard/, { timeout: 30_000 });
     await expectStableShell(page);
