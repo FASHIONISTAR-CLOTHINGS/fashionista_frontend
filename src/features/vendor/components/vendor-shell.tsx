@@ -544,7 +544,7 @@ function ProfileDropdown({ initials, storeName, userEmail, logoUrl }: ProfileDro
 // ── Topbar ────────────────────────────────────────────────────────────────────
 function VendorTopbar({
   onMenuClick,
-  sidebarCollapsed,
+  sidebarCollapsed: _sidebarCollapsed,
 }: {
   onMenuClick:       () => void;
   sidebarCollapsed:  boolean;
