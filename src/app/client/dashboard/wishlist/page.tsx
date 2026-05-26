@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import {  ClientWishlistView } from "@/features/client/components/client-wishlist-view";
+import { ClientWishlistView } from "@/features/client";
 import { RoleGuard } from "@/features/auth/components/RoleGuard";
 
 export const metadata: Metadata = {

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { RoleGuard } from "@/features/auth/components/RoleGuard";
-import { ClientSettingsView } from "@/features/client/components/client-settings-view";
+import { ClientSettingsView } from "@/features/client";
 
 export const metadata: Metadata = {
   title: "Settings — Client Dashboard | Fashionistar",

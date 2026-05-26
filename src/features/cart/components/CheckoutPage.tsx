@@ -19,7 +19,7 @@
  */
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -34,6 +34,11 @@ import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import { useCart, useSubmitCheckout } from "@/features/cart/hooks/use-cart";
 import { formatCurrency } from "@/lib/formatting";
+import {
+  AddressReferenceField,
+  useReferenceLocation,
+  type AddressSelection,
+} from "@/shared/reference-data";
 import { CheckoutPageSkeleton } from "./CheckoutPageSkeleton";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -44,10 +49,6 @@ interface DeliveryForm {
   full_name: string;
   phone: string;
   email: string;
-  street_address: string;
-  city: string;
-  state: string;
-  country: string;
   postal_code: string;
   delivery_note: string;
 }
@@ -168,14 +169,43 @@ export function CheckoutPage() {
     full_name: "",
     phone: "",
     email: "",
-    street_address: "",
-    city: "",
-    state: "",
-    country: "Nigeria",
     postal_code: "",
     delivery_note: "",
   });
   const [errors, setErrors] = useState<Partial<DeliveryForm>>({});
+  const [addressErrors, setAddressErrors] = useState<
+    Partial<Record<keyof AddressSelection, string>>
+  >({});
+  const [addressSelection, setAddressSelection] = useState<AddressSelection>({
+    country_code: "NG",
+    state_code: "",
+    lga_code: "",
+    city_code: "",
+    custom_city: "",
+    street_address: "",
+  });
+  const { states, getLgas, getCities } = useReferenceLocation(
+    addressSelection.country_code || "NG",
+  );
+  const lgas = useMemo(
+    () => getLgas(addressSelection.state_code),
+    [addressSelection.state_code, getLgas],
+  );
+  const cities = useMemo(
+    () => getCities(addressSelection.state_code, addressSelection.lga_code),
+    [addressSelection.lga_code, addressSelection.state_code, getCities],
+  );
+  const resolvedStateName =
+    states.find((state) => state.code === addressSelection.state_code)?.name ?? "";
+  const resolvedCityName =
+    addressSelection.custom_city?.trim() ||
+    cities.find((city) => city.code === addressSelection.city_code)?.name ||
+    lgas.find((lga) => lga.code === addressSelection.lga_code)?.name ||
+    "";
+  const resolvedCountryName =
+    addressSelection.country_code === "NG"
+      ? "Nigeria"
+      : addressSelection.country_code;
 
   useEffect(() => {
     setMounted(true);
@@ -214,15 +244,25 @@ export function CheckoutPage() {
   // ── Validation ─────────────────────────────────────────────────────────────
   const validate = (): boolean => {
     const newErrors: Partial<DeliveryForm> = {};
+    const newAddressErrors: Partial<Record<keyof AddressSelection, string>> = {};
     if (!form.full_name.trim()) newErrors.full_name = "Full name is required.";
     if (!form.phone.trim()) newErrors.phone = "Phone number is required.";
     if (!form.email.trim()) newErrors.email = "Email is required.";
-    if (!form.street_address.trim())
-      newErrors.street_address = "Street address is required.";
-    if (!form.city.trim()) newErrors.city = "City is required.";
-    if (!form.state.trim()) newErrors.state = "State is required.";
+    if (!addressSelection.street_address.trim()) {
+      newAddressErrors.street_address = "Street address is required.";
+    }
+    if (!addressSelection.state_code) {
+      newAddressErrors.state_code = "State is required.";
+    }
+    if (!resolvedCityName.trim()) {
+      newAddressErrors.city_code = "City is required.";
+    }
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setAddressErrors(newAddressErrors);
+    return (
+      Object.keys(newErrors).length === 0 &&
+      Object.keys(newAddressErrors).length === 0
+    );
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -240,10 +280,10 @@ export function CheckoutPage() {
         full_name: form.full_name.trim(),
         phone: form.phone.trim(),
         email: form.email.trim(),
-        address_line_1: form.street_address.trim(),
-        city: form.city.trim(),
-        state: form.state.trim(),
-        country: form.country.trim() || "Nigeria",
+        address_line_1: addressSelection.street_address.trim(),
+        city: resolvedCityName.trim(),
+        state: resolvedStateName.trim(),
+        country: resolvedCountryName,
         postal_code: form.postal_code.trim() || undefined,
       },
     });
@@ -345,22 +385,13 @@ export function CheckoutPage() {
                 autoComplete: "postal-code",
               })}
               <div className="sm:col-span-2">
-                {field("street_address", "Street address", {
-                  required: true,
-                  placeholder: "10 Ozumba Mbadiwe Avenue, Victoria Island",
-                  autoComplete: "street-address",
-                })}
+                <AddressReferenceField
+                  value={addressSelection}
+                  onChange={setAddressSelection}
+                  errors={addressErrors}
+                  disabled={submitting}
+                />
               </div>
-              {field("city", "City", {
-                required: true,
-                placeholder: "Lagos",
-                autoComplete: "address-level2",
-              })}
-              {field("state", "State", {
-                required: true,
-                placeholder: "Lagos State",
-                autoComplete: "address-level1",
-              })}
               <div className="sm:col-span-2">
                 <Field label="Delivery note (optional)" id="delivery_note">
                   <textarea

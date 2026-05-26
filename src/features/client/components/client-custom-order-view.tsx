@@ -10,7 +10,6 @@ import {
   Check,
   ExternalLink,
   Loader2,
-  Package,
   PackageCheck,
   Palette,
   Plus,
