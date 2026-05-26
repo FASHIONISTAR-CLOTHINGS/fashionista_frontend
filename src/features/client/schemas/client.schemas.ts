@@ -7,6 +7,7 @@
 import { z } from "zod";
 
 // ── Coerce helper — Django DecimalField serialises to string, not number ──────
+// Using z.coerce.number() safely converts "123.45" → 123.45 and 0 → 0.
 const coerceNumber = z.coerce.number();
 
 // ── Address ───────────────────────────────────────────────────────────────────
@@ -37,6 +38,8 @@ export const ClientProfileSchema = z.object({
   style_preferences: z.array(z.string()).default([]),
   favourite_colours: z.array(z.string()).default([]),
   total_orders: coerceNumber.default(0),
+  // Backend Django DecimalField sends this as a string e.g. "5400.00"
+  // z.coerce.number() safely parses string → number at runtime
   total_spent_ngn: coerceNumber.default(0),
   is_profile_complete: z.boolean().default(false),
   email_notifications_enabled: z.boolean().default(true),
