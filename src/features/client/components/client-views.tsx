@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   ArrowRight,
@@ -11,7 +11,6 @@ import {
   ChevronRight,
   Clock,
   ExternalLink,
-  Globe,
   Heart,
   Loader2,
   MapPin,
@@ -38,22 +37,17 @@ import {
 } from "@/features/client/hooks/use-client-profile";
 import { useClientWalletBalance } from "@/features/client/hooks/use-client-wallet";
 import { clientApi } from "@/features/client/api/client.api";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   ClientAddress,
   ClientAddressCreatePayload,
   ClientOrder,
   ClientProfileUpdatePayload,
   Country,
-  CustomOrder,
-  MilestonePct,
 } from "@/features/client/types/client.types";
 
 // ── Design Tokens ──────────────────────────────────────────────────────────────
-const GOLD = "#FDA600";
-const GREEN = "#01454A";
-const CREAM = "#F4F3EC";
-const CREAM_DARK = "#EDE7D9";
+// (Colors applied inline for direct reference across components)
 
 // ── Utility ────────────────────────────────────────────────────────────────────
 function fmtNgn(amount: number): string {
@@ -472,7 +466,7 @@ export function ClientDashboardView() {
 
 export function ClientOrdersView() {
   const [statusFilter, setStatusFilter] = useState("");
-  const { data: orders = [], isLoading, refetch } = useQuery({
+  const { data: orders = [], isLoading, refetch: refetchOrders } = useQuery({
     queryKey: ["client-orders", statusFilter],
     queryFn: () => clientApi.getOrders(statusFilter ? { status: statusFilter } : undefined),
     staleTime: 30_000,
