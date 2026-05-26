@@ -21,7 +21,6 @@ import {
   Package,
   PlusCircle,
   ReceiptText,
-  Search,
   Settings,
   ShoppingBag,
   Sparkles,

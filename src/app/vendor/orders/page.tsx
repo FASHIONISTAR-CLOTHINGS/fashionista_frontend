@@ -1,5 +1,5 @@
-import { OrderTable } from "@/features/order";
+import { VendorOrdersView } from "@/features/vendor";
 
 export default function VendorOrdersPage() {
-  return <OrderTable />;
+  return <VendorOrdersView />;
 }
