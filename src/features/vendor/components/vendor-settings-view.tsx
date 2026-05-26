@@ -364,14 +364,26 @@ function WalletPinTab() {
         </div>
       </SettingSection>
 
-      <SettingSection title="Payout account" description="Bank details used for withdrawals.">
-        <div className="flex flex-col gap-4">
-          <DashInput label="Bank name" id="bank_name" placeholder="First Bank of Nigeria" />
-          <DashInput label="Account number" id="acct_num" placeholder="0123456789" />
-          <DashInput label="Account holder name" id="acct_name" placeholder="As printed on bank statement" />
-          <SaveBar onSave={() => {}} label="Save payout account" />
+      <SettingSection title="Payout accounts" description="Manage saved bank accounts for withdrawals.">
+        <div className="rounded-2xl border border-[hsl(var(--border))] p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-[hsl(var(--card))]">
+          <div className="flex-1">
+            <p className="text-sm font-bold text-[hsl(var(--foreground))]">Multiple Bank Accounts Enabled</p>
+            <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
+              You can save and verify up to 5 different bank accounts via our secure partner API (Paystack).
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              window.location.href = "/vendor/payouts";
+            }}
+            className="inline-flex h-10 items-center justify-center rounded-xl bg-[hsl(var(--accent))] px-5 text-xs font-bold text-black transition-all hover:bg-[hsl(var(--accent)/0.8)] cursor-pointer"
+          >
+            Manage Bank Accounts
+          </button>
         </div>
       </SettingSection>
+
     </div>
   );
 }

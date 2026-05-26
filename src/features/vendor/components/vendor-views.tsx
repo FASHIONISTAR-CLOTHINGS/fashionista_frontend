@@ -74,9 +74,7 @@ import {
   useVendorOrders,
   useVendorOrder,
   useUpdateOrderStatus,
-  useSubmitPayoutProfile,
   useSetVendorPin,
-  useVerifyVendorPin,
 } from "@/features/vendor/hooks/use-vendor-orders";
 import type {
   VendorDashboard,
@@ -92,8 +90,10 @@ import {
   useRecordKycDocument,
 } from "@/features/kyc";
 import type { KycDocumentType } from "@/features/kyc";
+import { BankAccountsList, PayoutGateGuard } from "./bank-accounts";
 
 // ── Recharts (installed with shadcn) ─────────────────────────────────────────
+
 import {
   AreaChart,
   Area,
@@ -1902,97 +1902,9 @@ export function VendorWalletView() {
 }
 
 // ── Payouts View ──────────────────────────────────────────────────────────────
-const NIGERIAN_BANKS = [
-  { code: "058", name: "GTBank" },
-  { code: "011", name: "First Bank" },
-  { code: "044", name: "Access Bank" },
-  { code: "057", name: "Zenith Bank" },
-  { code: "232", name: "Sterling Bank" },
-  { code: "033", name: "United Bank for Africa" },
-  { code: "070", name: "Fidelity Bank" },
-  { code: "050", name: "Ecobank" },
-  { code: "082", name: "Keystone Bank" },
-  { code: "035", name: "Wema Bank" },
-  { code: "214", name: "FCMB" },
-  { code: "50211", name: "Kuda Bank" },
-  { code: "999992", name: "OPay" },
-  { code: "999991", name: "Palmpay" },
-];
-
-export function VendorPayoutsView() {
-  const { data: dashboard } = useVendorDashboard();
-  const payout = dashboard?.payout_profile;
-  const [showForm,  setShowForm]  = useState(!payout?.bank_name);
-  const [activeTab, setActiveTab] = useState<"bank" | "pin">("bank");
-  const [bankForm,  setBankForm]  = useState({ bank_name: "", account_number: "", account_name: "" });
-  const [selectedBankCode, setSelectedBankCode] = useState("");
-  const [resolving, setResolving] = useState(false);
-  const [pinForm,   setPinForm]   = useState({ pin: "", confirm_pin: "" });
-  const [isPinAuthModalOpen, setIsPinAuthModalOpen] = useState(false);
-  const [authPin, setAuthPin] = useState("");
-  const savePayout = useSubmitPayoutProfile();
-  const setPin     = useSetVendorPin();
-  const verifyPin  = useVerifyVendorPin();
-
-  useEffect(() => {
-    async function resolveAccount() {
-      if (bankForm.account_number.length === 10 && selectedBankCode) {
-        setResolving(true);
-        try {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          const mockNames = [
-            "CHIDI OBI",
-            "AMINU BELLO",
-            "OLUMIDE ADEBAYO",
-            "NGOZI EZE",
-            "FASHIONISTAR TAILORING LTD",
-          ];
-          const resolvedName = mockNames[Math.floor(Math.random() * mockNames.length)];
-          setBankForm((c) => ({ ...c, account_name: resolvedName }));
-          toast.success("Account resolved successfully via Paystack!");
-        } catch {
-          toast.error("Could not resolve account name.");
-        } finally {
-          setResolving(false);
-        }
-      }
-    }
-    resolveAccount();
-  }, [bankForm.account_number, selectedBankCode]);
-
-  const handleSaveBankInit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsPinAuthModalOpen(true);
-  };
-
-  const handleVerifyAndSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!authPin || authPin.length < 4) {
-      toast.error("Please enter a valid 4-digit PIN.");
-      return;
-    }
-    setIsPinAuthModalOpen(false);
-    try {
-      // 1. Verify PIN first
-      const verifyRes = await verifyPin.mutateAsync({ pin: authPin });
-      if (!verifyRes.valid) {
-        toast.error("Invalid transaction PIN.");
-        return;
-      }
-      // 2. Save payout details if verified
-      await savePayout.mutateAsync({
-        bank_name: bankForm.bank_name,
-        bank_code: selectedBankCode,
-        account_name: bankForm.account_name,
-        account_number: bankForm.account_number,
-      });
-      toast.success("Bank account saved! Under review for verification.");
-      setShowForm(false);
-      setAuthPin("");
-    } catch {
-      toast.error("Could not save bank details. Please verify your transaction PIN.");
-    }
-  };
+function PinSetupSection() {
+  const [pinForm, setPinForm] = useState({ pin: "", confirm_pin: "" });
+  const setPin = useSetVendorPin();
 
   const handleSetPin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -2007,227 +1919,94 @@ export function VendorPayoutsView() {
   };
 
   return (
-    <div className="space-y-8">
-      <PageHeader eyebrow="Finance" title="Payouts"
-        description="Configure your bank account for receiving withdrawals." />
-
-
-      {payout?.is_verified ? (
-        <div className="rounded-2xl border border-[#2D5016]/20 bg-[#E8F5E0] p-5 flex items-center gap-3">
-          <BadgeCheck className="h-5 w-5 text-[#2D5016] flex-shrink-0" />
-          <div className="flex-1">
-            <p className="text-sm font-bold text-[#2D5016]">Payout account verified ✓</p>
-            <p className="text-xs text-[#2D5016]/70 mt-0.5">
-              {payout?.bank_name} — Account ending ····{payout?.account_last4}
-            </p>
-          </div>
-          <button type="button" onClick={() => setShowForm((f) => !f)}
-            className="text-xs font-semibold text-[#2D5016] underline hover:no-underline">
-            {showForm ? "Hide" : "Update"}
-          </button>
+    <form onSubmit={handleSetPin}
+      className="rounded-3xl bg-white border border-[#ECE6D6] p-8 shadow-sm space-y-5">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FDA600]/10 text-[#FDA600]">
+          <Key className="h-5 w-5" />
         </div>
-      ) : (
-        <div className="flex items-center gap-4 rounded-2xl border border-[#FDA600]/30 bg-[#FFF6E3] p-5">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#FDA600]/20">
-            <Landmark className="h-5 w-5 text-[#FDA600]" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-[#B37700]">No payout account yet</p>
-            <p className="text-xs text-[#7A6B44] mt-0.5">Add your bank details below to receive withdrawals.</p>
-          </div>
+        <div>
+          <h2 className="text-base font-bold text-[#1A1208]">Wallet PIN</h2>
+          <p className="text-xs text-[#7A6B44]">Set a 4-digit PIN to authorise wallet withdrawals.</p>
         </div>
+      </div>
+      <div className="grid gap-5 md:grid-cols-2">
+        <div className="space-y-1.5">
+          <FieldLabel htmlFor="pin-new">New PIN (4 digits)</FieldLabel>
+          <TextInput id="pin-new" type="password" maxLength={4} inputMode="numeric" required placeholder="••••"
+            value={pinForm.pin}
+            onChange={(e) => setPinForm((c) => ({ ...c, pin: e.target.value.replace(/\D/g, "") }))} />
+        </div>
+        <div className="space-y-1.5">
+          <FieldLabel htmlFor="pin-confirm">Confirm PIN</FieldLabel>
+          <TextInput id="pin-confirm" type="password" maxLength={4} inputMode="numeric" required placeholder="••••"
+            value={pinForm.confirm_pin}
+            onChange={(e) => setPinForm((c) => ({ ...c, confirm_pin: e.target.value.replace(/\D/g, "") }))} />
+        </div>
+      </div>
+      {pinForm.pin && pinForm.confirm_pin && pinForm.pin !== pinForm.confirm_pin && (
+        <p className="text-xs font-semibold text-red-500">PINs do not match.</p>
       )}
+      <div className="flex justify-end">
+        <PrimaryButton type="submit" loading={setPin.isPending}
+          disabled={pinForm.pin !== pinForm.confirm_pin || pinForm.pin.length < 4}>
+          Set wallet PIN <Key className="h-4 w-4" />
+        </PrimaryButton>
+      </div>
+    </form>
+  );
+}
+
+export function VendorPayoutsView() {
+  const { data: dashboard } = useVendorDashboard();
+  const walletBalance = dashboard?.wallet?.balance ?? 0;
+  const [activeTab, setActiveTab] = useState<"accounts" | "pin">("accounts");
+
+  return (
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow="Finance"
+        title="Payouts"
+        description="Manage your bank accounts and request withdrawals."
+        action={
+          <PayoutGateGuard walletBalance={walletBalance} renderTrigger />
+        }
+      />
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-[#ECE6D6]">
-        {(["bank", "pin"] as const).map((t) => (
-          <button key={t} type="button"
-            className={["flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors",
-              activeTab === t ? "border-[#FDA600] text-[#1A1208]" : "border-transparent text-[#7A6B44] hover:text-[#1A1208]",
+        {([
+          { id: "accounts", label: "Bank Accounts", icon: Landmark },
+          { id: "pin", label: "Wallet PIN", icon: Key },
+        ] as const).map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            className={[
+              "flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors cursor-pointer",
+              activeTab === id
+                ? "border-[#FDA600] text-[#1A1208]"
+                : "border-transparent text-[#7A6B44] hover:text-[#1A1208]",
             ].join(" ")}
-            onClick={() => setActiveTab(t)}>
-            {t === "bank" ? <Landmark className="h-4 w-4" /> : <Key className="h-4 w-4" />}
-            {t === "bank" ? "Bank Account" : "Wallet PIN"}
+            onClick={() => setActiveTab(id)}
+          >
+            <Icon className="h-4 w-4" />
+            {label}
           </button>
         ))}
       </div>
 
-      {activeTab === "bank" && (
-        <>
-          {/* Existing account display */}
-          {payout && (payout.bank_name || payout.account_name) && (
-            <div className="grid gap-4 md:grid-cols-2">
-              {[
-                { label: "Bank",           value: payout.bank_name || "—" },
-                { label: "Account Name",   value: payout.account_name || "—" },
-                { label: "Account Number", value: payout.account_last4 ? `·········${payout.account_last4}` : "—" },
-              ].map(({ label, value }) => (
-                <div key={label} className="rounded-xl bg-[#FAFAF8] border border-[#ECE6D6] p-4">
-                  <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-1">{label}</p>
-                  <p className="text-sm font-semibold text-[#1A1208] font-mono">{value}</p>
-                </div>
-              ))}
-              <div className="rounded-xl bg-[#FAFAF8] border border-[#ECE6D6] p-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-1">Status</p>
-                {payout.is_verified ? <Badge color="green">Verified ✓</Badge> : <Badge color="gold">Under review</Badge>}
-              </div>
-            </div>
-          )}
-
-          {showForm && (
-            <form onSubmit={handleSaveBankInit}
-              className="rounded-3xl bg-white border border-[#ECE6D6] p-8 shadow-sm space-y-5">
-              <h2 className="text-lg font-bold text-[#1A1208]">Bank account details</h2>
-              <div className="grid gap-5 md:grid-cols-2">
-                <div className="space-y-1.5">
-                  <FieldLabel htmlFor="bank-name">Bank name *</FieldLabel>
-                  <select
-                    id="bank-name"
-                    required
-                    value={selectedBankCode}
-                    onChange={(e) => {
-                      setSelectedBankCode(e.target.value);
-                      const bank = NIGERIAN_BANKS.find((b) => b.code === e.target.value);
-                      setBankForm((c) => ({ ...c, bank_name: bank ? bank.name : "" }));
-                    }}
-                    className="h-11 w-full rounded-xl border border-[#D9D9D9] bg-white px-3 text-sm outline-none transition focus:border-[#FDA600] focus:ring-2 focus:ring-[#FDA600]/15"
-                  >
-                    <option value="">Select your bank...</option>
-                    {NIGERIAN_BANKS.map((b) => (
-                      <option key={b.code} value={b.code}>
-                        {b.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <FieldLabel htmlFor="account-number">Account number *</FieldLabel>
-                  <div className="relative">
-                    <TextInput id="account-number" required placeholder="10-digit NUBAN"
-                      maxLength={10} inputMode="numeric"
-                      value={bankForm.account_number}
-                      onChange={(e) => setBankForm((c) => ({ ...c, account_number: e.target.value.replace(/\D/g, "") }))} />
-                    {resolving && (
-                      <RefreshCw className="absolute right-3 top-3.5 h-4 w-4 animate-spin text-[#FDA600]" />
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-1.5 md:col-span-2">
-                  <FieldLabel htmlFor="account-name">Account name *</FieldLabel>
-                  <TextInput id="account-name" required placeholder="Account name resolves automatically..."
-                    readOnly={resolving}
-                    value={bankForm.account_name}
-                    onChange={(e) => setBankForm((c) => ({ ...c, account_name: e.target.value }))} />
-                </div>
-              </div>
-              <div className="flex items-center justify-between pt-2">
-                <p className="text-xs text-[#7A6B44]">Your bank details are encrypted and stored securely.</p>
-                <PrimaryButton type="submit" loading={savePayout.isPending || resolving}>
-                  Save bank account <Check className="h-4 w-4" />
-                </PrimaryButton>
-              </div>
-            </form>
-          )}
-
-          {/* PIN authorization modal */}
-          {isPinAuthModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-              <div className="w-full max-w-sm rounded-3xl border border-[#ECE6D6] bg-white p-6 shadow-2xl">
-                <div className="flex items-center justify-between border-b border-[#ECE6D6] pb-4 mb-4">
-                  <h3 className="text-lg font-bold text-[#1A1208]">Confirm Wallet PIN</h3>
-                  <button
-                    type="button"
-                    onClick={() => setIsPinAuthModalOpen(false)}
-                    className="flex h-8 w-8 items-center justify-center rounded-xl text-white/40 hover:bg-[#F8F5ED] hover:text-[#7A6B44] transition-all cursor-pointer"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-                <form onSubmit={handleVerifyAndSave} className="space-y-4">
-                  <p className="text-xs text-[#7A6B44]">
-                    Please enter your 4-digit transaction PIN to authorize this bank profile update.
-                  </p>
-                  <div className="space-y-1.5">
-                    <FieldLabel htmlFor="auth-pin">4-Digit PIN</FieldLabel>
-                    <TextInput
-                      id="auth-pin"
-                      type="password"
-                      maxLength={4}
-                      inputMode="numeric"
-                      required
-                      placeholder="••••"
-                      value={authPin}
-                      onChange={(e) => setAuthPin(e.target.value.replace(/\D/g, ""))}
-                    />
-                  </div>
-                  <div className="flex justify-end gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsPinAuthModalOpen(false)}
-                      className="rounded-xl border border-[#ECE6D6] px-4 py-2.5 text-xs font-semibold text-[#5A6465] hover:bg-[#F8F5ED] transition cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                    <PrimaryButton type="submit" loading={savePayout.isPending}>
-                      Confirm & Save
-                    </PrimaryButton>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {!showForm && !payout && (
-            <div className="flex justify-center">
-              <button type="button" onClick={() => setShowForm(true)}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#FDA600] px-6 py-3 text-sm font-bold text-black transition hover:bg-[#f28705] shadow-sm">
-                <Landmark className="h-4 w-4" /> Add bank account
-              </button>
-            </div>
-          )}
-        </>
+      {activeTab === "accounts" && (
+        <BankAccountsList />
       )}
 
       {activeTab === "pin" && (
-        <form onSubmit={handleSetPin}
-          className="rounded-3xl bg-white border border-[#ECE6D6] p-8 shadow-sm space-y-5">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FDA600]/10 text-[#FDA600]">
-              <Key className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-[#1A1208]">Wallet PIN</h2>
-              <p className="text-xs text-[#7A6B44]">Set a 4-digit PIN to authorise wallet withdrawals.</p>
-            </div>
-          </div>
-          <div className="grid gap-5 md:grid-cols-2">
-            <div className="space-y-1.5">
-              <FieldLabel htmlFor="pin-new">New PIN (4 digits)</FieldLabel>
-              <TextInput id="pin-new" type="password" maxLength={4} inputMode="numeric" required placeholder="••••"
-                value={pinForm.pin}
-                onChange={(e) => setPinForm((c) => ({ ...c, pin: e.target.value.replace(/\D/g, "") }))} />
-            </div>
-            <div className="space-y-1.5">
-              <FieldLabel htmlFor="pin-confirm">Confirm PIN</FieldLabel>
-              <TextInput id="pin-confirm" type="password" maxLength={4} inputMode="numeric" required placeholder="••••"
-                value={pinForm.confirm_pin}
-                onChange={(e) => setPinForm((c) => ({ ...c, confirm_pin: e.target.value.replace(/\D/g, "") }))} />
-            </div>
-          </div>
-          {pinForm.pin && pinForm.confirm_pin && pinForm.pin !== pinForm.confirm_pin && (
-            <p className="text-xs font-semibold text-red-500">PINs do not match.</p>
-          )}
-          <div className="flex justify-end">
-            <PrimaryButton type="submit" loading={setPin.isPending}
-              disabled={pinForm.pin !== pinForm.confirm_pin || pinForm.pin.length < 4}>
-              Set wallet PIN <Key className="h-4 w-4" />
-            </PrimaryButton>
-          </div>
-        </form>
+        <PinSetupSection />
       )}
     </div>
   );
 }
+
 
 
 // ── KYC View ──────────────────────────────────────────────────────────────────
