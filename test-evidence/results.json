@@ -1,0 +1,351 @@
+{
+  "timestamp": "2026-05-26T13:01:42.156Z",
+  "duration_seconds": 108,
+  "ngrok": {
+    "backend": "https://aeration-scabby-navy.ngrok-free.dev",
+    "frontend": "https://hydrographically-tawdrier-hayley.ngrok-free.dev"
+  },
+  "local": {
+    "backend": "http://localhost:8001",
+    "frontend": "http://localhost:3000"
+  },
+  "vendor_auth": {
+    "email": null,
+    "token_obtained": false
+  },
+  "summary": {
+    "api_tests": 14,
+    "api_passed": 0,
+    "api_failed": 14,
+    "ui_pages": 22,
+    "ui_passed": 22
+  },
+  "layers": {
+    "L1": [
+      {
+        "name": "health_check",
+        "url": "http://localhost:8001/health/",
+        "expect": [
+          200
+        ],
+        "status": 0,
+        "pass": false
+      },
+      {
+        "name": "health_ngrok",
+        "url": "https://aeration-scabby-navy.ngrok-free.dev/health/",
+        "expect": [
+          200
+        ],
+        "status": 0,
+        "pass": false
+      },
+      {
+        "name": "swagger_docs",
+        "url": "http://localhost:8001/swagger/?format=openapi",
+        "expect": [
+          200
+        ],
+        "status": 0,
+        "pass": false
+      },
+      {
+        "name": "ninja_docs",
+        "url": "http://localhost:8001/api/v1/ninja/docs",
+        "expect": [
+          200,
+          301,
+          302
+        ],
+        "status": 0,
+        "pass": false
+      },
+      {
+        "name": "public_catalog",
+        "url": "http://localhost:8001/api/v1/ninja/catalog/collections/",
+        "expect": [
+          200
+        ],
+        "status": 0,
+        "pass": false
+      },
+      {
+        "name": "public_products",
+        "url": "http://localhost:8001/api/v1/ninja/products/",
+        "expect": [
+          200
+        ],
+        "status": 0,
+        "pass": false
+      },
+      {
+        "name": "vendor_profile_unauth",
+        "url": "http://localhost:8001/api/v1/vendor/profile/",
+        "expect": [
+          401,
+          403
+        ],
+        "status": 0,
+        "pass": false
+      },
+      {
+        "name": "vendor_dashboard_unauth",
+        "url": "http://localhost:8001/api/v1/ninja/vendor/dashboard/",
+        "expect": [
+          401,
+          403
+        ],
+        "status": 0,
+        "pass": false
+      }
+    ],
+    "L2": {
+      "email": "vendor.e2e.1779800401742@fashionistar.ng",
+      "token": null,
+      "loginStatus": 0
+    },
+    "L3": [],
+    "L4": [],
+    "L5": [
+      {
+        "name": "register_empty_body",
+        "url": "http://localhost:8001/api/v1/auth/register/",
+        "method": "POST",
+        "body": {},
+        "expect": [
+          400
+        ],
+        "status": 0,
+        "pass": false
+      },
+      {
+        "name": "register_weak_password",
+        "url": "http://localhost:8001/api/v1/auth/register/",
+        "method": "POST",
+        "body": {
+          "email": "test@t.com",
+          "password": "123",
+          "confirm_password": "123"
+        },
+        "expect": [
+          400
+        ],
+        "status": 0,
+        "pass": false
+      },
+      {
+        "name": "register_invalid_email",
+        "url": "http://localhost:8001/api/v1/auth/register/",
+        "method": "POST",
+        "body": {
+          "email": "notanemail",
+          "password": "Good@Pass123",
+          "confirm_password": "Good@Pass123"
+        },
+        "expect": [
+          400
+        ],
+        "status": 0,
+        "pass": false
+      },
+      {
+        "name": "register_mismatched_passwords",
+        "url": "http://localhost:8001/api/v1/auth/register/",
+        "method": "POST",
+        "body": {
+          "email": "ok@test.com",
+          "password": "Pass@123",
+          "confirm_password": "Diff@123"
+        },
+        "expect": [
+          400
+        ],
+        "status": 0,
+        "pass": false
+      },
+      {
+        "name": "login_wrong_creds",
+        "url": "http://localhost:8001/api/v1/auth/token/",
+        "method": "POST",
+        "body": {
+          "email": "nobody@nobody.com",
+          "password": "wrong"
+        },
+        "expect": [
+          400,
+          401
+        ],
+        "status": 0,
+        "pass": false
+      },
+      {
+        "name": "login_empty_body",
+        "url": "http://localhost:8001/api/v1/auth/token/",
+        "method": "POST",
+        "body": {},
+        "expect": [
+          400
+        ],
+        "status": 0,
+        "pass": false
+      }
+    ],
+    "L6": [],
+    "L7": [
+      {
+        "url": "http://localhost:3000",
+        "name": "01_homepage",
+        "label": "FASHIONISTAR Homepage",
+        "finalUrl": "http://localhost:3000/",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:3000/login",
+        "name": "02_login",
+        "label": "Auth — Login Page",
+        "finalUrl": "http://localhost:3000/login",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:3000/register",
+        "name": "03_register",
+        "label": "Auth — Register Page",
+        "finalUrl": "http://localhost:3000/register",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:3000/vendor/register",
+        "name": "04_vendor_register",
+        "label": "Vendor — Registration",
+        "finalUrl": "http://localhost:3000/vendor/register",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:3000/vendor",
+        "name": "05_vendor_dashboard",
+        "label": "Vendor — Dashboard Home",
+        "finalUrl": "http://localhost:3000/vendor",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:3000/vendor/products",
+        "name": "06_vendor_products",
+        "label": "Vendor — Products Catalog",
+        "finalUrl": "http://localhost:3000/vendor/products",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:3000/vendor/orders",
+        "name": "07_vendor_orders",
+        "label": "Vendor — Orders",
+        "finalUrl": "http://localhost:3000/vendor/orders",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:3000/vendor/analytics",
+        "name": "08_vendor_analytics",
+        "label": "Vendor — Analytics & Charts",
+        "finalUrl": "http://localhost:3000/vendor/analytics",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:3000/vendor/wallet",
+        "name": "09_vendor_wallet",
+        "label": "Vendor — Wallet Balance",
+        "finalUrl": "http://localhost:3000/vendor/wallet",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:3000/vendor/payouts",
+        "name": "10_vendor_payouts",
+        "label": "Vendor — Payouts & Bank",
+        "finalUrl": "http://localhost:3000/vendor/payouts",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:3000/vendor/kyc",
+        "name": "11_vendor_kyc",
+        "label": "Vendor — KYC Verification",
+        "finalUrl": "http://localhost:3000/vendor/kyc",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:3000/vendor/catalog",
+        "name": "12_vendor_catalog",
+        "label": "Vendor — Catalog Collections",
+        "finalUrl": "http://localhost:3000/vendor/catalog",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:3000/vendor/customers",
+        "name": "13_vendor_customers",
+        "label": "Vendor — Customers",
+        "finalUrl": "http://localhost:3000/vendor/customers",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:3000/vendor/reviews",
+        "name": "14_vendor_reviews",
+        "label": "Vendor — Reviews",
+        "finalUrl": "http://localhost:3000/vendor/reviews",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:3000/vendor/settings",
+        "name": "15_vendor_settings",
+        "label": "Vendor — Settings",
+        "finalUrl": "http://localhost:3000/vendor/settings",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:3000/vendor/transactions",
+        "name": "16_vendor_transactions",
+        "label": "Vendor — Transactions",
+        "finalUrl": "http://localhost:3000/vendor/transactions",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:3000/vendor/payments",
+        "name": "17_vendor_payments",
+        "label": "Vendor — Payments",
+        "finalUrl": "http://localhost:3000/vendor/payments",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:8001/swagger/",
+        "name": "18_swagger_ui",
+        "label": "Backend — Swagger UI",
+        "finalUrl": "http://localhost:8001/swagger/",
+        "pass": true
+      },
+      {
+        "url": "http://localhost:8001/api/v1/ninja/docs",
+        "name": "19_ninja_docs",
+        "label": "Backend — Ninja API Docs",
+        "finalUrl": "http://localhost:8001/api/v1/ninja/docs/",
+        "pass": true
+      },
+      {
+        "url": "https://hydrographically-tawdrier-hayley.ngrok-free.dev",
+        "name": "20_ngrok_homepage",
+        "label": "Frontend via ngrok tunnel",
+        "finalUrl": "https://hydrographically-tawdrier-hayley.ngrok-free.dev/",
+        "pass": true
+      },
+      {
+        "url": "https://hydrographically-tawdrier-hayley.ngrok-free.dev/vendor",
+        "name": "21_ngrok_vendor",
+        "label": "Vendor Dashboard via ngrok",
+        "finalUrl": "https://hydrographically-tawdrier-hayley.ngrok-free.dev/vendor",
+        "pass": true
+      },
+      {
+        "url": "https://aeration-scabby-navy.ngrok-free.dev/swagger/",
+        "name": "22_ngrok_swagger",
+        "label": "Backend Swagger via ngrok",
+        "finalUrl": "https://aeration-scabby-navy.ngrok-free.dev/swagger",
+        "pass": true
+      }
+    ]
+  }
+}
