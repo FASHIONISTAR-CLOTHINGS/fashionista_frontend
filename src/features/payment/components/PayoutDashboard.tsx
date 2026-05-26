@@ -1,7 +1,7 @@
 /**
  * features/payment/components/PayoutDashboard.tsx
  *
- * Vendor Payout Management Dashboard.
+ * Legacy payout management dashboard.
  *
  * Features:
  *   - Payout history list with status badges and countdown to completion
@@ -9,8 +9,10 @@
  *   - Real-time balance awareness (wallet balance must cover payout)
  *   - KYC gate messaging when vendor not verified
  *
- * Routing: /vendor/payouts
- * Auth: Vendor-only (enforced by layout guard)
+ * Note:
+ *   - This component is no longer the canonical `/vendor/payouts` surface.
+ *   - The active vendor payouts route now uses the bank-account + PIN flow
+ *     exposed through `VendorPayoutsView`.
  */
 
 "use client";

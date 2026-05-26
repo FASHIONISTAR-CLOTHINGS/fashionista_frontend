@@ -25,7 +25,6 @@ import {
   Package,
   PackageCheck,
   Plus,
-  ReceiptText,
   RefreshCw,
   Search,
   ShoppingBag,

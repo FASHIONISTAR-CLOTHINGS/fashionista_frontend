@@ -126,15 +126,17 @@ export async function generateStaticParams() {
       `${API_BASE}/api/v1/ninja/vendor/public/?featured=true&limit=20`,
       { next: { revalidate: 3600 } },
     );
-    if (!res.ok) return [];
+    if (!res.ok) return [{ slug: "featured-tailor" }];
     const data = await res.json();
     const vendors: Array<{ store_slug: string }> =
       data?.data?.results ?? data?.results ?? [];
+    if (vendors.length === 0) return [{ slug: "featured-tailor" }];
     return vendors.map((v) => ({ slug: v.store_slug }));
   } catch {
-    return [];
+    return [{ slug: "featured-tailor" }];
   }
 }
+
 
 // ── Store skeleton ─────────────────────────────────────────────────────────────
 function StoreSectionSkeleton() {

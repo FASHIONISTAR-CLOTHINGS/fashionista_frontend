@@ -8,19 +8,18 @@
  */
 
 import type { Metadata } from "next";
-import { PayoutDashboard } from "@/features/payment";
+import { VendorPayoutsView } from "@/features/vendor";
 
 export const metadata: Metadata = {
   title: "Payouts — Fashionistar Vendor",
   description:
-    "Manage your vendor earnings payouts. View payout history and " +
-    "initiate bank transfers to your registered account.",
+    "Manage saved bank accounts, wallet PIN, and secure vendor withdrawals.",
 };
 
 export default function VendorPayoutsPage() {
   return (
     <section className="min-h-screen space-y-2 px-1 py-2">
-      <PayoutDashboard />
+      <VendorPayoutsView />
     </section>
   );
 }
