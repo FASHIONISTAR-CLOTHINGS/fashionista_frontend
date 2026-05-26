@@ -13,6 +13,8 @@ export * from "@/features/client/api/client.api";
 // ── Components ─────────────────────────────────────────────────────────────
 export * from "@/features/client/components/client-shell";
 export * from "@/features/client/components/client-views";
+export * from "@/features/client/components/client-settings-view";
+export * from "@/features/client/components/client-wishlist-view";
 
 // ── TanStack Query Hooks ───────────────────────────────────────────────────
 export * from "@/features/client/hooks/use-client-profile";

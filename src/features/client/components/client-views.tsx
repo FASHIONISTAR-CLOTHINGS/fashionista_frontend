@@ -741,7 +741,7 @@ function AddAddressModal({
 }
 
 export function ClientAddressView() {
-  const { data: profile, refetch } = useClientProfile();
+  const { data: profile } = useClientProfile();
   const [showModal, setShowModal] = useState(false);
   const queryClient = useQueryClient();
 
@@ -749,17 +749,17 @@ export function ClientAddressView() {
 
   const handleAddAddress = async (payload: ClientAddressCreatePayload) => {
     await clientApi.addAddress(payload);
-    await queryClient.invalidateQueries({ queryKey: ["client-profile"] });
+    await queryClient.invalidateQueries({ queryKey: ["client", "profile"] });
   };
 
   const handleDelete = async (id: string) => {
     await clientApi.deleteAddress(id);
-    await queryClient.invalidateQueries({ queryKey: ["client-profile"] });
+    await queryClient.invalidateQueries({ queryKey: ["client", "profile"] });
   };
 
   const handleSetDefault = async (id: string) => {
     await clientApi.setDefaultAddress(id);
-    await queryClient.invalidateQueries({ queryKey: ["client-profile"] });
+    await queryClient.invalidateQueries({ queryKey: ["client", "profile"] });
   };
 
   return (
