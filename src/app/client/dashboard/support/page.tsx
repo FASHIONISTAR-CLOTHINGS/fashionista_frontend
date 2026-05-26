@@ -1,4 +1,4 @@
-import { ClientSupportView } from "@/features/client/components/client-views";
+import { ClientSupportView } from "@/features/client";
 
 export const metadata = {
   title: "Support Tickets — Fashionistar",

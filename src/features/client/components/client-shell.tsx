@@ -15,7 +15,6 @@ import {
   Menu,
   MessageCircle,
   Package,
-  PackageSearch,
   Palette,
   ReceiptText,
   Settings,
@@ -30,10 +29,11 @@ import { RoleGuard } from "@/features/auth/components/RoleGuard";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useClientProfile } from "@/features/client/hooks/use-client-profile";
 import {
-  useClientNotifications,
   useMarkAllNotificationsRead,
-} from "@/features/client/hooks/use-client-notifications";
-import { useUnreadBadgeCount } from "@/features/notification/hooks/use-notification";
+  useMarkNotificationRead,
+  useNotifications,
+  useUnreadBadgeCount,
+} from "@/features/notification/hooks/use-notification";
 
 // ── Nav Item Config ──────────────────────────────────────────────────────────
 
@@ -60,7 +60,6 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Shopping",
     items: [
       { href: "/client/dashboard/orders", label: "My Orders", Icon: Package },
-      { href: "/client/dashboard/orders/track-order", label: "Track Order", Icon: PackageSearch },
       { href: "/client/dashboard/custom-orders", label: "Custom Orders", Icon: Palette },
       { href: "/client/dashboard/wishlist", label: "Wishlist", Icon: Heart },
     ],
@@ -116,12 +115,13 @@ function Avatar({ email, size = "md" }: { email: string; size?: "sm" | "md" | "l
 function NotificationBell() {
   // Global WebSocket-aware badge (falls back to 30s polling when WS is down)
   const { data: wsBadge } = useUnreadBadgeCount();
-  // Client-specific notifications for dropdown list content
-  const { data: notifications = [], unreadCount: pollCount } = useClientNotifications();
+  // Reuse the global notification feed for dropdown content.
+  const { data: notifications = [] } = useNotifications(1);
   const markAllRead = useMarkAllNotificationsRead();
+  const markRead = useMarkNotificationRead();
   const [open, setOpen] = useState(false);
-  // Prefer real-time WS badge; fall back to poll-derived count
-  const unreadCount = wsBadge ?? pollCount;
+  const unreadCount =
+    wsBadge ?? notifications.filter((notification) => !notification.is_read).length;
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -185,12 +185,21 @@ function NotificationBell() {
                   <div className={`mt-1 h-2 w-2 shrink-0 rounded-full ${!n.is_read ? "bg-[#FDA600]" : "bg-transparent"}`} />
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-black">{n.title}</p>
-                    <p className="truncate text-xs leading-5 text-[#5A6465]">{n.message}</p>
+                    <p className="truncate text-xs leading-5 text-[#5A6465]">{n.body}</p>
                     <p className="mt-1 text-[10px] text-[#A89A7A]">
                       {new Date(n.created_at).toLocaleDateString("en-NG", {
                         day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
                       })}
                     </p>
+                    {!n.is_read && (
+                      <button
+                        type="button"
+                        onClick={() => markRead.mutate(n.id)}
+                        className="mt-1 text-[10px] font-semibold text-[#01454A] hover:underline"
+                      >
+                        Mark read
+                      </button>
+                    )}
                   </div>
                 </div>
               ))
