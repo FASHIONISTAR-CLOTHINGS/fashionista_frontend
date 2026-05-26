@@ -500,7 +500,7 @@ export function ClientOrdersView() {
           </select>
           <button
             type="button"
-            onClick={() => void refetch()}
+            onClick={() => void refetchOrders()}
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#D9D9D9] bg-white text-[#5A6465] transition hover:text-black"
           >
             <RefreshCw className="h-4 w-4" />
