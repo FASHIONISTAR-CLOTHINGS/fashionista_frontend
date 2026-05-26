@@ -7,13 +7,17 @@ import {
   ArrowRight,
   ArrowUpRight,
   BarChart3,
+  Bell,
   CheckCircle2,
   ChevronRight,
+  ClipboardCheck,
   Clock,
   ExternalLink,
+  FileCheck2,
   Heart,
   Loader2,
   MapPin,
+  MessageSquarePlus,
   Package,
   PackageCheck,
   Palette,
@@ -21,8 +25,11 @@ import {
   Plus,
   RefreshCw,
   Ruler,
+  ShieldCheck,
   Sparkles,
+  TicketCheck,
   TrendingUp,
+  UploadCloud,
   Wallet,
   X,
   ZapIcon,
@@ -36,14 +43,18 @@ import {
   useUpdateClientProfile,
 } from "@/features/client/hooks/use-client-profile";
 import { useClientWalletBalance } from "@/features/client/hooks/use-client-wallet";
+import { useMarkAllNotificationsRead, useNotifications } from "@/features/notification/hooks/use-notification";
+import type { Notification as GlobalNotification } from "@/features/notification/types/notification.types";
 import { clientApi } from "@/features/client/api/client.api";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   ClientAddress,
   ClientAddressCreatePayload,
   ClientOrder,
   ClientProfileUpdatePayload,
   Country,
+  SupportTicket,
+  SupportTicketCreatePayload,
 } from "@/features/client/types/client.types";
 
 // ── Design Tokens ──────────────────────────────────────────────────────────────
@@ -1048,27 +1059,8 @@ export function ClientWalletView() {
         />
       </div>
 
-      {/* Quick top-up buttons */}
-      <div className="rounded-[28px] bg-white p-6 shadow-sm">
-        <p className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-[#7A6B44]">Quick Top-Up</p>
-        <div className="flex flex-wrap gap-2">
-          {[1000, 2000, 5000, 10000, 25000, 50000].map((amt) => (
-            <button
-              key={amt}
-              type="button"
-              className="rounded-full border border-[#ECE6D6] bg-[#F8F5ED] px-4 py-2 text-sm font-semibold text-black transition hover:bg-[#EDE7D9]"
-            >
-              {fmtNgn(amt)}
-            </button>
-          ))}
-          <Link
-            href="/client/dashboard/settings#wallet"
-            className="ml-auto flex items-center gap-1.5 rounded-full bg-[#FDA600] px-5 py-2 text-sm font-semibold text-black"
-          >
-            <Plus className="h-4 w-4" /> Add Funds
-          </Link>
-        </div>
-      </div>
+      {/* Quick top-up — wired to live initiateTopUp API */}
+      <WalletTopUpPanel />
 
       {/* Full transaction dashboard */}
       <Transactions
@@ -1122,6 +1114,575 @@ export function ClientTrackOrderView() {
             <PackageSearch className="h-4 w-4" /> Track Order
           </ActionBtn>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+//  WALLET TOP-UP PANEL (live Paystack initiate)
+// ──────────────────────────────────────────────────────────────────────────────
+
+function WalletTopUpPanel() {
+  const [amount, setAmount] = useState<number | null>(null);
+  const topUpMutation = useMutation({
+    mutationFn: (amountNgn: number) =>
+      clientApi.initiateTopUp({ amount: amountNgn, payment_method: "card" }),
+    onSuccess: (res) => {
+      if (res.payment_url) window.location.href = res.payment_url;
+    },
+  });
+
+  const PRESETS = [1000, 2000, 5000, 10000, 25000, 50000];
+
+  return (
+    <div className="rounded-[28px] bg-white p-6 shadow-sm">
+      <p className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-[#7A6B44]">Top Up Wallet</p>
+      <div className="flex flex-wrap gap-2">
+        {PRESETS.map((preset) => (
+          <button
+            key={preset}
+            type="button"
+            onClick={() => setAmount(preset)}
+            className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+              amount === preset
+                ? "border-[#FDA600] bg-[#FDA600] text-black"
+                : "border-[#ECE6D6] bg-[#F8F5ED] text-black hover:bg-[#EDE7D9]"
+            }`}
+          >
+            {fmtNgn(preset)}
+          </button>
+        ))}
+      </div>
+      <div className="mt-4 flex gap-3">
+        <input
+          type="number"
+          value={amount ?? ""}
+          onChange={(e) => setAmount(Number(e.target.value) || null)}
+          placeholder="Custom amount (₦)"
+          min={100}
+          className="h-12 flex-1 rounded-[16px] border border-[#D9D9D9] bg-white px-4 text-sm text-black outline-none transition focus:border-[#FDA600] focus:ring-2 focus:ring-[#FDA600]/20"
+        />
+        <button
+          type="button"
+          onClick={() => amount && topUpMutation.mutate(amount)}
+          disabled={!amount || amount < 100 || topUpMutation.isPending}
+          className="inline-flex items-center gap-2 rounded-full bg-[#FDA600] px-6 py-2.5 text-sm font-bold text-black transition hover:bg-[#f28705] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {topUpMutation.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Plus className="h-4 w-4" />
+          )}
+          Fund Wallet
+        </button>
+      </div>
+      {topUpMutation.isError && (
+        <p className="mt-2 text-xs font-semibold text-red-500">
+          Top-up failed. Please try again.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  NOTIFICATIONS VIEW  (global feed, mark-read, filter by type)
+// ══════════════════════════════════════════════════════════════════════════════
+
+const NOTIF_TYPE_LABELS: Record<string, string> = {
+  all: "All",
+  order: "Orders",
+  payment: "Payments",
+  custom_order: "Custom Orders",
+  promo: "Promotions",
+  kyc: "KYC",
+  support: "Support",
+};
+
+function NotifRow({ notif, onMarkRead }: { notif: GlobalNotification; onMarkRead: (id: string) => void }) {
+  const typeColors: Record<string, string> = {
+    order: "bg-[#DBEAFE] text-[#1E40AF]",
+    payment: "bg-[#D1FAE5] text-[#065F46]",
+    custom_order: "bg-[#EDE9FE] text-[#6D28D9]",
+    promo: "bg-[#FEF3C7] text-[#92400E]",
+    kyc: "bg-[#DCFCE7] text-[#166534]",
+    support: "bg-[#FEE2E2] text-[#991B1B]",
+  };
+  const typeKey = (notif.notification_type ?? "").split(".")[0];
+  const colourClass = typeColors[typeKey] ?? "bg-[#F3F4F6] text-[#6B7280]";
+
+  return (
+    <div
+      className={`flex items-start gap-4 rounded-[20px] p-4 transition hover:bg-[#FFFDF5] ${
+        !notif.is_read ? "bg-[#FFFDF5] ring-1 ring-[#FDA600]/20" : "bg-white"
+      }`}
+    >
+      {/* Unread dot */}
+      <div className={`mt-2 h-2 w-2 shrink-0 rounded-full ${
+        !notif.is_read ? "bg-[#FDA600]" : "bg-transparent"
+      }`} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-2">
+          <p className="font-semibold text-black">{notif.title}</p>
+          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${colourClass}`}>
+            {NOTIF_TYPE_LABELS[typeKey] ?? typeKey}
+          </span>
+        </div>
+        <p className="mt-1 text-sm leading-6 text-[#5A6465]">{notif.body}</p>
+        <div className="mt-2 flex items-center justify-between">
+          <span className="text-[10px] text-[#A89A7A]">
+            {new Date(notif.created_at).toLocaleDateString("en-NG", {
+              day: "numeric", month: "short", year: "numeric",
+              hour: "2-digit", minute: "2-digit",
+            })}
+          </span>
+          {!notif.is_read && (
+            <button
+              type="button"
+              onClick={() => onMarkRead(notif.id)}
+              className="text-[10px] font-semibold text-[#01454A] hover:underline"
+            >
+              Mark read
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ClientNotificationsView() {
+  const [page, setPage] = useState(1);
+  const [typeFilter, setTypeFilter] = useState("all");
+
+  const { data: notifications = [], isLoading, refetch } = useNotifications(page);
+  const markAllMutation = useMarkAllNotificationsRead();
+  const markReadMutation = useMutation({
+    mutationFn: (id: string) => clientApi.markNotificationRead(id),
+    onSuccess: () => void refetch(),
+  });
+
+  const filtered = typeFilter === "all"
+    ? (notifications as GlobalNotification[])
+    : (notifications as GlobalNotification[]).filter((n) => (n.notification_type ?? "").startsWith(typeFilter));
+
+  const unreadCount = (notifications as GlobalNotification[]).filter((n) => !n.is_read).length;
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="font-bon_foyage text-4xl text-black">Notifications</h1>
+            {unreadCount > 0 && (
+              <span className="flex h-6 min-w-[24px] items-center justify-center rounded-full bg-[#FDA600] px-1.5 text-xs font-bold text-black">
+                {unreadCount}
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-sm text-[#5A6465]">
+            {notifications.length} notification{notifications.length !== 1 ? "s" : ""} · {unreadCount} unread
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={() => markAllMutation.mutate()}
+              disabled={markAllMutation.isPending}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#ECE6D6] bg-white px-4 py-2 text-sm font-semibold text-[#01454A] transition hover:bg-[#F8F5ED] disabled:opacity-60"
+            >
+              {markAllMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+              Mark all read
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#D9D9D9] bg-white text-[#5A6465] transition hover:text-black"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Type filter chips */}
+      <div className="flex flex-wrap gap-2">
+        {Object.entries(NOTIF_TYPE_LABELS).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setTypeFilter(key)}
+            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+              typeFilter === key
+                ? "bg-[#FDA600] text-black shadow-sm"
+                : "border border-[#ECE6D6] bg-white text-[#5A6465] hover:bg-[#F8F5ED]"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Notification list */}
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-20 animate-pulse rounded-[20px] bg-white" />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center gap-4 rounded-[32px] bg-white py-16 text-center shadow-sm">
+          <Bell className="h-12 w-12 text-[#D9D9D9]" />
+          <div>
+            <p className="text-base font-semibold text-black">No notifications yet</p>
+            <p className="mt-1 text-sm text-[#5A6465]">We’ll notify you about orders, payments, and more.</p>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((n: GlobalNotification) => (
+            <NotifRow
+              key={n.id}
+              notif={n}
+              onMarkRead={(id) => markReadMutation.mutate(id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      <div className="flex items-center justify-center gap-2">
+        <button
+          type="button"
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={page === 1}
+          className="rounded-full border border-[#ECE6D6] bg-white px-4 py-2 text-sm font-semibold text-[#5A6465] transition hover:bg-[#F8F5ED] disabled:opacity-40"
+        >
+          ← Previous
+        </button>
+        <span className="text-sm text-[#5A6465]">Page {page}</span>
+        <button
+          type="button"
+          onClick={() => setPage((p) => p + 1)}
+          disabled={notifications.length < 20}
+          className="rounded-full border border-[#ECE6D6] bg-white px-4 py-2 text-sm font-semibold text-[#5A6465] transition hover:bg-[#F8F5ED] disabled:opacity-40"
+        >
+          Next →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  SUPPORT TICKETS VIEW
+// ══════════════════════════════════════════════════════════════════════════════
+
+const TICKET_STATUS_MAP: Record<string, { label: string; bg: string; text: string }> = {
+  open:        { label: "Open",        bg: "#DBEAFE", text: "#1E40AF" },
+  in_progress: { label: "In Progress", bg: "#EDE9FE", text: "#6D28D9" },
+  resolved:    { label: "Resolved",    bg: "#D1FAE5", text: "#065F46" },
+  closed:      { label: "Closed",      bg: "#F3F4F6", text: "#6B7280" },
+  escalated:   { label: "Escalated",   bg: "#FEE2E2", text: "#991B1B" },
+};
+
+const TICKET_CATEGORIES = [
+  "Order Issue",
+  "Payment Problem",
+  "Custom Order Dispute",
+  "Delivery Issue",
+  "Account & KYC",
+  "Product Quality",
+  "General Enquiry",
+];
+
+function CreateTicketModal({ onClose }: { onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState<SupportTicketCreatePayload>({
+    subject: "",
+    category: TICKET_CATEGORIES[0],
+    description: "",
+  });
+  const mutation = useMutation({
+    mutationFn: (payload: SupportTicketCreatePayload) => clientApi.createSupportTicket(payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["client-support-tickets"] });
+      onClose();
+    },
+  });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-lg overflow-hidden rounded-[28px] bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-[#ECE6D6] px-7 py-5">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#7A6B44]">New Ticket</p>
+            <h2 className="font-bon_foyage text-2xl text-black">Contact Support</h2>
+          </div>
+          <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full border border-[#ECE6D6] text-[#5A6465] hover:text-black">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="space-y-4 px-7 py-6">
+          <div className="space-y-2">
+            <FieldLabel htmlFor="ticket-subject">Subject</FieldLabel>
+            <TextInput
+              id="ticket-subject"
+              value={form.subject}
+              onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
+              placeholder="Briefly describe your issue"
+            />
+          </div>
+          <div className="space-y-2">
+            <FieldLabel htmlFor="ticket-category">Category</FieldLabel>
+            <SelectInput
+              id="ticket-category"
+              value={form.category}
+              onChange={(v) => setForm((f) => ({ ...f, category: v }))}
+            >
+              {TICKET_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </SelectInput>
+          </div>
+          <div className="space-y-2">
+            <FieldLabel htmlFor="ticket-desc">Description</FieldLabel>
+            <TextArea
+              id="ticket-desc"
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              placeholder="Describe the issue in detail — order numbers, dates, screenshots..."
+              rows={5}
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 border-t border-[#ECE6D6] px-7 py-5">
+          <ActionBtn variant="ghost" onClick={onClose}>Cancel</ActionBtn>
+          <ActionBtn
+            variant="primary"
+            onClick={() => mutation.mutate(form)}
+            loading={mutation.isPending}
+            disabled={!form.subject || !form.description}
+          >
+            <MessageSquarePlus className="h-4 w-4" /> Submit Ticket
+          </ActionBtn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ClientSupportView() {
+  const [showCreate, setShowCreate] = useState(false);
+  const { data: tickets = [], isLoading, refetch } = useQuery<SupportTicket[]>({
+    queryKey: ["client-support-tickets"],
+    queryFn: () => clientApi.getSupportTickets(),
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+  });
+
+  const openCount = tickets.filter((t) => t.status === "open" || t.status === "in_progress").length;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-bon_foyage text-4xl text-black">Support Tickets</h1>
+          <p className="mt-1 text-sm text-[#5A6465]">
+            {tickets.length} ticket{tickets.length !== 1 ? "s" : ""} · {openCount} open
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button type="button" onClick={() => void refetch()} className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#D9D9D9] bg-white text-[#5A6465] hover:text-black">
+            <RefreshCw className="h-4 w-4" />
+          </button>
+          <ActionBtn variant="primary" onClick={() => setShowCreate(true)}>
+            <MessageSquarePlus className="h-4 w-4" /> New Ticket
+          </ActionBtn>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => <div key={i} className="h-20 animate-pulse rounded-[20px] bg-white" />)}
+        </div>
+      ) : tickets.length === 0 ? (
+        <div className="flex flex-col items-center gap-4 rounded-[32px] bg-white py-16 text-center shadow-sm">
+          <TicketCheck className="h-14 w-14 text-[#D9D9D9]" />
+          <div>
+            <p className="text-base font-semibold text-black">No support tickets yet</p>
+            <p className="mt-1 text-sm text-[#5A6465]">Our team is ready to help with any issue</p>
+          </div>
+          <ActionBtn variant="primary" onClick={() => setShowCreate(true)}>
+            <MessageSquarePlus className="h-4 w-4" /> Open First Ticket
+          </ActionBtn>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-[28px] bg-white shadow-sm">
+          <div className="hidden grid-cols-[2fr_1fr_1fr_1fr] gap-4 bg-[#F8F5ED] px-6 py-4 text-[11px] font-bold uppercase tracking-[0.15em] text-[#7A6B44] md:grid">
+            <span>Subject</span>
+            <span>Category</span>
+            <span>Status</span>
+            <span>Date</span>
+          </div>
+          <div className="divide-y divide-[#F4F3EC]">
+            {tickets.map((ticket) => {
+              const st = TICKET_STATUS_MAP[ticket.status] ?? TICKET_STATUS_MAP.open;
+              return (
+                <div key={ticket.id} className="grid items-center gap-4 px-6 py-5 hover:bg-[#FFFDF5] md:grid-cols-[2fr_1fr_1fr_1fr]">
+                  <div>
+                    <p className="font-semibold text-black">{ticket.subject}</p>
+                    <p className="text-xs text-[#5A6465] line-clamp-1">{ticket.description}</p>
+                  </div>
+                  <p className="text-sm text-[#5A6465]">{ticket.category}</p>
+                  <span
+                    className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+                    style={{ backgroundColor: st.bg, color: st.text }}
+                  >
+                    {st.label}
+                  </span>
+                  <p className="text-xs text-[#5A6465]">
+                    {new Date(ticket.created_at).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {showCreate && <CreateTicketModal onClose={() => setShowCreate(false)} />}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  KYC VIEW
+// ══════════════════════════════════════════════════════════════════════════════
+
+type KycStatus = "verified" | "pending" | "not_started" | "rejected";
+
+export function ClientKycView() {
+  const { data: profile } = useClientProfile();
+  // Derive status from profile — backend exposes kyc_status on ClientProfile
+  const kycStatus = (profile as { kyc_status?: KycStatus } | undefined)?.kyc_status ?? "not_started";
+
+  const STATUS_CONFIG: Record<KycStatus, { label: string; bg: string; text: string; icon: React.ElementType }> = {
+    verified:    { label: "Verified ✅",     bg: "#D1FAE5", text: "#065F46", icon: ShieldCheck },
+    pending:     { label: "Under Review ⏳",  bg: "#FEF3C7", text: "#92400E", icon: Clock },
+    not_started: { label: "Not Started",   bg: "#F3F4F6", text: "#6B7280", icon: ClipboardCheck },
+    rejected:    { label: "Action Required", bg: "#FEE2E2", text: "#991B1B", icon: AlertCircle },
+  };
+  const cfg = STATUS_CONFIG[kycStatus];
+
+  const KYC_STEPS = [
+    {
+      id: "bvn",
+      label: "BVN Verification",
+      desc: "Link your Bank Verification Number for identity check",
+      icon: FileCheck2,
+      done: kycStatus === "verified",
+    },
+    {
+      id: "id",
+      label: "Government ID",
+      desc: "Upload National ID, International Passport, or Driver’s Licence",
+      icon: UploadCloud,
+      done: kycStatus === "verified",
+    },
+    {
+      id: "address",
+      label: "Address Proof",
+      desc: "Utility bill or bank statement (not older than 3 months)",
+      icon: MapPin,
+      done: kycStatus === "verified",
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="font-bon_foyage text-4xl text-black">KYC Verification</h1>
+        <p className="mt-1 text-sm text-[#5A6465]">
+          Complete identity verification to unlock full platform features.
+        </p>
+      </div>
+
+      {/* Status banner */}
+      <div
+        className="flex items-center gap-4 rounded-[24px] p-6"
+        style={{ backgroundColor: cfg.bg, color: cfg.text }}
+      >
+        <cfg.icon className="h-8 w-8 shrink-0" />
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.15em]">{cfg.label}</p>
+          {kycStatus === "verified" && (
+            <p className="mt-1 text-sm">Your identity has been verified. Full platform access granted.</p>
+          )}
+          {kycStatus === "pending" && (
+            <p className="mt-1 text-sm">Your documents are under review. This typically takes 24–48 hours.</p>
+          )}
+          {kycStatus === "not_started" && (
+            <p className="mt-1 text-sm">Complete the steps below to verify your identity and unlock payouts.</p>
+          )}
+          {kycStatus === "rejected" && (
+            <p className="mt-1 text-sm">Your submission was rejected. Please re-upload valid documents.</p>
+          )}
+        </div>
+      </div>
+
+      {/* Steps */}
+      <div className="space-y-3">
+        {KYC_STEPS.map((step) => (
+          <div
+            key={step.id}
+            className={`flex items-center gap-5 rounded-[24px] border p-6 transition ${
+              step.done
+                ? "border-[#D1FAE5] bg-[#F0FDF4]"
+                : "border-[#ECE6D6] bg-white hover:shadow-sm"
+            }`}
+          >
+            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
+              step.done ? "bg-[#D1FAE5]" : "bg-[#F4F3EC]"
+            }`}>
+              <step.icon className={`h-6 w-6 ${step.done ? "text-[#065F46]" : "text-[#01454A]"}`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-black">{step.label}</p>
+                {step.done && (
+                  <span className="rounded-full bg-[#D1FAE5] px-2 py-0.5 text-[10px] font-bold text-[#065F46]">
+                    Complete
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-sm text-[#5A6465]">{step.desc}</p>
+            </div>
+            {!step.done && (
+              <Link
+                href={`/client/dashboard/kyc/${step.id}`}
+                className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-[#FDA600] px-4 py-2 text-xs font-bold text-black"
+              >
+                Start <ArrowRight className="h-3 w-3" />
+              </Link>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Help note */}
+      <div className="rounded-[20px] border border-[#ECE6D6] bg-[#F8F5ED] p-5">
+        <p className="text-sm font-semibold text-black">Need help?</p>
+        <p className="mt-1 text-sm text-[#5A6465]">
+          Contact our support team via the{" "}
+          <Link href="/client/dashboard/support" className="font-semibold text-[#01454A] hover:underline">
+            Support Tickets
+          </Link>{" "}
+          page if you face any issues during verification.
+        </p>
       </div>
     </div>
   );

@@ -33,6 +33,7 @@ import {
   useClientNotifications,
   useMarkAllNotificationsRead,
 } from "@/features/client/hooks/use-client-notifications";
+import { useUnreadBadgeCount } from "@/features/notification/hooks/use-notification";
 
 // ── Nav Item Config ──────────────────────────────────────────────────────────
 
@@ -75,6 +76,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Account",
     items: [
+      { href: "/client/dashboard/notifications", label: "Notifications", Icon: Bell },
       { href: "/client/dashboard/kyc", label: "KYC Verification", Icon: ClipboardCheck },
       { href: "/client/dashboard/address", label: "Addresses", Icon: MapPin },
       { href: "/client/dashboard/account-details", label: "Profile", Icon: UserRound },
@@ -112,9 +114,14 @@ function Avatar({ email, size = "md" }: { email: string; size?: "sm" | "md" | "l
 
 // ── Notification Bell ─────────────────────────────────────────────────────────
 function NotificationBell() {
-  const { data: notifications = [], unreadCount } = useClientNotifications();
+  // Global WebSocket-aware badge (falls back to 30s polling when WS is down)
+  const { data: wsBadge } = useUnreadBadgeCount();
+  // Client-specific notifications for dropdown list content
+  const { data: notifications = [], unreadCount: pollCount } = useClientNotifications();
   const markAllRead = useMarkAllNotificationsRead();
   const [open, setOpen] = useState(false);
+  // Prefer real-time WS badge; fall back to poll-derived count
+  const unreadCount = wsBadge ?? pollCount;
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
