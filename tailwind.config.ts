@@ -131,6 +131,20 @@ const config: Config = {
           from: { transform: "rotate(0deg)" },
           to: { transform: "rotate(360deg)" },
         },
+        "scan-line": {
+          "0%": { top: "10%", opacity: "0" },
+          "10%": { opacity: "0.9" },
+          "90%": { opacity: "0.9" },
+          "100%": { top: "90%", opacity: "0" },
+        },
+        "fade-in-scale": {
+          from: { opacity: "0", transform: "scale(0.8) translateX(-10px)" },
+          to: { opacity: "1", transform: "scale(1) translateX(0)" },
+        },
+        "count-up": {
+          from: { opacity: "0", transform: "translateY(20px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
       },
 
       animation: {
@@ -139,6 +153,9 @@ const config: Config = {
         "slide-in-right": "slide-in-right 0.4s ease-out both",
         shimmer: "shimmer 2s linear infinite",
         "spin-slow": "spin-slow 3s linear infinite",
+        "scan-line": "scan-line 3s ease-in-out infinite",
+        "fade-in-scale": "fade-in-scale 0.5s ease-out forwards",
+        "count-up": "count-up 0.6s ease-out both",
       },
 
       // ── Box Shadows ───────────────────────────────────────────────────────

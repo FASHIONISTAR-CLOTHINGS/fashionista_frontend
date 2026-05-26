@@ -13,6 +13,10 @@ export * from "@/features/client/api/client.api";
 // ── Components ─────────────────────────────────────────────────────────────
 export * from "@/features/client/components/client-shell";
 export * from "@/features/client/components/client-views";
+export * from "@/features/client/components/client-wallet-view";
+export * from "@/features/client/components/client-kyc-view";
+export * from "@/features/client/components/client-notifications-view";
+export * from "@/features/client/components/client-support-view";
 export * from "@/features/client/components/client-settings-view";
 export * from "@/features/client/components/client-wishlist-view";
 

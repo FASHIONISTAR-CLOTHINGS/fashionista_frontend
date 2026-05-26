@@ -1,4 +1,4 @@
-import { ClientNotificationsView } from "@/features/client/components/client-views";
+import { ClientNotificationsView } from "@/features/client";
 
 export const metadata = {
   title: "Notifications — Fashionistar",

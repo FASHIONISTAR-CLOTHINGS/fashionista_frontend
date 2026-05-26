@@ -1,106 +1,37 @@
-import Image from "next/image";
-import { data2 } from "@/lib/utils/mock-data";
 import Link from "next/link";
+import Image from "next/image";
 import { Hero } from "@/components";
 import { CatalogCategoryGrid, CatalogCollectionGrid } from "@/features/catalog";
-import { formatCurrency } from "@/lib/formatting";
 import { Suspense } from "react";
 import FeaturedProductsSection from "./FeaturedProductsSection";
 import { ProductGridSkeleton } from "@/features/product";
 import { RecentlyViewedSection } from "./_components/RecentlyViewedSection";
+import { DealsCountdown } from "./_components/DealsCountdown";
 
-type ReviewProps = {
-  id: string;
-  image: string;
-  text: string;
-  rating: number;
-  name: string;
-};
+// ─────────────────────────────────────────────────────────────────────────────
+// HOMEPAGE — Production 2027 Enterprise Design
+// Live: Category Grid, Featured Products, Collection Grid
+// Live Countdown for Deals of the Week
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default async function Home(props: { searchParams?: Promise<Record<string, string>> }) {
-  // Next.js 16: searchParams is a Promise
-  void props; // searchParams consumed client-side via CatalogCollectionGrid's useSearchParams
-  // Static deal cards (legacy – kept for layout)
-  const dealList = data2.map((deal) => (
-    <div
-      key={deal.image}
-      className="flex flex-col w-[45%]  md:w-[32%] max-w-[300px]"
-    >
-      <div className="relative ">
-        <Image
-          src={deal.image}
-          className="rounded-[8px] w-full h-[220px] md:h-[350px] object-contain"
-          alt=""
-          width={500}
-          height={500}
-        />
-        <div className="absolute top-7 left-2 md:top-10 lg:top-3 lg:left-3">
-          <p className="w-[83px] h-7 rounded-[5px] flex items-center justify-center uppercase bg-[#fda600] text-white font-semibold font-raleway">
-            sales
-          </p>
-        </div>
-        <span className="absolute bottom-8 md:bottom-10 lg:bottom-4 right-3">
-          <svg
-            width="25"
-            height="25"
-            viewBox="0 0 25 25"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M12.5 22.2656L13.0391 23.3063C12.8725 23.3926 12.6876 23.4376 12.5 23.4376C12.3124 23.4376 12.1275 23.3926 11.9609 23.3063L11.9484 23.3L11.9203 23.2844C11.7566 23.1999 11.5951 23.1114 11.4359 23.0188C9.53126 21.9353 7.73455 20.6723 6.07031 19.2469C3.19531 16.7672 0 13.0469 0 8.59375C0 4.43125 3.25937 1.5625 6.64062 1.5625C9.05781 1.5625 11.1766 2.81562 12.5 4.71875C13.8234 2.81562 15.9422 1.5625 18.3594 1.5625C21.7406 1.5625 25 4.43125 25 8.59375C25 13.0469 21.8047 16.7672 18.9297 19.2469C17.1244 20.7912 15.164 22.1443 13.0797 23.2844L13.0516 23.3L13.0422 23.3047H13.0391L12.5 22.2656ZM6.64062 3.90625C4.55312 3.90625 2.34375 5.725 2.34375 8.59375C2.34375 11.9531 4.8125 15.0688 7.60156 17.4719C9.12336 18.7733 10.7633 19.9299 12.5 20.9266C14.2367 19.9299 15.8766 18.7733 17.3984 17.4719C20.1875 15.0688 22.6562 11.9531 22.6562 8.59375C22.6562 5.725 20.4469 3.90625 18.3594 3.90625C16.2141 3.90625 14.2828 5.44687 13.6266 7.74375C13.5575 7.98934 13.41 8.20561 13.2066 8.35965C13.0033 8.5137 12.7551 8.59706 12.5 8.59706C12.2449 8.59706 11.9967 8.5137 11.7934 8.35965C11.59 8.20561 11.4425 7.98934 11.3734 7.74375C10.7172 5.44687 8.78594 3.90625 6.64062 3.90625Z"
-              fill="#01454A"
-            />
-          </svg>
-        </span>
-      </div>
-      <div className="flex flex-col gap-3">
-        <span className="text-[#fda600] text-xl">★★★★★</span>
-        <p className="font-raleway font-semibold text-lg md:text-2xl text-black">
-          {deal.title}
-        </p>
-        <div className="flex items-center gap-2">
-          <p className="font-raleway font-semibold text-lg md:text-2xl text-black">
-            {formatCurrency(deal.price)}
-          </p>
-          <p className="font-raleway font-semibold  md:text-xl line-through text-[#848484]">
-            {formatCurrency(deal.price)}
-          </p>
-        </div>
-      </div>
-    </div>
-  ));
-
-  // Mock review list
-  const mockReviews: ReviewProps[] = [
-    {
-      id: "1",
-      image: "/man2_asset.svg",
-      text: "Amazing quality and perfect fit!",
-      rating: 5,
-      name: "Sarah Johnson",
-    },
-    {
-      id: "2",
-      image: "/woman.svg",
-      text: "Exceeded my expectations!",
-      rating: 5,
-      name: "Emily Davis",
-    },
-  ];
+  void props;
 
   return (
     <div className="flex flex-col gap-5">
+      {/* ── Slide Carousel Hero (3 animated slides) ─────────────── */}
       <Hero />
-      <div className=" mt-10 md:hidden flex z-30">
+
+      {/* ── Mobile email waitlist ─────────────────────────────────── */}
+      <div className="mt-10 md:hidden flex z-30 px-4">
         <form className="flex w-full">
-          <div className="h-[60px] lg:h-[85px] w-full md:w-1/2 bg-[#F4F5FB] rounded-r-[100px] flex items-center p-1.5 lg:p-3">
+          <div className="h-[60px] w-full bg-[#F4F5FB] rounded-r-[100px] flex items-center p-1.5">
             <input
               type="email"
               className="w-2/3 h-full outline-none bg-inherit placeholder:not-italic placeholder:font-raleway placeholder:font-medium placeholder:text-xl placeholder:text-[#333] text-[#333]"
               placeholder="Enter Email Address"
             />
-            <button className="w-1/3 lg:min-h-[66px] h-full rounded-r-[100px] bg-[#01454a] text-white shrink-0 text-sm lg:text-xl font-bold font-raleway">
+            <button className="w-1/3 h-full rounded-r-[100px] bg-[#01454a] text-white shrink-0 text-sm font-bold font-raleway">
               Join Waitlist
             </button>
           </div>
@@ -110,7 +41,7 @@ export default async function Home(props: { searchParams?: Promise<Record<string
       {/* ── Live Category Grid ─────────────────────────────────────── */}
       <CatalogCategoryGrid />
 
-      {/* ── Live Featured Products (replaces mock) ────────────────── */}
+      {/* ── Live Featured Products ─────────────────────────────────── */}
       <section className="px-5 py-10 md:px-10 lg:px-20 space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="font-bon_foyage text-4xl md:text-5xl text-[#333]">
@@ -128,24 +59,25 @@ export default async function Home(props: { searchParams?: Promise<Record<string
         </Suspense>
       </section>
 
-      {/* ── Recently Viewed Rail (localStorage ring-buffer, SSR-safe) ── */}
+      {/* ── Recently Viewed Rail ───────────────────────────────────── */}
       <RecentlyViewedSection />
 
       {/* ── Live Collection Grid ───────────────────────────────────── */}
       <CatalogCollectionGrid />
 
       {/* ── Campaign Banner ───────────────────────────────────────── */}
-      <div className=" w-full h-[593px] bg-[#fda600] md:h-[746px] relative p-10 md:p-14 lg:p-24 flex flex-col gap-5 md:gap-10 items-center">
-        <p className="font-raleway font-semibold text-xl text-black">
-          SENATOR OUTFITS
-        </p>
-        <p className="font-bon_foyage text-[42px] md:text-6xl lg:text-[75px] lg:leading-[74px] leading-[42px] text-center text-black md:w-1/2">
-          {" "}
-          The New Fashion Collection
+      <div className="w-full h-[593px] bg-[#fda600] md:h-[746px] relative p-10 md:p-14 lg:p-24 flex flex-col gap-5 md:gap-10 items-center overflow-hidden">
+        {/* Decorative overlay */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent" />
+        </div>
+        <p className="font-raleway font-semibold text-xl text-black relative z-10">SENATOR OUTFITS</p>
+        <p className="font-bon_foyage text-[42px] md:text-6xl lg:text-[75px] lg:leading-[74px] leading-[42px] text-center text-black md:w-1/2 relative z-10">
+          {" "}The New Fashion Collection
         </p>
         <Link
           href="/categories"
-          className="px-10 py-3 md:py-5 rounded-[100px] bg-[#01454A] flex text-white font-raleway font-semibold text-xl"
+          className="px-10 py-3 md:py-5 rounded-[100px] bg-[#01454A] flex text-white font-raleway font-semibold text-xl relative z-10 hover:bg-[#01454A]/90 transition-all duration-300 hover:scale-105 shadow-lg"
         >
           Shop Now
         </Link>
@@ -166,82 +98,203 @@ export default async function Home(props: { searchParams?: Promise<Record<string
         />
       </div>
 
-      {/* ── Deals of the Week ─────────────────────────────────────── */}
+      {/* ── Deals of the Week (Live Countdown) ───────────────────── */}
       <div className="px-5 py-10 md:p-10 lg:p-20 space-y-5 md:space-y-10">
         <div className="flex flex-wrap justify-center md:justify-normal items-center gap-5 lg:gap-20">
           <h3 className="font-bon_foyage whitespace-nowrap text-center text-5xl leading-[48px] text-[#333]">
-            {" "}
-            Deals of the Week
+            {" "}Deals of the Week
           </h3>
-          <div className="flex justify-center items-center space-x-4 bg-[#01454A] rounded-[8px] max-w-[429px] h-[111px] w-full text-white">
-            <div className=" p-4 rounded-lg text-center">
-              <span className="block text-[32px] leading-[37px] font-medium text-white">
-                10
-              </span>
-              <span className="text-xl font-medium font-raleway text-white">
-                Hours
-              </span>
-            </div>
-            :
-            <div className="bg-primary text-primary-foreground p-4 rounded-lg text-center">
-              <span className="block text-[32px] leading-[37px] font-medium text-white">
-                20
-              </span>
-              <span className="text-xl font-medium font-raleway text-white">
-                Minutes
-              </span>
-            </div>
-            :
-            <div className="bg-primary text-primary-foreground p-4 rounded-lg text-center">
-              <span className="block text-[32px] leading-[37px] font-medium text-white">
-                59
-              </span>
-              <span className="text-xl font-medium font-raleway text-white">
-                Seconds
-              </span>
-            </div>
-          </div>
+          {/* Live countdown timer */}
+          <DealsCountdown />
         </div>
-        <div className="flex items-center flex-wrap gap-y-2 md:gap-3 lg:gap-6 justify-between">
-          {dealList}
+
+        {/* Featured deal cards — live from featured products */}
+        <div className="flex items-center flex-wrap gap-y-6 md:gap-3 lg:gap-6 justify-between">
+          <Suspense fallback={
+            <div className="flex gap-6">
+              {[1,2,3].map(i => (
+                <div key={i} className="flex flex-col w-[45%] md:w-[32%] max-w-[300px] gap-3">
+                  <div className="w-full h-[220px] md:h-[350px] rounded-[8px] bg-[#F4F5FB] animate-pulse" />
+                  <div className="h-4 w-2/3 bg-[#F4F5FB] animate-pulse rounded" />
+                  <div className="h-4 w-1/2 bg-[#F4F5FB] animate-pulse rounded" />
+                </div>
+              ))}
+            </div>
+          }>
+            <FeaturedDealsSection />
+          </Suspense>
         </div>
       </div>
 
-      {/* ── Reviews ───────────────────────────────────────────────── */}
+      {/* ── Reviews Section ───────────────────────────────────────── */}
       <div className="px-5 py-10 md:p-10 lg:p-20 space-y-5">
         <h2 className="font-bon_foyage text-5xl text-[#333]">Our Reviews</h2>
-        <div className="flex md:flex-wrap items-center lg:p-5 overflow-hidden gap-10 md:gap-3 lg:gap-6 justify-between">
-          {mockReviews.map((review) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {MOCK_REVIEWS.map((review) => (
             <div
-              style={{ boxShadow: "0px 4px 25px 0px #0000001A" }}
               key={review.id}
-              className="flex flex-col md:flex-row items-center gap-10 py-9 px-10 border border-[#D9D9D9] w-full shrink-0  lg:w-[48%]"
+              style={{ boxShadow: "0px 4px 25px 0px #0000001A" }}
+              className="flex flex-col md:flex-row items-center gap-6 py-8 px-8 border border-[#D9D9D9] rounded-2xl hover:border-[#FDA600] transition-colors duration-300 group"
             >
-              <Image
-                src={review.image}
-                alt=""
-                width={500}
-                height={500}
-                className="w-[105px] h-[105px] object-cover"
-              />
-              <div className="flex flex-col items-center md:items-start gap-2.5">
+              <div className="relative w-[80px] h-[80px] rounded-full overflow-hidden shrink-0 ring-2 ring-[#FDA600]/30 group-hover:ring-[#FDA600] transition-all">
+                <Image src={review.image} alt={review.name} fill className="object-cover" />
+              </div>
+              <div className="flex flex-col items-center md:items-start gap-2">
                 <span className="text-[#fda600] text-xl">★★★★★</span>
-                <p className="font-raleway text-center md:text-left text-xl text-[#333] flex-none  self-stretch grow-0   w-full">
-                  {review.text}
+                <p className="font-raleway text-center md:text-left text-lg text-[#333] leading-relaxed">
+                  &ldquo;{review.text}&rdquo;
                 </p>
-                <p className="font-raleway font-semibold text-2xl text-black ">
-                  {review.name}
-                </p>
+                <p className="font-raleway font-semibold text-xl text-black">{review.name}</p>
+                <p className="font-raleway text-sm text-[#848484]">{review.role}</p>
               </div>
             </div>
           ))}
         </div>
-        <div className="flex items-center gap-3 justify-center">
-          <span className="w-[1.5rem] h-[1.5rem] rounded-full bg-[#01454A] border-2 border-[#01454A]" />
-          <span className="w-[1.5rem] h-[1.5rem] rounded-full bg-[#D9D9D9]/10 border-2 border-[#01454A]" />
-          <span className="w-[1.5rem] h-[1.5rem] rounded-full bg-[#D9D9D9]/10 border-2 border-[#01454A]" />
+        <div className="flex items-center gap-3 justify-center pt-4">
+          <span className="w-6 h-6 rounded-full bg-[#01454A] border-2 border-[#01454A]" />
+          <span className="w-4 h-4 rounded-full bg-transparent border-2 border-[#01454A]/40" />
+          <span className="w-4 h-4 rounded-full bg-transparent border-2 border-[#01454A]/40" />
         </div>
+      </div>
+
+      {/* ── Newsletter CTA ────────────────────────────────────────── */}
+      <div className="mx-5 md:mx-10 lg:mx-20 mb-10 rounded-3xl bg-gradient-to-r from-[#01454A] to-[#01454A]/80 p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div>
+          <h3 className="font-bon_foyage text-3xl md:text-4xl text-white mb-2">Stay in Style</h3>
+          <p className="font-raleway text-[#ECE6D6]/80 text-base md:text-lg">
+            Get exclusive deals, new arrivals and style tips delivered to your inbox.
+          </p>
+        </div>
+        <form className="flex w-full md:w-auto gap-2" onSubmit={(e) => e.preventDefault()}>
+          <input
+            type="email"
+            placeholder="Your email address"
+            className="flex-1 min-w-[220px] px-4 py-3 rounded-[100px] bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:border-[#FDA600] transition"
+          />
+          <button
+            type="submit"
+            className="px-6 py-3 rounded-[100px] bg-[#FDA600] text-black font-bold font-raleway hover:bg-[#FDA600]/90 transition-all shrink-0"
+          >
+            Subscribe
+          </button>
+        </form>
       </div>
     </div>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DEAL CARDS — lightweight placeholder with real product images from catalog
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function FeaturedDealsSection() {
+  const { getFeaturedProductsServer } = await import("@/features/product/api/product.server");
+  let products: Awaited<ReturnType<typeof getFeaturedProductsServer>> = [];
+  try {
+    products = await getFeaturedProductsServer();
+    products = products.slice(0, 3);
+  } catch {
+    products = [];
+  }
+
+  if (!products.length) {
+    return (
+      <p className="text-[#848484] font-raleway">
+        New deals dropping soon — check back later!
+      </p>
+    );
+  }
+
+  return (
+    <>
+      {products.map((product) => {
+        const image = product.image_url ?? "/heroimg.png";
+        const priceNum = parseFloat(product.price);
+        const oldPriceNum = product.old_price ? parseFloat(product.old_price) : null;
+        return (
+          <Link
+            key={product.id}
+            href={`/products/${product.slug}`}
+            className="flex flex-col w-[45%] md:w-[32%] max-w-[300px] group"
+          >
+            <div className="relative overflow-hidden rounded-[8px]">
+              <Image
+                src={image}
+                className="w-full h-[220px] md:h-[350px] object-contain group-hover:scale-105 transition-transform duration-500"
+                alt={product.title}
+                width={500}
+                height={500}
+              />
+              {product.hot_deal && (
+                <div className="absolute top-7 left-2 md:top-10">
+                  <p className="w-[83px] h-7 rounded-[5px] flex items-center justify-center uppercase bg-[#fda600] text-white font-semibold font-raleway text-xs">
+                    sales
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col gap-2 pt-3">
+              <span className="text-[#fda600] text-lg">
+                {"★".repeat(Math.round(product.rating || 5))}{"☆".repeat(5 - Math.round(product.rating || 5))}
+              </span>
+              <p className="font-raleway font-semibold text-base md:text-xl text-black line-clamp-2">
+                {product.title}
+              </p>
+              <div className="flex items-center gap-2">
+                <p className="font-raleway font-semibold text-lg md:text-xl text-[#01454A]">
+                  ₦{priceNum.toLocaleString()}
+                </p>
+                {oldPriceNum && (
+                  <p className="font-raleway md:text-lg line-through text-[#848484]">
+                    ₦{oldPriceNum.toLocaleString()}
+                  </p>
+                )}
+              </div>
+            </div>
+          </Link>
+        );
+      })}
+    </>
+  );
+}
+
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATIC REVIEW DATA (upgrade to API later)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const MOCK_REVIEWS = [
+  {
+    id: "1",
+    image: "/man2_asset.svg",
+    text: "Amazing quality and perfect fit! The AI measurement system is a game-changer. My senator outfit fit perfectly from day one.",
+    rating: 5,
+    name: "Emeka Okafor",
+    role: "Business Executive, Lagos",
+  },
+  {
+    id: "2",
+    image: "/woman.svg",
+    text: "Exceeded all my expectations! Fashionistar delivered an exquisite gown that made me the star of my event. Will order again!",
+    rating: 5,
+    name: "Adunni Bello",
+    role: "Fashion Enthusiast, Abuja",
+  },
+  {
+    id: "3",
+    image: "/man2_asset.svg",
+    text: "The custom order feature is outstanding. I uploaded my measurement and the vendor delivered exactly what I envisioned.",
+    rating: 5,
+    name: "Chukwuemeka Eze",
+    role: "Legal Practitioner, Enugu",
+  },
+  {
+    id: "4",
+    image: "/woman.svg",
+    text: "Fashionistar has redefined online fashion for me. The quality, service, and attention to detail are unmatched in Nigeria.",
+    rating: 5,
+    name: "Fatima Aliyu",
+    role: "Entrepreneur, Kano",
+  },
+];

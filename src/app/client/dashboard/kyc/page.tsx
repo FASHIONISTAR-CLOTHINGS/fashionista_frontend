@@ -1,5 +1,5 @@
-import { KycStatusView } from "@/features/kyc";
+import { ClientKycView } from "@/features/client";
 
 export default function ClientKycPage() {
-  return <KycStatusView audience="client" />;
+  return <ClientKycView />;
 }
