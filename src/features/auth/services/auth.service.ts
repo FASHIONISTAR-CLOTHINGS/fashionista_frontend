@@ -144,8 +144,13 @@ export async function logout(): Promise<{ message?: string }> {
   const store = await import("@/features/auth/store/auth.store");
   const refreshToken = store.useAuthStore.getState().refreshToken;
   const payload = refreshToken ? { refresh: refreshToken } : {};
-  const { data } = await apiSync.post(AUTH_ENDPOINTS.LOGOUT, payload);
-  return data as { message?: string };
+  try {
+    const { data } = await apiSync.post(AUTH_ENDPOINTS.LOGOUT, payload);
+    return data as { message?: string };
+  } catch (err) {
+    // Silently swallow backend errors so the client local logout is never blocked
+    return { message: "Logged out locally (backend unreachable)" };
+  }
 }
 
 // ── Token Refresh ─────────────────────────────────────────────────────────────
