@@ -15,7 +15,7 @@ import {
 describe("LoginSchema", () => {
   it("✅ accepts valid email + password", () => {
     const result = LoginSchema.safeParse({
-      email: "test@fashionistar.com",
+      email_or_phone: "test@fashionistar.com",
       password: "SecurePass1",
     });
     expect(result.success).toBe(true);
@@ -23,16 +23,16 @@ describe("LoginSchema", () => {
 
   it("❌ rejects invalid email", () => {
     const result = LoginSchema.safeParse({
-      email: "not-an-email",
+      email_or_phone: "not-an-email",
       password: "SecurePass1",
     });
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0].path).toContain("email");
+    expect(result.error?.issues[0].path).toContain("email_or_phone");
   });
 
   it("❌ rejects short password (< 8 chars)", () => {
     const result = LoginSchema.safeParse({
-      email: "test@fashionistar.com",
+      email_or_phone: "test@fashionistar.com",
       password: "short",
     });
     expect(result.success).toBe(false);
@@ -40,7 +40,7 @@ describe("LoginSchema", () => {
   });
 
   it("❌ rejects empty fields", () => {
-    const result = LoginSchema.safeParse({ email: "", password: "" });
+    const result = LoginSchema.safeParse({ email_or_phone: "", password: "" });
     expect(result.success).toBe(false);
   });
 });
@@ -127,7 +127,7 @@ describe("ChangePasswordSchema", () => {
   const validChange = {
     old_password: "OldPass1234",
     new_password: "NewSecure1",
-    new_password_confirm: "NewSecure1",
+    confirm_password: "NewSecure1",
   };
 
   it("✅ accepts valid password change", () => {
@@ -138,7 +138,7 @@ describe("ChangePasswordSchema", () => {
     const result = ChangePasswordSchema.safeParse({
       old_password: "SamePass1",
       new_password: "SamePass1",
-      new_password_confirm: "SamePass1",
+      confirm_password: "SamePass1",
     });
     expect(result.success).toBe(false);
   });
@@ -146,7 +146,7 @@ describe("ChangePasswordSchema", () => {
   it("❌ rejects mismatched new passwords", () => {
     const result = ChangePasswordSchema.safeParse({
       ...validChange,
-      new_password_confirm: "Mismatch9",
+      confirm_password: "Mismatch9",
     });
     expect(result.success).toBe(false);
   });
@@ -155,7 +155,7 @@ describe("ChangePasswordSchema", () => {
 // ── IDEMPOTENCY TEST: parsing the same valid input 100 times returns same result ──
 describe("Schema Idempotency (100 iterations)", () => {
   it("LoginSchema produces identical results on repeated parse", () => {
-    const input = { email: "test@test.com", password: "Password1" };
+    const input = { email_or_phone: "test@test.com", password: "Password1" };
     const results = Array.from({ length: 100 }, () =>
       LoginSchema.safeParse(input)
     );
