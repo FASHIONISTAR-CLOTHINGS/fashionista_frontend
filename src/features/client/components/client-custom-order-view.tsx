@@ -8,12 +8,11 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
-  ChevronRight,
-  Clock,
   ExternalLink,
   Loader2,
-  Palette,
+  Package,
   PackageCheck,
+  Palette,
   Plus,
   Send,
   Sparkles,
@@ -27,10 +26,6 @@ import type {
   CustomOrderCreatePayload,
   MilestonePct,
 } from "@/features/client/types/client.types";
-
-// ── Design tokens ─────────────────────────────────────────────────────────────
-const GOLD = "#FDA600";
-const GREEN = "#01454A";
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 function fmtNgn(n: number): string {

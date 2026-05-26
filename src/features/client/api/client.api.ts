@@ -25,7 +25,6 @@ import type {
   ClientProfileUpdatePayload,
   Country,
   CustomOrder,
-  CustomOrderApprovePayload,
   CustomOrderCreatePayload,
   MilestonePayPayload,
   ProductReview,
