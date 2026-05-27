@@ -14,6 +14,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { TableRowSkeleton } from "@/shared/components/skeletons";
 
+import { z } from "zod";
+import { toast } from "sonner";
+
+const BlogSchema = z.object({
+  title: z.string().min(3, "Title must be at least 3 characters."),
+  excerpt: z.string().max(300, "Excerpt cannot exceed 300 characters.").optional(),
+  content: z.string().min(10, "Content must be at least 10 characters."),
+  status: z.enum(["draft", "review", "published", "archived"]),
+  is_featured: z.boolean(),
+  tags: z.array(z.string()),
+});
+
 export default function BlogPostsPage() {
   const { data: blogPosts, isLoading } = useAdminBlogPosts();
   const createMutation = useCreateAdminBlogPost();
@@ -76,6 +88,13 @@ export default function BlogPostsPage() {
       is_featured: formData.is_featured,
       tags: tagList,
     };
+
+    // Validate using Zod
+    const validation = BlogSchema.safeParse(payload);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
 
     if (editingPost) {
       updateMutation.mutate(
