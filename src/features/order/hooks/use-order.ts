@@ -18,16 +18,10 @@ import {
   fetchClientOrders,
   fetchOrderDetail,
   fetchVendorOrderDetail,
-  fetchAdminOrderDetail,
   cancelOrder,
   confirmDelivery,
   fetchVendorOrders,
   updateVendorProductionStatus,
-  fetchAdminOrders,
-  updateAdminDeliveryStatus,
-  transitionAdminOrderStatus,
-  releaseAdminOrderEscrow,
-  cancelAdminOrder,
   getNinjaClientOrderCounts,
   getNinjaVendorOrderCounts,
   getNinjaVendorFinancialSummary,
@@ -35,7 +29,6 @@ import {
 import type {
   CancelOrderInput,
   VendorProductionStatusInput,
-  AdminDeliveryStatusInput,
 } from "../types/order.types";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -48,11 +41,8 @@ export const orderKeys = {
   clientList: (page: number) => [...orderKeys.clientLists(), page] as const,
   detail: (id: string) => [...orderKeys.all, "detail", id] as const,
   vendorDetail: (id: string) => [...orderKeys.all, "vendor", "detail", id] as const,
-  adminDetail: (id: string) => [...orderKeys.all, "admin", "detail", id] as const,
   vendorLists: () => [...orderKeys.all, "vendor", "list"] as const,
   vendorList: (page: number) => [...orderKeys.vendorLists(), page] as const,
-  adminLists: () => [...orderKeys.all, "admin", "list"] as const,
-  adminList: (page: number) => [...orderKeys.adminLists(), page] as const,
   /** Ninja: per-status badge counts for client */
   clientCounts: () => [...orderKeys.all, "ninja", "client", "counts"] as const,
   /** Ninja: per-status badge counts for vendor */
@@ -92,14 +82,7 @@ export function useVendorOrderDetail(orderId: string, enabled = true) {
   });
 }
 
-export function useAdminOrderDetail(orderId: string, enabled = true) {
-  return useQuery({
-    queryKey: orderKeys.adminDetail(orderId),
-    queryFn: () => fetchAdminOrderDetail(orderId),
-    staleTime: 30_000,
-    enabled: enabled && !!orderId,
-  });
-}
+
 
 export function useCancelOrder() {
   const qc = useQueryClient();
@@ -171,89 +154,7 @@ export function useUpdateVendorProductionStatus() {
   });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ADMIN HOOKS
-// ─────────────────────────────────────────────────────────────────────────────
 
-export function useAdminOrders(page = 1, search?: string, status?: string) {
-  return useQuery({
-    queryKey: [...orderKeys.adminList(page), search, status],
-    queryFn: () => fetchAdminOrders(page, search, status),
-    staleTime: 30_000,
-  });
-}
-
-export function useUpdateAdminDeliveryStatus() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      orderId,
-      input,
-    }: {
-      orderId: string;
-      input: AdminDeliveryStatusInput;
-    }) => updateAdminDeliveryStatus(orderId, input),
-    onSuccess: (order) => {
-      void qc.setQueryData(orderKeys.adminDetail(order.id), order);
-      void qc.invalidateQueries({ queryKey: orderKeys.adminLists() });
-      toast.success("Delivery status updated.");
-    },
-  });
-}
-
-export function useTransitionAdminOrderStatus() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      orderId,
-      newStatus,
-      note,
-    }: {
-      orderId: string;
-      newStatus: string;
-      note?: string;
-    }) => transitionAdminOrderStatus(orderId, newStatus, note),
-    onSuccess: (order) => {
-      void qc.setQueryData(orderKeys.adminDetail(order.id), order);
-      void qc.invalidateQueries({ queryKey: orderKeys.adminLists() });
-      toast.success("Order status transitioned successfully.");
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || err.message || "Failed to transition order status.");
-    },
-  });
-}
-
-export function useReleaseAdminOrderEscrow() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (orderId: string) => releaseAdminOrderEscrow(orderId),
-    onSuccess: (order) => {
-      void qc.setQueryData(orderKeys.adminDetail(order.id), order);
-      void qc.invalidateQueries({ queryKey: orderKeys.adminLists() });
-      toast.success("Escrow funds released to vendor.");
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || err.message || "Failed to release escrow.");
-    },
-  });
-}
-
-export function useCancelAdminOrder() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ orderId, reason }: { orderId: string; reason?: string }) =>
-      cancelAdminOrder(orderId, reason),
-    onSuccess: (order) => {
-      void qc.setQueryData(orderKeys.adminDetail(order.id), order);
-      void qc.invalidateQueries({ queryKey: orderKeys.adminLists() });
-      toast.success("Order cancelled by admin.");
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || err.message || "Failed to cancel order.");
-    },
-  });
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // NINJA ASYNC HOOKS — Badge Counts & Financial Aggregates

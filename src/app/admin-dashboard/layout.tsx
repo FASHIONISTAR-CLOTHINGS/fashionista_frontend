@@ -53,6 +53,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         { href: "/admin-dashboard/product", label: "Products", icon: "products" },
         { href: "/admin-dashboard/order", label: "Orders", icon: "orders" },
         { href: "/admin-dashboard/custom-order", label: "Custom Orders", icon: "custom-orders" },
+        { href: "/admin-dashboard/cart", label: "Active Carts", icon: "cart" },
         { href: "/admin-dashboard/catalog/collections", label: "Collections", icon: "collections" },
         { href: "/admin-dashboard/catalog/brands", label: "Brands", icon: "brands" },
         { href: "/admin-dashboard/catalog/categories", label: "Categories", icon: "categories" },
@@ -138,6 +139,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <path d="M3.4563 13.3863V9.56144C3.4563 6.85689 3.4563 5.50461 4.2965 4.66442C5.13669 3.82422 6.48897 3.82422 9.19352 3.82422H13.9745C16.6791 3.82422 18.0313 3.82422 18.8716 4.66442C19.7118 5.50461 19.7118 6.85689 19.7118 9.56144V13.3863C19.7118 16.0908 19.7118 17.4431 18.8716 18.2833C18.0313 19.1235 16.6791 19.1235 13.9745 19.1235H9.19352C6.48897 19.1235 5.13669 19.1235 4.2965 18.2833C3.4563 17.4431 3.4563 16.0908 3.4563 13.3863Z" stroke={strokeColor} strokeWidth="1.43431" />
             <path d="M3.4563 16.2549V9.56144C3.4563 6.85689 3.4563 5.50461 4.2965 4.66442C5.13669 3.82422 6.48897 3.82422 9.19352 3.82422H13.9745C16.6791 3.82422 18.0313 3.82422 18.8716 4.66442C19.7118 5.50461 19.7118 6.85689 19.7118 9.56144V16.2549C19.7118 18.9594 19.7118 20.3117 18.8716 21.1519C18.0313 21.9921 16.6791 21.9921 13.9745 21.9921H9.19352C6.48897 21.9921 5.13669 21.9921 4.2965 21.1519C3.4563 20.3117 3.4563 18.9594 3.4563 16.2549Z" stroke={strokeColor} strokeWidth="1.43431" />
             <path d="M7.75903 15.2996H11.5839M7.75903 10.5186H15.4087" stroke={strokeColor} strokeWidth="1.43431" strokeLinecap="round" />
+          </svg>
+        );
+      case "cart":
+        return (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 3H5L5.4 5M5.4 5H21L19 14H6.4L3 3ZM6.4 14C5.5 14 4.8 14.7 4.8 15.6C4.8 16.5 5.5 17.2 6.4 17.2H19" stroke={strokeColor} strokeWidth="1.43431" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="9" cy="20" r="1" fill={strokeColor} stroke={strokeColor} strokeWidth="1" />
+            <circle cx="17" cy="20" r="1" fill={strokeColor} stroke={strokeColor} strokeWidth="1" />
           </svg>
         );
       case "transactions":
