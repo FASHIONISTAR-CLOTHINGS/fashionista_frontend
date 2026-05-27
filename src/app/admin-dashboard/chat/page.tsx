@@ -48,7 +48,7 @@ export default function AdminChatPage() {
           Chat Support Console
         </h3>
         <p className="text-sm text-[#5A6465] mt-1">
-          Monitor platform communication threads, arbitrate designer tailoring disputes, and assist premium clients.
+          Monitor platform communication threads ({chatStats?.total_sessions ?? 0} active rooms), arbitrate designer tailoring disputes, and assist premium clients.
         </p>
       </div>
 
