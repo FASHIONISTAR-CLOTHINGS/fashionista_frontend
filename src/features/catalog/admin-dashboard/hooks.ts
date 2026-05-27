@@ -2,6 +2,8 @@
  * features/catalog/admin-dashboard/hooks.ts
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchAdminCategories,

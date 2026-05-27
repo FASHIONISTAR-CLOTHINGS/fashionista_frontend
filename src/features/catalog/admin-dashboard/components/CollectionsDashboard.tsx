@@ -11,6 +11,7 @@ import {
   useUpdateAdminCollection,
   useArchiveAdminCollection,
 } from "../hooks";
+import { AdminCollection } from "../types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,7 +41,7 @@ export function CollectionsDashboard() {
   const [sortBy, setSortBy] = useQueryState("sortBy", { defaultValue: "name" });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingCollection, setEditingCollection] = useState<any>(null);
+  const [editingCollection, setEditingCollection] = useState<AdminCollection | null>(null);
   const [, startTransition] = useTransition();
 
   const {
@@ -67,7 +68,7 @@ export function CollectionsDashboard() {
     setIsFormOpen(true);
   };
 
-  const handleOpenEdit = (collection: any) => {
+  const handleOpenEdit = (collection: AdminCollection) => {
     setEditingCollection(collection);
     reset({
       name: collection.name,
@@ -87,7 +88,7 @@ export function CollectionsDashboard() {
         setIsFormOpen(false);
       }
       reset();
-    } catch (err) {
+    } catch {
       // Handled in mutation onError
     }
   };
@@ -96,7 +97,7 @@ export function CollectionsDashboard() {
     if (confirm("Are you sure you want to archive this collection? This operation is idempotent and will clean up featured spotlight arrays.")) {
       try {
         await archiveMutation.mutateAsync(id);
-      } catch (err) {
+      } catch {
         // Handled in mutation onError
       }
     }
@@ -309,7 +310,7 @@ export function CollectionsDashboard() {
             <AlertCircle className="w-10 h-10 text-red-500 mx-auto" />
             <h5 className="font-satoshi font-bold text-lg text-black">Failed to Load Collections</h5>
             <p className="font-satoshi text-sm text-gray-500">
-              {(error as any)?.message || "A secure connection to the backend could not be established."}
+              {error instanceof Error ? error.message : "A secure connection to the backend could not be established."}
             </p>
             <Button onClick={() => refetch()} className="bg-red-500 text-white hover:bg-black">
               Try Again
@@ -333,7 +334,7 @@ export function CollectionsDashboard() {
               </thead>
               <tbody className="divide-y divide-[#f4f4f4]">
                 {filteredCollections.length > 0 ? (
-                  filteredCollections.map((collection: any) => (
+                  filteredCollections.map((collection: AdminCollection) => (
                     <tr key={collection.id} className="hover:bg-[#fcfcfa]/60 transition-colors group">
                       <td className="py-4 font-satoshi font-semibold text-black">
                         {collection.name}

@@ -11,6 +11,7 @@ import {
   useUpdateAdminBlogPost,
   useArchiveAdminBlogPost,
 } from "../hooks";
+import { AdminBlogPost } from "../types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,7 +44,7 @@ export function BlogsDashboard() {
   const [isFeaturedFilter, setIsFeaturedFilter] = useQueryState("featured", { defaultValue: "all" });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingPost, setEditingPost] = useState<any>(null);
+  const [editingPost, setEditingPost] = useState<AdminBlogPost | null>(null);
   const [rawTags, setRawTags] = useState("");
   const [, startTransition] = useTransition();
 
@@ -83,7 +84,7 @@ export function BlogsDashboard() {
     setIsFormOpen(true);
   };
 
-  const handleOpenEdit = (post: any) => {
+  const handleOpenEdit = (post: AdminBlogPost) => {
     setEditingPost(post);
     setRawTags((post.tags || []).join(", "));
     reset({
@@ -118,7 +119,7 @@ export function BlogsDashboard() {
       }
       reset();
       setRawTags("");
-    } catch (err) {
+    } catch {
       // Handled in mutation onError
     }
   };
@@ -127,7 +128,7 @@ export function BlogsDashboard() {
     if (confirm("Are you sure you want to archive this blog post? This operation is idempotent and will update active couture tags.")) {
       try {
         await archiveMutation.mutateAsync(id);
-      } catch (err) {
+      } catch {
         // Handled in mutation
       }
     }
@@ -279,7 +280,7 @@ export function BlogsDashboard() {
                 <select
                   id="post-status"
                   value={statusWatch}
-                  onChange={(e: any) => setValue("status", e.target.value)}
+                  onChange={(e) => setValue("status", e.target.value as BlogFormValues["status"])}
                   className="w-full h-11 px-3 rounded-xl border border-[#d9d9d9] focus:border-[#fda600] bg-white outline-none font-satoshi text-sm text-[#333]"
                 >
                   <option value="draft">Draft</option>
@@ -391,7 +392,7 @@ export function BlogsDashboard() {
             <AlertCircle className="w-10 h-10 text-red-500 mx-auto" />
             <h5 className="font-satoshi font-bold text-lg text-black">Failed to Load Blog Posts</h5>
             <p className="font-satoshi text-sm text-gray-500">
-              {(error as any)?.message || "A secure connection to the backend could not be established."}
+              {error instanceof Error ? error.message : "A secure connection to the backend could not be established."}
             </p>
             <Button onClick={() => refetch()} className="bg-red-500 text-white hover:bg-black">
               Try Again
@@ -415,7 +416,7 @@ export function BlogsDashboard() {
               </thead>
               <tbody className="divide-y divide-[#f4f4f4]">
                 {filteredBlogPosts.length > 0 ? (
-                  filteredBlogPosts.map((post: any) => (
+                  filteredBlogPosts.map((post: AdminBlogPost) => (
                     <tr key={post.id} className="hover:bg-[#fcfcfa]/60 transition-colors group">
                       <td className="py-4 font-satoshi font-semibold text-black max-w-[240px] truncate">
                         {post.title}

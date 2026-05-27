@@ -11,6 +11,7 @@ import {
   useUpdateAdminCategory,
   useArchiveAdminCategory,
 } from "../hooks";
+import { AdminCategory } from "../types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,7 +41,7 @@ export function CategoriesDashboard() {
   const [sortBy, setSortBy] = useQueryState("sortBy", { defaultValue: "name" });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [editingCategory, setEditingCategory] = useState<AdminCategory | null>(null);
   const [, startTransition] = useTransition();
 
   const {
@@ -67,7 +68,7 @@ export function CategoriesDashboard() {
     setIsFormOpen(true);
   };
 
-  const handleOpenEdit = (category: any) => {
+  const handleOpenEdit = (category: AdminCategory) => {
     setEditingCategory(category);
     reset({
       name: category.name,
@@ -87,7 +88,7 @@ export function CategoriesDashboard() {
         setIsFormOpen(false);
       }
       reset();
-    } catch (err) {
+    } catch {
       // Handled in mutation onError
     }
   };
@@ -96,7 +97,7 @@ export function CategoriesDashboard() {
     if (confirm("Are you sure you want to archive this category? This operation is idempotent and will archive all associated items.")) {
       try {
         await archiveMutation.mutateAsync(id);
-      } catch (err) {
+      } catch {
         // Handled in mutation onError
       }
     }
@@ -309,7 +310,7 @@ export function CategoriesDashboard() {
             <AlertCircle className="w-10 h-10 text-red-500 mx-auto" />
             <h5 className="font-satoshi font-bold text-lg text-black">Failed to Load Categories</h5>
             <p className="font-satoshi text-sm text-gray-500">
-              {(error as any)?.message || "A secure connection to the backend could not be established."}
+              {error instanceof Error ? error.message : "A secure connection to the backend could not be established."}
             </p>
             <Button onClick={() => refetch()} className="bg-red-500 text-white hover:bg-black">
               Try Again
@@ -333,7 +334,7 @@ export function CategoriesDashboard() {
               </thead>
               <tbody className="divide-y divide-[#f4f4f4]">
                 {filteredCategories.length > 0 ? (
-                  filteredCategories.map((category: any) => (
+                  filteredCategories.map((category: AdminCategory) => (
                     <tr key={category.id} className="hover:bg-[#fcfcfa]/60 transition-colors group">
                       <td className="py-4 font-satoshi font-semibold text-black">
                         {category.name}
