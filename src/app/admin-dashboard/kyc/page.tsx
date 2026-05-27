@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiSync } from "@/core/api/client.sync";
+import {
+  useAdminKycSubmissions,
+  useQuickApproveKyc,
+  useQuickRejectKyc,
+  useMarkKycInReviewSync,
+} from "@/features/admin";
 import { toast } from "sonner";
 import {
   CheckCircle2,
@@ -11,52 +15,11 @@ import {
   ShieldAlert,
   FileText,
   Search,
-  ZoomIn,
-  AlertTriangle,
   Loader2,
-  FileSearch
+  FileSearch,
 } from "lucide-react";
 
-interface UserCompact {
-  id: string;
-  email: string | null;
-  phone: string | null;
-  first_name: string;
-  last_name: string;
-  role: string;
-  avatar: string | null;
-}
-
-interface KycDocument {
-  id: string;
-  document_type: string;
-  document_number: string | null;
-  secure_url: string;
-  public_id: string;
-  provider_verified: boolean;
-  provider_response: string | null;
-  uploaded_at: string;
-}
-
-interface KycSubmission {
-  id: string;
-  user: UserCompact;
-  status: "pending" | "in_review" | "approved" | "rejected" | "resubmit";
-  is_approved: boolean;
-  is_pending: boolean;
-  is_rejected: boolean;
-  can_resubmit: boolean;
-  review_notes: string;
-  provider_reference: string;
-  submitted_at: string;
-  reviewed_at: string | null;
-  documents: KycDocument[];
-  created_at: string;
-  updated_at: string;
-}
-
 export default function AdminKycPage() {
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
@@ -68,95 +31,25 @@ export default function AdminKycPage() {
   const [zoomUrl, setZoomUrl] = useState<string | null>(null);
 
   // ── Query: Fetch All KYC Submissions (Staff Only) ─────────────────────────
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["admin", "kyc-submissions"],
-    queryFn: async () => {
-      const response = await apiSync.get("v1/kyc/admin/submissions/");
-      return response.data; // Unwrapped by client.sync.ts response interceptor
-    },
-    staleTime: 15_000,
+  const { data: submissionsData, isLoading, isError, refetch } = useAdminKycSubmissions({
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    search: search.trim() || undefined,
+    page: 1,
+    page_size: 100,
   });
 
-  const rawSubmissions: KycSubmission[] = Array.isArray(data)
-    ? data
-    : (data as any)?.results || [];
+  const rawSubmissions = submissionsData?.results || [];
 
   // Find currently selected submission object
   const selectedSubmission = rawSubmissions.find((s) => s.id === selectedSubmissionId) || null;
 
-  // ── Mutation: Approve KYC Submission ──────────────────────────────────────
-  const approveMutation = useMutation({
-    mutationFn: async ({ submissionId, providerRef }: { submissionId: string; providerRef?: string }) => {
-      const response = await apiSync.post(`v1/kyc/admin/${submissionId}/approve/`, {
-        provider_reference: providerRef || ""
-      });
-      return response.data;
-    },
-    onSuccess: () => {
-      toast.success("KYC submission approved successfully! User's identity is verified.");
-      void queryClient.invalidateQueries({ queryKey: ["admin", "kyc-submissions"] });
-      setSelectedSubmissionId(null);
-      setProviderReference("");
-    },
-    onError: (err: any) => {
-      const msg = err?.response?.data?.detail || err?.message || "Failed to approve KYC.";
-      toast.error(msg);
-    }
-  });
-
-  // ── Mutation: Reject KYC Submission ──────────────────────────────────────
-  const rejectMutation = useMutation({
-    mutationFn: async ({
-      submissionId,
-      notes,
-      allowResub
-    }: {
-      submissionId: string;
-      notes: string;
-      allowResub: boolean;
-    }) => {
-      const response = await apiSync.post(`v1/kyc/admin/${submissionId}/reject/`, {
-        review_notes: notes,
-        allow_resubmit: allowResub
-      });
-      return response.data;
-    },
-    onSuccess: () => {
-      toast.success("KYC submission rejected successfully. Review notes recorded.");
-      void queryClient.invalidateQueries({ queryKey: ["admin", "kyc-submissions"] });
-      setSelectedSubmissionId(null);
-      setReviewNotes("");
-      setAllowResubmit(true);
-    },
-    onError: (err: any) => {
-      const msg = err?.response?.data?.detail || err?.message || "Failed to reject KYC.";
-      toast.error(msg);
-    }
-  });
-
-  // Filter Submissions
-  const filteredSubmissions = rawSubmissions.filter((sub) => {
-    // 1. Text Search matches legal name, email, or user ID
-    const searchLower = search.toLowerCase();
-    const fullName = `${sub.user.first_name || ""} ${sub.user.last_name || ""}`.toLowerCase();
-    const matchesSearch =
-      !search ||
-      fullName.includes(searchLower) ||
-      (sub.user.email || "").toLowerCase().includes(searchLower) ||
-      sub.user.id.toLowerCase().includes(searchLower);
-
-    // 2. Status Filter
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "pending" && sub.status === "pending") ||
-      (statusFilter === "approved" && sub.status === "approved") ||
-      (statusFilter === "rejected" && (sub.status === "rejected" || sub.status === "resubmit"));
-
-    return matchesSearch && matchesStatus;
-  });
+  // ── Mutations ─────────────────────────────────────────────────────────────
+  const approveMutation = useQuickApproveKyc();
+  const rejectMutation = useQuickRejectKyc();
+  const markInReviewMutation = useMarkKycInReviewSync();
 
   const handleApprove = (id: string) => {
-    approveMutation.mutate({ submissionId: id, providerRef: providerReference });
+    approveMutation.mutate({ submissionId: id, legalName: providerReference });
   };
 
   const handleReject = (id: string) => {
@@ -167,14 +60,13 @@ export default function AdminKycPage() {
     rejectMutation.mutate({
       submissionId: id,
       notes: reviewNotes.trim(),
-      allowResub: allowResubmit
+      allowResubmit: allowResubmit,
     });
   };
 
-  const formatDocName = (type: string) => {
-    return type.replace(/_/g, " ").toUpperCase();
+  const handleMarkInReview = (id: string) => {
+    markInReviewMutation.mutate({ submissionId: id });
   };
-
   const formatDate = (isoString: string | null) => {
     if (!isoString) return "-N/A-";
     return new Date(isoString).toLocaleDateString("en-US", {
@@ -182,7 +74,7 @@ export default function AdminKycPage() {
       month: "short",
       day: "numeric",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
     });
   };
 
@@ -278,7 +170,7 @@ export default function AdminKycPage() {
           )}
 
           {/* Empty queue state */}
-          {!isLoading && !isError && filteredSubmissions.length === 0 && (
+          {!isLoading && !isError && rawSubmissions.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-[#ECE6D6] bg-white rounded-2xl gap-2 flex-1">
               <FileSearch className="w-8 h-8 text-[#8A9596]" />
               <p className="font-bon_foyage text-lg text-black">Queue is clear</p>
@@ -287,11 +179,11 @@ export default function AdminKycPage() {
           )}
 
           {/* List items */}
-          {!isLoading && !isError && filteredSubmissions.length > 0 && (
+          {!isLoading && !isError && rawSubmissions.length > 0 && (
             <div className="space-y-3 flex-1 overflow-y-auto">
-              {filteredSubmissions.map((sub) => {
+              {rawSubmissions.map((sub) => {
                 const isSelected = sub.id === selectedSubmissionId;
-                const userInitials = `${sub.user.first_name?.[0] || ""}${sub.user.last_name?.[0] || ""}`.toUpperCase() || "U";
+                const userInitials = "U";
                 return (
                   <div
                     key={sub.id}
@@ -307,30 +199,20 @@ export default function AdminKycPage() {
                     }`}
                   >
                     <div className="flex items-center gap-3 overflow-hidden">
-                      {sub.user.avatar ? (
-                        <img
-                          src={sub.user.avatar}
-                          alt=""
-                          className="w-10 h-14 rounded-xl object-cover shrink-0"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-[#01454A]/5 border border-[#01454A]/10 text-[#01454A] font-bon_foyage text-sm flex items-center justify-center shrink-0">
-                          {userInitials}
-                        </div>
-                      )}
+                      <div className="w-10 h-10 rounded-full bg-[#01454A]/5 border border-[#01454A]/10 text-[#01454A] font-bon_foyage text-sm flex items-center justify-center shrink-0">
+                        {userInitials}
+                      </div>
 
                       <div className="overflow-hidden space-y-0.5">
                         <h4 className="font-bon_foyage text-base text-black truncate leading-tight">
-                          {sub.user.first_name || sub.user.last_name
-                            ? `${sub.user.first_name} ${sub.user.last_name}`
-                            : "Anonymous Builder"}
+                          {sub.legal_name || "Bespoke Applicant"}
                         </h4>
                         <p className="font-satoshi text-[10px] text-[#8A9596] truncate">
-                          {sub.user.email}
+                          {sub.user_email || `ID: ${sub.user_id}`}
                         </p>
                         <p className="font-satoshi text-[9px] text-[#5A6465] flex items-center gap-1">
                           <FileText className="w-3 h-3 text-[#8A9596]" />
-                          <span>{sub.documents.length} document(s) uploaded</span>
+                          <span>Submitted</span>
                         </p>
                       </div>
                     </div>
@@ -376,23 +258,15 @@ export default function AdminKycPage() {
               {/* Applicant Header */}
               <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#ECE6D6]/80 pb-4 gap-4">
                 <div className="flex items-center gap-4">
-                  {selectedSubmission.user.avatar ? (
-                    <img
-                      src={selectedSubmission.user.avatar}
-                      alt=""
-                      className="w-14 h-14 rounded-2xl object-cover border border-[#ECE6D6]"
-                    />
-                  ) : (
-                    <div className="w-14 h-14 rounded-2xl bg-[#01454A]/5 flex items-center justify-center text-[#01454A] font-bon_foyage text-xl">
-                      {`${selectedSubmission.user.first_name?.[0] || ""}${selectedSubmission.user.last_name?.[0] || ""}`.toUpperCase() || "U"}
-                    </div>
-                  )}
+                  <div className="w-14 h-14 rounded-2xl bg-[#01454A]/5 flex items-center justify-center text-[#01454A] font-bon_foyage text-xl">
+                    U
+                  </div>
                   <div>
                     <h4 className="font-bon_foyage text-2xl text-black leading-snug">
-                      {selectedSubmission.user.first_name} {selectedSubmission.user.last_name}
+                      {selectedSubmission.legal_name || "Bespoke Applicant"}
                     </h4>
                     <p className="font-satoshi text-xs text-[#5A6465]">
-                      Account role: <span className="font-bold uppercase text-[#01454A]">{selectedSubmission.user.role}</span>
+                      User ID: <span className="font-bold text-[#01454A]">{selectedSubmission.user_id}</span>
                     </p>
                   </div>
                 </div>
@@ -412,80 +286,27 @@ export default function AdminKycPage() {
                 <div className="grid grid-cols-2 gap-4 text-xs font-satoshi">
                   <div className="bg-white border border-[#ECE6D6] p-3 rounded-xl">
                     <span className="text-[#8A9596] block">Applicant Email</span>
-                    <span className="font-semibold text-black block mt-0.5 truncate">{selectedSubmission.user.email || "-N/A-"}</span>
+                    <span className="font-semibold text-black block mt-0.5 truncate">{selectedSubmission.user_email || "-N/A-"}</span>
                   </div>
                   <div className="bg-white border border-[#ECE6D6] p-3 rounded-xl">
-                    <span className="text-[#8A9596] block">Contact Mobile</span>
-                    <span className="font-semibold text-black block mt-0.5">{selectedSubmission.user.phone || "-N/A-"}</span>
+                    <span className="text-[#8A9596] block">Member ID</span>
+                    <span className="font-semibold text-black block mt-0.5">{selectedSubmission.user_member_id || "-N/A-"}</span>
                   </div>
                 </div>
 
-                {/* Secure ID documents gallery review */}
+                {/* Status Indicator / Actions */}
                 <div className="space-y-3.5">
                   <span className="font-satoshi text-xs font-bold uppercase text-[#5A6465] tracking-wide block">
-                    Cloudinary Identification Assets ({selectedSubmission.documents.length})
+                    Identity Verification
                   </span>
-
-                  {selectedSubmission.documents.length === 0 ? (
-                    <div className="bg-amber-50/50 border border-amber-200 rounded-2xl p-5 flex items-start gap-3">
-                      <AlertTriangle className="w-5 h-5 text-[#FDA600] shrink-0 mt-0.5" />
-                      <div className="font-satoshi text-xs text-[#5A6465] space-y-1">
-                        <p className="font-semibold text-black">No documents recorded</p>
-                        <p>This user has declared their KYC intent but hasn't uploaded any verification assets to Cloudinary yet.</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {selectedSubmission.documents.map((doc) => (
-                        <div
-                          key={doc.id}
-                          className="bg-white border border-[#ECE6D6] rounded-2xl p-4 space-y-3 flex flex-col justify-between group"
-                        >
-                          <div className="space-y-1.5 font-satoshi">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-extrabold text-[#01454A]">
-                                {formatDocName(doc.document_type)}
-                              </span>
-                              {doc.provider_verified && (
-                                <span className="bg-emerald-50 text-emerald-700 font-extrabold text-[8px] px-1.5 py-0.5 rounded">
-                                  REGISTRY VERIFIED
-                                </span>
-                              )}
-                            </div>
-                            {doc.document_number && (
-                              <p className="text-[10px] text-[#5A6465] font-mono bg-[#F8F5ED] px-2 py-0.5 rounded border border-[#ECE6D6]/40 inline-block">
-                                ID ending: ...{doc.document_number}
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Image preview box */}
-                          <div className="relative h-44 w-full bg-[#F8F5ED] rounded-xl overflow-hidden border border-[#ECE6D6] flex items-center justify-center group-hover:border-[#01454A] transition-all duration-200">
-                            {doc.secure_url ? (
-                              <>
-                                <img
-                                  src={doc.secure_url}
-                                  alt=""
-                                  className="w-full h-full object-contain"
-                                />
-                                <button
-                                  onClick={() => setZoomUrl(doc.secure_url)}
-                                  className="absolute bottom-2.5 right-2.5 p-1.5 rounded-lg bg-black/60 text-white hover:bg-black transition-colors flex items-center gap-1 text-[10px] font-bold"
-                                >
-                                  <ZoomIn className="w-3.5 h-3.5" />
-                                  Zoom Card
-                                </button>
-                              </>
-                            ) : (
-                              <div className="text-center p-4">
-                                <FileText className="w-8 h-8 text-[#8A9596] mx-auto mb-1" />
-                                <span className="text-[10px] font-bold text-[#8A9596]">No URL stored</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                  {selectedSubmission.status === "pending" && (
+                    <button
+                      onClick={() => handleMarkInReview(selectedSubmission.id)}
+                      disabled={markInReviewMutation.isPending}
+                      className="bg-[#01454A]/10 hover:bg-[#01454A]/20 text-[#01454A] font-bold text-xs px-4 py-2.5 rounded-xl transition"
+                    >
+                      {markInReviewMutation.isPending ? "Updating status..." : "Mark In Review"}
+                    </button>
                   )}
                 </div>
               </div>
@@ -506,10 +327,10 @@ export default function AdminKycPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
                     <div className="md:col-span-2">
                       <label className="block font-satoshi">
-                        <span className="text-[10px] font-bold uppercase text-[#8A9596]">Provider Audit Reference</span>
+                        <span className="text-[10px] font-bold uppercase text-[#8A9596]">Legal Name Audit Confirm</span>
                         <input
                           type="text"
-                          placeholder="SmileID job reference or legal code..."
+                          placeholder="Confirm legal name matches..."
                           value={providerReference}
                           onChange={(e) => setProviderReference(e.target.value)}
                           className="w-full h-10 mt-1 px-3 bg-[#F8F5ED]/50 border border-[#ECE6D6] focus:border-[#01454A] rounded-xl outline-none text-xs text-black transition-all"
@@ -543,7 +364,7 @@ export default function AdminKycPage() {
 
                   <div className="space-y-4">
                     <label className="block font-satoshi">
-                      <span className="text-[10px] font-bold uppercase text-[#8A9596] block">Rejection Notes / Explanatory Review Notes (Required)</span>
+                      <span className="text-[10px] font-bold uppercase text-[#8A9596] block">Rejection Notes (Required)</span>
                       <textarea
                         rows={2}
                         placeholder="NIN document is blurry. Please provide high resolution snapshot in JPG/PNG format..."

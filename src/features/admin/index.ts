@@ -35,3 +35,22 @@ export { fetchAdminDashboardKPI } from "./api/dashboard.api";
 export type { AdminDashboardKPI } from "./api/dashboard.api";
 export { useAdminDashboardKPI } from "./hooks/use-dashboard-kpi";
 
+// ── Admin Auth/Users ───────────────────────────────────────────────────────
+export * from "./auth/model/types";
+export * from "./auth/api";
+export * from "./auth/hooks/useAdminAuth";
+
+// ── Admin Vendor ───────────────────────────────────────────────────────────
+export * from "./vendor/model/types";
+export * from "./vendor/api";
+export * from "./vendor/hooks/useAdminVendor";
+
+// ── Admin KYC ──────────────────────────────────────────────────────────────
+export * from "./kyc/model/types";
+export * from "./kyc/api";
+export * from "./kyc/hooks/useAdminKyc";
+
+// ── Admin Settings ──────────────────────────────────────────────────────────
+export * from "./settings/api";
+export * from "./settings/hooks/useAdminSettings";
+
