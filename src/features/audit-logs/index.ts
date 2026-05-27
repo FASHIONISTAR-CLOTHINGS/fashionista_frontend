@@ -1,7 +1,7 @@
 /**
  * features/audit-logs/index.ts
  *
- * Public barrel for the `features/audit-logs` canonical FSD slice.
+ * Public FSD entrypoint for audit-logs feature.
  */
 
 export * from "./admin-dashboard";

@@ -1,5 +1,7 @@
 /**
  * features/audit-logs/admin-dashboard/components/AuditLogViewer.tsx
+ *
+ * Superadmin Compliance Audit Trail Viewer.
  */
 
 "use client";

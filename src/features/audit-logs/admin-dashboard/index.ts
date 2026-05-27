@@ -5,4 +5,4 @@
 export * from "./types";
 export * from "./api";
 export * from "./hooks";
-export * from "./components/AuditLogViewer";
+export { AuditLogViewer } from "./components/AuditLogViewer";
