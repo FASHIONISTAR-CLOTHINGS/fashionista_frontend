@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useCatalogCategories } from "@/features/catalog/hooks/use-catalog";
 import { useAdminProducts, useDeleteAdminProduct } from "@/features/product";
-import { toast } from "sonner";
 import { 
   Search, 
   Trash2, 

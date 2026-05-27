@@ -56,9 +56,6 @@ export {
   useRecordKycDocument,
   useNinjaKycStatus,
   useNinjaKycDocuments,
-  useAdminKycSubmissions,
-  useApproveKyc,
-  useRejectKyc,
 } from "./hooks/use-kyc";
 
 // ── Components ─────────────────────────────────────────────────────────────────

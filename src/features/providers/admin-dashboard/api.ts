@@ -2,7 +2,7 @@
  * features/providers/admin-dashboard/api.ts
  */
 
-import { apiAdminSync, apiAdminAsync } from "@/core/api/client.admin";
+import { apiAdminAsync } from "@/core/api/client.admin";
 import type { ApiProvider } from "./types";
 
 export async function fetchAdminProviders(): Promise<ApiProvider[]> {
