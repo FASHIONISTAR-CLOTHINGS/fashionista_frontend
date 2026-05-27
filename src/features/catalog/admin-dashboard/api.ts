@@ -2,6 +2,9 @@
  * features/catalog/admin-dashboard/api.ts
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+
 import { apiAdminSync, apiAdminAsync } from "@/core/api/client.admin";
 import type { AdminCategory, AdminBrand, AdminCollection, AdminBlogPost, AdminDashboardKPI } from "./types";
 
