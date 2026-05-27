@@ -5,4 +5,4 @@
 export * from "./types";
 export * from "./api";
 export * from "./hooks";
-export { PaymentDashboard } from "./components/PaymentDashboard";
+export { PaymentDashboard as AdminPaymentDashboard } from "./components/PaymentDashboard";

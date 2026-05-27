@@ -6,7 +6,9 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { fetchAdminCarts, fetchAdminCartDetail, clearAdminCart } from "./api";
+import { fetchAdminCarts, fetchAdminCartDetail, clearAdminCart, type PaginatedAdminCarts } from "./api";
+
+
 
 export const cartAdminKeys = {
   all: ["cart", "admin"] as const,
@@ -17,7 +19,7 @@ export const cartAdminKeys = {
 } as const;
 
 export function useAdminCarts(page = 1, search?: string) {
-  return useQuery({
+  return useQuery<PaginatedAdminCarts, Error>({
     queryKey: [...cartAdminKeys.list(page), search],
     queryFn: () => fetchAdminCarts(page, search),
     staleTime: 30_000,

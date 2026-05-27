@@ -1,5 +1,5 @@
-import { PaymentDashboard } from "@/features/payment";
+import { AdminPaymentDashboard } from "@/features/payment";
 
 export default function AdminPaymentPage() {
-  return <PaymentDashboard />;
+  return <AdminPaymentDashboard />;
 }

@@ -8,7 +8,7 @@ import { apiAdminAsync, apiAdminSync } from "@/core/api/client.admin";
 import { unwrapApiData } from "@/core/api/response";
 import type { AdminCart } from "./types";
 
-interface PaginatedAdminCarts {
+export interface PaginatedAdminCarts {
   count: number;
   next: string | null;
   previous: string | null;
