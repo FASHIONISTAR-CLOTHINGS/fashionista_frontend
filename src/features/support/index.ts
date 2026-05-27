@@ -104,3 +104,7 @@ export { SupportTicketList }   from "./components/SupportTicketList";
 export { TicketDetailPanel }   from "./components/TicketDetailPanel";
 export { NewTicketModal }      from "./components/NewTicketModal";
 export { SlaDashboard }        from "./components/SlaDashboard";
+
+// ── Admin Dashboard ────────────────────────────────────────────────────────────
+export * from "./admin-dashboard";
+

@@ -6,57 +6,29 @@ import {
   MessageSquare,
   Send,
   Shield,
+  Loader2,
 } from "lucide-react";
 
-interface SupportChannel {
-  id: string;
-  clientName: string;
-  designerName: string;
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
-  status: "open" | "closed";
-}
-
-const MOCK_CHANNELS: SupportChannel[] = [
-  {
-    id: "CH-1002",
-    clientName: "Amara Kalu",
-    designerName: "Deji Luxury",
-    lastMessage: "Thank you for the update. The golden thread embroidery looks perfect.",
-    timestamp: "10:45 AM",
-    unreadCount: 2,
-    status: "open",
-  },
-  {
-    id: "CH-1003",
-    clientName: "Tobi Adebayo",
-    designerName: "Vanguard Tailors",
-    lastMessage: "I need to modify the sleeve length by 1.5 inches before cutting the fabric.",
-    timestamp: "Yesterday",
-    unreadCount: 0,
-    status: "open",
-  },
-  {
-    id: "CH-1004",
-    clientName: "Ngozi Echem",
-    designerName: "Eze Couture",
-    lastMessage: "Your Ankara dress has been packaged and handed over to DHL.",
-    timestamp: "2 days ago",
-    unreadCount: 0,
-    status: "closed",
-  },
-];
+import { useAdminChatSessions, useAdminChatStats } from "@/features/chat";
 
 export default function AdminChatPage() {
   const [search, setSearch] = useState("");
-  const [selectedChannel, setSelectedChannel] = useState<SupportChannel | null>(MOCK_CHANNELS[0]);
+  const [selectedChannel, setSelectedChannel] = useState<any | null>(null);
   const [messageInput, setMessageInput] = useState("");
   const [messages, setMessages] = useState<Array<{ sender: string; text: string; time: string }>>([
     { sender: "client", text: "Hello! Is it possible to see the golden thread accent design?", time: "10:40 AM" },
     { sender: "designer", text: "Of course! I have uploaded the close-up sample to the order file.", time: "10:42 AM" },
     { sender: "client", text: "Thank you for the update. The golden thread embroidery looks perfect.", time: "10:45 AM" },
   ]);
+
+  const { data: chatSessions = [], isLoading, isError } = useAdminChatSessions();
+  const { data: chatStats } = useAdminChatStats();
+
+  const filteredChannels = chatSessions.filter((channel) =>
+    channel.room_name.toLowerCase().includes(search.toLowerCase()) ||
+    channel.vendor_name.toLowerCase().includes(search.toLowerCase()) ||
+    channel.client_name.toLowerCase().includes(search.toLowerCase())
+  );
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +71,26 @@ export default function AdminChatPage() {
 
           {/* List items */}
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
-            {MOCK_CHANNELS.map((channel) => (
+            {isLoading && (
+              <div className="flex flex-col items-center justify-center py-10 gap-2">
+                <Loader2 className="w-5 h-5 text-[#01454A] animate-spin" />
+                <span className="font-satoshi text-[10px] text-[#5A6465] animate-pulse">Loading active chats...</span>
+              </div>
+            )}
+
+            {isError && (
+              <div className="text-center py-6 text-xs text-red-500 font-satoshi">
+                Failed to load chat channels.
+              </div>
+            )}
+
+            {!isLoading && !isError && filteredChannels.length === 0 && (
+              <div className="text-center py-10 text-xs text-[#8A9596] font-satoshi">
+                No conversations found.
+              </div>
+            )}
+
+            {!isLoading && !isError && filteredChannels.map((channel) => (
               <div
                 key={channel.id}
                 onClick={() => setSelectedChannel(channel)}
@@ -111,12 +102,14 @@ export default function AdminChatPage() {
               >
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-[10px] font-bold opacity-60">{channel.id}</span>
-                  <span className="text-[9px] font-medium opacity-80">{channel.timestamp}</span>
+                  <span className="text-[9px] font-medium opacity-80">
+                    {new Date(channel.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
                 </div>
                 <div>
-                  <h4 className="font-bon_foyage text-base truncate">{channel.clientName} ↔ {channel.designerName}</h4>
-                  <p className={`text-xs mt-1 line-clamp-1 opacity-70`}>
-                    {channel.lastMessage}
+                  <h4 className="font-bon_foyage text-base truncate">{channel.client_name} ↔ {channel.vendor_name}</h4>
+                  <p className="text-xs mt-1 line-clamp-1 opacity-70">
+                    Room Name: {channel.room_name}
                   </p>
                 </div>
               </div>
@@ -132,7 +125,7 @@ export default function AdminChatPage() {
               <div className="px-6 py-4 border-b border-[#ECE6D6]/80 flex items-center justify-between shrink-0">
                 <div>
                   <h4 className="font-bon_foyage text-lg text-black">
-                    {selectedChannel.clientName} &amp; {selectedChannel.designerName}
+                    {selectedChannel.client_name} &amp; {selectedChannel.vendor_name}
                   </h4>
                   <p className="text-xs text-[#8A9596] mt-0.5">Monitoring Active Bespoke Thread</p>
                 </div>
@@ -163,9 +156,9 @@ export default function AdminChatPage() {
                     >
                       <span className="text-[9px] font-bold text-[#8A9596] uppercase mb-1">
                         {msg.sender === "client"
-                          ? selectedChannel.clientName
+                          ? selectedChannel.client_name
                           : msg.sender === "designer"
-                            ? selectedChannel.designerName
+                            ? selectedChannel.vendor_name
                             : "Platform Administrator"}
                       </span>
                       <div
