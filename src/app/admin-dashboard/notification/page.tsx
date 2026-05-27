@@ -37,16 +37,21 @@ const MOCK_NOTIFICATIONS: SystemNotification[] = [
   },
 ];
 
+import { useAdminAnnouncements, useSendAnnouncement } from "@/features/notification";
+import { Loader2 } from "lucide-react";
+
 export default function AdminNotificationPage() {
   const [search, setSearch] = useState("");
   const [titleInput, setTitleInput] = useState("");
   const [bodyInput, setBodyInput] = useState("");
   const [targetAudience, setTargetAudience] = useState<"all" | "vendors" | "clients">("all");
-  const [isPending, setIsPending] = useState(false);
 
-  const filteredNotifs = MOCK_NOTIFICATIONS.filter((notif) =>
+  const { data: announcements = [], isLoading, isError } = useAdminAnnouncements();
+  const sendAnnouncementMutation = useSendAnnouncement();
+
+  const filteredNotifs = announcements.filter((notif) =>
     notif.title.toLowerCase().includes(search.toLowerCase()) ||
-    notif.body.toLowerCase().includes(search.toLowerCase())
+    notif.message_preview.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleBroadcast = (e: React.FormEvent) => {
@@ -56,13 +61,19 @@ export default function AdminNotificationPage() {
       return;
     }
 
-    setIsPending(true);
-    setTimeout(() => {
-      setIsPending(false);
-      toast.success("Platform broadcast queued successfully.");
-      setTitleInput("");
-      setBodyInput("");
-    }, 1200);
+    sendAnnouncementMutation.mutate(
+      {
+        title: titleInput.trim(),
+        message: bodyInput.trim(),
+        target_audience: targetAudience,
+      },
+      {
+        onSuccess: () => {
+          setTitleInput("");
+          setBodyInput("");
+        },
+      }
+    );
   };
 
   return (
