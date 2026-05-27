@@ -1,10 +1,19 @@
 /**
  * features/audit-logs/admin-dashboard/api.ts
+ *
+ * API client for the compliance audit log viewer.
+ *
+ * Endpoint: GET /api/v1/admin_backend/audit/logs/
+ * Auth: Superadmin only
+ * Client: apiAdminAsync (Ky) — Ninja async
  */
 
-import { apiAsync } from "@/core/api/client.async";
+import { apiAdminAsync } from "@/core/api/client.admin";
 import type { AuditLogEnvelope, AuditLogFilters } from "./types";
 
+/**
+ * Fetch audit log entries with optional filters.
+ */
 export async function fetchAuditLogs(
   filters?: AuditLogFilters
 ): Promise<AuditLogEnvelope> {
@@ -16,7 +25,7 @@ export async function fetchAuditLogs(
   if (filters?.page)          params.page          = filters.page;
   if (filters?.page_size)     params.page_size     = filters.page_size ?? 50;
 
-  return apiAsync
+  return apiAdminAsync
     .get("audit/logs/", {
       searchParams: params as Record<string, string>,
     })
