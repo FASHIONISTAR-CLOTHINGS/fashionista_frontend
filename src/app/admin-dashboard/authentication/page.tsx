@@ -10,7 +10,7 @@ import {
   useVerifyUser,
   useForcePasswordReset,
   useUpdateUserRole,
-} from "@/features/admin";
+} from "@/features/auth";
 import {
   Search,
   User,
