@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Trigger stable Next.js cache revalidation
-    revalidateTag(tag);
+    revalidateTag(tag, "max");
 
     return NextResponse.json({
       success: true,
