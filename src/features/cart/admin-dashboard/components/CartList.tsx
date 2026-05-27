@@ -9,6 +9,8 @@ import { useState, useTransition, useEffect } from "react";
 import { useQueryState, parseAsInteger } from "nuqs";
 import { Search, ShoppingBag, Trash2, Clock, Mail, Tag, Eye } from "lucide-react";
 import { useAdminCarts, useClearAdminCart, useAdminCartDetail } from "../hooks";
+import type { AdminCart, AdminCartItem } from "../types";
+
 
 
 const SkeletonRow = () => (
@@ -81,8 +83,8 @@ export function CartList() {
   }
 
   // Calculate live KPI statistics from listed items
-  const totalActiveValue = carts.reduce((acc, c) => acc + parseFloat(acc === acc ? c.total : "0"), 0);
-  const anonymousCartsCount = carts.filter((c) => !c.owner_email).length;
+  const totalActiveValue = carts.reduce((acc: number, c: AdminCart) => acc + parseFloat(c.total || "0"), 0);
+  const anonymousCartsCount = carts.filter((c: AdminCart) => !c.owner_email).length;
   const averageValue = totalCount > 0 ? totalActiveValue / totalCount : 0;
 
   function formatNGN(amount: string | number | null | undefined): string {
@@ -197,7 +199,7 @@ export function CartList() {
                     </td>
                   </tr>
                 ) : (
-                  carts.map((cart) => {
+                  carts.map((cart: AdminCart) => {
                     const identifier = cart.owner_email || `Guest: ${cart.session_key?.slice(0, 12)}...`;
                     const hasUser = !!cart.owner_email;
                     return (
@@ -221,7 +223,7 @@ export function CartList() {
                           </div>
                         </td>
                         <td className="py-3.5 px-4 text-center font-semibold text-black">
-                          {cart.items?.reduce((sum, item) => sum + item.quantity, 0) || 0}
+                          {cart.items?.reduce((sum: number, item: AdminCartItem) => sum + item.quantity, 0) || 0}
                         </td>
                         <td className="py-3.5 px-4 text-right font-medium text-gray-500">
                           {formatNGN(cart.subtotal)}

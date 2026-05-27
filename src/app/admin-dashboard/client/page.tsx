@@ -1,5 +1,5 @@
-import { ClientDashboard } from "@/features/client";
+import { AdminClientDashboard } from "@/features/client";
 
 export default function ClientsPage() {
-  return <ClientDashboard />;
+  return <AdminClientDashboard />;
 }
