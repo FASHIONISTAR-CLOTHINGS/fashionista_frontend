@@ -211,3 +211,7 @@ export type {
   FaqRow,
   StepMeta,
 } from "./builder";
+
+// ── Admin Dashboard ────────────────────────────────────────────────────────────
+export * from "./admin-dashboard";
+

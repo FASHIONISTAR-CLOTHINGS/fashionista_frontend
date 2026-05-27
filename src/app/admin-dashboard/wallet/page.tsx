@@ -6,11 +6,8 @@ import {
   Search,
   Wallet,
   TrendingUp,
-  ArrowDownLeft,
-  ArrowUpRight,
   Shield,
   Loader2,
-  CheckCircle2,
   XCircle,
   ExternalLink,
   DollarSign,
@@ -31,7 +28,7 @@ export default function AdminWalletPage() {
     wallet.id.toLowerCase().includes(search.toLowerCase())
   );
 
-  const selectedWallet = wallets.find((w) => wallet.id === selectedWalletId || w.id === selectedWalletId);
+  const selectedWallet = wallets.find((w) => w.id === selectedWalletId);
 
   return (
     <div className="space-y-10 bg-inherit min-h-screen pb-12 font-satoshi">

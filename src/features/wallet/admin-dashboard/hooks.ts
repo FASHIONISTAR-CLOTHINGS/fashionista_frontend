@@ -27,24 +27,17 @@ export function useAdminWalletKPIs() {
 
 export function useToggleWalletFreeze() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const toast = useToast();
 
   return useMutation({
     mutationFn: ({ walletId, action }: { walletId: string; action: "freeze" | "unfreeze" }) =>
       toggleWalletFreeze(walletId, action),
     onSuccess: (_, variables) => {
-      toast({
-        title: "Success",
-        description: `Wallet ${variables.walletId} successfully ${variables.action}d`,
-      });
+      toast.success(`Wallet ${variables.walletId} successfully ${variables.action}d`);
       queryClient.invalidateQueries({ queryKey: adminWalletKeys.all });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to update wallet status",
-        variant: "destructive",
-      });
+      toast.error(error?.message || "Failed to update wallet status");
     },
   });
 }

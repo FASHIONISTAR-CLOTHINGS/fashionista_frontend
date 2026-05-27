@@ -5,13 +5,7 @@ import {
   Search,
   MessageSquare,
   Send,
-  User,
   Shield,
-  Loader2,
-  XCircle,
-  ExternalLink,
-  ChevronRight,
-  Info,
 } from "lucide-react";
 
 interface SupportChannel {
