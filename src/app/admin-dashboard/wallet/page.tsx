@@ -6,66 +6,39 @@ import {
   Search,
   Wallet,
   TrendingUp,
+  ArrowDownLeft,
+  ArrowUpRight,
   Shield,
+  Loader2,
+  CheckCircle2,
   XCircle,
+  ExternalLink,
   DollarSign,
+  AlertCircle,
 } from "lucide-react";
-
-interface WalletEntry {
-  id: string;
-  storeName: string;
-  availableBalance: number;
-  escrowBalance: number;
-  totalPayouts: number;
-  lastPayoutDate: string;
-  status: "active" | "frozen";
-}
-
-const MOCK_WALLETS: WalletEntry[] = [
-  {
-    id: "WLT-081",
-    storeName: "Deji Luxury",
-    availableBalance: 420000,
-    escrowBalance: 350000,
-    totalPayouts: 2400000,
-    lastPayoutDate: "2026-05-20",
-    status: "active",
-  },
-  {
-    id: "WLT-082",
-    storeName: "Vanguard Tailors",
-    availableBalance: 180000,
-    escrowBalance: 280000,
-    totalPayouts: 1850000,
-    lastPayoutDate: "2026-05-18",
-    status: "active",
-  },
-  {
-    id: "WLT-083",
-    storeName: "Eze Couture",
-    availableBalance: 95000,
-    escrowBalance: 195000,
-    totalPayouts: 920000,
-    lastPayoutDate: "2026-05-10",
-    status: "active",
-  },
-];
+import { useAdminWallets, useAdminWalletKPIs, useToggleWalletFreeze } from "@/features/wallet";
 
 export default function AdminWalletPage() {
   const [search, setSearch] = useState("");
-  const [selectedWallet, setSelectedWallet] = useState<WalletEntry | null>(null);
+  const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
 
-  const filteredWallets = MOCK_WALLETS.filter((wallet) =>
+  const { data: wallets = [], isLoading: isLoadingWallets, isError: isErrorWallets } = useAdminWallets();
+  const { data: kpis, isLoading: isLoadingKPIs } = useAdminWalletKPIs();
+  const { mutate: toggleFreeze, isPending: isToggling } = useToggleWalletFreeze();
+
+  const filteredWallets = wallets.filter((wallet) =>
     wallet.storeName.toLowerCase().includes(search.toLowerCase()) ||
     wallet.id.toLowerCase().includes(search.toLowerCase())
   );
+
+  const selectedWallet = wallets.find((w) => wallet.id === selectedWalletId || w.id === selectedWalletId);
 
   return (
     <div className="space-y-10 bg-inherit min-h-screen pb-12 font-satoshi">
       {/* Header Banner */}
       <div>
         <h3 className="font-bon_foyage text-4xl text-black md:text-5xl">
-          Wallets & Ledger
+          Wallets &amp; Ledger
         </h3>
         <p className="text-sm text-[#5A6465] mt-1">
           Monitor tailor bank balances, audit ledger log events, and trace escrow status transitions.
@@ -77,7 +50,9 @@ export default function AdminWalletPage() {
         <div className="bg-[#fff] rounded-[20px] shadow-sm p-6 border border-[#ECE6D6] flex justify-between items-center">
           <div className="space-y-1">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block">Global Escrow Hold</span>
-            <span className="font-bon_foyage text-3xl text-black">₦825,000</span>
+            <span className="font-bon_foyage text-3xl text-black">
+              ₦{isLoadingKPIs ? "..." : kpis?.globalEscrowHold.toLocaleString()}
+            </span>
           </div>
           <div className="p-3 bg-[#FEF3D3] text-[#FDA600] rounded-full">
             <Shield className="w-6 h-6" />
@@ -87,7 +62,9 @@ export default function AdminWalletPage() {
         <div className="bg-[#fff] rounded-[20px] shadow-sm p-6 border border-[#ECE6D6] flex justify-between items-center">
           <div className="space-y-1">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block">Available Seller Funds</span>
-            <span className="font-bon_foyage text-3xl text-black">₦695,000</span>
+            <span className="font-bon_foyage text-3xl text-black">
+              ₦{isLoadingKPIs ? "..." : kpis?.availableSellerFunds.toLocaleString()}
+            </span>
           </div>
           <div className="p-3 bg-blue-50 text-blue-600 rounded-full">
             <Wallet className="w-6 h-6" />
@@ -97,7 +74,9 @@ export default function AdminWalletPage() {
         <div className="bg-[#fff] rounded-[20px] shadow-sm p-6 border border-[#ECE6D6] flex justify-between items-center">
           <div className="space-y-1">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block">Platform Gross Payouts</span>
-            <span className="font-bon_foyage text-3xl text-[#20AB2C]">₦5,170,000</span>
+            <span className="font-bon_foyage text-3xl text-[#20AB2C]">
+              ₦{isLoadingKPIs ? "..." : kpis?.platformGrossPayouts.toLocaleString()}
+            </span>
           </div>
           <div className="p-3 bg-[#C5FECB] text-emerald-700 rounded-full">
             <TrendingUp className="w-6 h-6" />
@@ -118,53 +97,72 @@ export default function AdminWalletPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredWallets.map((wallet) => (
-            <div
-              key={wallet.id}
-              onClick={() => setSelectedWallet(wallet)}
-              className="bg-white border border-[#ECE6D6] hover:border-[#01454A] rounded-[24px] p-5 shadow-xs hover:shadow transition duration-200 cursor-pointer flex flex-col justify-between group"
-            >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold text-[#8A9596]">{wallet.id}</span>
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      wallet.status === "active"
-                        ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                        : "bg-red-50 text-red-500 border border-red-100"
-                    }`}
-                  >
-                    {wallet.status.toUpperCase()}
-                  </span>
+        {isLoadingWallets ? (
+          <div className="flex flex-col items-center justify-center py-20 space-y-4">
+            <Loader2 className="w-10 h-10 animate-spin text-[#01454A]" />
+            <p className="text-sm text-[#5A6465]">Loading wallet records...</p>
+          </div>
+        ) : isErrorWallets ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-[#ECE6D6] rounded-2xl bg-white">
+            <AlertCircle className="w-10 h-10 text-red-500 mb-2" />
+            <p className="text-sm text-[#5A6465] font-semibold">Failed to fetch wallet records</p>
+            <p className="text-xs text-[#8A9596] mt-1">Please try again later or check your backend services.</p>
+          </div>
+        ) : filteredWallets.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-[#ECE6D6] rounded-2xl bg-white">
+            <Wallet className="w-10 h-10 text-gray-300 mb-2" />
+            <p className="text-sm text-[#5A6465] font-semibold">No wallets found</p>
+            <p className="text-xs text-[#8A9596] mt-1">Try refining your search keyword.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredWallets.map((wallet) => (
+              <div
+                key={wallet.id}
+                onClick={() => setSelectedWalletId(wallet.id)}
+                className="bg-white border border-[#ECE6D6] hover:border-[#01454A] rounded-[24px] p-5 shadow-xs hover:shadow transition duration-200 cursor-pointer flex flex-col justify-between group"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-[#8A9596]">{wallet.id}</span>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        wallet.status === "active"
+                          ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                          : "bg-red-50 text-red-500 border border-red-100"
+                      }`}
+                    >
+                      {wallet.status.toUpperCase()}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h4 className="font-bon_foyage text-lg text-black">{wallet.storeName}</h4>
+                  </div>
+
+                  <div className="space-y-2 pt-3 border-t border-[#ECE6D6]/40 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-[#8A9596]">Available Balance</span>
+                      <span className="font-bold text-[#01454A]">₦{wallet.availableBalance.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#8A9596]">Escrow Reserve</span>
+                      <span className="font-bold text-black">₦{wallet.escrowBalance.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#8A9596]">Gross Payouts</span>
+                      <span className="font-semibold text-emerald-600">₦{wallet.totalPayouts.toLocaleString()}</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <h4 className="font-bon_foyage text-lg text-black">{wallet.storeName}</h4>
-                </div>
-
-                <div className="space-y-2 pt-3 border-t border-[#ECE6D6]/40 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-[#8A9596]">Available Balance</span>
-                    <span className="font-bold text-[#01454A]">₦{wallet.availableBalance.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#8A9596]">Escrow Reserve</span>
-                    <span className="font-bold text-black">₦{wallet.escrowBalance.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#8A9596]">Gross Payouts</span>
-                    <span className="font-semibold text-emerald-600">₦{wallet.totalPayouts.toLocaleString()}</span>
-                  </div>
+                <div className="pt-3 mt-4 border-t border-[#ECE6D6]/30 text-[10px] text-[#8A9596]">
+                  Last Withdrawal: {wallet.lastPayoutDate || "Never"}
                 </div>
               </div>
-
-              <div className="pt-3 mt-4 border-t border-[#ECE6D6]/30 text-[10px] text-[#8A9596]">
-                Last Withdrawal: {wallet.lastPayoutDate}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Details drawer */}
@@ -177,7 +175,7 @@ export default function AdminWalletPage() {
                   Wallet Audit Details
                 </span>
                 <button
-                  onClick={() => setSelectedWallet(null)}
+                  onClick={() => setSelectedWalletId(null)}
                   className="p-1 rounded-full border border-[#ECE6D6] bg-white hover:bg-black hover:text-white transition"
                 >
                   <XCircle className="w-5 h-5" />
@@ -204,17 +202,40 @@ export default function AdminWalletPage() {
                     <span className="text-xs text-[#8A9596] block">Escrow Holds</span>
                     <span className="text-black font-semibold text-lg">₦{selectedWallet.escrowBalance.toLocaleString()}</span>
                   </div>
+                  <div>
+                    <span className="text-xs text-[#8A9596] block">Wallet Status</span>
+                    <span className="font-bold block mt-1">
+                      {selectedWallet.status.toUpperCase()}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="pt-6 border-t border-[#ECE6D6]/80 bg-inherit space-y-3">
+              <button
+                onClick={() => {
+                  toggleFreeze({
+                    walletId: selectedWallet.id,
+                    action: selectedWallet.status === "active" ? "freeze" : "unfreeze",
+                  });
+                }}
+                disabled={isToggling}
+                className="w-full bg-[#01454A] hover:bg-[#01454A]/90 disabled:bg-[#01454A]/60 text-white font-bold text-sm py-3.5 rounded-xl shadow-sm flex items-center justify-center gap-2 transition"
+              >
+                {isToggling ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <DollarSign className="w-4 h-4" />
+                )}
+                {selectedWallet.status === "active" ? "Freeze Wallet" : "Unfreeze Wallet"}
+              </button>
               <Link
                 href={`${process.env.NEXT_PUBLIC_API_V1_URL || "http://127.0.0.1:8001"}/admin/wallet/wallet/${selectedWallet.id}/change/`}
                 target="_blank"
-                className="w-full bg-[#01454A] hover:bg-[#01454A]/90 text-white font-bold text-sm py-3.5 rounded-xl shadow-sm flex items-center justify-center gap-2 transition"
+                className="w-full bg-white border border-[#ECE6D6] hover:bg-[#F4F3EC] text-black font-bold text-sm py-3.5 rounded-xl shadow-sm flex items-center justify-center gap-2 transition"
               >
-                <DollarSign className="w-4 h-4" />
+                <ExternalLink className="w-4 h-4" />
                 Open In Django Super-Admin
               </Link>
             </div>

@@ -10,64 +10,32 @@ import {
   ExternalLink,
   ChevronRight,
   TrendingUp,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
-
-interface PaymentTransaction {
-  id: string;
-  clientName: string;
-  amount: number;
-  gateway: "stripe" | "paystack" | "wallet";
-  status: "success" | "pending" | "failed";
-  orderId: string;
-  created_at: string;
-}
-
-const MOCK_PAYMENTS: PaymentTransaction[] = [
-  {
-    id: "TXN-7731",
-    clientName: "Amara Kalu",
-    amount: 350000,
-    gateway: "stripe",
-    status: "success",
-    orderId: "ORD-9912",
-    created_at: "2026-05-26 14:32",
-  },
-  {
-    id: "TXN-7732",
-    clientName: "Tobi Adebayo",
-    amount: 280000,
-    gateway: "stripe",
-    status: "pending",
-    orderId: "ORD-9913",
-    created_at: "2026-05-26 15:10",
-  },
-  {
-    id: "TXN-7733",
-    clientName: "Ngozi Echem",
-    amount: 195000,
-    gateway: "paystack",
-    status: "success",
-    orderId: "ORD-9914",
-    created_at: "2026-05-25 09:44",
-  },
-];
+import { useAdminPayments, useAdminPaymentKPIs } from "@/features/payment";
 
 export default function AdminPaymentPage() {
   const [search, setSearch] = useState("");
-  const [selectedTxn, setSelectedTxn] = useState<PaymentTransaction | null>(null);
+  const [selectedTxnId, setSelectedTxnId] = useState<string | null>(null);
 
-  const filteredPayments = MOCK_PAYMENTS.filter((payment) =>
+  const { data: payments = [], isLoading: isLoadingPayments, isError: isErrorPayments } = useAdminPayments();
+  const { data: kpis, isLoading: isLoadingKPIs } = useAdminPaymentKPIs();
+
+  const filteredPayments = payments.filter((payment) =>
     payment.clientName.toLowerCase().includes(search.toLowerCase()) ||
     payment.id.toLowerCase().includes(search.toLowerCase()) ||
     payment.orderId.toLowerCase().includes(search.toLowerCase())
   );
+
+  const selectedTxn = payments.find((p) => p.id === selectedTxnId);
 
   return (
     <div className="space-y-10 bg-inherit min-h-screen pb-12 font-satoshi">
       {/* Header Banner */}
       <div>
         <h3 className="font-bon_foyage text-4xl text-black md:text-5xl">
-          Transactions & Payments
+          Transactions &amp; Payments
         </h3>
         <p className="text-sm text-[#5A6465] mt-1">
           Audit global checkout credit transactions, reconcile payment gateways, and trigger manual admin overrides.
@@ -79,7 +47,9 @@ export default function AdminPaymentPage() {
         <div className="bg-[#fff] rounded-[20px] shadow-sm p-6 border border-[#ECE6D6] flex justify-between items-center">
           <div className="space-y-1">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block">Volume Today</span>
-            <span className="font-bon_foyage text-3xl text-black">₦825,000</span>
+            <span className="font-bon_foyage text-3xl text-black">
+              ₦{isLoadingKPIs ? "..." : kpis?.volumeToday.toLocaleString()}
+            </span>
           </div>
           <div className="p-3 bg-[#C5FECB] text-emerald-700 rounded-full">
             <TrendingUp className="w-6 h-6" />
@@ -89,7 +59,9 @@ export default function AdminPaymentPage() {
         <div className="bg-[#fff] rounded-[20px] shadow-sm p-6 border border-[#ECE6D6] flex justify-between items-center">
           <div className="space-y-1">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block">Stripe Gateway</span>
-            <span className="font-bon_foyage text-3xl text-black">Active</span>
+            <span className="font-bon_foyage text-3xl text-black">
+              {isLoadingKPIs ? "..." : kpis?.stripeStatus}
+            </span>
           </div>
           <div className="p-3 bg-blue-50 text-blue-600 rounded-full">
             <CreditCard className="w-6 h-6" />
@@ -99,7 +71,9 @@ export default function AdminPaymentPage() {
         <div className="bg-[#fff] rounded-[20px] shadow-sm p-6 border border-[#ECE6D6] flex justify-between items-center">
           <div className="space-y-1">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block">Failed Checkouts</span>
-            <span className="font-bon_foyage text-3xl text-red-500">0.02%</span>
+            <span className="font-bon_foyage text-3xl text-red-500">
+              {isLoadingKPIs ? "..." : `${kpis?.failedCheckouts}%`}
+            </span>
           </div>
           <div className="p-3 bg-red-50 text-red-600 rounded-full">
             <AlertTriangle className="w-6 h-6" />
@@ -120,55 +94,74 @@ export default function AdminPaymentPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPayments.map((payment) => (
-            <div
-              key={payment.id}
-              onClick={() => setSelectedTxn(payment)}
-              className="bg-white border border-[#ECE6D6] hover:border-[#01454A] rounded-[24px] p-5 shadow-xs hover:shadow transition duration-200 cursor-pointer flex flex-col justify-between group"
-            >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold text-[#8A9596]">{payment.id}</span>
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      payment.status === "success"
-                        ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                        : payment.status === "pending"
-                          ? "bg-amber-50 text-[#FDA600] border border-amber-100"
-                          : "bg-red-50 text-red-500 border border-red-100"
-                    }`}
-                  >
-                    {payment.status.toUpperCase()}
+        {isLoadingPayments ? (
+          <div className="flex flex-col items-center justify-center py-20 space-y-4">
+            <Loader2 className="w-10 h-10 animate-spin text-[#01454A]" />
+            <p className="text-sm text-[#5A6465]">Loading payment records...</p>
+          </div>
+        ) : isErrorPayments ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-[#ECE6D6] rounded-2xl bg-white">
+            <AlertCircle className="w-10 h-10 text-red-500 mb-2" />
+            <p className="text-sm text-[#5A6465] font-semibold">Failed to fetch payment records</p>
+            <p className="text-xs text-[#8A9596] mt-1">Please try again later or check your backend services.</p>
+          </div>
+        ) : filteredPayments.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-[#ECE6D6] rounded-2xl bg-white">
+            <CreditCard className="w-10 h-10 text-gray-300 mb-2" />
+            <p className="text-sm text-[#5A6465] font-semibold">No transactions found</p>
+            <p className="text-xs text-[#8A9596] mt-1">Try refining your search keyword.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredPayments.map((payment) => (
+              <div
+                key={payment.id}
+                onClick={() => setSelectedTxnId(payment.id)}
+                className="bg-white border border-[#ECE6D6] hover:border-[#01454A] rounded-[24px] p-5 shadow-xs hover:shadow transition duration-200 cursor-pointer flex flex-col justify-between group"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-[#8A9596]">{payment.id}</span>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        payment.status === "success"
+                          ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                          : payment.status === "pending"
+                            ? "bg-amber-50 text-[#FDA600] border border-amber-100"
+                            : "bg-red-50 text-red-500 border border-red-100"
+                      }`}
+                    >
+                      {payment.status.toUpperCase()}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h4 className="font-bon_foyage text-lg text-black">{payment.clientName}</h4>
+                    <p className="text-xs text-[#FDA600] font-bold mt-1">₦{payment.amount.toLocaleString()}</p>
+                  </div>
+
+                  <div className="space-y-2 pt-3 border-t border-[#ECE6D6]/40 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-[#8A9596]">Payment Gateway</span>
+                      <span className="font-bold text-[#01454A] capitalize">{payment.gateway}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#8A9596]">Order Reference</span>
+                      <span className="font-bold text-black font-mono">{payment.orderId}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-3 mt-4 border-t border-[#ECE6D6]/30 flex items-center justify-between text-[10px] text-[#8A9596]">
+                  <span>{payment.created_at}</span>
+                  <span className="font-bold flex items-center gap-0.5 text-[#01454A] group-hover:translate-x-0.5 transition">
+                    Audit <ChevronRight className="w-3.5 h-3.5" />
                   </span>
                 </div>
-
-                <div>
-                  <h4 className="font-bon_foyage text-lg text-black">{payment.clientName}</h4>
-                  <p className="text-xs text-[#FDA600] font-bold mt-1">₦{payment.amount.toLocaleString()}</p>
-                </div>
-
-                <div className="space-y-2 pt-3 border-t border-[#ECE6D6]/40 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-[#8A9596]">Payment Gateway</span>
-                    <span className="font-bold text-[#01454A] capitalize">{payment.gateway}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#8A9596]">Order Reference</span>
-                    <span className="font-bold text-black font-mono">{payment.orderId}</span>
-                  </div>
-                </div>
               </div>
-
-              <div className="pt-3 mt-4 border-t border-[#ECE6D6]/30 flex items-center justify-between text-[10px] text-[#8A9596]">
-                <span>{payment.created_at}</span>
-                <span className="font-bold flex items-center gap-0.5 text-[#01454A] group-hover:translate-x-0.5 transition">
-                  Audit <ChevronRight className="w-3.5 h-3.5" />
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Details drawer */}
@@ -181,7 +174,7 @@ export default function AdminPaymentPage() {
                   Transaction Inspector
                 </span>
                 <button
-                  onClick={() => setSelectedTxn(null)}
+                  onClick={() => setSelectedTxnId(null)}
                   className="p-1 rounded-full border border-[#ECE6D6] bg-white hover:bg-black hover:text-white transition"
                 >
                   <XCircle className="w-5 h-5" />

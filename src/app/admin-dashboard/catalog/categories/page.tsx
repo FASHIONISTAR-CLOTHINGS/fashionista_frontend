@@ -6,7 +6,7 @@ import {
   useCreateAdminCategory,
   useUpdateAdminCategory,
   useArchiveAdminCategory,
-} from "@/features/admin-dashboard";
+} from "@/features/catalog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -159,7 +159,7 @@ export default function CategoriesPage() {
               </thead>
               <tbody className="divide-y divide-[#f4f4f4]">
                 {categories && categories.length > 0 ? (
-                  categories.map((category) => (
+                  categories.map((category: any) => (
                     <tr key={category.id} className="hover:bg-[#fcfcfa] transition-colors">
                       <td className="py-4 font-satoshi font-medium text-black">{category.name}</td>
                       <td className="py-4 font-mono text-xs text-gray-500">{category.slug}</td>

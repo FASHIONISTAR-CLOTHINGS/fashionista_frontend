@@ -6,7 +6,7 @@ import {
   useCreateAdminCollection,
   useUpdateAdminCollection,
   useArchiveAdminCollection,
-} from "@/features/admin-dashboard";
+} from "@/features/catalog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -159,7 +159,7 @@ export default function CollectionsPage() {
               </thead>
               <tbody className="divide-y divide-[#f4f4f4]">
                 {collections && collections.length > 0 ? (
-                  collections.map((collection) => (
+                  collections.map((collection: any) => (
                     <tr key={collection.id} className="hover:bg-[#fcfcfa] transition-colors">
                       <td className="py-4 font-satoshi font-medium text-black">{collection.name}</td>
                       <td className="py-4 font-mono text-xs text-gray-500">{collection.slug}</td>

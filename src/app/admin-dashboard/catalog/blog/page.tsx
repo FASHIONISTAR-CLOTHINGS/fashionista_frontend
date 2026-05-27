@@ -6,7 +6,7 @@ import {
   useCreateAdminBlogPost,
   useUpdateAdminBlogPost,
   useArchiveAdminBlogPost,
-} from "@/features/admin-dashboard";
+} from "@/features/catalog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -234,7 +234,7 @@ export default function BlogPostsPage() {
               </thead>
               <tbody className="divide-y divide-[#f4f4f4]">
                 {blogPosts && blogPosts.length > 0 ? (
-                  blogPosts.map((post) => (
+                  blogPosts.map((post: any) => (
                     <tr key={post.id} className="hover:bg-[#fcfcfa] transition-colors">
                       <td className="py-4 font-satoshi font-medium text-black max-w-[200px] truncate">
                         {post.title}

@@ -96,3 +96,7 @@ export { usePayoutHistory, useInitiateVendorPayout } from "./hooks/use-payout";
 
 // ── Payout Components ─────────────────────────────────────────────────────────
 export { PayoutDashboard } from "./components/PayoutDashboard";
+
+// ── Admin Dashboard ────────────────────────────────────────────────────────────
+export * from "./admin-dashboard";
+
