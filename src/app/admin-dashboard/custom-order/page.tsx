@@ -16,7 +16,14 @@ import {
   HelpCircle,
   Calendar,
   XCircle,
+  Loader2,
+  CheckCircle,
 } from "lucide-react";
+import {
+  useAdminCustomOrders,
+  useAdminCustomOrderDetail,
+  useUpdateAdminCustomOrderStatus,
+} from "@/features/custom-order";
 
 const formatDate = (dateStr: string) => {
   if (!dateStr) return "-";
@@ -27,83 +34,47 @@ const formatDate = (dateStr: string) => {
   });
 };
 
-interface CustomOrder {
-  id: string;
-  clientName: string;
-  clientEmail: string;
-  designerName: string;
-  garmentType: string;
-  status: "pending_review" | "in_production" | "shipped" | "completed" | "cancelled";
-  price: number;
-  dueDate: string;
-  created_at: string;
-  notes: string;
-}
-
-const MOCK_CUSTOM_ORDERS: CustomOrder[] = [
-  {
-    id: "CST-0091",
-    clientName: "Amara Kalu",
-    clientEmail: "amara@fashionistar.com",
-    designerName: "Deji Luxury",
-    garmentType: "Bridal Aso-Oke Ensemble",
-    status: "in_production",
-    price: 350000,
-    dueDate: "2026-06-15",
-    created_at: "2026-05-10",
-    notes: "Requires hand-woven gold filigree accents along the shoulder train.",
-  },
-  {
-    id: "CST-0092",
-    clientName: "Tobi Adebayo",
-    clientEmail: "tobi.adebayo@gmail.com",
-    designerName: "Vanguard Tailors",
-    garmentType: "Classic Cashmere Agbada Set",
-    status: "pending_review",
-    price: 280000,
-    dueDate: "2026-06-20",
-    created_at: "2026-05-25",
-    notes: "Requesting custom initials embroidery on the left sleeve hem.",
-  },
-  {
-    id: "CST-0093",
-    clientName: "Ngozi Echem",
-    clientEmail: "ngozi@echem.co",
-    designerName: "Eze Couture",
-    garmentType: "Modern Ankara Ballgown",
-    status: "completed",
-    price: 195000,
-    dueDate: "2026-05-24",
-    created_at: "2026-05-01",
-    notes: "High-low structural hemline with micro-pleated sleeve caps.",
-  },
-];
-
 export default function AdminCustomOrdersPage() {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedOrder, setSelectedOrder] = useState<CustomOrder | null>(null);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [reasonText, setReasonText] = useState("");
 
-  const filteredOrders = MOCK_CUSTOM_ORDERS.filter((order) => {
-    const matchesSearch =
-      order.clientName.toLowerCase().includes(search.toLowerCase()) ||
-      order.designerName.toLowerCase().includes(search.toLowerCase()) ||
-      order.garmentType.toLowerCase().includes(search.toLowerCase()) ||
-      order.id.toLowerCase().includes(search.toLowerCase());
-    
-    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  const { data: orders = [], isLoading, isError } = useAdminCustomOrders({
+    search: search || undefined,
+    status: statusFilter || undefined,
   });
 
-  const getStatusBadge = (status: CustomOrder["status"]) => {
+  const { data: selectedOrder, isLoading: isLoadingDetail } = useAdminCustomOrderDetail(
+    selectedOrderId || "",
+    !!selectedOrderId
+  );
+
+  const statusMutation = useUpdateAdminCustomOrderStatus();
+
+  const handleUpdateStatus = (statusVal: string) => {
+    if (!selectedOrderId) return;
+    statusMutation.mutate(
+      { id: selectedOrderId, status: statusVal, reason: reasonText },
+      {
+        onSuccess: () => {
+          setReasonText("");
+        },
+      }
+    );
+  };
+
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending_review":
+      case "pending":
         return (
           <span className="flex items-center gap-1 bg-amber-50 text-[#FDA600] border border-amber-100 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
             <Clock className="w-3 h-3" /> PENDING REVIEW
           </span>
         );
       case "in_production":
+      case "approved":
         return (
           <span className="flex items-center gap-1 bg-blue-50 text-blue-600 border border-blue-100 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
             <Scissors className="w-3 h-3" /> IN PRODUCTION
@@ -187,124 +158,208 @@ export default function AdminCustomOrdersPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full h-12 px-4 bg-white border border-[#ECE6D6] focus:border-[#01454A] rounded-2xl outline-none text-sm text-black cursor-pointer appearance-none"
+              className="w-full h-12 px-4 bg-white border border-[#ECE6D6] focus:border-[#01454A] rounded-2xl outline-none text-sm text-black cursor-pointer"
             >
-              <option value="all">All Bespoke Statuses</option>
-              <option value="pending_review">Pending Review</option>
-              <option value="in_production">In Production</option>
+              <option value="">All Bespoke Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
               <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
             </select>
           </div>
         </div>
 
         {/* Directory Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredOrders.map((order) => (
-            <div
-              key={order.id}
-              className="bg-white border border-[#ECE6D6] hover:border-[#01454A] rounded-[24px] p-6 shadow-xs hover:shadow transition duration-200 flex flex-col justify-between"
-            >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold text-[#8A9596]">{order.id}</span>
-                  {getStatusBadge(order.status)}
-                </div>
-
-                <div>
-                  <h4 className="font-bon_foyage text-xl text-black">{order.garmentType}</h4>
-                  <p className="text-xs text-[#FDA600] font-bold mt-1">₦{order.price.toLocaleString()}</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-3 border-t border-[#ECE6D6]/40 text-xs">
-                  <div>
-                    <span className="text-[#8A9596] block">Client</span>
-                    <span className="font-semibold text-black flex items-center gap-1 mt-0.5">
-                      <User className="w-3 h-3" /> {order.clientName}
-                    </span>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <Loader2 className="w-8 h-8 text-[#01454A] animate-spin" />
+            <p className="text-xs text-[#5A6465]">Loading custom bespoke orders...</p>
+          </div>
+        ) : isError ? (
+          <div className="text-center py-20 border border-dashed border-[#ECE6D6] rounded-[24px] bg-white">
+            <p className="text-sm text-red-600">Failed to load custom orders. Please refresh the page.</p>
+          </div>
+        ) : orders.length === 0 ? (
+          <div className="text-center py-20 border border-dashed border-[#ECE6D6] rounded-[24px] bg-white">
+            <p className="text-sm text-[#8A9596]">No custom bespoke orders found matching current criteria.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {orders.map((order) => (
+              <div
+                key={order.id}
+                className="bg-white border border-[#ECE6D6] hover:border-[#01454A] rounded-[24px] p-6 shadow-xs hover:shadow transition duration-200 flex flex-col justify-between"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-[#8A9596]">{order.reference}</span>
+                    {getStatusBadge(order.status)}
                   </div>
+
                   <div>
-                    <span className="text-[#8A9596] block">Design House</span>
-                    <span className="font-semibold text-[#01454A] flex items-center gap-1 mt-0.5">
-                      <Sparkles className="w-3 h-3" /> {order.designerName}
-                    </span>
+                    <h4 className="font-bon_foyage text-xl text-black">Bespoke Production Contract</h4>
+                    <p className="text-xs text-[#FDA600] font-bold mt-1">₦{Number(order.agreed_amount_ngn || order.budget_ngn).toLocaleString()}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 pt-3 border-t border-[#ECE6D6]/40 text-xs">
+                    <div>
+                      <span className="text-[#8A9596] block">Client Email</span>
+                      <span className="font-semibold text-black flex items-center gap-1 mt-0.5">
+                        <User className="w-3 h-3" /> {order.client_email}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[#8A9596] block">Design House</span>
+                      <span className="font-semibold text-[#01454A] flex items-center gap-1 mt-0.5">
+                        <Sparkles className="w-3 h-3" /> {order.vendor_store_name}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <p className="text-xs text-[#5A6465] leading-relaxed bg-[#F8F5ED]/40 border border-[#ECE6D6]/50 rounded-xl p-3">
-                  {order.notes}
-                </p>
+                <div className="flex items-center justify-between pt-4 mt-4 border-t border-[#ECE6D6]/50 text-[10px] text-[#8A9596]">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5" /> Logged: {formatDate(order.created_at)}
+                  </span>
+                  <button
+                    onClick={() => setSelectedOrderId(order.id)}
+                    className="flex items-center gap-1 font-bold text-xs text-[#01454A] hover:text-[#FDA600] transition"
+                  >
+                    <Eye className="w-4 h-4" /> Inspect Milestones
+                  </button>
+                </div>
               </div>
-
-              <div className="flex items-center justify-between pt-4 mt-4 border-t border-[#ECE6D6]/50 text-[10px] text-[#8A9596]">
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" /> Due Date: {formatDate(order.dueDate)}
-                </span>
-                <button
-                  onClick={() => setSelectedOrder(order)}
-                  className="flex items-center gap-1 font-bold text-xs text-[#01454A] hover:text-[#FDA600] transition"
-                >
-                  <Eye className="w-4 h-4" /> Inspect Milestones
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Details drawer */}
-      {selectedOrder && (
+      {selectedOrderId && (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/40 backdrop-blur-xs">
           <div className="w-full max-w-md h-full bg-[#F8F5ED] p-6 md:p-8 overflow-y-auto shadow-2xl flex flex-col justify-between border-l border-[#ECE6D6] animate-in slide-in-from-right duration-300">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-widest text-[#5A6465]">
-                  Bespoke Order Inspector
-                </span>
-                <button
-                  onClick={() => setSelectedOrder(null)}
-                  className="p-1 rounded-full border border-[#ECE6D6] bg-white hover:bg-black hover:text-white transition"
-                >
-                  <XCircle className="w-5 h-5" />
-                </button>
+            {isLoadingDetail ? (
+              <div className="flex flex-col items-center justify-center h-full gap-3">
+                <Loader2 className="w-8 h-8 text-[#01454A] animate-spin" />
+                <p className="text-xs text-[#5A6465]">Loading bespoke contract specs...</p>
               </div>
-
-              <div className="py-4 border-b border-[#ECE6D6]/80">
-                <span className="font-mono text-xs text-[#8A9596] block">{selectedOrder.id}</span>
-                <h4 className="font-bon_foyage text-2xl text-black mt-1">
-                  {selectedOrder.garmentType}
-                </h4>
-                <div className="mt-2">{getStatusBadge(selectedOrder.status)}</div>
-              </div>
-
-              <div className="space-y-4 bg-white border border-[#ECE6D6] rounded-2xl p-5 text-sm">
-                <p className="font-bon_foyage text-lg text-black border-b border-[#ECE6D6]/50 pb-2">
-                  Transaction Metadata
-                </p>
-                <div className="space-y-3">
-                  <div>
-                    <span className="text-xs text-[#8A9596] block">Bespoke Contract Price</span>
-                    <span className="text-[#FDA600] font-bold text-lg">₦{selectedOrder.price.toLocaleString()}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-[#8A9596] block">Client Contact</span>
-                    <span className="text-black font-semibold flex items-center gap-1 mt-0.5">
-                      <Mail className="w-3.5 h-3.5 text-[#8A9596]" /> {selectedOrder.clientEmail}
+            ) : selectedOrder ? (
+              <div className="space-y-6 flex-1 flex flex-col justify-between h-full">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold uppercase tracking-widest text-[#5A6465]">
+                      Bespoke Order Inspector
                     </span>
+                    <button
+                      onClick={() => setSelectedOrderId(null)}
+                      className="p-1 rounded-full border border-[#ECE6D6] bg-white hover:bg-black hover:text-white transition"
+                    >
+                      <XCircle className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <div className="py-4 border-b border-[#ECE6D6]/80">
+                    <span className="font-mono text-xs text-[#8A9596] block">{selectedOrder.reference}</span>
+                    <h4 className="font-bon_foyage text-2xl text-black mt-1">Bespoke Spec Contract</h4>
+                    <div className="mt-2">{getStatusBadge(selectedOrder.status)}</div>
+                  </div>
+
+                  <div className="space-y-4 bg-white border border-[#ECE6D6] rounded-2xl p-5 text-sm">
+                    <p className="font-bon_foyage text-lg text-black border-b border-[#ECE6D6]/50 pb-2">
+                      Transaction Metadata
+                    </p>
+                    <div className="space-y-3 text-xs">
+                      <div>
+                        <span className="text-[#8A9596] block">Agreed Contract Price</span>
+                        <span className="text-[#FDA600] font-bold text-sm">₦{Number(selectedOrder.agreed_amount_ngn || selectedOrder.budget_ngn).toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#8A9596] block">Client Contact</span>
+                        <span className="text-black font-semibold flex items-center gap-1 mt-0.5">
+                          <Mail className="w-3.5 h-3.5 text-[#8A9596]" /> {selectedOrder.client_email}
+                        </span>
+                      </div>
+                      {selectedOrder.design_brief && (
+                        <div>
+                          <span className="text-[#8A9596] block">Design Brief / Notes</span>
+                          <p className="text-[#5A6465] bg-[#F8F5ED]/40 border border-[#ECE6D6]/50 rounded-xl p-3 leading-relaxed mt-1">
+                            {selectedOrder.design_brief}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Milestones Listing */}
+                  {selectedOrder.milestones && selectedOrder.milestones.length > 0 && (
+                    <div className="space-y-4 bg-white border border-[#ECE6D6] rounded-2xl p-5 text-sm">
+                      <p className="font-bon_foyage text-lg text-black border-b border-[#ECE6D6]/50 pb-2">
+                        Payment & Escrow Milestones
+                      </p>
+                      <div className="space-y-3">
+                        {selectedOrder.milestones.map((ms, index) => (
+                          <div key={ms.id} className="flex items-center justify-between text-xs border-b border-gray-150 pb-2 last:border-0 last:pb-0">
+                            <div>
+                              <p className="font-bold text-black">Milestone {index + 1} ({ms.milestone_pct}%)</p>
+                              <p className="text-[#8A9596] text-[10px]">Ref: {ms.payment_reference || "N/A"}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-[#FDA600]">₦{Number(ms.amount_ngn).toLocaleString()}</p>
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                                ms.payment_status === "paid" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                              }`}>
+                                {ms.payment_status.toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Actions / Status Controls */}
+                  <div className="space-y-3 bg-white border border-[#ECE6D6] rounded-2xl p-5 text-sm">
+                    <p className="font-bon_foyage text-lg text-black border-b border-[#ECE6D6]/50 pb-2">
+                      Governance Controls
+                    </p>
+                    <textarea
+                      placeholder="Optional cancellation or transition notes..."
+                      value={reasonText}
+                      onChange={(e) => setReasonText(e.target.value)}
+                      className="w-full h-16 p-2 border border-[#ECE6D6] rounded-xl text-xs outline-none focus:border-[#01454A] resize-none"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleUpdateStatus("completed")}
+                        disabled={statusMutation.isPending || selectedOrder.status === "completed"}
+                        className="flex-1 h-9 bg-[#01454A] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 disabled:opacity-50 transition"
+                      >
+                        {statusMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+                        Complete Contract
+                      </button>
+                      <button
+                        onClick={() => handleUpdateStatus("cancelled")}
+                        disabled={statusMutation.isPending || selectedOrder.status === "cancelled"}
+                        className="flex-1 h-9 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 disabled:opacity-50 transition border border-red-200"
+                      >
+                        Cancel Contract
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="pt-6 border-t border-[#ECE6D6]/80 bg-inherit space-y-3">
-              <Link
-                href={`${process.env.NEXT_PUBLIC_API_V1_URL || "http://127.0.0.1:8001"}/admin/custom_order/customorder/${selectedOrder.id}/change/`}
-                target="_blank"
-                className="w-full bg-[#01454A] hover:bg-[#01454A]/90 text-white font-bold text-sm py-3.5 rounded-xl shadow-sm flex items-center justify-center gap-2 transition"
-              >
-                <Settings className="w-4 h-4" />
-                Open In Django Super-Admin
-              </Link>
-            </div>
+                <div className="pt-6 border-t border-[#ECE6D6]/80 bg-inherit mt-auto">
+                  <Link
+                    href={`${process.env.NEXT_PUBLIC_API_V1_URL || "http://127.0.0.1:8001"}/admin/custom_order/customorder/${selectedOrder.id}/change/`}
+                    target="_blank"
+                    className="w-full bg-[#01454A] hover:bg-[#01454A]/90 text-white font-bold text-sm py-3.5 rounded-xl shadow-sm flex items-center justify-center gap-2 transition"
+                  >
+                    <Settings className="w-4 h-4" />
+                    Open In Django Super-Admin
+                  </Link>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       )}

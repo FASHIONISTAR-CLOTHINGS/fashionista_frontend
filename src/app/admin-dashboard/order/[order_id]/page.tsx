@@ -6,5 +6,5 @@ export default async function AdminOrderDetailPage({
   params: Promise<{ order_id: string }>;
 }) {
   const { order_id } = await params;
-  return <OrderDetailView orderId={order_id} backHref="/admin-dashboard/orders" scope="admin" />;
+  return <OrderDetailView orderId={order_id} backHref="/admin-dashboard/order" scope="admin" />;
 }

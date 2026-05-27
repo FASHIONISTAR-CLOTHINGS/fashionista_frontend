@@ -69,7 +69,7 @@ export const OrderList = () => {
       }
       params.set("page", "1");
       startTransition(() => {
-        router.push(`/admin-dashboard/orders?${params.toString()}`);
+        router.push(`/admin-dashboard/order?${params.toString()}`);
       });
     }, 400);
 
@@ -125,7 +125,7 @@ export const OrderList = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(newPage));
     startTransition(() => {
-      router.push(`/admin-dashboard/orders?${params.toString()}`);
+      router.push(`/admin-dashboard/order?${params.toString()}`);
     });
   };
 
@@ -164,7 +164,7 @@ export const OrderList = () => {
         >
           {STATUS_TABS.map(({ label, value }) => {
             const isActive = value === activeStatus;
-            const linkHref = value ? `/admin-dashboard/orders?order-status=${value}` : "/admin-dashboard/orders";
+            const linkHref = value ? `/admin-dashboard/order?order-status=${value}` : "/admin-dashboard/order";
             return (
               <Link
                 key={value}
@@ -212,7 +212,7 @@ export const OrderList = () => {
             ) : isError ? (
               <tr>
                 <td colSpan={9} className="py-16 text-center text-red-500 text-sm font-semibold">
-                  Failed to load orders. Refresh to try again.
+                    Failed to load orders. Refresh to try again.
                 </td>
               </tr>
             ) : orders.length === 0 ? (
@@ -242,7 +242,7 @@ export const OrderList = () => {
                     </td>
                     <td className="py-4 px-2 text-center font-bold text-[#01454A]">
                       <Link
-                        href={`/admin-dashboard/orders/${order.id}`}
+                        href={`/admin-dashboard/order/${order.id}`}
                         className="hover:underline"
                       >
                         {order.order_number}
@@ -299,7 +299,7 @@ export const OrderList = () => {
                     </td>
                     <td className="py-4 px-2 text-center">
                       <Link
-                        href={`/admin-dashboard/orders/${order.id}`}
+                        href={`/admin-dashboard/order/${order.id}`}
                         className="bg-[#01454A] hover:bg-[#026269] text-white text-[11px] px-3 py-1.5 rounded font-semibold shadow-sm transition-all"
                       >
                         View Details
