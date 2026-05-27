@@ -1,17 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Search,
   Wallet,
   TrendingUp,
-  ArrowDownLeft,
-  ArrowUpRight,
   Shield,
-  Loader2,
-  CheckCircle2,
   XCircle,
-  ExternalLink,
   DollarSign,
 } from "lucide-react";
 

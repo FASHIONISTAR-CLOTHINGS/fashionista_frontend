@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Search,
   Server,
@@ -9,7 +10,6 @@ import {
   Activity,
   ChevronRight,
   ExternalLink,
-  Shield,
   RefreshCw,
 } from "lucide-react";
 

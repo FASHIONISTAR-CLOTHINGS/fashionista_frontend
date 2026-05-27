@@ -1,16 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Search,
   Scissors,
-  CheckCircle2,
   XCircle,
-  Eye,
   ExternalLink,
   ChevronRight,
-  Sparkles,
-  Info,
 } from "lucide-react";
 
 interface MeasurementProfile {

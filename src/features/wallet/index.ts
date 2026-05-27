@@ -60,3 +60,7 @@ export {
 export * from "./components/WalletOverviewView";
 export * from "./components/WalletDashboardView";
 export { WithdrawalPanel } from "./components/WithdrawalPanel";
+
+// ── Admin Dashboard ────────────────────────────────────────────────────────────
+export * from "./admin-dashboard";
+

@@ -35,3 +35,7 @@ export * from "@/features/client/store/client.store";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 export * from "@/features/client/types/client.types";
+
+// ── Admin Dashboard ────────────────────────────────────────────────────────
+export * from "./admin-dashboard";
+

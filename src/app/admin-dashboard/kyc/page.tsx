@@ -59,7 +59,7 @@ export default function AdminKycPage() {
     }
     rejectMutation.mutate({
       submissionId: id,
-      notes: reviewNotes.trim(),
+      reviewNotes: reviewNotes.trim(),
       allowResubmit: allowResubmit,
     });
   };
@@ -181,7 +181,7 @@ export default function AdminKycPage() {
           {/* List items */}
           {!isLoading && !isError && rawSubmissions.length > 0 && (
             <div className="space-y-3 flex-1 overflow-y-auto">
-              {rawSubmissions.map((sub) => {
+              {rawSubmissions.map((sub: any) => {
                 const isSelected = sub.id === selectedSubmissionId;
                 const userInitials = "U";
                 return (
