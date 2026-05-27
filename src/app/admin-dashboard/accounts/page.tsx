@@ -2,9 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiSync } from "@/core/api/client.sync";
-import { toast } from "sonner";
+import {
+  useAdminUsers,
+  useAdminUserDetail,
+  useSuspendUser,
+  useReactivateUser,
+  useVerifyUser,
+  useForcePasswordReset,
+  useUpdateUserRole,
+} from "@/features/admin";
 import {
   Search,
   User,
@@ -22,109 +28,38 @@ import {
   ArrowUpDown,
   Lock,
   Unlock,
-  Loader2
+  Loader2,
 } from "lucide-react";
 
-interface UserProfile {
-  user_id: string;
-  member_id: string | null;
-  email: string | null;
-  phone: string | null;
-  first_name: string;
-  last_name: string;
-  role: string;
-  is_verified: boolean;
-  is_active: boolean;
-  avatar: string | null;
-  bio: string;
-  country: string;
-  state: string;
-  city: string;
-  address: string;
-  date_joined: string | null;
-}
-
 export default function AdminAccountsPage() {
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
-  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   // ── Query: Fetch Live Registered Users (Admin Only) ────────────────────────
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["admin", "users-list"],
-    queryFn: async () => {
-      const response = await apiSync.get("v1/profile/users/");
-      return response.data; // Unwrapped by client.sync.ts interceptor
-    },
-    staleTime: 30_000,
+  const { data: usersData, isLoading, isError, refetch } = useAdminUsers({
+    role: roleFilter,
+    is_active: statusFilter === "active" ? true : statusFilter === "blocked" ? false : undefined,
+    is_verified: statusFilter === "verified" ? true : statusFilter === "unverified" ? false : undefined,
+    search: search || undefined,
+    ordering: sortOrder === "newest" ? "-date_joined" : "date_joined",
+    page: 1,
+    page_size: 100,
   });
 
-  // ── Mutation: Toggle User Active Status (Block / Unblock) ───────────────────
-  const toggleActiveMutation = useMutation({
-    mutationFn: async ({ userId, isActive }: { userId: string; isActive: boolean }) => {
-      // We perform a sync patch/post to toggle active status or similar admin-backend action if available.
-      // In FASHIONISTAR apps/authentication, a standard django admin toggle works. 
-      // If we are triggering it from API, we can use a custom admin action route.
-      // Let's create an elegant local mock-or-toggle that prompts success and invalidates the query.
-      // Since it's a mutation, we will call an active state toggle API if it exists, otherwise provide simulated robust feedback.
-      // Let's call the actual profile edit or admin-toggle route if supported, otherwise simulate with perfect message alerts.
-      await apiSync.patch(`v1/profile/users/${userId}/`, { is_active: !isActive });
-    },
-    onSuccess: (_, variables) => {
-      toast.success(
-        `User ${variables.isActive ? "blocked" : "activated"} successfully.`
-      );
-      void queryClient.invalidateQueries({ queryKey: ["admin", "users-list"] });
-      if (selectedUser && selectedUser.user_id === variables.userId) {
-        setSelectedUser((prev) => prev ? { ...prev, is_active: !prev.is_active } : null);
-      }
-    },
-    onError: (err: any) => {
-      // Fallback: If patch is unsupported directly (standard DRF without standard update view on users list),
-      // we gracefully handle or provide staff feedback.
-      const errMsg = err?.response?.data?.detail || err?.message || "Failed to update user status.";
-      toast.error(errMsg);
-    }
-  });
+  // ── Query: Fetch User Detail for Inspector Panel ───────────────────────────
+  const { data: selectedUser } = useAdminUserDetail(selectedUserId);
 
-  // Extract profiles defensively supporting both raw array and paginated response
-  const rawUsers: UserProfile[] = Array.isArray(data)
-    ? data
-    : (data as any)?.results || [];
+  // ── Mutation hooks ────────────────────────────────────────────────────────
+  const suspendMutation = useSuspendUser();
+  const reactivateMutation = useReactivateUser();
+  const verifyMutation = useVerifyUser();
+  const forcePasswordResetMutation = useForcePasswordReset();
+  const updateRoleMutation = useUpdateUserRole();
 
-  // Filter and Search logic
-  const filteredUsers = rawUsers
-    .filter((user) => {
-      // 1. Text Search
-      const searchLower = search.toLowerCase();
-      const fullName = `${user.first_name || ""} ${user.last_name || ""}`.toLowerCase();
-      const matchesSearch =
-        !search ||
-        fullName.includes(searchLower) ||
-        (user.email || "").toLowerCase().includes(searchLower) ||
-        (user.member_id || "").toLowerCase().includes(searchLower) ||
-        (user.phone || "").toLowerCase().includes(searchLower);
-
-      // 2. Role Filter
-      const matchesRole = roleFilter === "all" || user.role === roleFilter;
-
-      // 3. Status Filter
-      let matchesStatus = true;
-      if (statusFilter === "active") matchesStatus = user.is_active;
-      else if (statusFilter === "blocked") matchesStatus = !user.is_active;
-      else if (statusFilter === "verified") matchesStatus = user.is_verified;
-      else if (statusFilter === "unverified") matchesStatus = !user.is_verified;
-
-      return matchesSearch && matchesRole && matchesStatus;
-    })
-    .sort((a, b) => {
-      const dateA = new Date(a.date_joined || 0).getTime();
-      const dateB = new Date(b.date_joined || 0).getTime();
-      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
-    });
+  const rawUsers = usersData?.results || [];
 
   const clearFilters = () => {
     setSearch("");
@@ -133,8 +68,24 @@ export default function AdminAccountsPage() {
     setSortOrder("newest");
   };
 
-  const handleToggleActive = (user: UserProfile) => {
-    toggleActiveMutation.mutate({ userId: user.user_id, isActive: user.is_active });
+  const handleToggleActive = (user: any) => {
+    if (user.is_active) {
+      suspendMutation.mutate({ userId: user.id, reason: "Administrative action" });
+    } else {
+      reactivateMutation.mutate({ userId: user.id });
+    }
+  };
+
+  const handleVerify = (user: any) => {
+    verifyMutation.mutate({ userId: user.id });
+  };
+
+  const handleForcePasswordReset = (user: any) => {
+    forcePasswordResetMutation.mutate({ userId: user.id });
+  };
+
+  const handleRoleChange = (user: any, newRole: string) => {
+    updateRoleMutation.mutate({ userId: user.id, role: newRole });
   };
 
   // Helper to format ISO Date
@@ -221,7 +172,7 @@ export default function AdminAccountsPage() {
         <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-[#ECE6D6]/60">
           <div className="flex items-center gap-2 font-satoshi text-xs font-semibold text-[#5A6465]">
             <Sparkles className="w-4 h-4 text-[#FDA600]" />
-            <span>Showing {filteredUsers.length} of {rawUsers.length} users</span>
+            <span>Showing {rawUsers.length} users</span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -263,14 +214,14 @@ export default function AdminAccountsPage() {
             <div>
               <p className="font-bon_foyage text-xl text-black">Data Fetch Failure</p>
               <p className="font-satoshi text-sm text-[#5A6465] mt-1">
-                Unable to query users list from the backend sync endpoint. Please make sure your token is valid and you are logged in as admin.
+                Unable to query users list from the backend admin endpoint. Please make sure your token is valid and you are logged in as admin.
               </p>
             </div>
           </div>
         )}
 
         {/* Directory Grid */}
-        {!isLoading && !isError && filteredUsers.length === 0 && (
+        {!isLoading && !isError && rawUsers.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 text-center max-w-md mx-auto space-y-3 bg-white border border-dashed border-[#ECE6D6] rounded-[24px]">
             <p className="font-bon_foyage text-2xl text-black">No Profiles Match</p>
             <p className="font-satoshi text-sm text-[#5A6465]">
@@ -279,14 +230,14 @@ export default function AdminAccountsPage() {
           </div>
         )}
 
-        {!isLoading && !isError && filteredUsers.length > 0 && (
+        {!isLoading && !isError && rawUsers.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredUsers.map((user) => {
+            {rawUsers.map((user) => {
               const userInitials = `${user.first_name?.[0] || ""}${user.last_name?.[0] || ""}`.toUpperCase() || "U";
               return (
                 <div
-                  key={user.user_id}
-                  onClick={() => setSelectedUser(user)}
+                  key={user.id}
+                  onClick={() => setSelectedUserId(user.id)}
                   className="bg-white border border-[#ECE6D6] hover:border-[#01454A] rounded-[24px] p-5 space-y-4 shadow-sm hover:shadow transition-all duration-200 cursor-pointer flex flex-col justify-between group"
                 >
                   <div className="space-y-4">
@@ -411,7 +362,7 @@ export default function AdminAccountsPage() {
                   Inspector Panel
                 </span>
                 <button
-                  onClick={() => setSelectedUser(null)}
+                  onClick={() => setSelectedUserId(null)}
                   className="p-1 rounded-full border border-[#ECE6D6] bg-white hover:bg-black hover:text-white transition"
                 >
                   <XCircle className="w-5 h-5" />
@@ -438,7 +389,7 @@ export default function AdminAccountsPage() {
                       : "Anonymous User"}
                   </h4>
                   <p className="font-satoshi text-sm text-[#8A9596] mt-0.5">
-                    ID: {selectedUser.member_id || selectedUser.user_id}
+                    ID: {selectedUser.member_id || selectedUser.id}
                   </p>
                 </div>
               </div>
@@ -447,9 +398,16 @@ export default function AdminAccountsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white border border-[#ECE6D6] rounded-xl p-3 flex flex-col">
                   <span className="text-[10px] font-bold text-[#8A9596] uppercase">Account Role</span>
-                  <span className="font-satoshi text-sm font-bold text-[#01454A] capitalize mt-1">
-                    {selectedUser.role}
-                  </span>
+                  <select
+                    value={selectedUser.role}
+                    onChange={(e) => handleRoleChange(selectedUser, e.target.value)}
+                    className="font-satoshi text-sm font-bold text-[#01454A] bg-transparent outline-none mt-1 capitalize cursor-pointer"
+                  >
+                    <option value="client">Client</option>
+                    <option value="vendor">Vendor</option>
+                    <option value="staff">Staff</option>
+                    <option value="admin">Admin</option>
+                  </select>
                 </div>
                 <div className="bg-white border border-[#ECE6D6] rounded-xl p-3 flex flex-col">
                   <span className="text-[10px] font-bold text-[#8A9596] uppercase">Verifications</span>
@@ -516,14 +474,14 @@ export default function AdminAccountsPage() {
               {/* Status Action Button */}
               <button
                 onClick={() => handleToggleActive(selectedUser)}
-                disabled={toggleActiveMutation.isPending}
+                disabled={suspendMutation.isPending || reactivateMutation.isPending}
                 className={`w-full py-3.5 rounded-xl font-satoshi font-bold text-sm flex items-center justify-center gap-2 border shadow-sm transition-all duration-200 ${
                   selectedUser.is_active
                     ? "bg-red-50 hover:bg-red-100 text-red-600 border-red-200"
                     : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
                 }`}
               >
-                {toggleActiveMutation.isPending ? (
+                {suspendMutation.isPending || reactivateMutation.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : selectedUser.is_active ? (
                   <>
@@ -538,9 +496,43 @@ export default function AdminAccountsPage() {
                 )}
               </button>
 
+              {/* Verify Action Button */}
+              {!selectedUser.is_verified && (
+                <button
+                  onClick={() => handleVerify(selectedUser)}
+                  disabled={verifyMutation.isPending}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-satoshi font-bold text-sm py-3.5 rounded-xl shadow-sm flex items-center justify-center gap-2 transition duration-200 disabled:opacity-50"
+                >
+                  {verifyMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      Manually Approve Verification
+                    </>
+                  )}
+                </button>
+              )}
+
+              {/* Force Password Reset Button */}
+              <button
+                onClick={() => handleForcePasswordReset(selectedUser)}
+                disabled={forcePasswordResetMutation.isPending}
+                className="w-full bg-white hover:bg-[#F4F3EC] border border-[#ECE6D6] text-black font-satoshi font-bold text-sm py-3.5 rounded-xl shadow-sm flex items-center justify-center gap-2 transition duration-200 disabled:opacity-50"
+              >
+                {forcePasswordResetMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <ShieldAlert className="w-4 h-4 text-[#FDA600]" />
+                    Trigger Force Password Reset
+                  </>
+                )}
+              </button>
+
               {/* View details on Django Admin helper */}
               <Link
-                href={`${process.env.NEXT_PUBLIC_API_V1_URL || ""}/admin/authentication/unifieduser/${selectedUser.user_id}/change/`}
+                href={`${process.env.NEXT_PUBLIC_API_V1_URL || "http://127.0.0.1:8001"}/admin/authentication/unifieduser/${selectedUser.id}/change/`}
                 target="_blank"
                 className="w-full bg-white hover:bg-[#F4F3EC] border border-[#ECE6D6] text-black font-satoshi font-bold text-sm py-3.5 rounded-xl shadow-sm flex items-center justify-center gap-2 transition duration-200"
               >

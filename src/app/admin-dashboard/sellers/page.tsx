@@ -2,8 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { apiSync } from "@/core/api/client.sync";
+import {
+  useAdminVendors,
+  useAdminVendorDetail,
+  useApproveVendor,
+  useSuspendVendor,
+  useReactivateVendor,
+  useToggleVendorFeatured,
+  useUpdateVendorCommission,
+} from "@/features/admin";
 import {
   Search,
   MapPin,
@@ -17,57 +24,65 @@ import {
   FilterX,
   Loader2,
   Store,
-  ArrowRight,
   ChevronRight,
-  XCircle
+  XCircle,
+  Lock,
+  Unlock,
+  Percent,
 } from "lucide-react";
-
-interface VendorProfile {
-  id: string;
-  store_name: string;
-  store_slug: string;
-  tagline: string;
-  description: string;
-  logo_url: string;
-  cover_url: string;
-  city: string;
-  state: string;
-  country: string;
-  is_verified: boolean;
-  is_featured: boolean;
-  average_rating: number;
-  review_count: number;
-  total_products: number;
-  total_sales: number;
-}
 
 export default function AdminSellersPage() {
   const [search, setSearch] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [isFeaturedFilter, setIsFeaturedFilter] = useState(false);
-  const [selectedVendor, setSelectedVendor] = useState<VendorProfile | null>(null);
+  const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
+  const [commissionRate, setCommissionRate] = useState<number>(10);
 
-  // ── Query: Fetch Live Vendor Profiles from public list endpoint ────────────
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["admin", "sellers-list", { search, cityFilter, isFeaturedFilter }],
-    queryFn: async () => {
-      const params: Record<string, string> = {};
-      if (search.trim()) params.search = search.trim();
-      if (cityFilter.trim()) params.city = cityFilter.trim();
-      if (isFeaturedFilter) params.is_featured = "true";
-
-      const response = await apiSync.get("v1/vendor/public/", { params });
-      return response.data; // Unwrapped by client.sync.ts response interceptor
-    },
-    staleTime: 30_000,
+  // ── Query: Fetch Live Vendor Profiles from Admin endpoint ──────────────────
+  const { data, isLoading, isError, refetch } = useAdminVendors({
+    is_featured: isFeaturedFilter || undefined,
+    country: undefined, // Add filter if needed
+    search: search.trim() || undefined,
+    page: 1,
+    page_size: 100,
   });
 
-  const sellers: VendorProfile[] = data?.results || [];
+  // ── Query: Fetch Single Vendor Detail ─────────────────────────────────────
+  const { data: selectedVendor } = useAdminVendorDetail(selectedVendorId);
+
+  // ── Mutation hooks ────────────────────────────────────────────────────────
+  const approveVendorMutation = useApproveVendor();
+  const suspendVendorMutation = useSuspendVendor();
+  const reactivateVendorMutation = useReactivateVendor();
+  const toggleFeaturedMutation = useToggleVendorFeatured();
+  const updateCommissionMutation = useUpdateVendorCommission();
+
+  const sellers = data?.results || [];
 
   const clearFilters = () => {
     setSearch("");
     setCityFilter("");
     setIsFeaturedFilter(false);
+  };
+
+  const handleApprove = (vendor: any) => {
+    approveVendorMutation.mutate({ vendorId: vendor.id });
+  };
+
+  const handleToggleSuspend = (vendor: any) => {
+    if (vendor.is_active) {
+      suspendVendorMutation.mutate({ vendorId: vendor.id, reason: "Administrative suspension" });
+    } else {
+      reactivateVendorMutation.mutate({ vendorId: vendor.id });
+    }
+  };
+
+  const handleToggleFeatured = (vendor: any) => {
+    toggleFeaturedMutation.mutate({ vendorId: vendor.id, featured: !vendor.is_featured });
+  };
+
+  const handleUpdateCommission = (vendor: any) => {
+    updateCommissionMutation.mutate({ vendorId: vendor.id, commissionRate });
   };
 
   // Helper to render star rating stars
@@ -108,14 +123,12 @@ export default function AdminSellersPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            href={`${process.env.NEXT_PUBLIC_API_V1_URL || ""}/admin/vendor/vendorprofile/`}
-            target="_blank"
-            className="bg-[#01454A] hover:bg-[#01454A]/90 text-[#F8F5ED] hover:text-[#FDA600] flex items-center gap-2 font-satoshi font-bold transition-all duration-200 px-5 py-3 rounded-xl shadow-sm hover:shadow text-sm"
+          <button
+            onClick={() => refetch()}
+            className="border border-[#ECE6D6] bg-white hover:bg-[#F4F3EC] text-black font-satoshi font-bold transition-all duration-200 px-5 py-3 rounded-xl shadow-sm text-sm"
           >
-            <Store className="w-4 h-4" />
-            Manage In Django Admin
-          </Link>
+            Refresh Directory
+          </button>
         </div>
       </div>
 
@@ -221,18 +234,13 @@ export default function AdminSellersPage() {
               return (
                 <div
                   key={vendor.id}
-                  onClick={() => setSelectedVendor(vendor)}
+                  onClick={() => {
+                    setSelectedVendorId(vendor.id);
+                  }}
                   className="bg-white border border-[#ECE6D6] hover:border-[#01454A] rounded-[28px] overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group"
                 >
                   {/* Backdrop banner */}
                   <div className="relative h-32 w-full overflow-hidden bg-gradient-to-tr from-[#01454A] to-[#FDA600]/30">
-                    {vendor.cover_url && (
-                      <img
-                        src={vendor.cover_url}
-                        alt=""
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out opacity-90"
-                      />
-                    )}
                     
                     {/* Badge Overlay */}
                     <div className="absolute top-4 right-4 flex flex-col gap-1.5 items-end">
@@ -248,6 +256,11 @@ export default function AdminSellersPage() {
                           VERIFIED
                         </span>
                       )}
+                      {!vendor.is_active && (
+                        <span className="flex items-center gap-0.5 bg-red-600 text-[#F8F5ED] text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                          SUSPENDED
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -255,17 +268,9 @@ export default function AdminSellersPage() {
                   <div className="p-6 pt-0 relative flex-1 flex flex-col justify-between">
                     {/* Floating Store Logo */}
                     <div className="relative -top-8 left-0 z-10 inline-block w-16 h-16 rounded-2xl overflow-hidden border-2 border-white bg-white shadow">
-                      {vendor.logo_url ? (
-                        <img
-                          src={vendor.logo_url}
-                          alt={vendor.store_name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-[#01454A]/5 flex items-center justify-center text-[#01454A] font-bon_foyage text-xl">
-                          {vendor.store_name?.[0]?.toUpperCase() || "B"}
-                        </div>
-                      )}
+                      <div className="w-full h-full bg-[#01454A]/5 flex items-center justify-center text-[#01454A] font-bon_foyage text-xl">
+                        {vendor.store_name?.[0]?.toUpperCase() || "B"}
+                      </div>
                     </div>
 
                     {/* Meta section */}
@@ -290,17 +295,17 @@ export default function AdminSellersPage() {
                       <div className="flex flex-col items-center">
                         <div className="flex items-center gap-0.5 text-[#FDA600] font-satoshi text-xs font-bold">
                           <Star className="w-3 h-3 fill-[#FDA600]" />
-                          <span>{vendor.average_rating.toFixed(1)}</span>
+                          <span>{Number(vendor.average_rating || 0).toFixed(1)}</span>
                         </div>
                         <span className="text-[9px] font-bold text-[#8A9596] uppercase tracking-wider mt-0.5">
-                          {vendor.review_count} reviews
+                          {vendor.review_count || 0} reviews
                         </span>
                       </div>
 
                       <div className="flex flex-col items-center border-x border-[#ECE6D6]/60">
                         <div className="flex items-center gap-0.5 text-[#01454A] font-satoshi text-xs font-bold">
                           <ShoppingBag className="w-3 h-3" />
-                          <span>{vendor.total_products}</span>
+                          <span>{vendor.total_products || 0}</span>
                         </div>
                         <span className="text-[9px] font-bold text-[#8A9596] uppercase tracking-wider mt-0.5">
                           Products
@@ -310,7 +315,7 @@ export default function AdminSellersPage() {
                       <div className="flex flex-col items-center">
                         <div className="flex items-center gap-0.5 text-black font-satoshi text-xs font-bold">
                           <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>{vendor.total_sales}</span>
+                          <span>{vendor.total_sales || 0}</span>
                         </div>
                         <span className="text-[9px] font-bold text-[#8A9596] uppercase tracking-wider mt-0.5">
                           Sales
@@ -348,7 +353,7 @@ export default function AdminSellersPage() {
                   Boutique Inspector
                 </span>
                 <button
-                  onClick={() => setSelectedVendor(null)}
+                  onClick={() => setSelectedVendorId(null)}
                   className="p-1 rounded-full border border-[#ECE6D6] bg-white hover:bg-black hover:text-white transition"
                 >
                   <XCircle className="w-5 h-5" />
@@ -356,28 +361,10 @@ export default function AdminSellersPage() {
               </div>
 
               {/* Cover Backdrop */}
-              <div className="relative h-44 rounded-2xl overflow-hidden bg-gradient-to-tr from-[#01454A] to-[#FDA600]/30 border border-[#ECE6D6]">
-                {selectedVendor.cover_url && (
-                  <img
-                    src={selectedVendor.cover_url}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                )}
-                
+              <div className="relative h-40 rounded-2xl overflow-hidden bg-gradient-to-tr from-[#01454A] to-[#FDA600]/30 border border-[#ECE6D6] flex items-center justify-center">
                 {/* Logo Floating */}
-                <div className="absolute bottom-4 left-4 z-10 w-20 h-20 rounded-2xl overflow-hidden border-2 border-white bg-white shadow-md">
-                  {selectedVendor.logo_url ? (
-                    <img
-                      src={selectedVendor.logo_url}
-                      alt={selectedVendor.store_name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-[#01454A]/5 flex items-center justify-center text-[#01454A] font-bon_foyage text-2xl">
-                      {selectedVendor.store_name?.[0]?.toUpperCase()}
-                    </div>
-                  )}
+                <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white bg-white shadow-md flex items-center justify-center text-[#01454A] font-bon_foyage text-3xl">
+                  {selectedVendor.store_name?.[0]?.toUpperCase()}
                 </div>
               </div>
 
@@ -407,6 +394,11 @@ export default function AdminSellersPage() {
                     VERIFIED CRAFT HOUSE
                   </span>
                 )}
+                {!selectedVendor.is_active && (
+                  <span className="flex items-center gap-1 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xs">
+                    SUSPENDED
+                  </span>
+                )}
               </div>
 
               {/* Performance Metrics Panel */}
@@ -419,9 +411,9 @@ export default function AdminSellersPage() {
                   <div className="bg-[#F8F5ED]/50 p-3 rounded-xl border border-[#ECE6D6]/40">
                     <span className="text-xs text-[#8A9596] block">Boutique Rating</span>
                     <div className="flex items-center gap-1.5 mt-1">
-                      <span className="font-bold text-black">{selectedVendor.average_rating.toFixed(1)}</span>
+                      <span className="font-bold text-black">{Number(selectedVendor.average_rating || 0).toFixed(1)}</span>
                       <div className="flex items-center">
-                        {renderStars(selectedVendor.average_rating)}
+                        {renderStars(selectedVendor.average_rating || 0)}
                       </div>
                     </div>
                   </div>
@@ -429,32 +421,49 @@ export default function AdminSellersPage() {
                   <div className="bg-[#F8F5ED]/50 p-3 rounded-xl border border-[#ECE6D6]/40">
                     <span className="text-xs text-[#8A9596] block">Feedback Count</span>
                     <span className="font-bold text-black block mt-1">
-                      {selectedVendor.review_count} client logs
+                      {selectedVendor.review_count || 0} client logs
                     </span>
                   </div>
 
                   <div className="bg-[#F8F5ED]/50 p-3 rounded-xl border border-[#ECE6D6]/40">
                     <span className="text-xs text-[#8A9596] block">Active Catalog</span>
                     <span className="font-bold text-black block mt-1">
-                      {selectedVendor.total_products} unique items
+                      {selectedVendor.total_products || 0} unique items
                     </span>
                   </div>
 
                   <div className="bg-[#F8F5ED]/50 p-3 rounded-xl border border-[#ECE6D6]/40">
                     <span className="text-xs text-[#8A9596] block">Bespoke Orders</span>
                     <span className="font-bold text-emerald-600 block mt-1">
-                      {selectedVendor.total_sales} transactions
+                      {selectedVendor.total_sales || 0} transactions
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Store description */}
-              <div className="bg-white border border-[#ECE6D6] rounded-2xl p-5 space-y-2 font-satoshi text-sm">
-                <span className="text-xs text-[#8A9596] block font-semibold uppercase">House Story & Concept</span>
-                <p className="text-[#5A6465] leading-relaxed">
-                  {selectedVendor.description || "No customized story or concept summary has been supplied by this design house yet."}
-                </p>
+              {/* Commission Adjuster */}
+              <div className="bg-white border border-[#ECE6D6] rounded-2xl p-5 space-y-3 font-satoshi text-sm">
+                <span className="text-xs text-[#8A9596] block font-semibold uppercase">Platform Commission Rate</span>
+                <div className="flex items-center gap-3">
+                  <div className="relative flex-1">
+                    <Percent className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8A9596]" />
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={commissionRate}
+                      onChange={(e) => setCommissionRate(Number(e.target.value))}
+                      className="w-full h-10 pl-9 pr-3 bg-[#F8F5ED]/50 border border-[#ECE6D6] focus:border-[#01454A] rounded-xl outline-none text-xs text-black"
+                    />
+                  </div>
+                  <button
+                    onClick={() => handleUpdateCommission(selectedVendor)}
+                    disabled={updateCommissionMutation.isPending}
+                    className="bg-[#01454A] hover:bg-[#01454A]/90 text-white font-bold text-xs h-10 px-4 rounded-xl flex items-center justify-center transition"
+                  >
+                    {updateCommissionMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Update"}
+                  </button>
+                </div>
               </div>
 
               {/* Physical presence */}
@@ -474,19 +483,68 @@ export default function AdminSellersPage() {
                 Aesthetics Operations
               </span>
 
-              {/* Live link to Seller's Storefront */}
-              <Link
-                href={`/vendors/${selectedVendor.store_slug}`}
-                className="w-full bg-[#01454A] hover:bg-[#01454A]/90 text-white font-satoshi font-bold text-sm py-4 rounded-xl shadow-sm flex items-center justify-center gap-2 transition duration-200"
+              {/* Spotlight toggle */}
+              <button
+                onClick={() => handleToggleFeatured(selectedVendor)}
+                disabled={toggleFeaturedMutation.isPending}
+                className="w-full bg-white hover:bg-[#F4F3EC] border border-[#ECE6D6] text-black font-satoshi font-bold text-sm py-3 rounded-xl shadow-sm flex items-center justify-center gap-2 transition duration-200"
               >
-                <Store className="w-4 h-4 text-[#FDA600]" />
-                Inspect Live Storefront
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+                {toggleFeaturedMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 text-[#FDA600] fill-[#FDA600]" />
+                    {selectedVendor.is_featured ? "Remove Spotlight Star" : "Spotlight Spotlight Star"}
+                  </>
+                )}
+              </button>
+
+              {/* Approve / Reject buttons if not verified */}
+              {!selectedVendor.is_verified && (
+                <button
+                  onClick={() => handleApprove(selectedVendor)}
+                  disabled={approveVendorMutation.isPending}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-satoshi font-bold text-sm py-3.5 rounded-xl shadow-sm flex items-center justify-center gap-2 transition duration-200"
+                >
+                  {approveVendorMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      Approve Boutique Onboarding
+                    </>
+                  )}
+                </button>
+              )}
+
+              {/* Suspend / Reactivate button */}
+              <button
+                onClick={() => handleToggleSuspend(selectedVendor)}
+                disabled={suspendVendorMutation.isPending || reactivateVendorMutation.isPending}
+                className={`w-full py-3.5 rounded-xl font-satoshi font-bold text-sm flex items-center justify-center gap-2 border shadow-sm transition-all duration-200 ${
+                  selectedVendor.is_active
+                    ? "bg-red-50 hover:bg-red-100 text-red-600 border-red-200"
+                    : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
+                }`}
+              >
+                {suspendVendorMutation.isPending || reactivateVendorMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : selectedVendor.is_active ? (
+                  <>
+                    <Lock className="w-4 h-4" />
+                    Suspend Storefront
+                  </>
+                ) : (
+                  <>
+                    <Unlock className="w-4 h-4" />
+                    Reactivate Storefront
+                  </>
+                )}
+              </button>
 
               {/* Django Change page link */}
               <Link
-                href={`${process.env.NEXT_PUBLIC_API_V1_URL || ""}/admin/vendor/vendorprofile/${selectedVendor.id}/change/`}
+                href={`${process.env.NEXT_PUBLIC_API_V1_URL || "http://127.0.0.1:8001"}/admin/vendor/vendorprofile/${selectedVendor.id}/change/`}
                 target="_blank"
                 className="w-full bg-white hover:bg-[#F4F3EC] border border-[#ECE6D6] text-black font-satoshi font-bold text-sm py-3.5 rounded-xl shadow-sm flex items-center justify-center gap-2 transition duration-200"
               >
