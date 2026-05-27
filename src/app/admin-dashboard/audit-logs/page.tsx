@@ -8,7 +8,7 @@
  */
 
 import type { Metadata } from "next";
-import { AuditLogViewer } from "@/features/admin";
+import { AuditLogViewer } from "@/features/audit-logs";
 
 export const metadata: Metadata = {
   title: "Audit Trail — Fashionistar Admin",
