@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useCatalogCategories } from "@/features/catalog/hooks/use-catalog";
-import { useAdminProducts, useDeleteAdminProduct } from "@/features/admin-dashboard";
+import { useAdminProducts, useDeleteAdminProduct } from "../hooks";
 import { 
   Search, 
   Trash2, 
@@ -19,7 +19,7 @@ import {
   Star
 } from "lucide-react";
 
-export default function AdminProductsPage() {
+export function ProductsDashboard() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [page, setPage] = useState(1);
@@ -320,7 +320,7 @@ export default function AdminProductsPage() {
               className="absolute top-4 right-4 text-[#8A9596] hover:text-black transition"
             >
               <X className="w-5 h-5" />
-            </button>Optionally, confirm if any files are missing in your plans.
+            </button>
 
             <div className="flex items-center gap-4 text-[#EA1705]">
               <div className="bg-[#EA1705]/10 p-3 rounded-2xl">

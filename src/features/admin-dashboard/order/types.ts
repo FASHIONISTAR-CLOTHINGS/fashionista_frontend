@@ -3,7 +3,7 @@
  * @description Admin Dashboard specific types for the Order domain.
  */
 
-import type { OrderDetail, OrderListItem, PaginatedOrderList } from "../types/order.types";
+import type { OrderDetail, OrderListItem, PaginatedOrderList } from "@/features/order/types/order.types";
 
 export type AdminOrderDetail = OrderDetail;
 export type AdminOrderListItem = OrderListItem;

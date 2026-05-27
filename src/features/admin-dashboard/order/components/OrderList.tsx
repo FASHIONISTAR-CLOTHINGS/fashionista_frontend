@@ -108,7 +108,7 @@ export function OrderList() {
     if (selectedIds.size === orders.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(orders.map((o) => o.id)));
+      setSelectedIds(new Set(orders.map((o: any) => o.id)));
     }
   };
 
@@ -218,7 +218,7 @@ export function OrderList() {
                 </td>
               </tr>
             ) : (
-              orders.map((order) => {
+              orders.map((order: any) => {
                 const isSelected = selectedIds.has(order.id);
                 return (
                   <tr

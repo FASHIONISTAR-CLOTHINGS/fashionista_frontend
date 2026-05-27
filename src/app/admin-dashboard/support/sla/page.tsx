@@ -8,7 +8,7 @@
  */
 
 import type { Metadata } from "next";
-import { SlaDashboard } from "@/features/admin-dashboard";
+import { SlaDashboard } from "@/features/support";
 
 export const metadata: Metadata = {
   title: "SLA Monitoring — Fashionistar Admin",

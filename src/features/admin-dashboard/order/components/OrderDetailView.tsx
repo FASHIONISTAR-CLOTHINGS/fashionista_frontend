@@ -400,7 +400,7 @@ export function OrderDetailView({ orderId, backHref }: Props) {
           </h2>
         </div>
         <div className="divide-y divide-[hsl(var(--border))]">
-          {order.items.map((item) => (
+          {order.items.map((item: any) => (
             <div
               key={item.id}
               className="flex items-center justify-between gap-4 py-4 text-sm"
@@ -441,7 +441,7 @@ export function OrderDetailView({ orderId, backHref }: Props) {
         </div>
         <div className="space-y-3">
           {order.payment_records.length > 0 ? (
-            order.payment_records.map((record) => (
+            order.payment_records.map((record: any) => (
               <div
                 key={`${record.sequence_number}-${record.correlation_id}`}
                 className="rounded-xl border border-[hsl(var(--border))] p-4"
@@ -521,7 +521,7 @@ export function OrderDetailView({ orderId, backHref }: Props) {
           </button>
           {showHistory && (
             <div className="mt-4 space-y-3">
-              {order.status_history.map((entry) => (
+              {order.status_history.map((entry: any) => (
                 <div key={entry.id} className="rounded-xl border border-[hsl(var(--border))] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>

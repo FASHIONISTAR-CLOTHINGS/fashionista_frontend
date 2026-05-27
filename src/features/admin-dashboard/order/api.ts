@@ -4,8 +4,8 @@
  */
 import { apiAdminAsync, apiAdminSync } from "@/core/api/client.admin";
 import { unwrapApiData } from "@/core/api/response";
-import { parseOrderResponse, PaginatedOrderListSchema, OrderDetailSchema } from "../schemas/order.schemas";
-import type { PaginatedOrderList, OrderDetail, AdminDeliveryStatusInput } from "../types/order.types";
+import { parseOrderResponse, PaginatedOrderListSchema, OrderDetailSchema } from "@/features/order/schemas/order.schemas";
+import type { PaginatedOrderList, OrderDetail, AdminDeliveryStatusInput } from "@/features/order/types/order.types";
 
 interface NinjaListEnvelope {
   count?: number;

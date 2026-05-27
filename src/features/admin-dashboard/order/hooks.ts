@@ -14,7 +14,7 @@ import {
   releaseAdminOrderEscrow,
   cancelAdminOrder,
 } from "./api";
-import type { AdminDeliveryStatusInput } from "../types/order.types";
+import type { AdminDeliveryStatusInput } from "@/features/order/types/order.types";
 
 export const orderAdminKeys = {
   all: ["order", "admin"] as const,
