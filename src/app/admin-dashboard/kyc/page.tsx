@@ -6,7 +6,7 @@ import {
   useApproveKyc as useQuickApproveKyc,
   useRejectKyc as useQuickRejectKyc,
   useMarkKycInReview as useMarkKycInReviewSync,
-} from "@/features/kyc";
+} from "@/features/kyc/admin-dashboard";
 import { toast } from "sonner";
 import {
   CheckCircle2,
@@ -41,7 +41,7 @@ export default function AdminKycPage() {
   const rawSubmissions = submissionsData?.results || [];
 
   // Find currently selected submission object
-  const selectedSubmission = rawSubmissions.find((s) => s.id === selectedSubmissionId) || null;
+  const selectedSubmission = rawSubmissions.find((s: any) => s.id === selectedSubmissionId) || null;
 
   // ── Mutations ─────────────────────────────────────────────────────────────
   const approveMutation = useQuickApproveKyc();
@@ -59,7 +59,7 @@ export default function AdminKycPage() {
     }
     rejectMutation.mutate({
       submissionId: id,
-      reviewNotes: reviewNotes.trim(),
+      notes: reviewNotes.trim(),
       allowResubmit: allowResubmit,
     });
   };

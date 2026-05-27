@@ -1,0 +1,48 @@
+/**
+ * features/product/admin-dashboard/hooks.ts
+ */
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchAdminProducts, deleteAdminProduct } from "./api";
+import { useToast } from "@/shared/hooks/use-toast";
+
+export const adminProductKeys = {
+  all: ["admin-products"] as const,
+  filtered: (params: any) => ["admin-products", params] as const,
+};
+
+export function useAdminProducts(params: {
+  page?: number;
+  page_size?: number;
+  q?: string;
+  category?: string;
+}) {
+  return useQuery({
+    queryKey: adminProductKeys.filtered(params),
+    queryFn: () => fetchAdminProducts(params),
+  });
+}
+
+export function useDeleteAdminProduct() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteAdminProduct(id),
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Product deleted successfully from global catalog.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["catalog", "products"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to delete product.",
+        variant: "destructive",
+      });
+    },
+  });
+}

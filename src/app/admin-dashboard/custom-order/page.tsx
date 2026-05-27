@@ -1,20 +1,31 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Search,
   Sparkles,
   TrendingUp,
   Clock,
   CheckCircle2,
-  AlertCircle,
   Eye,
   Settings,
   Mail,
   User,
   Scissors,
   HelpCircle,
+  Calendar,
+  XCircle,
 } from "lucide-react";
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return "-";
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
 
 interface CustomOrder {
   id: string;
