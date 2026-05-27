@@ -45,7 +45,7 @@ export function BlogsDashboard() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<any>(null);
   const [rawTags, setRawTags] = useState("");
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const {
     register,

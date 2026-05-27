@@ -41,7 +41,7 @@ export function CollectionsDashboard() {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCollection, setEditingCollection] = useState<any>(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const {
     register,
