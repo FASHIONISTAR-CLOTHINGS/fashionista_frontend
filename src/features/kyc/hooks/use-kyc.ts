@@ -24,6 +24,9 @@ import {
   getNinjaKycDocuments,
   getNinjaKycStatus,
   submitKyc,
+  getAdminKycSubmissions,
+  approveKycSubmission,
+  rejectKycSubmission,
 } from "../api/kyc.api";
 import type {
   KycSubmitInput,
@@ -148,5 +151,62 @@ export function useNinjaKycDocuments() {
     queryKey: kycKeys.ninjaDocuments(),
     queryFn: getNinjaKycDocuments,
     staleTime: 60_000,
+  });
+}
+
+// ─── Admin Review Hooks ──────────────────────────────────────────────────────
+
+/** Staff-only: list all submissions */
+export function useAdminKycSubmissions() {
+  return useQuery({
+    queryKey: [...kycKeys.all, "admin", "submissions"],
+    queryFn: getAdminKycSubmissions,
+    staleTime: 30_000,
+  });
+}
+
+/** Staff-only: approve a KYC submission */
+export function useApproveKyc() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      submissionId,
+      providerReference,
+    }: {
+      submissionId: string;
+      providerReference?: string;
+    }) => approveKycSubmission(submissionId, providerReference),
+    onSuccess: () => {
+      invalidateAll(qc);
+      toast.success("KYC submission approved successfully.");
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : "Failed to approve KYC.";
+      toast.error(msg);
+    },
+  });
+}
+
+/** Staff-only: reject a KYC submission with comments */
+export function useRejectKyc() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      submissionId,
+      reviewNotes,
+      allowResubmit = true,
+    }: {
+      submissionId: string;
+      reviewNotes: string;
+      allowResubmit?: boolean;
+    }) => rejectKycSubmission(submissionId, reviewNotes, allowResubmit),
+    onSuccess: () => {
+      invalidateAll(qc);
+      toast.success("KYC submission rejected with notes.");
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : "Failed to reject KYC.";
+      toast.error(msg);
+    },
   });
 }

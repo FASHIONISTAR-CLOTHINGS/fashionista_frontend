@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file kyc.api.ts
  * @description KYC API client — full document submission lifecycle.
  *
@@ -128,3 +128,49 @@ export async function getNinjaKycDocuments(): Promise<NinjaKycWithDocuments> {
     "getNinjaKycDocuments",
   ) as NinjaKycWithDocuments;
 }
+
+// ─── Admin Review Endpoints ──────────────────────────────────────────────────
+
+/**
+ * GET /api/v1/kyc/admin/submissions/
+ *
+ * Staff-only list of all KYC submissions with users and documents.
+ */
+export async function getAdminKycSubmissions(): Promise<any> {
+  const { data } = await apiSync.get<unknown>("v1/kyc/admin/submissions/");
+  return data;
+}
+
+/**
+ * POST /api/v1/kyc/admin/<id>/approve/
+ *
+ * Staff-only approval of a KYC submission.
+ */
+export async function approveKycSubmission(
+  submissionId: string,
+  providerReference?: string,
+): Promise<any> {
+  const { data } = await apiSync.post<unknown>(
+    `v1/kyc/admin/${submissionId}/approve/`,
+    providerReference ? { provider_reference: providerReference } : {},
+  );
+  return data;
+}
+
+/**
+ * POST /api/v1/kyc/admin/<id>/reject/
+ *
+ * Staff-only rejection of a KYC submission.
+ */
+export async function rejectKycSubmission(
+  submissionId: string,
+  reviewNotes: string,
+  allowResubmit: boolean = true,
+): Promise<any> {
+  const { data } = await apiSync.post<unknown>(
+    `v1/kyc/admin/${submissionId}/reject/`,
+    { review_notes: reviewNotes, allow_resubmit: allowResubmit },
+  );
+  return data;
+}
+
