@@ -25,24 +25,17 @@ export function useAdminProducts(params: {
 
 export function useDeleteAdminProduct() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const toast = useToast();
 
   return useMutation({
     mutationFn: (id: string) => deleteAdminProduct(id),
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Product deleted successfully from global catalog.",
-      });
+      toast.success("Product deleted successfully from global catalog.");
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["catalog", "products"] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to delete product.",
-        variant: "destructive",
-      });
+      toast.error(error?.message || "Failed to delete product.");
     },
   });
 }

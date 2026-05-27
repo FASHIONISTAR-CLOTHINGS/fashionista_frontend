@@ -208,7 +208,7 @@ export default function AdminKycPage() {
                           {sub.legal_name || "Bespoke Applicant"}
                         </h4>
                         <p className="font-satoshi text-[10px] text-[#8A9596] truncate">
-                          {sub.user_email || `ID: ${sub.user_id}`}
+                          {sub.user?.email || `ID: ${sub.user_id}`}
                         </p>
                         <p className="font-satoshi text-[9px] text-[#5A6465] flex items-center gap-1">
                           <FileText className="w-3 h-3 text-[#8A9596]" />
@@ -286,11 +286,11 @@ export default function AdminKycPage() {
                 <div className="grid grid-cols-2 gap-4 text-xs font-satoshi">
                   <div className="bg-white border border-[#ECE6D6] p-3 rounded-xl">
                     <span className="text-[#8A9596] block">Applicant Email</span>
-                    <span className="font-semibold text-black block mt-0.5 truncate">{selectedSubmission.user_email || "-N/A-"}</span>
+                    <span className="font-semibold text-black block mt-0.5 truncate">{selectedSubmission.user?.email || "-N/A-"}</span>
                   </div>
                   <div className="bg-white border border-[#ECE6D6] p-3 rounded-xl">
                     <span className="text-[#8A9596] block">Member ID</span>
-                    <span className="font-semibold text-black block mt-0.5">{selectedSubmission.user_member_id || "-N/A-"}</span>
+                    <span className="font-semibold text-black block mt-0.5">{selectedSubmission.user_id || "-N/A-"}</span>
                   </div>
                 </div>
 
