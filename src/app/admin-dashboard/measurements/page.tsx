@@ -8,65 +8,17 @@ import {
   XCircle,
   ExternalLink,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
-
-interface MeasurementProfile {
-  id: string;
-  clientName: string;
-  bust: number;
-  waist: number;
-  hips: number;
-  shoulder: number;
-  height: number;
-  unit: "inches" | "cm";
-  is_verified: boolean;
-  updated_at: string;
-}
-
-const MOCK_MEASUREMENTS: MeasurementProfile[] = [
-  {
-    id: "MS-412",
-    clientName: "Amara Kalu",
-    bust: 34,
-    waist: 26,
-    hips: 36,
-    shoulder: 15,
-    height: 64,
-    unit: "inches",
-    is_verified: true,
-    updated_at: "2026-05-24",
-  },
-  {
-    id: "MS-413",
-    clientName: "Tobi Adebayo",
-    bust: 40,
-    waist: 34,
-    hips: 42,
-    shoulder: 18,
-    height: 70,
-    unit: "inches",
-    is_verified: false,
-    updated_at: "2026-05-20",
-  },
-  {
-    id: "MS-414",
-    clientName: "Ngozi Echem",
-    bust: 36,
-    waist: 28,
-    hips: 39,
-    shoulder: 16,
-    height: 66,
-    unit: "inches",
-    is_verified: true,
-    updated_at: "2026-05-18",
-  },
-];
+import { useAdminMeasurements } from "@/features/measurements";
 
 export default function AdminMeasurementsPage() {
   const [search, setSearch] = useState("");
-  const [selectedProfile, setSelectedProfile] = useState<MeasurementProfile | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
 
-  const filteredProfiles = MOCK_MEASUREMENTS.filter((profile) =>
+  const { data: measurementsList = [], isLoading, isError } = useAdminMeasurements();
+
+  const filteredProfiles = measurementsList.filter((profile) =>
     profile.clientName.toLowerCase().includes(search.toLowerCase()) ||
     profile.id.toLowerCase().includes(search.toLowerCase())
   );
@@ -96,7 +48,31 @@ export default function AdminMeasurementsPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <Loader2 className="w-8 h-8 text-[#01454A] animate-spin" />
+            <span className="font-satoshi text-xs text-[#5A6465] animate-pulse">Loading client measurements...</span>
+          </div>
+        )}
+
+        {isError && (
+          <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-[#ECE6D6] bg-white rounded-2xl gap-2">
+            <XCircle className="w-8 h-8 text-red-500" />
+            <p className="font-bon_foyage text-lg text-black">Connection error</p>
+            <p className="font-satoshi text-xs text-[#5A6465]">Could not retrieve measurements files.</p>
+          </div>
+        )}
+
+        {!isLoading && !isError && filteredProfiles.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-[#ECE6D6] bg-white rounded-2xl gap-2">
+            <Search className="w-8 h-8 text-[#8A9596]" />
+            <p className="font-bon_foyage text-lg text-black">No sizing profiles found</p>
+            <p className="font-satoshi text-xs text-[#5A6465]">No candidates matched your search criteria.</p>
+          </div>
+        )}
+
+        {!isLoading && !isError && filteredProfiles.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProfiles.map((profile) => (
             <div
               key={profile.id}
@@ -152,6 +128,7 @@ export default function AdminMeasurementsPage() {
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* Details drawer */}

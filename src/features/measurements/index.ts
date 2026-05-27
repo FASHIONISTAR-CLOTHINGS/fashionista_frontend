@@ -57,3 +57,7 @@ export {
 // ── Components ─────────────────────────────────────────────────────────────────
 export { MeasurementProfilePanel } from "./components/MeasurementProfilePanel";
 export { MirrorSizeMeasurementFlow } from "./components/MirrorSizeMeasurementFlow";
+
+// ── Admin Dashboard ────────────────────────────────────────────────────────────
+export * from "./admin-dashboard";
+
