@@ -4,4 +4,3 @@
  * Public FSD entrypoint for audit-logs feature.
  */
 
-export * from "./admin-dashboard";

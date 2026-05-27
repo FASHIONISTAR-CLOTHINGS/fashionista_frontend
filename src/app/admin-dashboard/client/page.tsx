@@ -1,4 +1,4 @@
-import { AdminClientDashboard } from "@/features/client";
+import { AdminClientDashboard } from "@/features/admin-dashboard";
 
 export default function ClientsPage() {
   return <AdminClientDashboard />;

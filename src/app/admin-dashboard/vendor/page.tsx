@@ -10,7 +10,7 @@ import {
   useReactivateVendor,
   useToggleVendorFeatured,
   useUpdateVendorCommission,
-} from "@/features/vendor";
+} from "@/features/admin-dashboard";
 import {
   Search,
   MapPin,

@@ -78,15 +78,4 @@ export {
 
 export { OrderTable, ClientOrderList, OrderDetailView, OrderPaymentView, OrderConfirmationView } from "./components";
 
-// ── Admin Dashboard ─────────────────────────────────────────────────────────
-export {
-  OrderList as AdminOrderList,
-  OrderDetailView as AdminOrderDetailView,
-  useAdminOrders,
-  useAdminOrderDetail,
-  useTransitionAdminOrderStatus,
-  useReleaseAdminOrderEscrow,
-  useCancelAdminOrder,
-} from "./admin-dashboard";
-
-
+// Admin exports have been moved to the centralized admin-dashboard feature slice.

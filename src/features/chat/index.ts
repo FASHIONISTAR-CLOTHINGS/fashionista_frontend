@@ -85,5 +85,4 @@ export {
 } from "./components/OfferCard";
 
 // ── Admin Dashboard ────────────────────────────────────────────────────────────
-export * from "./admin-dashboard";
 

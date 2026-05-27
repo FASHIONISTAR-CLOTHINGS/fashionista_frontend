@@ -7,7 +7,7 @@
 
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { ChatDashboard } from "@/features/chat";
+import { ChatDashboard } from "@/features/admin-dashboard";
 import { TableRowSkeleton } from "@/shared/components/skeletons";
 
 export const metadata: Metadata = {

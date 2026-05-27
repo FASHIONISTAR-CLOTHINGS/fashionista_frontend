@@ -7,7 +7,7 @@
 
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { SettingsDashboard } from "@/features/settings";
+import { SettingsDashboard } from "@/features/admin-dashboard";
 import { TableRowSkeleton } from "@/shared/components/skeletons";
 
 export const metadata: Metadata = {

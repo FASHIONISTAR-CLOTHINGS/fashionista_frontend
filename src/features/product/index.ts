@@ -213,5 +213,4 @@ export type {
 } from "./builder";
 
 // ── Admin Dashboard ────────────────────────────────────────────────────────────
-export * from "./admin-dashboard";
 

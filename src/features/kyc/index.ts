@@ -66,4 +66,3 @@ export { KYCGate } from "./components/KYCGate";
 export { KYCStatusBadge } from "./components/KYCStatusBadge";
 
 // ── Admin Dashboard ─────────────────────────────────────────────────────────
-export * from "./admin-dashboard";

@@ -7,7 +7,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useAdminAnnouncements, useSendAnnouncement } from "@/features/notification";
+import { useAdminAnnouncements, useSendAnnouncement } from "@/features/admin-dashboard";
 
 export default function AdminNotificationPage() {
   const [search, setSearch] = useState("");

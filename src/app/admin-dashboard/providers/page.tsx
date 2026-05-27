@@ -14,7 +14,7 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
-import { useAdminProviders, type ApiProvider } from "@/features/providers";
+import { useAdminProviders, type ApiProvider } from "@/features/admin-dashboard";
 
 export default function AdminProvidersPage() {
   const [search, setSearch] = useState("");
