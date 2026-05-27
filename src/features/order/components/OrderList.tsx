@@ -10,7 +10,8 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Search, Package, ArrowLeft, ArrowRight } from "lucide-react";
 import { useAdminOrders } from "../hooks/use-order";
-import type { OrderListItem, OrderStatus } from "../types/order.types";
+import type { OrderListItem } from "../types/order.types";
+
 
 // ── Status config ─────────────────────────────────────────────────────────────
 

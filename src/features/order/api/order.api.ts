@@ -192,7 +192,7 @@ export async function updateAdminDeliveryStatus(
 ): Promise<OrderDetail> {
   const { data } = await apiAdminSync.patch<unknown>(
     `order/${orderId}/transition/`,
-    { new_status: input.delivery_status },
+    { new_status: input.status },
   );
   return parseOrderResponse(
     OrderDetailSchema,
