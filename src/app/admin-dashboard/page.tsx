@@ -4,7 +4,7 @@ import { ChartOptions, ChartData } from "chart.js";
 import Image from "next/image";
 import { Suspense } from "react";
 import { TableRowSkeleton } from "@/shared/components/skeletons";
-import { useAdminDashboardKPI } from "@/features/admin";
+import { useAdminDashboardKPI } from "@/features/catalog";
 
 import { OrderList } from "@/features/order";
 

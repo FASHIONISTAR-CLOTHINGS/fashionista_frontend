@@ -67,3 +67,6 @@ export { KycDocumentUploadPanel } from "./components/KycDocumentUploadPanel";
 // Provider Registry UI — Phase 7
 export { KYCGate } from "./components/KYCGate";
 export { KYCStatusBadge } from "./components/KYCStatusBadge";
+
+// ── Admin Dashboard ─────────────────────────────────────────────────────────
+export * from "./admin-dashboard";

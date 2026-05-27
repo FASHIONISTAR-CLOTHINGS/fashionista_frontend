@@ -3,10 +3,10 @@
 import { useState } from "react";
 import {
   useAdminKycSubmissions,
-  useQuickApproveKyc,
-  useQuickRejectKyc,
-  useMarkKycInReviewSync,
-} from "@/features/admin";
+  useApproveKyc as useQuickApproveKyc,
+  useRejectKyc as useQuickRejectKyc,
+  useMarkKycInReview as useMarkKycInReviewSync,
+} from "@/features/kyc";
 import { toast } from "sonner";
 import {
   CheckCircle2,
