@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useGlobalSettings, useUpdateGlobalSettings } from "@/features/admin";
+import { useGlobalSettings, useUpdateGlobalSettings } from "@/features/settings";
 import { Loader2, Shield, Settings, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 export default function AdminSettingsPage() {

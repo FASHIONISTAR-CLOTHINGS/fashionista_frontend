@@ -71,3 +71,7 @@ export * from "./store/vendor.store";
 export * from "./components/vendor-shell";
 export * from "./components/vendor-views";
 export * from "./components/vendor-extra-views";
+
+// ── Admin Dashboard ─────────────────────────────────────────────────────────
+export * from "./admin-dashboard";
+

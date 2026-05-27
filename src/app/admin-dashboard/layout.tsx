@@ -50,20 +50,23 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       id: "commerce",
       label: "Commerce",
       items: [
-        { href: "/admin-dashboard/products", label: "Products", icon: "products" },
-        { href: "/admin-dashboard/orders", label: "Orders", icon: "orders" },
-        { href: "/admin-dashboard/custom-orders", label: "Custom Orders", icon: "custom-orders" },
-        { href: "/admin-dashboard/collections", label: "Collections", icon: "collections" },
-        { href: "/admin-dashboard/brands", label: "Brands", icon: "brands" },
-        { href: "/admin-dashboard/reviews", label: "Reviews", icon: "reviews" }
+        { href: "/admin-dashboard/product", label: "Products", icon: "products" },
+        { href: "/admin-dashboard/order", label: "Orders", icon: "orders" },
+        { href: "/admin-dashboard/custom-order", label: "Custom Orders", icon: "custom-orders" },
+        { href: "/admin-dashboard/catalog/collections", label: "Collections", icon: "collections" },
+        { href: "/admin-dashboard/catalog/brands", label: "Brands", icon: "brands" },
+        { href: "/admin-dashboard/catalog/categories", label: "Categories", icon: "categories" },
+        { href: "/admin-dashboard/catalog/blog", label: "Editorial Blog", icon: "blog" },
+        { href: "/admin-dashboard/product/reviews", label: "Reviews", icon: "reviews" }
       ]
     },
     {
       id: "identity",
       label: "Identity",
       items: [
-        { href: "/admin-dashboard/accounts", label: "Accounts", icon: "accounts" },
-        { href: "/admin-dashboard/sellers", label: "Sellers", icon: "sellers" },
+        { href: "/admin-dashboard/authentication", label: "Authentication", icon: "accounts" },
+        { href: "/admin-dashboard/vendor", label: "Vendors", icon: "sellers" },
+        { href: "/admin-dashboard/client", label: "Clients", icon: "clients" },
         { href: "/admin-dashboard/kyc", label: "KYC Submissions", icon: "kyc" }
       ]
     },
@@ -72,7 +75,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       label: "Financial",
       items: [
         { href: "/admin-dashboard/transactions", label: "Transactions", icon: "transactions" },
-        { href: "/admin-dashboard/wallet", label: "Wallets", icon: "wallet" }
+        { href: "/admin-dashboard/wallet", label: "Wallets", icon: "wallet" },
+        { href: "/admin-dashboard/payment", label: "Payments", icon: "payment" }
       ]
     },
     {
@@ -96,10 +100,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       id: "platform",
       label: "Platform",
       items: [
-        { href: "/admin-dashboard/audit", label: "Audit Trail", icon: "audit" },
-        { href: "/admin-dashboard/settings", label: "Settings", icon: "settings" }
+        { href: "/admin-dashboard/audit-logs", label: "Audit Trail", icon: "audit" },
+        { href: "/admin-dashboard/global-platform-settings", label: "Settings", icon: "settings" },
+        { href: "/admin-dashboard/providers", label: "Providers", icon: "providers" }
       ]
     }
+
   ];
 
   const renderIcon = (iconName: string, active: boolean) => {
