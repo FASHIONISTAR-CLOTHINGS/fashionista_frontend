@@ -2,7 +2,7 @@
  * features/measurements/admin-dashboard/api.ts
  */
 
-import { apiAdminSync, apiAdminAsync } from "@/core/api/client.admin";
+import { apiAdminAsync } from "@/core/api/client.admin";
 import type { MeasurementProfile } from "./types";
 
 export async function fetchAdminMeasurements(): Promise<MeasurementProfile[]> {
