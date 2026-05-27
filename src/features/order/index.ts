@@ -46,6 +46,9 @@ export {
   updateVendorProductionStatus,
   fetchAdminOrders,
   updateAdminDeliveryStatus,
+  transitionAdminOrderStatus,
+  releaseAdminOrderEscrow,
+  cancelAdminOrder,
   // Ninja async endpoints
   getNinjaClientOrderCounts,
   getNinjaVendorOrderCounts,
@@ -67,6 +70,9 @@ export {
   useUpdateVendorProductionStatus,
   useAdminOrders,
   useUpdateAdminDeliveryStatus,
+  useTransitionAdminOrderStatus,
+  useReleaseAdminOrderEscrow,
+  useCancelAdminOrder,
   // Ninja async reads
   useNinjaClientOrderCounts,
   useNinjaVendorOrderCounts,

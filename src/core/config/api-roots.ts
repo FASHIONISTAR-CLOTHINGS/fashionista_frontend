@@ -29,3 +29,12 @@ export function getAsyncApiBaseUrl(): string {
 export function getServerAsyncApiBaseUrl(): string {
   return `${getServerBackendRootUrl()}/api/v1/ninja`;
 }
+
+export function getAdminSyncApiBaseUrl(): string {
+  return `${getClientBackendRootUrl()}/api/v1/admin_backend`;
+}
+
+export function getAdminAsyncApiBaseUrl(): string {
+  return `${getClientBackendRootUrl()}/api/v1/admin_backend`;
+}
+

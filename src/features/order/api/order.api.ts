@@ -8,6 +8,7 @@
  */
 import { apiAsync } from "@/core/api/client.async";
 import { apiSync } from "@/core/api/client.sync";
+import { apiAdminAsync, apiAdminSync } from "@/core/api/client.admin";
 import { unwrapApiData } from "@/core/api/response";
 import {
   parseOrderResponse,
@@ -21,6 +22,7 @@ import type {
   VendorProductionStatusInput,
   AdminDeliveryStatusInput,
 } from "../types/order.types";
+
 
 // Status count types — returned by Ninja /counts/ endpoints
 export type OrderStatusCounts = Record<string, number>;
@@ -102,7 +104,7 @@ export async function fetchVendorOrderDetail(orderId: string): Promise<OrderDeta
 
 /** Fetch single order detail for admin/staff review. */
 export async function fetchAdminOrderDetail(orderId: string): Promise<OrderDetail> {
-  const data = await apiAsync.get(`orders/admin/${orderId}/`).json();
+  const data = await apiAdminAsync.get(`order/${orderId}/`).json();
   return parseOrderResponse(
     OrderDetailSchema,
     unwrapApiData(data),
@@ -168,9 +170,13 @@ export async function updateVendorProductionStatus(
 // ── ADMIN ─────────────────────────────────────────────────────────────────────
 
 /** Fetch all orders (admin). */
-export async function fetchAdminOrders(page = 1): Promise<PaginatedOrderList> {
-  const data = await apiAsync.get("orders/admin/", {
-    searchParams: { page, limit: 100 },
+export async function fetchAdminOrders(page = 1, search?: string, status?: string): Promise<PaginatedOrderList> {
+  const searchParams: Record<string, any> = { page, limit: 100 };
+  if (search) searchParams.search = search;
+  if (status) searchParams.status = status;
+
+  const data = await apiAdminAsync.get("order/", {
+    searchParams,
   }).json();
   return parseOrderResponse(
     PaginatedOrderListSchema,
@@ -184,14 +190,60 @@ export async function updateAdminDeliveryStatus(
   orderId: string,
   input: AdminDeliveryStatusInput,
 ): Promise<OrderDetail> {
-  const { data } = await apiSync.patch<unknown>(
-    `${BASE}/admin/${orderId}/delivery-status/`,
-    input,
+  const { data } = await apiAdminSync.patch<unknown>(
+    `order/${orderId}/transition/`,
+    { new_status: input.delivery_status },
   );
   return parseOrderResponse(
     OrderDetailSchema,
     unwrapApiData(data),
     "updateAdminDeliveryStatus",
+  ) as OrderDetail;
+}
+
+/** Transition order status (admin). */
+export async function transitionAdminOrderStatus(
+  orderId: string,
+  newStatus: string,
+  note = "",
+): Promise<OrderDetail> {
+  const { data } = await apiAdminSync.post<unknown>(
+    `order/${orderId}/transition/`,
+    { new_status: newStatus, note },
+  );
+  return parseOrderResponse(
+    OrderDetailSchema,
+    unwrapApiData(data),
+    "transitionAdminOrderStatus",
+  ) as OrderDetail;
+}
+
+/** Release escrow to vendor (admin). */
+export async function releaseAdminOrderEscrow(orderId: string): Promise<OrderDetail> {
+  const { data } = await apiAdminSync.post<unknown>(
+    `order/${orderId}/release-escrow/`,
+    {},
+  );
+  return parseOrderResponse(
+    OrderDetailSchema,
+    unwrapApiData(data),
+    "releaseAdminOrderEscrow",
+  ) as OrderDetail;
+}
+
+/** Cancel order as administrator. */
+export async function cancelAdminOrder(
+  orderId: string,
+  reason = "Cancelled by administrator.",
+): Promise<OrderDetail> {
+  const { data } = await apiAdminSync.post<unknown>(
+    `order/${orderId}/cancel/`,
+    { reason },
+  );
+  return parseOrderResponse(
+    OrderDetailSchema,
+    unwrapApiData(data),
+    "cancelAdminOrder",
   ) as OrderDetail;
 }
 
