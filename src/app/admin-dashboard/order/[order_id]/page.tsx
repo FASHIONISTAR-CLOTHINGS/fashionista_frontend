@@ -1,4 +1,4 @@
-import { OrderDetailView } from "@/features/order";
+import { AdminOrderDetailView } from "@/features/order";
 
 export default async function AdminOrderDetailPage({
   params,
@@ -6,5 +6,5 @@ export default async function AdminOrderDetailPage({
   params: Promise<{ order_id: string }>;
 }) {
   const { order_id } = await params;
-  return <OrderDetailView orderId={order_id} backHref="/admin-dashboard/order" scope="admin" />;
+  return <AdminOrderDetailView orderId={order_id} backHref="/admin-dashboard/order" />;
 }

@@ -4,3 +4,4 @@
 
 export * from "./api";
 export * from "./hooks";
+export { ClientDashboard as AdminClientDashboard } from "./components/ClientDashboard";

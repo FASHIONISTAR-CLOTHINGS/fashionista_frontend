@@ -39,21 +39,16 @@ export {
   fetchClientOrders,
   fetchOrderDetail,
   fetchVendorOrderDetail,
-  fetchAdminOrderDetail,
   cancelOrder,
   confirmDelivery,
   fetchVendorOrders,
   updateVendorProductionStatus,
-  fetchAdminOrders,
-  updateAdminDeliveryStatus,
-  transitionAdminOrderStatus,
-  releaseAdminOrderEscrow,
-  cancelAdminOrder,
   // Ninja async endpoints
   getNinjaClientOrderCounts,
   getNinjaVendorOrderCounts,
   getNinjaVendorFinancialSummary,
 } from "./api/order.api";
+
 
 // ── TanStack Query Hooks ───────────────────────────────────────────────────
 export {
@@ -62,22 +57,17 @@ export {
   useClientOrders,
   useOrderDetail,
   useVendorOrderDetail,
-  useAdminOrderDetail,
   // DRF mutations
   useCancelOrder,
   useConfirmDelivery,
   useVendorOrders,
   useUpdateVendorProductionStatus,
-  useAdminOrders,
-  useUpdateAdminDeliveryStatus,
-  useTransitionAdminOrderStatus,
-  useReleaseAdminOrderEscrow,
-  useCancelAdminOrder,
   // Ninja async reads
   useNinjaClientOrderCounts,
   useNinjaVendorOrderCounts,
   useNinjaVendorFinancialSummary,
 } from "./hooks/use-order";
+
 
 // ── Server Actions ─────────────────────────────────────────────────────────
 export {
@@ -86,5 +76,17 @@ export {
   trackOrderAction,
 } from "./api/order.server-actions";
 
-// ── Components ─────────────────────────────────────────────────────────────
-export { OrderTable, OrderList, ClientOrderList, OrderDetailView, OrderPaymentView, OrderConfirmationView } from "./components";
+export { OrderTable, ClientOrderList, OrderDetailView, OrderPaymentView, OrderConfirmationView } from "./components";
+
+// ── Admin Dashboard ─────────────────────────────────────────────────────────
+export {
+  OrderList as AdminOrderList,
+  OrderDetailView as AdminOrderDetailView,
+  useAdminOrders,
+  useAdminOrderDetail,
+  useTransitionAdminOrderStatus,
+  useReleaseAdminOrderEscrow,
+  useCancelAdminOrder,
+} from "./admin-dashboard";
+
+

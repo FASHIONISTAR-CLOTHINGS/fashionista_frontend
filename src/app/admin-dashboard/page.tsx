@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import { TableRowSkeleton } from "@/shared/components/skeletons";
 import { useAdminDashboardKPI } from "@/features/catalog";
 
-import { OrderList } from "@/features/order";
+import { AdminOrderList } from "@/features/order";
 
 interface MembersProp {
   image: string;
@@ -354,7 +354,7 @@ const Page = () => {
             </div>
           }
         >
-          <OrderList />
+          <AdminOrderList />
         </Suspense>
       </div>
     </div>

@@ -2,16 +2,15 @@
  * @file OrderList.tsx
  * @description Enterprise order list for admin dashboard.
  * Live TanStack Query data via useAdminOrders(),
- * row checkbox selection, bulk action support, paginated.
+ * Nuqs URL query synchronization, row selection, bulk action support, paginated.
  */
 "use client";
+
 import { useState, useTransition, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useQueryState, parseAsInteger } from "nuqs";
 import { Search, Package, ArrowLeft, ArrowRight } from "lucide-react";
-import { useAdminOrders } from "../hooks/use-order";
-
-
+import { useAdminOrders } from "../hooks";
 
 // ── Status config ─────────────────────────────────────────────────────────────
 
@@ -45,47 +44,42 @@ const SkeletonRow = () => (
   </tr>
 );
 
-export const OrderList = () => {
-  const searchParams = useSearchParams();
-  const router = useRouter();
+export function OrderList() {
   const [, startTransition] = useTransition();
 
-  // Read query parameters
-  const activeStatus = searchParams.get("order-status") || "";
-  const pageParam = Number(searchParams.get("page") || "1");
-  const [searchInput, setSearchTerm] = useState(searchParams.get("search") || "");
-  const [debouncedSearch, setDebouncedSearch] = useState(searchInput);
+  // Nuqs URL state synchronization
+  const [search, setSearch] = useQueryState("search", { defaultValue: "" });
+  const [activeStatus, setActiveStatus] = useQueryState("order-status", { defaultValue: "" });
+  const [pageParam, setPageParam] = useQueryState("page", parseAsInteger.withDefault(1));
 
-  // Simple debounce logic
+  // Local state for debounced input
+  const [searchInput, setSearchInput] = useState(search);
+
+  // Simple debounce logic for search
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedSearch(searchInput);
-      // Reset page to 1 when search term changes
-      const params = new URLSearchParams(searchParams.toString());
-      if (searchInput) {
-        params.set("search", searchInput);
-      } else {
-        params.delete("search");
-      }
-      params.set("page", "1");
       startTransition(() => {
-        router.push(`/admin-dashboard/order?${params.toString()}`);
+        void setSearch(searchInput || null);
+        void setPageParam(1); // Reset page to 1 when search term changes
       });
     }, 400);
 
     return () => clearTimeout(handler);
   }, [searchInput]);
 
-  // Sync state with URL parameter if it changes externally
+  // Sync local input with external query parameter updates
   useEffect(() => {
-    const searchFromUrl = searchParams.get("search") || "";
-    if (searchFromUrl !== searchInput) {
-      setSearchTerm(searchFromUrl);
+    if (search !== searchInput) {
+      setSearchInput(search);
     }
-  }, [searchParams]);
+  }, [search]);
 
   // Query Hook
-  const { data, isLoading, isError } = useAdminOrders(pageParam, debouncedSearch || undefined, activeStatus || undefined);
+  const { data, isLoading, isError } = useAdminOrders(
+    pageParam,
+    search || undefined,
+    activeStatus || undefined,
+  );
   const orders = data?.results || [];
   const totalCount = data?.count || 0;
   const limit = 100;
@@ -122,11 +116,12 @@ export const OrderList = () => {
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(newPage));
-    startTransition(() => {
-      router.push(`/admin-dashboard/order?${params.toString()}`);
-    });
+    void setPageParam(newPage);
+  };
+
+  const handleStatusFilterChange = (status: string) => {
+    void setActiveStatus(status || null);
+    void setPageParam(1); // Reset page on filter change
   };
 
   return (
@@ -151,7 +146,7 @@ export const OrderList = () => {
           <input
             type="search"
             value={searchInput}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search order ID or customer details..."
             className="w-full h-full bg-inherit outline-none text-sm placeholder:text-gray-400 text-black font-satoshi"
           />
@@ -164,19 +159,19 @@ export const OrderList = () => {
         >
           {STATUS_TABS.map(({ label, value }) => {
             const isActive = value === activeStatus;
-            const linkHref = value ? `/admin-dashboard/order?order-status=${value}` : "/admin-dashboard/order";
             return (
-              <Link
+              <button
                 key={value}
-                href={linkHref}
-                className={`text-[11px] md:text-xs py-2 px-3.5 rounded-full whitespace-nowrap transition-all duration-150 font-semibold border
+                type="button"
+                onClick={() => handleStatusFilterChange(value)}
+                className={`text-[11px] md:text-xs py-2 px-3.5 rounded-full whitespace-nowrap transition-all duration-150 font-semibold border cursor-pointer
                             ${isActive
                               ? "bg-[#01454A] text-white border-[#01454A] shadow-md"
                               : "bg-[#F4F3EC] text-[#555] border-gray-200 hover:border-[#01454A] hover:bg-white"
                             }`}
               >
                 {label}
-              </Link>
+              </button>
             );
           })}
         </nav>
@@ -212,7 +207,7 @@ export const OrderList = () => {
             ) : isError ? (
               <tr>
                 <td colSpan={9} className="py-16 text-center text-red-500 text-sm font-semibold">
-                    Failed to load orders. Refresh to try again.
+                  Failed to load orders. Refresh to try again.
                 </td>
               </tr>
             ) : orders.length === 0 ? (
@@ -324,7 +319,7 @@ export const OrderList = () => {
             <button
               onClick={() => handlePageChange(pageParam - 1)}
               disabled={pageParam <= 1}
-              className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-inherit transition-all"
+              className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-inherit transition-all cursor-pointer"
               aria-label="Previous Page"
             >
               <ArrowLeft size={16} />
@@ -332,7 +327,7 @@ export const OrderList = () => {
             <button
               onClick={() => handlePageChange(pageParam + 1)}
               disabled={pageParam >= totalPages}
-              className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-inherit transition-all"
+              className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-inherit transition-all cursor-pointer"
               aria-label="Next Page"
             >
               <ArrowRight size={16} />
@@ -347,13 +342,13 @@ export const OrderList = () => {
                         flex items-center gap-4 bg-white shadow-xl border border-gray-200
                         rounded-full px-6 py-3 text-sm font-medium animate-bounce-subtle">
           <span className="text-gray-600 font-semibold">{selectedIds.size} selected</span>
-          <button className="bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 transition-colors px-4 py-1.5 rounded-full text-xs font-bold border border-red-200">
+          <button className="bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 transition-colors px-4 py-1.5 rounded-full text-xs font-bold border border-red-200 cursor-pointer">
             Cancel Selected
           </button>
         </div>
       )}
     </div>
   );
-};
+}
 
 export default OrderList;

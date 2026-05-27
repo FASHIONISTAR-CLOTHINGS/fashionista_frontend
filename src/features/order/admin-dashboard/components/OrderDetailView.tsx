@@ -2,18 +2,8 @@
 
 /**
  * @file OrderDetailView.tsx
- * @description Premium order detail view — 2027 Edition.
- *
- * Features:
- *  - Order status stepper with completed/active/pending states.
- *  - Full financial metrics (total, paid, outstanding, %).
- *  - Item snapshot list with product thumbnails.
- *  - Payment timeline records.
- *  - Status history timeline.
- *  - "Confirm Delivery" CTA (releases escrow) — client scope only.
- *  - "Cancel Order" CTA — only shown for cancellable statuses.
- *  - "Continue Payment" CTA — if outstanding amount exists.
- *  - "Admin Operations Desk" — rich administrative control panel.
+ * @description Premium administrative order detail view.
+ * Fully isolated under the admin-dashboard subdirectory.
  */
 
 import { useState } from "react";
@@ -28,18 +18,15 @@ import {
   CreditCard,
   MapPin,
   Package,
-  PackageCheck,
   ReceiptText,
-  RefreshCw,
   Truck,
 } from "lucide-react";
-import { toast } from "sonner";
 import {
-  useCancelOrder,
-  useConfirmDelivery,
-  useOrderDetail,
-  useVendorOrderDetail,
-} from "../hooks/use-order";
+  useAdminOrderDetail,
+  useTransitionAdminOrderStatus,
+  useReleaseAdminOrderEscrow,
+  useCancelAdminOrder,
+} from "../hooks";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -85,8 +72,6 @@ const STATUS_COLORS: Record<string, string> = {
   refunded: "bg-gray-50 text-gray-600 border-gray-200",
   disputed: "bg-rose-50 text-rose-700 border-rose-200",
 };
-
-const CANCELLABLE_STATUSES = new Set(["pending_payment", "payment_confirmed"]);
 
 // ── Skeleton ───────────────────────────────────────────────────────────────────
 
@@ -175,27 +160,24 @@ function StatusStepper({ currentStatus }: { currentStatus: string }) {
 type Props = {
   orderId: string;
   backHref: string;
-  scope?: "client" | "vendor";
 };
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
-export default function OrderDetailView({
-  orderId,
-  backHref,
-  scope = "client",
-}: Props) {
-  const [cancelOpen, setCancelOpen] = useState(false);
-  const [cancelReason, setCancelReason] = useState("");
+export function OrderDetailView({ orderId, backHref }: Props) {
   const [showHistory, setShowHistory] = useState(false);
 
-  const clientQuery = useOrderDetail(orderId, scope === "client");
-  const vendorQuery = useVendorOrderDetail(orderId, scope === "vendor");
-  const activeQuery = scope === "vendor" ? vendorQuery : clientQuery;
+  // Admin operational states
+  const [adminNewStatus, setAdminNewStatus] = useState("");
+  const [adminTransitionNote, setAdminTransitionNote] = useState("");
+  const [adminCancelReason, setAdminCancelReason] = useState("");
 
-  const { data: order, isLoading, isError } = activeQuery;
-  const { mutate: cancelOrder, isPending: cancelling } = useCancelOrder();
-  const { mutate: confirmDelivery, isPending: confirming } = useConfirmDelivery();
+  const { data: order, isLoading, isError } = useAdminOrderDetail(orderId);
+
+  // Admin Mutations
+  const { mutate: transitionAdminStatus, isPending: transitioning } = useTransitionAdminOrderStatus();
+  const { mutate: releaseAdminEscrow, isPending: releasing } = useReleaseAdminOrderEscrow();
+  const { mutate: cancelAdminOrderMutation, isPending: adminCancelling } = useCancelAdminOrder();
 
   if (isLoading) return <OrderDetailSkeleton />;
 
@@ -220,30 +202,41 @@ export default function OrderDetailView({
 
   const badgeCls =
     STATUS_COLORS[safeOrder.status] ?? "bg-gray-50 text-gray-600 border-gray-200";
-  const canCancel = scope === "client" && CANCELLABLE_STATUSES.has(safeOrder.status);
-  const canConfirm =
-    scope === "client" && safeOrder.status === "delivered" && safeOrder.escrow_status === "held";
-  const hasOutstanding = !safeOrder.is_fully_paid && parseFloat(safeOrder.amount_outstanding) > 0;
   const paidPercent = Math.min(100, parseFloat(safeOrder.percent_paid_total));
 
-  function handleCancel() {
-    if (!cancelReason.trim()) {
-      toast.error("Please provide a cancellation reason.");
-      return;
-    }
-    cancelOrder(
-      { orderId: safeOrder.id, input: { reason: cancelReason } },
+  // Admin operations handlers
+  function handleAdminStatusTransition() {
+    if (!adminNewStatus) return;
+    transitionAdminStatus(
+      { orderId: safeOrder.id, newStatus: adminNewStatus, note: adminTransitionNote },
       {
-        onSuccess: () => setCancelOpen(false),
-      },
+        onSuccess: () => {
+          setAdminNewStatus("");
+          setAdminTransitionNote("");
+        },
+      }
     );
   }
 
-  function handleConfirmDelivery() {
-    confirmDelivery(safeOrder.id);
+  function handleAdminEscrowRelease() {
+    if (confirm("Are you sure you want to release the escrow funds for this order to the vendor? This action is irreversible.")) {
+      releaseAdminEscrow(safeOrder.id);
+    }
   }
 
-
+  function handleAdminCancel() {
+    if (!adminCancelReason.trim()) return;
+    if (confirm("Are you sure you want to FORCE cancel this order? This will void all payments and cannot be undone.")) {
+      cancelAdminOrderMutation(
+        { orderId: safeOrder.id, reason: adminCancelReason },
+        {
+          onSuccess: () => {
+            setAdminCancelReason("");
+          },
+        }
+      );
+    }
+  }
 
   return (
     <section className="flex flex-col gap-6 px-4 py-6 md:px-8 lg:px-10">
@@ -259,7 +252,7 @@ export default function OrderDetailView({
       <div className="rounded-[2rem] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-[var(--card-shadow)]">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="font-bon_foyage text-4xl text-[hsl(var(--foreground))] md:text-5xl">
+            <h1 className="font-bon_foyage text-4xl text-[hsl(var(--foreground))] md:text-5xl text-black">
               {order.order_number}
             </h1>
             <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
@@ -292,84 +285,106 @@ export default function OrderDetailView({
             />
           </div>
         </div>
-
-        {/* Action buttons (client only) */}
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          {hasOutstanding && scope === "client" && (
-            <Link
-              href={`/client/dashboard/orders/${order.id}/payment`}
-              className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--accent))] px-5 py-2.5 text-sm font-bold text-[hsl(var(--accent-foreground))] shadow transition hover:brightness-110"
-            >
-              <CreditCard className="h-4 w-4" /> Continue Payment
-            </Link>
-          )}
-          {canConfirm && (
-            <button
-              type="button"
-              disabled={confirming}
-              onClick={handleConfirmDelivery}
-              className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {confirming ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <PackageCheck className="h-4 w-4" />
-              )}
-              Confirm Delivery
-            </button>
-          )}
-          {canCancel && (
-            <button
-              type="button"
-              onClick={() => setCancelOpen((o) => !o)}
-              className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--destructive)/0.3)] px-5 py-2.5 text-sm font-bold text-[hsl(var(--destructive))] transition hover:bg-[hsl(var(--destructive)/0.06)]"
-            >
-              Cancel Order
-            </button>
-          )}
-        </div>
-
-        {/* Cancel form (client only) */}
-        {cancelOpen && (
-          <div className="mt-4 rounded-xl border border-[hsl(var(--destructive)/0.2)] bg-red-50 p-4">
-            <p className="mb-2 text-sm font-semibold text-red-700">
-              Cancellation Reason
-            </p>
-            <textarea
-              rows={3}
-              value={cancelReason}
-              onChange={(e) => setCancelReason(e.target.value)}
-              placeholder="Tell us why you're cancelling…"
-              className="w-full resize-none rounded-lg border border-red-200 bg-white p-3 text-sm text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--destructive)/0.3)]"
-            />
-            <div className="mt-3 flex gap-2">
-              <button
-                type="button"
-                disabled={cancelling}
-                onClick={handleCancel}
-                className="rounded-full bg-[hsl(var(--destructive))] px-4 py-2 text-xs font-bold text-white transition hover:brightness-110 disabled:opacity-60"
-              >
-                {cancelling ? "Cancelling…" : "Confirm Cancellation"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setCancelOpen(false)}
-                className="rounded-full border border-red-200 px-4 py-2 text-xs font-bold text-red-700"
-              >
-                Keep Order
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
+      {/* ── Admin Operations Panel ────────────────────────────────────────── */}
+      <div className="rounded-[2rem] border border-[#01454A]/25 bg-[#F4F3EC] p-6 shadow-md">
+        <div className="flex items-center gap-2 mb-4">
+          <AlertCircle className="h-5 w-5 text-[#01454A]" />
+          <h2 className="text-base font-bold text-[#01454A] font-satoshi">
+            Admin Operations Desk
+          </h2>
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Status Transition Selector */}
+          <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-sm flex flex-col justify-between">
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 font-satoshi">
+                Transition Order Status
+              </h3>
+              <p className="text-xs text-gray-400 mb-3 font-satoshi">Force transition this order's lifecycle status.</p>
+              <select
+                value={adminNewStatus}
+                onChange={(e) => setAdminNewStatus(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#01454A] font-satoshi text-black"
+              >
+                <option value="">-- Select Status --</option>
+                {Object.entries(STATUS_LABELS).map(([val, lbl]) => (
+                  <option key={val} value={val}>{lbl}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                placeholder="Optional transition note..."
+                value={adminTransitionNote}
+                onChange={(e) => setAdminTransitionNote(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-xs mt-2 focus:outline-none focus:ring-1 focus:ring-[#01454A] font-satoshi text-black"
+              />
+            </div>
+            <button
+              type="button"
+              disabled={transitioning || !adminNewStatus}
+              onClick={handleAdminStatusTransition}
+              className="w-full mt-4 bg-[#01454A] hover:bg-[#026269] text-white text-xs py-2.5 rounded-lg font-bold transition-all disabled:opacity-45 cursor-pointer"
+            >
+              {transitioning ? "Transitioning..." : "Apply Transition"}
+            </button>
+          </div>
+
+          {/* Escrow Release Card */}
+          <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-sm flex flex-col justify-between">
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 font-satoshi">
+                Escrow Funds Governance
+              </h3>
+              <p className="text-xs text-gray-400 mb-3 font-satoshi">Release payment escrow directly to the tailor/vendor profile.</p>
+              <div className="bg-amber-50 border border-amber-200/50 p-3 rounded-lg text-[11px] text-amber-800 font-satoshi font-semibold">
+                Current Status: <span className="uppercase text-amber-900 font-bold">{safeOrder.escrow_status}</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled={releasing || safeOrder.escrow_status !== "held"}
+              onClick={handleAdminEscrowRelease}
+              className="w-full mt-4 bg-[#FDA600] hover:bg-[#e09500] text-black text-xs py-2.5 rounded-lg font-bold transition-all disabled:opacity-45 cursor-pointer"
+            >
+              {releasing ? "Releasing..." : safeOrder.escrow_status === "released" ? "Escrow Released" : "Release Escrow Direct"}
+            </button>
+          </div>
+
+          {/* Admin Force Cancellation Card */}
+          <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-sm flex flex-col justify-between">
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 font-satoshi">
+                Force Cancel & Void
+              </h3>
+              <p className="text-xs text-gray-400 mb-3 font-satoshi">Cancel this order in full and trigger payment refunds if applicable.</p>
+              <input
+                type="text"
+                placeholder="Reason for cancel..."
+                value={adminCancelReason}
+                onChange={(e) => setAdminCancelReason(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-red-500 font-satoshi text-black"
+              />
+            </div>
+            <button
+              type="button"
+              disabled={adminCancelling || !adminCancelReason.trim() || safeOrder.status === "cancelled"}
+              onClick={handleAdminCancel}
+              className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white text-xs py-2.5 rounded-lg font-bold transition-all disabled:opacity-45 cursor-pointer"
+            >
+              {adminCancelling ? "Cancelling..." : "Force Cancel Order"}
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* ── Status Stepper ───────────────────────────────────────────────────── */}
       <div className="rounded-[2rem] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-[var(--card-shadow)]">
         <div className="mb-6 flex items-center gap-2">
           <Truck className="h-5 w-5 text-[hsl(var(--accent))]" />
-          <h2 className="text-base font-bold text-[hsl(var(--foreground))]">
+          <h2 className="text-base font-bold text-[hsl(var(--foreground))] text-black">
             Order Progress
           </h2>
         </div>
@@ -380,7 +395,7 @@ export default function OrderDetailView({
       <div className="rounded-[2rem] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-[var(--card-shadow)]">
         <div className="mb-4 flex items-center gap-2">
           <Package className="h-5 w-5 text-[hsl(var(--accent))]" />
-          <h2 className="text-base font-bold text-[hsl(var(--foreground))]">
+          <h2 className="text-base font-bold text-[hsl(var(--foreground))] text-black">
             Order Items
           </h2>
         </div>
@@ -395,7 +410,7 @@ export default function OrderDetailView({
                   <Package className="h-6 w-6 text-[hsl(var(--muted-foreground)/0.5)]" />
                 </div>
                 <div>
-                  <p className="font-semibold text-[hsl(var(--foreground))]">
+                  <p className="font-semibold text-[hsl(var(--foreground))] text-black">
                     {item.product_title}
                   </p>
                   <p className="text-xs text-[hsl(var(--muted-foreground))]">
@@ -408,7 +423,7 @@ export default function OrderDetailView({
                   </p>
                 </div>
               </div>
-              <p className="shrink-0 font-bold text-[hsl(var(--foreground))]">
+              <p className="shrink-0 font-bold text-[hsl(var(--foreground))] text-black">
                 {formatNGN(item.line_total)}
               </p>
             </div>
@@ -420,7 +435,7 @@ export default function OrderDetailView({
       <div className="rounded-[2rem] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-[var(--card-shadow)]">
         <div className="mb-4 flex items-center gap-2">
           <CreditCard className="h-5 w-5 text-[hsl(var(--accent))]" />
-          <h2 className="text-base font-bold text-[hsl(var(--foreground))]">
+          <h2 className="text-base font-bold text-[hsl(var(--foreground))] text-black">
             Payment Timeline
           </h2>
         </div>
@@ -432,7 +447,7 @@ export default function OrderDetailView({
                 className="rounded-xl border border-[hsl(var(--border))] p-4"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-bold text-[hsl(var(--foreground))]">
+                  <p className="text-sm font-bold text-[hsl(var(--foreground))] text-black">
                     Payment #{record.sequence_number} — {record.selected_percent}%
                   </p>
                   <p className="text-sm font-bold text-[hsl(var(--accent))]">
@@ -463,13 +478,13 @@ export default function OrderDetailView({
       <div className="rounded-[2rem] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-[var(--card-shadow)]">
         <div className="mb-3 flex items-center gap-2">
           <MapPin className="h-5 w-5 text-[hsl(var(--accent))]" />
-          <h2 className="text-base font-bold text-[hsl(var(--foreground))]">
+          <h2 className="text-base font-bold text-[hsl(var(--foreground))] text-black">
             Delivery Details
           </h2>
         </div>
         <div className="grid gap-2 text-sm text-[hsl(var(--muted-foreground))]">
           <p>
-            <span className="font-semibold text-[hsl(var(--foreground))]">
+            <span className="font-semibold text-[hsl(var(--foreground))] text-black">
               {order.buyer_name}
             </span>
           </p>
@@ -490,11 +505,11 @@ export default function OrderDetailView({
           <button
             type="button"
             onClick={() => setShowHistory((h) => !h)}
-            className="flex w-full items-center justify-between"
+            className="flex w-full items-center justify-between cursor-pointer"
           >
             <div className="flex items-center gap-2">
               <ReceiptText className="h-5 w-5 text-[hsl(var(--accent))]" />
-              <h2 className="text-base font-bold text-[hsl(var(--foreground))]">
+              <h2 className="text-base font-bold text-[hsl(var(--foreground))] text-black">
                 Status History
               </h2>
             </div>
@@ -510,7 +525,7 @@ export default function OrderDetailView({
                 <div key={entry.id} className="rounded-xl border border-[hsl(var(--border))] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-[hsl(var(--foreground))]">
+                      <p className="text-sm font-semibold text-[hsl(var(--foreground))] text-black">
                         {entry.to_status
                            ? `→ ${STATUS_LABELS[entry.to_status] ?? entry.to_status}`
                            : STATUS_LABELS[entry.status ?? ""] ?? entry.status}
@@ -548,7 +563,7 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(var(--muted-foreground))]">
         {label}
       </p>
-      <p className="mt-1 text-sm font-bold capitalize text-[hsl(var(--foreground))]">
+      <p className="mt-1 text-sm font-bold capitalize text-[hsl(var(--foreground))] text-black">
         {value}
       </p>
     </div>
