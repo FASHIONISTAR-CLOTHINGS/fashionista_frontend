@@ -5,3 +5,5 @@
 export * from "./types";
 export * from "./api";
 export * from "./hooks";
+export { MeasurementsDashboard } from "./components/MeasurementsDashboard";
+
