@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import {
   Bell,
@@ -8,37 +7,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-
-interface SystemNotification {
-  id: string;
-  title: string;
-  body: string;
-  targetAudience: "all" | "vendors" | "clients";
-  status: "sent" | "draft";
-  created_at: string;
-}
-
-const MOCK_NOTIFICATIONS: SystemNotification[] = [
-  {
-    id: "NTF-9901",
-    title: "System Update: Wallet Payout Windows",
-    body: "Please note that minimum payout threshold is now updated to ₦10,000 for compliance gating.",
-    targetAudience: "vendors",
-    status: "sent",
-    created_at: "2026-05-24",
-  },
-  {
-    id: "NTF-9902",
-    title: "New Bespoke Design Feature Deployed",
-    body: "Explore tailor body profile measurement guides inside your custom dashboard today.",
-    targetAudience: "clients",
-    status: "sent",
-    created_at: "2026-05-20",
-  },
-];
-
 import { useAdminAnnouncements, useSendAnnouncement } from "@/features/notification";
-import { Loader2 } from "lucide-react";
 
 export default function AdminNotificationPage() {
   const [search, setSearch] = useState("");
@@ -46,7 +15,7 @@ export default function AdminNotificationPage() {
   const [bodyInput, setBodyInput] = useState("");
   const [targetAudience, setTargetAudience] = useState<"all" | "vendors" | "clients">("all");
 
-  const { data: announcements = [], isLoading, isError } = useAdminAnnouncements();
+  const { data: announcements = [] } = useAdminAnnouncements();
   const sendAnnouncementMutation = useSendAnnouncement();
 
   const filteredNotifs = announcements.filter((notif) =>
@@ -138,10 +107,10 @@ export default function AdminNotificationPage() {
 
             <button
               type="submit"
-              disabled={isPending}
+              disabled={sendAnnouncementMutation.isPending}
               className="w-full py-3.5 bg-[#01454A] hover:bg-[#01454A]/90 text-white hover:text-[#FDA600] font-bold text-xs rounded-xl shadow-sm flex items-center justify-center gap-2 transition"
             >
-              {isPending ? (
+              {sendAnnouncementMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
@@ -175,7 +144,7 @@ export default function AdminNotificationPage() {
                   <span className="font-mono text-xs font-bold text-[#8A9596]">{notif.id}</span>
                   <div className="flex items-center gap-1.5">
                     <span className="text-[9px] font-bold uppercase bg-[#01454A]/10 text-[#01454A] px-2 py-0.5 rounded-full">
-                      Audience: {notif.targetAudience}
+                      Audience: {notif.target_audience}
                     </span>
                     <span className="text-[9px] font-bold uppercase bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-full">
                       SENT
@@ -185,11 +154,11 @@ export default function AdminNotificationPage() {
 
                 <div>
                   <h4 className="font-bon_foyage text-lg text-black">{notif.title}</h4>
-                  <p className="text-xs text-[#5A6465] leading-relaxed mt-1.5">{notif.body}</p>
+                  <p className="text-xs text-[#5A6465] leading-relaxed mt-1.5">{notif.message_preview}</p>
                 </div>
 
                 <div className="pt-3 border-t border-[#ECE6D6]/40 text-[9px] text-[#8A9596]">
-                  Queued Date: {notif.created_at}
+                  Queued Date: {notif.sent_at}
                 </div>
               </div>
             ))}
