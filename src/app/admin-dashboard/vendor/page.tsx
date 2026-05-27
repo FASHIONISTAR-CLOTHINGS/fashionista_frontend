@@ -48,7 +48,8 @@ export default function AdminSellersPage() {
   });
 
   // ── Query: Fetch Single Vendor Detail ─────────────────────────────────────
-  const { data: selectedVendor } = useAdminVendorDetail(selectedVendorId);
+  const { data: selectedVendorData } = useAdminVendorDetail(selectedVendorId);
+  const selectedVendor = selectedVendorData as any;
 
   // ── Mutation hooks ────────────────────────────────────────────────────────
   const approveVendorMutation = useApproveVendor();
@@ -57,7 +58,7 @@ export default function AdminSellersPage() {
   const toggleFeaturedMutation = useToggleVendorFeatured();
   const updateCommissionMutation = useUpdateVendorCommission();
 
-  const sellers = data?.results || [];
+  const sellers = (data?.results as any[]) || [];
 
   const clearFilters = () => {
     setSearch("");

@@ -5,13 +5,7 @@ import {
   Bell,
   Search,
   Send,
-  Users,
-  AlertTriangle,
   Loader2,
-  CheckCircle2,
-  XCircle,
-  ExternalLink,
-  Info,
 } from "lucide-react";
 import { toast } from "sonner";
 

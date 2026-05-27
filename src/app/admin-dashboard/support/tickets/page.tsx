@@ -1,16 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Search,
-  MessageCircle,
-  Clock,
-  CheckCircle2,
   XCircle,
-  Eye,
   ExternalLink,
   ChevronRight,
-  Shield,
   LifeBuoy,
 } from "lucide-react";
 

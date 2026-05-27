@@ -23,7 +23,7 @@ import {
   fetchAdminDashboardKPI,
 } from "./api";
 import { toast } from "sonner";
-import type { AdminCategory, AdminBrand, AdminCollection, AdminBlogPost, AdminDashboardKPI } from "./types";
+import type { AdminCategory, AdminBrand, AdminCollection, AdminBlogPost } from "./types";
 
 // ── Categories ───────────────────────────────────────────────────────────────
 

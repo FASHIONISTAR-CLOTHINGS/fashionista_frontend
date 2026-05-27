@@ -1,16 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Search,
   CreditCard,
-  CheckCircle2,
   XCircle,
   AlertTriangle,
   ExternalLink,
   ChevronRight,
   TrendingUp,
-  RefreshCw,
 } from "lucide-react";
 
 interface PaymentTransaction {

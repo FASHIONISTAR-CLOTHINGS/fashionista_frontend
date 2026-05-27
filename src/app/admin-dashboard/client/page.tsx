@@ -1,300 +1,191 @@
 "use client";
 
-import { useState } from "react";
-import { useAdminUsers, useAdminUserDetail, useSuspendUser, useReactivateUser } from "@/features/auth";
-import {
-  Search,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  ShieldAlert,
-  Loader2,
-  Lock,
-  Unlock,
-  CheckCircle2,
-  XCircle,
-  ExternalLink,
-} from "lucide-react";
+import React, { useState } from "react";
+import { useAdminClients, useUpdateAdminClient } from "@/features/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { TableRowSkeleton } from "@/shared/components/skeletons";
 
-export default function AdminClientsPage() {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+export default function ClientsPage() {
+  const { data: clients, isLoading } = useAdminClients();
+  const updateMutation = useUpdateAdminClient();
 
-  // ── Query: Fetch Live Client Profiles ─────────────────────────────────────
-  const { data: clientsData, isLoading, isError, refetch } = useAdminUsers({
-    role: "client",
-    is_active: statusFilter === "active" ? true : statusFilter === "blocked" ? false : undefined,
-    search: search || undefined,
-    page: 1,
-    page_size: 100,
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState<any>(null);
+
+  const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
+    phone_number: "",
+    is_active: true,
   });
 
-  // ── Query: Fetch Client Detail for Inspector Panel ───────────────────────────
-  const { data: selectedClient } = useAdminUserDetail(selectedUserId);
+  const handleOpenEdit = (client: any) => {
+    setEditingClient(client);
+    setFormData({
+      first_name: client.first_name || "",
+      last_name: client.last_name || "",
+      phone_number: client.phone_number || "",
+      is_active: client.is_active,
+    });
+    setIsFormOpen(true);
+  };
 
-  const suspendMutation = useSuspendUser();
-  const reactivateMutation = useReactivateUser();
-
-  const clients = clientsData?.results || [];
-
-  const handleToggleActive = (user: any) => {
-    if (user.is_active) {
-      suspendMutation.mutate({ userId: user.id, reason: "Administrative client action" });
-    } else {
-      reactivateMutation.mutate({ userId: user.id });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingClient) {
+      updateMutation.mutate(
+        { id: editingClient.id, data: formData },
+        {
+          onSuccess: () => setIsFormOpen(false),
+        }
+      );
     }
   };
 
-  const formatDate = (isoString: string | null) => {
-    if (!isoString) return "-N/A-";
-    return new Date(isoString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
   return (
-    <div className="space-y-10 bg-inherit min-h-screen pb-12 font-satoshi">
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-8 bg-inherit">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h3 className="font-bon_foyage text-4xl text-black md:text-5xl">
-            Clients Directory
+          <h3 className="font-satoshi font-medium text-3xl text-black">
+            Client Governance
           </h3>
-          <p className="text-sm text-[#5A6465] mt-1">
-            Supervise registered clients, audit purchase privileges, and manage verification states.
+          <p className="font-satoshi text-sm text-[#4E4E4E]">
+            Monitor, edit, suspend and reactivate client profiles
           </p>
         </div>
-        <button
-          onClick={() => refetch()}
-          className="border border-[#ECE6D6] bg-white hover:bg-[#F4F3EC] text-black font-bold transition px-5 py-3 rounded-xl shadow-sm text-sm"
-        >
-          Refresh Directory
-        </button>
       </div>
 
-      {/* Filter Section */}
-      <div className="w-full bg-[#F8F5ED]/40 border border-[#ECE6D6] rounded-[32px] p-6 md:p-8 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-          <div className="relative md:col-span-2">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#8A9596]" />
-            <input
-              type="text"
-              placeholder="Search clients by name, email, phone, ID..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-12 pl-12 pr-4 bg-white border border-[#ECE6D6] focus:border-[#01454A] rounded-2xl outline-none text-sm text-black placeholder:text-[#8A9596] transition-all"
-            />
-          </div>
-
-          <div className="relative">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full h-12 px-4 bg-white border border-[#ECE6D6] focus:border-[#01454A] rounded-2xl outline-none text-sm text-black cursor-pointer appearance-none"
-            >
-              <option value="all">All Statuses</option>
-              <option value="active">Active Clients</option>
-              <option value="blocked">Suspended Clients</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Loading / Error States */}
-        {isLoading && (
-          <div className="flex flex-col items-center justify-center py-20 space-y-4">
-            <Loader2 className="w-10 h-10 text-[#01454A] animate-spin" />
-            <p className="text-sm text-[#5A6465] animate-pulse">Retrieving registered clients...</p>
-          </div>
-        )}
-
-        {isError && (
-          <div className="flex flex-col items-center justify-center py-16 text-center max-w-md mx-auto space-y-4">
-            <div className="p-3 bg-red-50 text-red-600 rounded-full">
-              <ShieldAlert className="w-8 h-8" />
-            </div>
-            <p className="font-bon_foyage text-xl text-black">Directory Retrieval Error</p>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!isLoading && !isError && clients.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-24 text-center max-w-md mx-auto space-y-3 bg-white border border-dashed border-[#ECE6D6] rounded-[24px]">
-            <p className="font-bon_foyage text-2xl text-black">No Clients Found</p>
-            <p className="text-sm text-[#5A6465]">Try modifying your active query parameters.</p>
-          </div>
-        )}
-
-        {/* Clients Grid */}
-        {!isLoading && !isError && clients.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {clients.map((client) => {
-              const initials = `${client.first_name?.[0] || ""}${client.last_name?.[0] || ""}`.toUpperCase() || "C";
-              return (
-                <div
-                  key={client.id}
-                  onClick={() => setSelectedUserId(client.id)}
-                  className="bg-white border border-[#ECE6D6] hover:border-[#01454A] rounded-[24px] p-5 shadow-sm hover:shadow transition-all duration-200 cursor-pointer flex flex-col justify-between group"
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between">
-                      {client.avatar ? (
-                        <img
-                          src={client.avatar}
-                          alt={client.first_name}
-                          className="w-12 h-12 rounded-2xl object-cover border border-[#ECE6D6]"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-2xl bg-[#01454A]/5 border border-[#01454A]/15 text-[#01454A] font-bon_foyage text-lg flex items-center justify-center">
-                          {initials}
-                        </div>
-                      )}
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          client.is_active
-                            ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                            : "bg-red-50 text-red-500 border border-red-100"
-                        }`}
-                      >
-                        {client.is_active ? "Active" : "Suspended"}
-                      </span>
-                    </div>
-
-                    <div>
-                      <h4 className="font-bon_foyage text-lg text-black truncate">
-                        {client.first_name || client.last_name
-                          ? `${client.first_name} ${client.last_name}`
-                          : "Anonymous Client"}
-                      </h4>
-                      <p className="text-xs text-[#8A9596]">{client.member_id || `-N/A-`}</p>
-                    </div>
-
-                    <div className="space-y-1.5 pt-3 border-t border-[#ECE6D6]/50 text-xs text-[#5A6465]">
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-3.5 h-3.5 text-[#8A9596]" />
-                        <span className="truncate">{client.email || "-N/A-"}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-3.5 h-3.5 text-[#8A9596]" />
-                        <span>{client.phone || "-N/A-"}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-3 mt-4 border-t border-[#ECE6D6]/50 text-[10px] text-[#8A9596]">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      Joined: {formatDate(client.date_joined)}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Inspector Panel Drawer */}
-      {selectedClient && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/40 backdrop-blur-xs">
-          <div className="w-full max-w-md h-full bg-[#F8F5ED] p-6 md:p-8 overflow-y-auto shadow-2xl flex flex-col justify-between border-l border-[#ECE6D6] animate-in slide-in-from-right duration-300">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-widest text-[#5A6465]">
-                  Client Details
-                </span>
-                <button
-                  onClick={() => setSelectedUserId(null)}
-                  className="p-1 rounded-full border border-[#ECE6D6] bg-white hover:bg-black hover:text-white transition"
-                >
-                  <XCircle className="w-5 h-5" />
-                </button>
+      {isFormOpen && (
+        <div className="bg-white p-6 rounded-[20px] shadow space-y-4 border border-[#e5e5e5]">
+          <h4 className="font-satoshi font-bold text-lg text-black">
+            Edit Client: {editingClient?.user_email}
+          </h4>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="first-name">First Name</Label>
+                <Input
+                  id="first-name"
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  className="w-full border-[#d9d9d9] focus:border-[#fda600]"
+                />
               </div>
-
-              <div className="flex items-center gap-4 py-4 border-b border-[#ECE6D6]/80">
-                {selectedClient.avatar ? (
-                  <img
-                    src={selectedClient.avatar}
-                    alt={selectedClient.first_name}
-                    className="w-16 h-16 rounded-2xl object-cover border border-[#ECE6D6]"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-2xl bg-[#01454A]/5 border border-[#01454A]/15 text-[#01454A] font-bon_foyage text-2xl flex items-center justify-center">
-                    {`${selectedClient.first_name?.[0] || ""}${selectedClient.last_name?.[0] || ""}`.toUpperCase() || "C"}
-                  </div>
-                )}
-                <div>
-                  <h4 className="font-bon_foyage text-2xl text-black">
-                    {selectedClient.first_name} {selectedClient.last_name}
-                  </h4>
-                  <p className="text-sm text-[#8A9596]">ID: {selectedClient.id}</p>
-                </div>
-              </div>
-
-              <div className="space-y-4 bg-white border border-[#ECE6D6] rounded-2xl p-5 text-sm">
-                <p className="font-bon_foyage text-lg text-black border-b border-[#ECE6D6]/50 pb-2">
-                  Contact Details
-                </p>
-                <div className="space-y-3">
-                  <div>
-                    <span className="text-xs text-[#8A9596] block">Email</span>
-                    <span className="text-black font-medium">{selectedClient.email || "-N/A-"}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-[#8A9596] block">Phone</span>
-                    <span className="text-black font-medium">{selectedClient.phone || "-N/A-"}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-[#8A9596] block">Geography</span>
-                    <span className="text-black font-medium">
-                      {[selectedClient.city, selectedClient.state, selectedClient.country].filter(Boolean).join(", ") || "-N/A-"}
-                    </span>
-                  </div>
-                </div>
+              <div className="space-y-1">
+                <Label htmlFor="last-name">Last Name</Label>
+                <Input
+                  id="last-name"
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  className="w-full border-[#d9d9d9] focus:border-[#fda600]"
+                />
               </div>
             </div>
 
-            <div className="pt-6 border-t border-[#ECE6D6]/80 bg-inherit space-y-3">
-              <button
-                onClick={() => handleToggleActive(selectedClient)}
-                disabled={suspendMutation.isPending || reactivateMutation.isPending}
-                className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 border shadow-sm transition ${
-                  selectedClient.is_active
-                    ? "bg-red-50 hover:bg-red-100 text-red-600 border-red-200"
-                    : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
-                }`}
+            <div className="space-y-1">
+              <Label htmlFor="phone-number">Phone Number</Label>
+              <Input
+                id="phone-number"
+                value={formData.phone_number}
+                onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                className="w-full border-[#d9d9d9] focus:border-[#fda600]"
+              />
+            </div>
+
+            <div className="flex items-center justify-between py-2 border-t border-[#f4f4f4]">
+              <Label htmlFor="client-active">Status Active</Label>
+              <Switch
+                id="client-active"
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+              />
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsFormOpen(false)}
+                className="font-satoshi font-medium"
               >
-                {suspendMutation.isPending || reactivateMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : selectedClient.is_active ? (
-                  <>
-                    <Lock className="w-4 h-4" />
-                    Suspend Account
-                  </>
-                ) : (
-                  <>
-                    <Unlock className="w-4 h-4" />
-                    Activate Account
-                  </>
-                )}
-              </button>
-
-              <Link
-                href={`${process.env.NEXT_PUBLIC_API_V1_URL || "http://127.0.0.1:8001"}/admin/authentication/unifieduser/${selectedClient.id}/change/`}
-                target="_blank"
-                className="w-full bg-white hover:bg-[#F4F3EC] border border-[#ECE6D6] text-black font-bold text-sm py-3.5 rounded-xl shadow-sm flex items-center justify-center gap-2 transition"
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={updateMutation.isPending}
+                className="bg-[#fda600] text-black hover:bg-black hover:text-[#fda600] font-satoshi font-medium"
               >
-                <ExternalLink className="w-4 h-4 text-[#8A9596]" />
-                Modify In Django Super-Admin
-              </Link>
+                Save Changes
+              </Button>
             </div>
-          </div>
+          </form>
         </div>
       )}
+
+      <div className="bg-white rounded-[20px] p-6 shadow border border-[#e5e5e5]">
+        {isLoading ? (
+          <TableRowSkeleton columns={5} rows={5} />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-[#e5e5e5] pb-3">
+                  <th className="font-satoshi font-medium text-sm text-[#858585] pb-3">Email</th>
+                  <th className="font-satoshi font-medium text-sm text-[#858585] pb-3">Full Name</th>
+                  <th className="font-satoshi font-medium text-sm text-[#858585] pb-3">Phone</th>
+                  <th className="font-satoshi font-medium text-sm text-[#858585] pb-3">Status</th>
+                  <th className="font-satoshi font-medium text-sm text-[#858585] pb-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#f4f4f4]">
+                {clients && clients.length > 0 ? (
+                  clients.map((client) => (
+                    <tr key={client.id} className="hover:bg-[#fcfcfa] transition-colors">
+                      <td className="py-4 font-satoshi font-medium text-black">{client.user_email}</td>
+                      <td className="py-4 font-satoshi text-sm text-black">
+                        {client.first_name || client.last_name
+                          ? `${client.first_name || ""} ${client.last_name || ""}`.trim()
+                          : "—"}
+                      </td>
+                      <td className="py-4 font-mono text-xs text-gray-500">{client.phone_number || "—"}</td>
+                      <td className="py-4">
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-bold font-satoshi ${
+                            client.is_active
+                              ? "bg-[#C5FECB] text-[#20AB2C]"
+                              : "bg-[#FEF3D3] text-[#ECB219]"
+                          }`}
+                        >
+                          {client.is_active ? "Active" : "Suspended"}
+                        </span>
+                      </td>
+                      <td className="py-4 text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenEdit(client)}
+                          className="font-satoshi font-medium"
+                        >
+                          Moderate
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-sm text-gray-500 font-satoshi">
+                      No clients found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
