@@ -5,6 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchAdminProducts, deleteAdminProduct } from "./api";
 import { useToast } from "@/shared/hooks/use-toast";
+import { triggerServerRevalidate } from "@/core/cache/revalidate";
 
 export const adminProductKeys = {
   all: ["admin-products"] as const,
@@ -33,6 +34,7 @@ export function useDeleteAdminProduct() {
       success("Product deleted successfully from global catalog.");
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["catalog", "products"] });
+      void triggerServerRevalidate("products");
     },
     onError: (err: any) => {
       error(err?.message || "Failed to delete product.");
