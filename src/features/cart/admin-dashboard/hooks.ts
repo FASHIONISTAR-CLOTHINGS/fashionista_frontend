@@ -6,7 +6,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { fetchAdminCarts, fetchAdminCartDetail, clearAdminCart, type PaginatedAdminCarts } from "./api";
+import { fetchAdminCarts, fetchAdminCartDetail, clearAdminCart, PaginatedAdminCarts } from "./api";
 
 
 

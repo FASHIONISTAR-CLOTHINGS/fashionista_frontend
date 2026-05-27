@@ -223,7 +223,7 @@ export function CartList() {
                           </div>
                         </td>
                         <td className="py-3.5 px-4 text-center font-semibold text-black">
-                          {cart.items?.reduce((sum, item) => sum + item.quantity, 0) || 0}
+                          {cart.items?.reduce((sum: number, item: AdminCartItem) => sum + item.quantity, 0) || 0}
                         </td>
                         <td className="py-3.5 px-4 text-right font-medium text-gray-500">
                           {formatNGN(cart.subtotal)}
