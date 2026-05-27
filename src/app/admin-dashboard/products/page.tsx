@@ -1,177 +1,376 @@
-import Link from "next/link";
-import Image from "next/image";
-const page = () => {
-  const products = [
-    {
-      id: 1,
-      image: "/man2_asset.svg",
-      title: "Men Senator",
-      price: "$1200",
-      date: "02.07.2024",
-      status: "active",
-    },
-    {
-      id: 2,
-      image: "/man3_assets.svg",
-      title: "Men Attire",
-      price: "$1200",
-      date: "02.07.2024",
-      status: "active",
-    },
-    {
-      id: 3,
-      image: "/man2_asset.svg",
-      title: "Men Senator",
-      price: "$1200",
-      date: "02.07.2024",
-      status: "active",
-    },
-    {
-      id: 4,
-      image: "/man3_assets.svg",
-      title: "Men Attire",
-      price: "$1200",
-      date: "02.07.2024",
-      status: "active",
-    },
-  ];
-  const productList = products.map((product) => {
-    return (
-      <div key={product.id} className="lg:w-[24%] md:w-[30%] w-[48%]">
-        <div className=" overflow-hidden w-full">
-          <Image
-            src={product.image}
-            alt=""
-            className="h-[269px] w-full object-cover hover:scale-105 transition duration-100 ease-in-out"
-          />
-        </div>
+"use client";
 
-        <div className="space-y-1">
-          <p className="font-bon_foyage text-[26px] leading-[26px] text-black">
-            {product.title}
-          </p>
-          <p className="text-xl font-bold text-black font-satoshi">
-            {product.price}
-          </p>
-          <div className="flex items-center justify-between gap-1">
-            <button className="py-2 px-3 md:px-[18px] gap-1 flex justify-center font-medium items-center text-white bg-[#f28705]">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M11.7284 3.2382C12.3494 2.56539 12.6599 2.22899 12.9898 2.03277C13.7859 1.55929 14.7662 1.54457 15.5757 1.99393C15.9111 2.18016 16.2311 2.50709 16.8712 3.16096C17.5112 3.81483 17.8313 4.14176 18.0136 4.48443C18.4535 5.31126 18.4391 6.31265 17.9756 7.12591C17.7835 7.46296 17.4542 7.78014 16.7956 8.41449L8.95916 15.9622C7.71106 17.1644 7.08699 17.7655 6.30704 18.0701C5.52709 18.3747 4.66966 18.3523 2.95479 18.3075L2.72148 18.3014C2.19942 18.2877 1.93838 18.2809 1.78665 18.1087C1.63491 17.9365 1.65563 17.6706 1.69706 17.1388L1.71956 16.8501C1.83617 15.3532 1.89447 14.6049 2.18675 13.9322C2.47903 13.2594 2.98319 12.7132 3.99152 11.6207L11.7284 3.2382Z"
-                  stroke="currentColor"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M10.833 3.33301L16.6663 9.16634"
-                  stroke="currentColor"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Edit
-            </button>
-            <button className="py-2 px-2 md:px-[18px] gap-1 flex justify-center font-medium items-center text-[#EA1705] bg-[#EA1705]/10">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M16.25 4.58301L15.7336 12.9373C15.6016 15.0717 15.5357 16.1389 15.0007 16.9063C14.7361 17.2856 14.3956 17.6058 14.0006 17.8463C13.2017 18.333 12.1325 18.333 9.99392 18.333C7.8526 18.333 6.78192 18.333 5.98254 17.8454C5.58733 17.6044 5.24667 17.2837 4.98223 16.9037C4.4474 16.1352 4.38287 15.0664 4.25384 12.929L3.75 4.58301"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M2.5 4.58366H17.5M13.3797 4.58366L12.8109 3.4101C12.433 2.63054 12.244 2.24076 11.9181 1.99767C11.8458 1.94374 11.7693 1.89578 11.6892 1.85424C11.3283 1.66699 10.8951 1.66699 10.0287 1.66699C9.14067 1.66699 8.69667 1.66699 8.32973 1.86209C8.24842 1.90533 8.17082 1.95524 8.09774 2.0113C7.76803 2.26424 7.58386 2.66828 7.21551 3.47638L6.71077 4.58366"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M7.91699 13.75V8.75"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M12.083 13.75V8.75"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                />
-              </svg>
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+import { useState } from "react";
+import Link from "next/link";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCatalogProducts } from "@/features/catalog/hooks/use-catalog-products";
+import { useCatalogCategories } from "@/features/catalog/hooks/use-catalog";
+import { vendorApi } from "@/features/vendor/api/vendor.api";
+import { toast } from "sonner";
+import { 
+  Search, 
+  Trash2, 
+  Edit3, 
+  Plus, 
+  AlertCircle, 
+  Loader2, 
+  ShoppingBag, 
+  Tag, 
+  Sparkles, 
+  X, 
+  FilterX,
+  Star
+} from "lucide-react";
+
+export default function AdminProductsPage() {
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  // ── Fetch live products from dynamic catalog hook ───────────────────────
+  const { data: productsData, isLoading: productsLoading, isError: productsError, refetch: refetchProducts } = useCatalogProducts({
+    page,
+    page_size: pageSize,
+    q: search || undefined,
+    category: category || undefined,
   });
+
+  // ── Fetch live categories ───────────────────────────────────────────────
+  const { data: categoriesData } = useCatalogCategories();
+
+  const products = productsData?.results ?? [];
+  const categories = categoriesData ?? [];
+  const totalCount = productsData?.count ?? 0;
+
+  // ── Delete Product Mutation ─────────────────────────────────────────────
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => vendorApi.deleteProduct(id),
+    onSuccess: () => {
+      toast.success("Product deleted successfully from global catalog.");
+      setDeleteId(null);
+      void queryClient.invalidateQueries({ queryKey: ["catalog", "products"] });
+    },
+    onError: (err: any) => {
+      const msg = err instanceof Error ? err.message : "Error deleting product.";
+      toast.error(msg);
+      setDeleteId(null);
+    }
+  });
+
+  const handleDelete = (id: string) => {
+    setDeleteId(id);
+  };
+
+  const confirmDelete = () => {
+    if (deleteId) {
+      deleteMutation.mutate(deleteId);
+    }
+  };
+
+  const clearFilters = () => {
+    setSearch("");
+    setCategory("");
+    setPage(1);
+  };
+
+  // Helper to format Nigerian Naira
+  const formatCurrency = (amount: string | number) => {
+    const numeric = typeof amount === "string" ? parseFloat(amount) : amount;
+    if (isNaN(numeric)) return "₦0.00";
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 2,
+    }).format(numeric);
+  };
+
   return (
-    <div className="space-y-10 bg-inherit">
-      <div className="flex flex-col md:flex-row md:items-center justify-between space-y-3">
+    <div className="space-y-10 bg-inherit min-h-screen pb-12">
+      {/* Header Panel */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h3 className="font-satoshi font-medium text-3xl text-black">
-            Products
+          <h3 className="font-bon_foyage text-4xl text-black md:text-5xl">
+            Products Catalog
           </h3>
-          <p className="font-satoshi text-sm text-[#4E4E4E]">
-            Vendors product on displayed
+          <p className="font-satoshi text-sm text-[#5A6465] mt-1">
+            Browse, manage, and verify Ankara, Agbada, and bespoke garments on displayed.
           </p>
         </div>
-        <div className="flex items-center gap-4 ">
-          <button className="px-5 py-2.5 bg-[#d9d9d9] font-medium text-[#858585] grow-0">
-            Import
-          </button>
-          <button className="px-5 py-2.5 bg-[#d9d9d9] font-medium text-[#858585] grow-0">
-            Export
-          </button>
+        <div className="flex items-center gap-3">
           <Link
             href="/vendor/products"
-            className="bg-[#fda600] hover:bg-black flex items-center font-satoshi font-medium text-black hover:text-[#fda600] transition-colors duration-150 grow-0  px-5 py-2.5"
+            className="bg-[#01454A] hover:bg-[#01454A]/90 text-[#F8F5ED] hover:text-[#FDA600] flex items-center gap-2 font-satoshi font-bold transition-all duration-200 px-5 py-3 rounded-xl shadow-sm hover:shadow"
           >
-            Create New
+            <Plus className="w-5 h-5" />
+            Create Product
           </Link>
         </div>
       </div>
-      <div className="w-full bg-white rounded-[20px] min-h-[400px] p-3 md:p-[30px] space-y-5">
-        <div className="flex items-center justify-end gap-3">
-          <div className="p-2.5 rounded-[10px] border-[0.8px] border-[#D9D9D9] text-black bg-[#fff]">
-            <select
-              id="categories"
-              className="w-full outline-none bg-inherit"
-              defaultValue="All Categories"
-            >
-              <option disabled className="">
-                All Categories
-              </option>
-              <option defaultValue="" className="">
-                Agbada
-              </option>
-            </select>
+
+      {/* Main Grid Container */}
+      <div className="w-full bg-[#F8F5ED]/30 border border-[#ECE6D6] rounded-3xl p-6 md:p-8 space-y-6">
+        
+        {/* Advanced Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+          {/* Text Search */}
+          <div className="relative md:col-span-2">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#8A9596]" />
+            <input
+              type="text"
+              placeholder="Search by SKU, title, vendor name..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="w-full h-12 pl-12 pr-4 bg-white border border-[#ECE6D6] focus:border-[#01454A] rounded-2xl outline-none font-satoshi text-sm text-black placeholder:text-[#8A9596] transition-all"
+            />
           </div>
-          <div className="p-2.5 rounded-[10px] border-[0.8px] border-[#D9D9D9] text-black bg-[#fff]">
+
+          {/* Dynamic Categories Dropdown */}
+          <div className="relative">
+            <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#8A9596]" />
             <select
-              id="categories"
-              className="w-full outline-none bg-inherit"
-              defaultValue="latest Added"
+              value={category}
+              onChange={(e) => {
+                setCategory(e.target.value);
+                setPage(1);
+              }}
+              className="w-full h-12 pl-12 pr-10 bg-white border border-[#ECE6D6] focus:border-[#01454A] rounded-2xl outline-none font-satoshi text-sm text-black appearance-none transition-all cursor-pointer"
             >
-              <option disabled className="">
-                latest Added
-              </option>
-              <option defaultValue="" className="">
-                Agbada
-              </option>
+              <option value="">All Categories</option>
+              {categories.map((cat: any) => (
+                <option key={cat.id} value={cat.slug}>
+                  {cat.title || cat.name}
+                </option>
+              ))}
             </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-[#8A9596] h-0 w-0"></div>
           </div>
         </div>
-        <div className="flex flex-wrap gap-3">{productList}</div>
+
+        {/* Filter Applied Badge */}
+        {(search || category) && (
+          <div className="flex items-center justify-between bg-white/50 border border-[#ECE6D6] px-4 py-2.5 rounded-xl">
+            <span className="text-xs text-[#5A6465] font-satoshi font-medium">
+              Displaying {totalCount} garments
+            </span>
+            <button
+              onClick={clearFilters}
+              className="text-xs font-bold text-[#EA1705] hover:underline flex items-center gap-1.5"
+            >
+              <FilterX className="w-3.5 h-3.5" />
+              Reset filters
+            </button>
+          </div>
+        )}
+
+        {/* Loading and Error Indicators */}
+        {productsLoading && (
+          <div className="flex flex-col items-center justify-center py-20 space-y-3">
+            <Loader2 className="w-10 h-10 text-[#01454A] animate-spin" />
+            <p className="text-sm font-bold text-black font-satoshi">Loading premium apparel...</p>
+          </div>
+        )}
+
+        {productsError && (
+          <div className="flex flex-col items-center justify-center py-16 text-center space-y-4 max-w-md mx-auto">
+            <div className="bg-[#EA1705]/10 p-4 rounded-full text-[#EA1705]">
+              <AlertCircle className="w-8 h-8" />
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-bold text-lg text-black font-satoshi">Database connection failed</h4>
+              <p className="text-xs text-[#5A6465] leading-relaxed">
+                Unable to fetch catalog items. Make sure your Django backend is actively running on Port 8001.
+              </p>
+            </div>
+            <button
+              onClick={() => refetchProducts()}
+              className="bg-[#01454A] text-white px-5 py-2.5 text-xs font-bold rounded-xl transition"
+            >
+              Retry Load
+            </button>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!productsLoading && !productsError && products.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-24 text-center space-y-4 bg-white border border-[#ECE6D6] rounded-2xl max-w-lg mx-auto">
+            <div className="bg-[#FDA600]/10 p-4 rounded-full text-[#FDA600]">
+              <ShoppingBag className="w-8 h-8" />
+            </div>
+            <div className="space-y-2 px-6">
+              <h4 className="font-bold text-lg text-black font-satoshi">No garments matching query</h4>
+              <p className="text-xs text-[#5A6465] leading-relaxed">
+                Adjust your filters or query parameter above. No styles currently match this combination.
+              </p>
+            </div>
+            <button
+              onClick={clearFilters}
+              className="bg-[#FDA600] text-white px-5 py-2.5 text-xs font-bold rounded-xl transition-all hover:bg-black"
+            >
+              Clear Filters
+            </button>
+          </div>
+        )}
+
+        {/* Catalog apparel grid */}
+        {!productsLoading && !productsError && products.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {products.map((product: any) => (
+              <div 
+                key={product.id} 
+                className="group bg-white border border-[#ECE6D6] hover:border-[#01454A] rounded-2xl overflow-hidden transition-all duration-300 flex flex-col h-full shadow-sm hover:shadow-md"
+              >
+                {/* Image panel & Status badges overlay */}
+                <div className="relative h-64 bg-[#1A1208]/10 overflow-hidden">
+                  {product.image_url ? (
+                    <img
+                      src={product.image_url}
+                      alt={product.title}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?auto=format&fit=crop&w=400&h=400&q=80";
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-[#1A1208]/5 flex items-center justify-center">
+                      <ShoppingBag className="w-12 h-12 text-[#8A9596]/30" />
+                    </div>
+                  )}
+
+                  {/* Stock Availability Pill */}
+                  <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-sm ${
+                    product.in_stock 
+                      ? "bg-[#01454A] text-[#F8F5ED]" 
+                      : "bg-[#EA1705]/15 text-[#EA1705]"
+                  }`}>
+                    {product.in_stock ? "In Stock" : "Out of Stock"}
+                  </div>
+
+                  {/* Rating Overlay */}
+                  {product.computed_avg_rating > 0 && (
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-black px-2 py-0.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm">
+                      <Star className="w-3.5 h-3.5 text-[#FDA600] fill-[#FDA600]" />
+                      <span>{Number(product.computed_avg_rating).toFixed(1)}</span>
+                    </div>
+                  )}
+
+                  {/* Customization Ribbon */}
+                  {product.requires_measurement && (
+                    <div className="absolute bottom-3 left-3 bg-[#FDA600] text-black px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide flex items-center gap-1 shadow-sm">
+                      <Sparkles className="w-3 h-3" />
+                      <span>Bespoke / Sized</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Info and Actions */}
+                <div className="p-4 flex-grow flex flex-col justify-between space-y-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[11px] text-[#8A9596] font-satoshi font-bold">
+                      <span className="uppercase">{product.category_name || "Uncategorized"}</span>
+                      <span>{product.sku || "N/A"}</span>
+                    </div>
+                    
+                    <h4 className="font-bon_foyage text-2xl text-black leading-tight truncate group-hover:text-[#01454A] transition-colors">
+                      {product.title}
+                    </h4>
+
+                    {/* Price and Old Price line */}
+                    <div className="flex items-baseline gap-2 pt-1">
+                      <span className="text-lg font-bold text-black font-satoshi">
+                        {formatCurrency(product.price)}
+                      </span>
+                      {product.old_price && (
+                        <span className="text-xs text-[#8A9596] line-through font-satoshi">
+                          {formatCurrency(product.old_price)}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-[11px] text-[#5A6465] font-satoshi truncate">
+                      Designer: <span className="font-bold text-black">{product.vendor_name || "Independent"}</span>
+                    </p>
+                  </div>
+
+                  {/* Actions buttons */}
+                  <div className="flex items-center justify-between gap-2 pt-3 border-t border-[#ECE6D6]/80">
+                    <Link
+                      href={`/products/${product.slug}`}
+                      className="flex-1 text-center bg-[#F8F5ED] hover:bg-[#01454A]/5 border border-[#ECE6D6] text-black py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1.5"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-[#01454A]" />
+                      Edit Garment
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(product.id)}
+                      className="bg-[#EA1705]/10 hover:bg-[#EA1705] text-[#EA1705] hover:text-white p-2.5 rounded-xl transition-all duration-150"
+                      title="Delete Product"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* Delete Confirmation Modal Overlay */}
+      {deleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white border border-[#ECE6D6] rounded-3xl w-full max-w-md p-6 md:p-8 space-y-6 shadow-2xl relative">
+            <button 
+              onClick={() => setDeleteId(null)}
+              className="absolute top-4 right-4 text-[#8A9596] hover:text-black transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-4 text-[#EA1705]">
+              <div className="bg-[#EA1705]/10 p-3 rounded-2xl">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="font-bold text-lg text-black font-satoshi">Remove garment?</h4>
+                <p className="text-xs text-[#5A6465] mt-0.5">This operation cannot be undone.</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#5A6465] leading-relaxed bg-[#F8F5ED]/50 border border-[#ECE6D6] p-4 rounded-xl font-satoshi">
+              Deleting this garment will immediately de-list it from the FASHIONISTAR marketplace. Existing custom cart items or client order records referring to this style snapshot will not be broken, but new checkouts will be blocked.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteId(null)}
+                className="flex-1 bg-white border border-[#ECE6D6] text-black h-11 rounded-xl text-xs font-bold transition hover:bg-[#F8F5ED]"
+              >
+                Keep Garment
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleteMutation.isPending}
+                className="flex-1 bg-[#EA1705] hover:bg-[#EA1705]/90 text-white h-11 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"
+              >
+                {deleteMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Confirm Deletion"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
-export default page;
+}

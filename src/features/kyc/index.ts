@@ -42,6 +42,9 @@ export {
   recordKycDocument,
   getNinjaKycStatus,
   getNinjaKycDocuments,
+  getAdminKycSubmissions,
+  approveKycSubmission,
+  rejectKycSubmission,
 } from "./api/kyc.api";
 
 // ── TanStack Query Hooks ───────────────────────────────────────────────────────
@@ -53,6 +56,9 @@ export {
   useRecordKycDocument,
   useNinjaKycStatus,
   useNinjaKycDocuments,
+  useAdminKycSubmissions,
+  useApproveKyc,
+  useRejectKyc,
 } from "./hooks/use-kyc";
 
 // ── Components ─────────────────────────────────────────────────────────────────
