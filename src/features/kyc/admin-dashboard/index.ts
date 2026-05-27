@@ -5,3 +5,5 @@
 export * from "./types";
 export * from "./api";
 export * from "./hooks";
+export { KycDashboard } from "./components/KycDashboard";
+
