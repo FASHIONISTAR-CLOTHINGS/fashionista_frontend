@@ -4,7 +4,7 @@
 
 import { apiAdminSync, apiAdminAsync } from "@/core/api/client.admin";
 import type { AdminKycSubmission, AdminKycStats } from "./types";
-import { PaginatedEnvelope } from "../../auth/admin-dashboard/types";
+import type { PaginatedEnvelope } from "@/features/admin-dashboard/auth/types";
 
 export async function fetchAdminKycSubmissions(params?: {
   status?: string;
