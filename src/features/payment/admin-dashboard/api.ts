@@ -2,7 +2,7 @@
  * features/payment/admin-dashboard/api.ts
  */
 
-import { apiAdminSync, apiAdminAsync } from "@/core/api/client.admin";
+import { apiAdminAsync } from "@/core/api/client.admin";
 import type { AdminPaymentTransaction, AdminPaymentKPI } from "./types";
 
 export async function fetchAdminPayments(): Promise<AdminPaymentTransaction[]> {

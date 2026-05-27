@@ -11,65 +11,23 @@ import {
   ChevronRight,
   ExternalLink,
   RefreshCw,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
-
-interface ApiProvider {
-  id: string;
-  name: string;
-  type: "payment" | "sms" | "email" | "logistics" | "assets";
-  status: "healthy" | "degraded" | "down";
-  latency: number;
-  uptime: number;
-  lastChecked: string;
-}
-
-const MOCK_PROVIDERS: ApiProvider[] = [
-  {
-    id: "PRV-01",
-    name: "Stripe Payment Gateway",
-    type: "payment",
-    status: "healthy",
-    latency: 120,
-    uptime: 99.99,
-    lastChecked: "1 min ago",
-  },
-  {
-    id: "PRV-02",
-    name: "Paystack Payments Africa",
-    type: "payment",
-    status: "healthy",
-    latency: 180,
-    uptime: 99.95,
-    lastChecked: "1 min ago",
-  },
-  {
-    id: "PRV-03",
-    name: "Twilio SMS & OTP",
-    type: "sms",
-    status: "healthy",
-    latency: 240,
-    uptime: 99.9,
-    lastChecked: "3 mins ago",
-  },
-  {
-    id: "PRV-04",
-    name: "Cloudinary CDN Storage",
-    type: "assets",
-    status: "healthy",
-    latency: 85,
-    uptime: 100.0,
-    lastChecked: "2 mins ago",
-  },
-];
+import { useAdminProviders, type ApiProvider } from "@/features/providers";
 
 export default function AdminProvidersPage() {
   const [search, setSearch] = useState("");
-  const [selectedProvider, setSelectedProvider] = useState<ApiProvider | null>(null);
+  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
 
-  const filteredProviders = MOCK_PROVIDERS.filter((provider) =>
+  const { data: providers = [], isLoading, isError, refetch } = useAdminProviders();
+
+  const filteredProviders = providers.filter((provider) =>
     provider.name.toLowerCase().includes(search.toLowerCase()) ||
     provider.type.toLowerCase().includes(search.toLowerCase())
   );
+
+  const selectedProvider = providers.find((p) => p.id === selectedProviderId);
 
   const getStatusBadge = (status: ApiProvider["status"]) => {
     switch (status) {
@@ -107,7 +65,7 @@ export default function AdminProvidersPage() {
           </p>
         </div>
         <button
-          onClick={() => {}}
+          onClick={() => refetch()}
           className="border border-[#ECE6D6] bg-white hover:bg-[#F4F3EC] text-black font-bold transition px-5 py-3 rounded-xl shadow-sm text-sm flex items-center gap-2"
         >
           <RefreshCw className="w-4 h-4" /> Run Live Diagnostics
@@ -127,45 +85,64 @@ export default function AdminProvidersPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredProviders.map((provider) => (
-            <div
-              key={provider.id}
-              onClick={() => setSelectedProvider(provider)}
-              className="bg-white border border-[#ECE6D6] hover:border-[#01454A] rounded-[24px] p-6 shadow-xs hover:shadow transition duration-200 cursor-pointer flex flex-col justify-between group"
-            >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold text-[#8A9596]">{provider.id}</span>
-                  {getStatusBadge(provider.status)}
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 space-y-4">
+            <Loader2 className="w-10 h-10 animate-spin text-[#01454A]" />
+            <p className="text-sm text-[#5A6465]">Loading gateway integrations...</p>
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-[#ECE6D6] rounded-2xl bg-white">
+            <AlertCircle className="w-10 h-10 text-red-500 mb-2" />
+            <p className="text-sm text-[#5A6465] font-semibold">Failed to fetch integrations status</p>
+            <p className="text-xs text-[#8A9596] mt-1">Please try again later or check your backend connection.</p>
+          </div>
+        ) : filteredProviders.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-[#ECE6D6] rounded-2xl bg-white">
+            <Server className="w-10 h-10 text-gray-300 mb-2" />
+            <p className="text-sm text-[#5A6465] font-semibold">No integrations found</p>
+            <p className="text-xs text-[#8A9596] mt-1">Try refining your search keyword.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {filteredProviders.map((provider) => (
+              <div
+                key={provider.id}
+                onClick={() => setSelectedProviderId(provider.id)}
+                className="bg-white border border-[#ECE6D6] hover:border-[#01454A] rounded-[24px] p-6 shadow-xs hover:shadow transition duration-200 cursor-pointer flex flex-col justify-between group"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-[#8A9596]">{provider.id}</span>
+                    {getStatusBadge(provider.status)}
+                  </div>
+
+                  <div>
+                    <h4 className="font-bon_foyage text-xl text-black">{provider.name}</h4>
+                    <p className="text-xs text-[#01454A] font-bold uppercase mt-1">Type: {provider.type}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 pt-3 border-t border-[#ECE6D6]/40 text-xs">
+                    <div>
+                      <span className="text-[#8A9596] block">Latency</span>
+                      <span className="font-semibold text-black block mt-0.5">{provider.latency} ms</span>
+                    </div>
+                    <div>
+                      <span className="text-[#8A9596] block">Core Uptime</span>
+                      <span className="font-semibold text-emerald-600 block mt-0.5">{provider.uptime}%</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <h4 className="font-bon_foyage text-xl text-black">{provider.name}</h4>
-                  <p className="text-xs text-[#01454A] font-bold uppercase mt-1">Type: {provider.type}</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-3 border-t border-[#ECE6D6]/40 text-xs">
-                  <div>
-                    <span className="text-[#8A9596] block">Latency</span>
-                    <span className="font-semibold text-black block mt-0.5">{provider.latency} ms</span>
-                  </div>
-                  <div>
-                    <span className="text-[#8A9596] block">Core Uptime</span>
-                    <span className="font-semibold text-emerald-600 block mt-0.5">{provider.uptime}%</span>
-                  </div>
+                <div className="pt-3 mt-4 border-t border-[#ECE6D6]/30 flex items-center justify-between text-[10px] text-[#8A9596]">
+                  <span>Diagnostics: {provider.lastChecked}</span>
+                  <span className="font-bold flex items-center gap-0.5 text-[#01454A] group-hover:translate-x-0.5 transition">
+                    Audit <ChevronRight className="w-3.5 h-3.5" />
+                  </span>
                 </div>
               </div>
-
-              <div className="pt-3 mt-4 border-t border-[#ECE6D6]/30 flex items-center justify-between text-[10px] text-[#8A9596]">
-                <span>Diagnostics: {provider.lastChecked}</span>
-                <span className="font-bold flex items-center gap-0.5 text-[#01454A] group-hover:translate-x-0.5 transition">
-                  Audit <ChevronRight className="w-3.5 h-3.5" />
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Details drawer */}
@@ -178,7 +155,7 @@ export default function AdminProvidersPage() {
                   Diagnostics Inspector
                 </span>
                 <button
-                  onClick={() => setSelectedProvider(null)}
+                  onClick={() => setSelectedProviderId(null)}
                   className="p-1 rounded-full border border-[#ECE6D6] bg-white hover:bg-black hover:text-white transition"
                 >
                   <XCircle className="w-5 h-5" />

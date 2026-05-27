@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCatalogProducts } from "@/features/catalog/hooks/use-catalog-products";
 import { useCatalogCategories } from "@/features/catalog/hooks/use-catalog";
-import { vendorApi } from "@/features/vendor/api/vendor.api";
+import { useAdminProducts, useDeleteAdminProduct } from "@/features/product";
 import { toast } from "sonner";
 import { 
   Search, 
@@ -23,15 +21,14 @@ import {
 } from "lucide-react";
 
 export default function AdminProductsPage() {
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  // ── Fetch live products from dynamic catalog hook ───────────────────────
-  const { data: productsData, isLoading: productsLoading, isError: productsError, refetch: refetchProducts } = useCatalogProducts({
+  // ── Fetch live products from admin feature hook ─────────────────────────
+  const { data: productsData, isLoading: productsLoading, isError: productsError, refetch: refetchProducts } = useAdminProducts({
     page,
     page_size: pageSize,
     q: search || undefined,
@@ -41,24 +38,11 @@ export default function AdminProductsPage() {
   // ── Fetch live categories ───────────────────────────────────────────────
   const { data: categoriesData } = useCatalogCategories();
 
+  const { mutate: deleteProduct, isPending: isDeleting } = useDeleteAdminProduct();
+
   const products = productsData?.results ?? [];
   const categories = categoriesData ?? [];
   const totalCount = productsData?.count ?? 0;
-
-  // ── Delete Product Mutation ─────────────────────────────────────────────
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => vendorApi.deleteProduct(id),
-    onSuccess: () => {
-      toast.success("Product deleted successfully from global catalog.");
-      setDeleteId(null);
-      void queryClient.invalidateQueries({ queryKey: ["catalog", "products"] });
-    },
-    onError: (err: any) => {
-      const msg = err instanceof Error ? err.message : "Error deleting product.";
-      toast.error(msg);
-      setDeleteId(null);
-    }
-  });
 
   const handleDelete = (id: string) => {
     setDeleteId(id);
@@ -66,7 +50,14 @@ export default function AdminProductsPage() {
 
   const confirmDelete = () => {
     if (deleteId) {
-      deleteMutation.mutate(deleteId);
+      deleteProduct(deleteId, {
+        onSuccess: () => {
+          setDeleteId(null);
+        },
+        onError: () => {
+          setDeleteId(null);
+        }
+      });
     }
   };
 
@@ -330,7 +321,7 @@ export default function AdminProductsPage() {
               className="absolute top-4 right-4 text-[#8A9596] hover:text-black transition"
             >
               <X className="w-5 h-5" />
-            </button>
+            </button>Optionally, confirm if any files are missing in your plans.
 
             <div className="flex items-center gap-4 text-[#EA1705]">
               <div className="bg-[#EA1705]/10 p-3 rounded-2xl">
@@ -355,10 +346,10 @@ export default function AdminProductsPage() {
               </button>
               <button
                 onClick={confirmDelete}
-                disabled={deleteMutation.isPending}
+                disabled={isDeleting}
                 className="flex-1 bg-[#EA1705] hover:bg-[#EA1705]/90 text-white h-11 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"
               >
-                {deleteMutation.isPending ? (
+                {isDeleting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Deleting...
