@@ -10,7 +10,7 @@ import {
   ChevronRight,
   Loader2,
 } from "lucide-react";
-import { useAdminMeasurements } from "@/features/measurements";
+import { useAdminMeasurements } from "@/features/admin-dashboard";
 
 export default function AdminMeasurementsPage() {
   const [search, setSearch] = useState("");

@@ -4,9 +4,9 @@ import { ChartOptions, ChartData } from "chart.js";
 import Image from "next/image";
 import { Suspense } from "react";
 import { TableRowSkeleton } from "@/shared/components/skeletons";
-import { useAdminDashboardKPI } from "@/features/catalog";
+import { useAdminDashboardKPI } from "@/features/admin-dashboard";
 
-import { AdminOrderList } from "@/features/order";
+import { AdminOrderList } from "@/features/admin-dashboard";
 
 interface MembersProp {
   image: string;

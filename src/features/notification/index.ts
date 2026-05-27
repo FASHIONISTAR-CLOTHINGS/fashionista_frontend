@@ -31,5 +31,4 @@ export {
 } from "./hooks/use-notification-websocket";
 
 // ── Admin Dashboard ────────────────────────────────────────────────────────────
-export * from "./admin-dashboard";
 

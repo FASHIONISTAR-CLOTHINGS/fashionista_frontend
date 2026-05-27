@@ -1,4 +1,4 @@
-import { CustomOrdersDashboard } from "@/features/custom-order";
+import { CustomOrdersDashboard } from "@/features/admin-dashboard";
 
 export default function AdminCustomOrdersPage() {
   return <CustomOrdersDashboard />;

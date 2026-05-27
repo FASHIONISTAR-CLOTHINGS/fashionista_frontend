@@ -72,5 +72,4 @@ export { default as CartPage } from "./components/CartPage";
 export { CartPageSkeleton } from "./components/CartPageSkeleton";
 
 // ── Admin Dashboard ─────────────────────────────────────────────────────────
-export * from "./admin-dashboard";
 

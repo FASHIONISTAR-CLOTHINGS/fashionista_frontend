@@ -57,5 +57,4 @@ export * from "./components/VendorTransactionsView";
 export * from "./components/AdminTransactionsView";
 
 // ── Admin Dashboard ────────────────────────────────────────────────────────────
-export * from "./admin-dashboard";
 

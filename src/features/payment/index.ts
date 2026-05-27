@@ -98,5 +98,4 @@ export { usePayoutHistory, useInitiateVendorPayout } from "./hooks/use-payout";
 export { PayoutDashboard } from "./components/PayoutDashboard";
 
 // ── Admin Dashboard ────────────────────────────────────────────────────────────
-export * from "./admin-dashboard";
 

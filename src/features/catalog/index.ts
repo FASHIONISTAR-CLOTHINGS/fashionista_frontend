@@ -30,5 +30,4 @@ export * from "./schemas/catalog.schemas";
 export * from "./types/catalog.types";
 
 // ── Admin Dashboard ─────────────────────────────────────────────────────────
-export * from "./admin-dashboard";
 

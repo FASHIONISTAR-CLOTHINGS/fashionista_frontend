@@ -1,4 +1,4 @@
-import { AdminOrderDetailView } from "@/features/order";
+import { AdminOrderDetailView } from "@/features/admin-dashboard";
 
 export default async function AdminOrderDetailPage({
   params,

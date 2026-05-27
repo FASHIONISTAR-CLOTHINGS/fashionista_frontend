@@ -1,4 +1,4 @@
-import { CartsDashboard } from "@/features/cart";
+import { CartsDashboard } from "@/features/admin-dashboard";
 
 export default function AdminCartsPage() {
   return (

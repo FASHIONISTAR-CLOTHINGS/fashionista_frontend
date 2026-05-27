@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useCatalogCategories } from "@/features/catalog/hooks/use-catalog";
-import { useAdminProducts, useDeleteAdminProduct } from "@/features/product";
+import { useCatalogCategories } from "@/features/admin-dashboard/hooks/use-catalog";
+import { useAdminProducts, useDeleteAdminProduct } from "@/features/admin-dashboard";
 import { 
   Search, 
   Trash2, 
