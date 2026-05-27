@@ -3,6 +3,7 @@
  * @description Central FSD public barrel for admin-dashboard slice.
  */
 
+export * from './dashboard';
 export * from './audit-logs';
 export * from './auth';
 export * from './cart';
@@ -22,3 +23,4 @@ export * from './support';
 export * from './transaction';
 export * from './vendor';
 export * from './wallet';
+
