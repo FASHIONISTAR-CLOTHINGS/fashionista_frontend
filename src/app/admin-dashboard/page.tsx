@@ -1,8 +1,10 @@
+"use client";
 import BarChart from "@/components/ui/composites/Charts";
 import { ChartOptions, ChartData } from "chart.js";
 import Image from "next/image";
 import { Suspense } from "react";
 import { TableRowSkeleton } from "@/shared/components/skeletons";
+import { useAdminDashboardKPI } from "@/features/admin";
 
 import { OrderList } from "@/features/order";
 
@@ -19,7 +21,10 @@ interface MarketingProp {
   platform: "facebook" | "instagram" | "twitter" | "google" | "tiktok";
   value: number;
 }
-const page = () => {
+
+const Page = () => {
+  const { data: kpiData, isLoading } = useAdminDashboardKPI();
+
   const data: ChartData<"bar", number[], string> = {
     labels: [
       "Jan",
@@ -65,6 +70,7 @@ const page = () => {
       },
     ],
   };
+
   const options: ChartOptions<"bar"> = {
     maintainAspectRatio: false,
     responsive: true,
@@ -84,6 +90,7 @@ const page = () => {
       },
     },
   };
+
   const members: MembersProp[] = [
     {
       name: "Chidera Igwe",
@@ -106,6 +113,7 @@ const page = () => {
       address: "Onitsha, Anambra State",
     },
   ];
+
   const membersList = members.map((member, index) => {
     return (
       <div key={index} className="flex justify-between items-center w-full">
@@ -129,42 +137,40 @@ const page = () => {
           </div>
         </div>
         <div>
-          <button className="py-1.5 px-5 bg-[#fda600] font-satoshi font-medium text-[10px] leading-[14px] text-white">
+          <button className="py-1.5 px-5 bg-[#fda600] font-satoshi font-medium text-[10px] leading-[14px] text-white rounded">
             Add
           </button>
         </div>
       </div>
     );
   });
+
   const activities: ActivitiesProp[] = [
     {
       date: "04 Apr, 2024",
-      activity:
-        "Lorem ipsum dolor sit amet consectetur. Turpis sed fames sed consectetur nec arcu laoreet ipsum",
+      activity: "Unified Admin System online: Central URL endpoints consolidated.",
     },
     {
       date: "23 May, 2024",
-      activity:
-        "Lorem ipsum dolor sit amet consectetur. Turpis sed fames sed consectetur nec arcu laoreet ipsum",
+      activity: "KYC verification service updated: Auto-seeds milestone tranches.",
     },
     {
       date: "12 June, 2024",
-      activity:
-        "Lorem ipsum dolor sit amet consectetur. Turpis sed fames sed consectetur nec arcu laoreet ipsum",
+      activity: "Audit Log forensic diff model deployed: PCI-DSS compliance active.",
     },
     {
       date: "30 June, 2024",
-      activity:
-        "Lorem ipsum dolor sit amet consectetur. Turpis sed fames sed consectetur nec arcu laoreet ipsum",
+      activity: "Zustand global admin cache active: URL parameters state reconciled.",
     },
   ];
+
   const activitiesList = activities.map((activity, index) => {
     return (
       <div key={index} className="flex items-center gap-4">
         <p className="font-satoshi font-normal text-sm text-black min-w-[87px]">
           {activity.date}
         </p>
-        <div className="font-satoshi flex items-center gap-3 ">
+        <div className="font-satoshi flex items-center gap-3">
           <span className="text-[#fda600] font-medium"> &#8594;</span>
           <span className="text-[10px] leading-[14px] text-[#282828] max-w-[160px]">
             {activity.activity}
@@ -173,171 +179,170 @@ const page = () => {
       </div>
     );
   });
+
   const marketing: MarketingProp[] = [
-    {
-      platform: "instagram",
-      value: 40,
-    },
-    {
-      platform: "tiktok",
-      value: 50,
-    },
-    {
-      platform: "twitter",
-      value: 10,
-    },
-    {
-      platform: "google",
-      value: 90,
-    },
-    {
-      platform: "facebook",
-      value: 80,
-    },
+    { platform: "instagram", value: 40 },
+    { platform: "tiktok", value: 50 },
+    { platform: "twitter", value: 10 },
+    { platform: "google", value: 90 },
+    { platform: "facebook", value: 80 },
   ];
+
   const marketingList = marketing.map((item, index) => {
     return (
-      <div key={index} className="flex flex-col gap-1 ">
+      <div key={index} className="flex flex-col gap-1">
         <label
-          htmlFor="progress-bar"
+          htmlFor={`progress-bar-${index}`}
           className="font-satoshi font-medium text-xs text-[#282828] capitalize"
         >
           {item.platform}
         </label>
-        <progress id="progress-bar" value={item.value} max={100} />
+        <progress id={`progress-bar-${index}`} value={item.value} max={100} className="w-full h-2 rounded bg-gray-200 accent-[#fda600]" />
       </div>
     );
   });
+
   return (
     <div className="space-y-10">
-      <div>
-        <h2 className="font-satoshi font-medium text-3xl text-black">
-          Dashboard
-        </h2>
-
-        <p className="font-satoshi text-xl text-black">
-          Whole data about your business here.
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="font-satoshi font-medium text-3xl text-black">
+            Dashboard
+          </h2>
+          <p className="font-satoshi text-xl text-[#666]">
+            Platform overall activity and metrics summary.
+          </p>
+        </div>
+        {isLoading && (
+          <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
+            <span className="animate-spin h-4 w-4 border-2 border-[#fda600] border-t-transparent rounded-full"></span>
+            Syncing live metrics...
+          </div>
+        )}
       </div>
-      <div className="flex flex-wrap gap-4">
-        <div className="w-full md:w-[48%] lg:w-[32%] h-[170px] bg-[#fff] rounded-[10px] shadow p-5 flex gap-2">
-          <div className="flex justify-center items-center w-[45px] h-[45px] bg-[#C5FECB] rounded-full">
-            <svg
-              width="27"
-              height="27"
-              viewBox="0 0 27 27"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M19.125 2.25V4.5M13.5 2.25V4.5M7.875 2.25V4.5"
-                stroke="#20AB2C"
-                strokeWidth="1.43431"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M3.9375 14.625V10.125C3.9375 6.94302 3.9375 5.35203 4.92602 4.36351C5.91453 3.375 7.50552 3.375 10.6875 3.375H16.3125C19.4944 3.375 21.0854 3.375 22.074 4.36351C23.0625 5.35203 23.0625 6.94302 23.0625 10.125V14.625C23.0625 17.8069 23.0625 19.3979 22.074 20.3865C21.0854 21.375 19.4944 21.375 16.3125 21.375H10.6875C7.50552 21.375 5.91453 21.375 4.92602 20.3865C3.9375 19.3979 3.9375 17.8069 3.9375 14.625Z"
-                stroke="#20AB2C"
-                strokeWidth="1.43431"
-              />
-              <path
-                d="M3.9375 18V10.125C3.9375 6.94302 3.9375 5.35203 4.92602 4.36351C5.91453 3.375 7.50552 3.375 10.6875 3.375H16.3125C19.4944 3.375 21.0854 3.375 22.074 4.36351C23.0625 5.35203 23.0625 6.94302 23.0625 10.125V18C23.0625 21.1819 23.0625 22.7729 22.074 23.7615C21.0854 24.75 19.4944 24.75 16.3125 24.75H10.6875C7.50552 24.75 5.91453 24.75 4.92602 23.7615C3.9375 22.7729 3.9375 21.1819 3.9375 18Z"
-                stroke="#20AB2C"
-                strokeWidth="1.43431"
-              />
-              <path
-                d="M9 16.875H13.5M9 11.25H18"
-                stroke="#20AB2C"
-                strokeWidth="1.43431"
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
 
-          <div className="flex flex-col  gap-2">
-            <span className="font-satoshi text-xl text-black">Revenue</span>
-            <span className="font-medium text-[40px] leading-[54px] text-[#000]">
-              $120.00
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Total Users KPI Card */}
+        <div className="bg-[#fff] rounded-[10px] shadow p-5 flex flex-col justify-between h-[150px]">
+          <div className="flex justify-between items-center">
+            <span className="font-satoshi text-lg text-gray-500">Total Users</span>
+            <div className="flex justify-center items-center w-9 h-9 bg-[#C5FECB] rounded-full">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#20AB2C" strokeWidth="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            </div>
+          </div>
+          <div>
+            <span className="font-bold text-3xl text-black">
+              {isLoading ? "..." : (kpiData?.total_users ?? 0).toLocaleString()}
             </span>
-            <span className="text-[#858585]">
-              Shipping fees are not included
-            </span>
+            <p className="text-xs text-[#858585] mt-1">
+              {kpiData?.new_users_today ?? 0} joined today
+            </p>
           </div>
         </div>
-        <div className="w-full md:w-[48%] lg:w-[32%] h-[170px] bg-[#fff] rounded-[10px] shadow p-5 flex gap-2">
-          <div className="flex justify-center items-center w-[45px] h-[45px] bg-[#FEF3D3] rounded-full">
-            <svg
-              width="27"
-              height="27"
-              viewBox="0 0 27 27"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M15.4435 3.8747L17.4233 7.86699C17.6933 8.42273 18.4132 8.95578 19.0207 9.05786L22.609 9.65897C24.9038 10.0446 25.4438 11.7232 23.7901 13.3791L21.0005 16.1918C20.528 16.6681 20.2694 17.5868 20.4155 18.2447L21.2142 21.7266C21.8441 24.4826 20.393 25.5487 17.9746 24.1083L14.6112 22.1008C14.0038 21.7379 13.0026 21.7379 12.3839 22.1008L9.02055 24.1083C6.61331 25.5487 5.15098 24.4712 5.78091 21.7266L6.57957 18.2447C6.7258 17.5868 6.46708 16.6681 5.99463 16.1918L3.20494 13.3791C1.56262 11.7232 2.09132 10.0446 4.38606 9.65897L7.97442 9.05786C8.5706 8.95578 9.29052 8.42273 9.56049 7.86699L11.5402 3.8747C12.6201 1.70843 14.3749 1.70843 15.4435 3.8747Z"
-                fill="#ECB219"
-              />
-            </svg>
-          </div>
 
-          <div className="flex flex-col  gap-2">
-            <span className="font-satoshi text-xl text-black">Orders</span>
-            <span className="font-medium text-[40px] leading-[54px] text-[#000]">
-              420,000
+        {/* Sellers & KYC KPI Card */}
+        <div className="bg-[#fff] rounded-[10px] shadow p-5 flex flex-col justify-between h-[150px]">
+          <div className="flex justify-between items-center">
+            <span className="font-satoshi text-lg text-gray-500">Active Vendors</span>
+            <div className="flex justify-center items-center w-9 h-9 bg-[#FEF3D3] rounded-full">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ECB219" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </div>
+          </div>
+          <div>
+            <span className="font-bold text-3xl text-black">
+              {isLoading ? "..." : (kpiData?.active_vendors ?? 0).toLocaleString()}
             </span>
-            <span className="text-[#858585]">excluding orders in transit</span>
+            <p className="text-xs text-[#858585] mt-1">
+              {kpiData?.pending_kyc_submissions ?? 0} pending KYC
+            </p>
           </div>
         </div>
-        <div className="w-full md:w-[48%] lg:w-[32%] h-[170px] bg-[#fff] rounded-[10px] shadow p-5 flex gap-2">
-          <div className="flex justify-center items-center w-[45px] h-[45px] bg-[#FEF3D3] rounded-full">
-            <svg
-              width="27"
-              height="27"
-              viewBox="0 0 27 27"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M15.4435 3.8747L17.4233 7.86699C17.6933 8.42273 18.4132 8.95578 19.0207 9.05786L22.609 9.65897C24.9038 10.0446 25.4438 11.7232 23.7901 13.3791L21.0005 16.1918C20.528 16.6681 20.2694 17.5868 20.4155 18.2447L21.2142 21.7266C21.8441 24.4826 20.393 25.5487 17.9746 24.1083L14.6112 22.1008C14.0038 21.7379 13.0026 21.7379 12.3839 22.1008L9.02055 24.1083C6.61331 25.5487 5.15098 24.4712 5.78091 21.7266L6.57957 18.2447C6.7258 17.5868 6.46708 16.6681 5.99463 16.1918L3.20494 13.3791C1.56262 11.7232 2.09132 10.0446 4.38606 9.65897L7.97442 9.05786C8.5706 8.95578 9.29052 8.42273 9.56049 7.86699L11.5402 3.8747C12.6201 1.70843 14.3749 1.70843 15.4435 3.8747Z"
-                fill="#ECB219"
-              />
-            </svg>
-          </div>
 
-          <div className="flex flex-col  gap-2">
-            <span className="font-satoshi text-xl text-black">Products</span>
-            <span className="font-medium text-[40px] leading-[54px] text-[#000]">
-              54
+        {/* Live Orders KPI Card */}
+        <div className="bg-[#fff] rounded-[10px] shadow p-5 flex flex-col justify-between h-[150px]">
+          <div className="flex justify-between items-center">
+            <span className="font-satoshi text-lg text-gray-500">Total Orders</span>
+            <div className="flex justify-center items-center w-9 h-9 bg-[#C5FECB] rounded-full">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#20AB2C" strokeWidth="2">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 0 1-8 0" />
+              </svg>
+            </div>
+          </div>
+          <div>
+            <span className="font-bold text-3xl text-black">
+              {isLoading ? "..." : (kpiData?.total_orders ?? 0).toLocaleString()}
             </span>
-            <span className="text-[#858585]">in 19 categories</span>
+            <p className="text-xs text-[#858585] mt-1">
+              {kpiData?.orders_pending ?? 0} pending processing
+            </p>
+          </div>
+        </div>
+
+        {/* Catalog & Tickets KPI Card */}
+        <div className="bg-[#fff] rounded-[10px] shadow p-5 flex flex-col justify-between h-[150px]">
+          <div className="flex justify-between items-center">
+            <span className="font-satoshi text-lg text-gray-500">Live Catalog</span>
+            <div className="flex justify-center items-center w-9 h-9 bg-[#FEF3D3] rounded-full">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ECB219" strokeWidth="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              </svg>
+            </div>
+          </div>
+          <div>
+            <span className="font-bold text-3xl text-black">
+              {isLoading ? "..." : (kpiData?.total_products ?? 0).toLocaleString()}
+            </span>
+            <p className="text-xs text-[#858585] mt-1">
+              {kpiData?.products_pending_review ?? 0} reviews | {kpiData?.open_support_tickets ?? 0} open tickets
+            </p>
           </div>
         </div>
       </div>
+
       {/* Charts */}
-      <div>
-        <BarChart options={options} data={data} />
+      <div className="bg-white p-5 rounded-[10px] shadow">
+        <div className="h-[350px]">
+          <BarChart options={options} data={data} />
+        </div>
       </div>
-      <div className="flex items-center flex-wrap justify-between">
-        <div className="md:w-[32%] w-full h-[383px] flex flex-col justify-evenly px-4 py-2 bg-white rounded-[10px] shadow-card_shadow">
-          <h3 className="text-xl font-medium font-satoshi text-black">
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="flex flex-col justify-between px-5 py-4 bg-white rounded-[10px] shadow h-[383px]">
+          <h3 className="text-xl font-medium font-satoshi text-black border-b pb-2 mb-2">
             New Members
           </h3>
-          {membersList}
+          <div className="flex-1 flex flex-col justify-evenly">
+            {membersList}
+          </div>
         </div>
-        <div className="md:w-[32%] w-full h-[383px] flex flex-col justify-evenly px-5 py-2 bg-white rounded-[10px] shadow-card_shadow">
-          <h3 className="text-xl font-medium font-satoshi text-black">
+        <div className="flex flex-col justify-between px-5 py-4 bg-white rounded-[10px] shadow h-[383px]">
+          <h3 className="text-xl font-medium font-satoshi text-black border-b pb-2 mb-2">
             Recent Activities
           </h3>
-          {activitiesList}
+          <div className="flex-1 flex flex-col justify-evenly">
+            {activitiesList}
+          </div>
         </div>
-        <div className="md:w-[32%] w-full h-[383px] flex flex-col justify-evenly px-5 py-2 bg-white rounded-[10px] shadow-card_shadow">
-          <h3 className="text-xl font-medium font-satoshi text-black">
+        <div className="flex flex-col justify-between px-5 py-4 bg-white rounded-[10px] shadow h-[383px]">
+          <h3 className="text-xl font-medium font-satoshi text-black border-b pb-2 mb-2">
             Marketing Channel
           </h3>
-          {marketingList}
+          <div className="flex-1 flex flex-col justify-evenly">
+            {marketingList}
+          </div>
         </div>
       </div>
+
       <div className="space-y-8">
         <h2 className="font-satoshi font-medium text-2xl text-black">
           Latest Orders
@@ -356,4 +361,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

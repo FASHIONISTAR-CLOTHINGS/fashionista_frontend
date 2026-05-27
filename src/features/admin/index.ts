@@ -29,3 +29,9 @@ export { useAuditLogs } from "./hooks/use-audit-log";
 
 // ── Admin Components ───────────────────────────────────────────────────────
 export { AuditLogViewer } from "./components/AuditLogViewer";
+
+// ── Dashboard KPI API & Hooks ──────────────────────────────────────────────
+export { fetchAdminDashboardKPI } from "./api/dashboard.api";
+export type { AdminDashboardKPI } from "./api/dashboard.api";
+export { useAdminDashboardKPI } from "./hooks/use-dashboard-kpi";
+
