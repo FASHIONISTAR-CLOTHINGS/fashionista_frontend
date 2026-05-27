@@ -14,6 +14,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { TableRowSkeleton } from "@/shared/components/skeletons";
 
+import { z } from "zod";
+import { toast } from "sonner";
+
+const CategorySchema = z.object({
+  name: z.string().min(2, "Category Name must be at least 2 characters."),
+  description: z.string().max(500, "Description cannot exceed 500 characters.").optional(),
+  active: z.boolean(),
+});
+
 export default function CategoriesPage() {
   const { data: categories, isLoading } = useAdminCategories();
   const createMutation = useCreateAdminCategory();
@@ -47,6 +56,14 @@ export default function CategoriesPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate using Zod
+    const validation = CategorySchema.safeParse(formData);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
+
     if (editingCategory) {
       updateMutation.mutate(
         { id: editingCategory.id, data: formData },

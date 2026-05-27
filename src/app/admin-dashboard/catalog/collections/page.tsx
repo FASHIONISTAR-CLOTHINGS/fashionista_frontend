@@ -14,6 +14,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { TableRowSkeleton } from "@/shared/components/skeletons";
 
+import { z } from "zod";
+import { toast } from "sonner";
+
+const CollectionSchema = z.object({
+  name: z.string().min(2, "Collection Name must be at least 2 characters."),
+  description: z.string().max(500, "Description cannot exceed 500 characters.").optional(),
+  active: z.boolean(),
+});
+
 export default function CollectionsPage() {
   const { data: collections, isLoading } = useAdminCollections();
   const createMutation = useCreateAdminCollection();
@@ -47,6 +56,14 @@ export default function CollectionsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate using Zod
+    const validation = CollectionSchema.safeParse(formData);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
+
     if (editingCollection) {
       updateMutation.mutate(
         { id: editingCollection.id, data: formData },
