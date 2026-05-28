@@ -71,6 +71,17 @@ async function refreshSession(
 }
 
 export default async function globalSetup(_config: FullConfig) {
+  // Clear the dynamic active test emails so each new test execution gets fresh ones
+  const activeTestEmailsPath = path.resolve(process.cwd(), "tests/e2e/.tmp/active-test-emails.json");
+  if (fs.existsSync(activeTestEmailsPath)) {
+    try {
+      fs.unlinkSync(activeTestEmailsPath);
+      console.log("[playwright global-setup] Cleared active-test-emails.json successfully.");
+    } catch (e) {
+      console.warn("[playwright global-setup] Failed to clear active-test-emails.json:", e);
+    }
+  }
+
   if (!fs.existsSync(seededAuthPath)) return;
 
   const backendBaseUrl =
