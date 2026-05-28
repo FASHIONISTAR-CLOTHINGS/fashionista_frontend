@@ -4,7 +4,7 @@
 
 import { apiAdminSync, apiAdminAsync } from "@/core/api/client.admin";
 import type { AdminVendor, AdminVendorMetrics } from "./types";
-import type { PaginatedEnvelope } from "@/features/admin-dashboard/auth/types";
+import type { PaginatedEnvelope } from "@/features/admin-dashboard/authentication/types";
 
 export async function fetchAdminVendors(params?: {
   is_verified?: boolean;

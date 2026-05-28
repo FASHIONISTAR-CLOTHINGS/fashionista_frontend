@@ -5,7 +5,7 @@
 
 export * from './dashboard';
 export * from './audit-logs';
-export * from './auth';
+export * from './authentication';
 export * from './cart';
 export * from './catalog';
 export * from './chat';
@@ -18,9 +18,9 @@ export * from './order';
 export * from './payment';
 export * from './product';
 export * from './providers';
-export * from './settings';
+export * from './global-platform-settings';
 export * from './support';
-export * from './transaction';
+export * from './transactions';
 export * from './vendor';
 export * from './wallet';
 

@@ -186,15 +186,15 @@ function AdminMenu({ close }: { close: () => void }) {
   return (
     <nav aria-label="Admin account menu" className="flex flex-col gap-0.5 py-2">
       <MenuAction id="nav-admin-dashboard" href="/admin-dashboard" label="Admin Dashboard" Icon={LayoutDashboard} onNavigate={close} />
-      <MenuAction id="nav-admin-accounts" href="/admin-dashboard/accounts" label="Accounts" Icon={Users} onNavigate={close} />
-      <MenuAction id="nav-admin-sellers" href="/admin-dashboard/sellers" label="Sellers" Icon={Store} onNavigate={close} />
-      <MenuAction id="nav-admin-products" href="/admin-dashboard/products" label="Products" Icon={Package} onNavigate={close} />
-      <MenuAction id="nav-admin-orders" href="/admin-dashboard/orders" label="Orders" Icon={ShoppingBag} onNavigate={close} />
+      <MenuAction id="nav-admin-accounts" href="/admin-dashboard/authentication" label="Authentication" Icon={Users} onNavigate={close} />
+      <MenuAction id="nav-admin-sellers" href="/admin-dashboard/vendor" label="Vendors" Icon={Store} onNavigate={close} />
+      <MenuAction id="nav-admin-products" href="/admin-dashboard/product" label="Products" Icon={Package} onNavigate={close} />
+      <MenuAction id="nav-admin-orders" href="/admin-dashboard/order" label="Orders" Icon={ShoppingBag} onNavigate={close} />
       <MenuAction id="nav-admin-transactions" href="/admin-dashboard/transactions" label="Transactions" Icon={ScrollText} onNavigate={close} />
-      <MenuAction id="nav-admin-collections" href="/admin-dashboard/collections" label="Collections" Icon={Shapes} onNavigate={close} />
-      <MenuAction id="nav-admin-reviews" href="/admin-dashboard/reviews" label="Reviews" Icon={Star} onNavigate={close} />
-      <MenuAction id="nav-admin-brands" href="/admin-dashboard/brands" label="Brands" Icon={Gem} onNavigate={close} />
-      <MenuAction id="nav-admin-settings" href="/admin-dashboard/settings" label="Platform Settings" Icon={Settings} onNavigate={close} />
+      <MenuAction id="nav-admin-collections" href="/admin-dashboard/catalog/collections" label="Collections" Icon={Shapes} onNavigate={close} />
+      <MenuAction id="nav-admin-reviews" href="/admin-dashboard/product/reviews" label="Reviews" Icon={Star} onNavigate={close} />
+      <MenuAction id="nav-admin-brands" href="/admin-dashboard/catalog/brands" label="Brands" Icon={Gem} onNavigate={close} />
+      <MenuAction id="nav-admin-settings" href="/admin-dashboard/global-platform-settings" label="Platform Settings" Icon={Settings} onNavigate={close} />
     </nav>
   );
 }
