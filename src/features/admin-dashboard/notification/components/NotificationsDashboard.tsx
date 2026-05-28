@@ -6,6 +6,7 @@ import {
   Search,
   Send,
   Loader2,
+  ShieldAlert,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAdminAnnouncements, useSendAnnouncement } from "../hooks";
@@ -16,7 +17,11 @@ export function NotificationsDashboard() {
   const [bodyInput, setBodyInput] = useState("");
   const [targetAudience, setTargetAudience] = useState<"all" | "vendors" | "clients">("all");
 
-  const { data: announcements = [] } = useAdminAnnouncements();
+  const {
+    data: announcements = [],
+    isLoading,
+    isError,
+  } = useAdminAnnouncements();
   const sendAnnouncementMutation = useSendAnnouncement();
 
   const filteredNotifs = announcements.filter((notif) =>
@@ -136,6 +141,34 @@ export function NotificationsDashboard() {
           </div>
 
           <div className="space-y-4">
+            {isLoading && (
+              <div className="bg-white border border-[#ECE6D6] rounded-[20px] p-8 shadow-xs flex items-center gap-3 text-[#5A6465]">
+                <Loader2 className="w-5 h-5 animate-spin text-[#01454A]" />
+                <span className="text-sm">Loading notification history...</span>
+              </div>
+            )}
+
+            {isError && (
+              <div className="bg-white border border-red-100 rounded-[20px] p-8 shadow-xs flex items-start gap-3 text-red-600">
+                <ShieldAlert className="w-5 h-5 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-sm text-black">Notification feed unavailable</p>
+                  <p className="text-xs text-[#5A6465] mt-1">
+                    The admin notification endpoint did not return a live response. Check your session and backend admin registry.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {!isLoading && !isError && filteredNotifs.length === 0 && (
+              <div className="bg-white border border-dashed border-[#ECE6D6] rounded-[20px] p-8 shadow-xs text-center">
+                <p className="font-bon_foyage text-xl text-black">No Broadcasts Yet</p>
+                <p className="text-xs text-[#5A6465] mt-1.5">
+                  Your sent in-app announcements will appear here after dispatch.
+                </p>
+              </div>
+            )}
+
             {filteredNotifs.map((notif) => (
               <div
                 key={notif.id}
@@ -159,7 +192,7 @@ export function NotificationsDashboard() {
                 </div>
 
                 <div className="pt-3 border-t border-[#ECE6D6]/40 text-[9px] text-[#8A9596]">
-                  Queued Date: {notif.sent_at}
+                  Queued Date: {notif.sent_at ?? notif.created_at}
                 </div>
               </div>
             ))}

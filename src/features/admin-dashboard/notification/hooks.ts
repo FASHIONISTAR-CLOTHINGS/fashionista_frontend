@@ -25,7 +25,7 @@ export function useSendAnnouncement() {
   return useMutation({
     mutationFn: (input: SendAnnouncementInput) => sendAdminAnnouncement(input),
     onSuccess: () => {
-      success("Broad announcement dispatched to selected platform audience.");
+      success("Broadcast announcement dispatched successfully.");
       queryClient.invalidateQueries({ queryKey: ["admin-announcements"] });
     },
     onError: (err: any) => {

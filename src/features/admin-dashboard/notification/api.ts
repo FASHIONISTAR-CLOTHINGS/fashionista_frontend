@@ -1,38 +1,69 @@
-/**
- * features/notification/admin-dashboard/api.ts
- */
-
 import { apiAdminAsync, apiAdminSync } from "@/core/api/client.admin";
-import type { AdminAnnouncement, SendAnnouncementInput } from "./types";
 
-export async function fetchAdminAnnouncements(): Promise<AdminAnnouncement[]> {
-  try {
-    return await apiAdminAsync.get("notifications/announcements/").json<AdminAnnouncement[]>();
-  } catch (error) {
-    console.error("Failed to fetch admin announcements, using fallback", error);
-    return [
-      {
-        id: "AN-101",
-        title: "Scheduled System Maintenance",
-        target_audience: "all",
-        sent_by: "Admin Root",
-        sent_at: "2026-05-24T06:00:00Z",
-        message_preview: "The Fashionistar application database cluster will undergo...",
-        read_count: 1450,
-      },
-      {
-        id: "AN-102",
-        title: "New Vendor Commission Rates",
-        target_audience: "vendors",
-        sent_by: "Fintech Lead",
-        sent_at: "2026-05-20T11:45:00Z",
-        message_preview: "Effective starting June 1st, standard boutique commission will...",
-        read_count: 320,
-      },
-    ];
-  }
+import type { AdminNotification, SendAnnouncementInput } from "./types";
+
+type RawAdminNotification = {
+  id: string;
+  title: string;
+  body: string;
+  notification_type: string;
+  channel: string;
+  metadata?: Record<string, unknown> | null;
+  sent_at?: string | null;
+  created_at: string;
+  failed?: boolean;
+  external_id?: string | null;
+  recipient_email?: string | null;
+};
+
+function mapAudience(targetRole: unknown): AdminNotification["target_audience"] {
+  if (targetRole === "vendor") return "vendors";
+  if (targetRole === "client") return "clients";
+  return "all";
 }
 
-export async function sendAdminAnnouncement(input: SendAnnouncementInput): Promise<AdminAnnouncement> {
-  return await apiAdminSync.post("notifications/announcements/", input).then(res => res.data);
+function toAdminNotification(row: RawAdminNotification): AdminNotification {
+  const preview = row.body.length > 140 ? `${row.body.slice(0, 137)}...` : row.body;
+  return {
+    id: row.id,
+    title: row.title,
+    body: row.body,
+    message_preview: preview,
+    target_audience: mapAudience(row.metadata?.target_role),
+    notification_type: row.notification_type,
+    channel: row.channel,
+    sent_at: row.sent_at ?? null,
+    created_at: row.created_at,
+    failed: Boolean(row.failed),
+    external_id: row.external_id ?? "",
+    recipient_email: row.recipient_email ?? null,
+  };
+}
+
+export async function fetchAdminAnnouncements(): Promise<AdminNotification[]> {
+  const rows = await apiAdminAsync
+    .get("notification/", {
+      searchParams: { channel: "in_app" },
+    })
+    .json<RawAdminNotification[]>();
+
+  return rows.map(toAdminNotification);
+}
+
+export async function sendAdminAnnouncement(input: SendAnnouncementInput): Promise<{ message?: string }> {
+  const target_role =
+    input.target_audience === "vendors"
+      ? "vendor"
+      : input.target_audience === "clients"
+        ? "client"
+        : null;
+
+  const response = await apiAdminSync.post("notification/broadcast/", {
+    notification_type: "system_announcement",
+    title: input.title,
+    body: input.message,
+    target_role,
+  });
+
+  return response.data;
 }
