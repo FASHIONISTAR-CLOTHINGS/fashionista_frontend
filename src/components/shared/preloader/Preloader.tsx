@@ -24,6 +24,7 @@ export function Preloader() {
   useEffect(() => {
     let dismissTimeoutId: number | undefined;
     let unmountTimeoutId: number | undefined;
+    let fallbackTimeoutId: number | undefined;
 
     const dismiss = () => {
       dismissTimeoutId = window.setTimeout(() => {
@@ -38,12 +39,15 @@ export function Preloader() {
       dismiss();
     } else {
       window.addEventListener("load", dismiss, { once: true });
+      // Safety fallback to unblock the dashboard after 1200ms maximum
+      fallbackTimeoutId = window.setTimeout(dismiss, 1200);
     }
 
     return () => {
       window.removeEventListener("load", dismiss);
       if (dismissTimeoutId) window.clearTimeout(dismissTimeoutId);
       if (unmountTimeoutId) window.clearTimeout(unmountTimeoutId);
+      if (fallbackTimeoutId) window.clearTimeout(fallbackTimeoutId);
     };
   }, []);
 
