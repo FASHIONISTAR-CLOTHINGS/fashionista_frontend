@@ -120,27 +120,55 @@ export const OrderCommercialTransitionLogSchema = z.object({
   metadata: z.record(z.unknown()).optional().default({}),
 });
 
-export const OrderListItemSchema = z.object({
+/**
+ * Base ZodObject kept separate from .transform() so OrderDetailSchema
+ * can call .extend() on it (ZodEffects does not support .extend()).
+ */
+const OrderListItemBaseSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
   order_number: z.string(),
   status: OrderStatusSchema,
-  payment_status: PaymentStatusSchema,
-  escrow_status: EscrowStatusSchema,
+  // Backend OrderListSerializer does NOT return payment_status / escrow_status in list view.
+  payment_status: PaymentStatusSchema.optional().default("unpaid"),
+  escrow_status: EscrowStatusSchema.optional().default("held"),
+  // Escrow amount fields — present in list serializer
   amount_paid_total: z.string().optional().default("0.00"),
   percent_paid_total: z.string().optional().default("0.00"),
   amount_outstanding: z.string().optional().default("0.00"),
   is_fully_paid: z.boolean().optional().default(false),
   cash_payment_mode_snapshot: CashPaymentModeSchema.optional().default("disabled"),
   delivery_mode: OrderDeliveryModeSchema.optional().default("platform_courier"),
-  item_count: z.number().int().min(0),
-  subtotal: z.string(),
-  final_total: z.string(),
-  currency: z.string(),
-  requires_measurement: z.boolean(),
+  item_count: z.number().int().min(0).optional().default(0),
+  // Backend sends "total_amount"; subtotal is not in the list serializer
+  total_amount: z.string().optional().default("0.00"),
+  subtotal: z.string().optional().default("0.00"),
+  // final_total is NOT returned by backend list — aliased from total_amount via transform
+  final_total: z.string().optional().default("0.00"),
+  currency: z.string().optional().default("NGN"),
+  // requires_measurement is a Product field, not on Order list serializer
+  requires_measurement: z.boolean().optional().default(false),
+  // vendor_name is present in OrderListSerializer
+  vendor_name: z.string().nullable().optional().default(null),
+  paid_at: z.string().nullable().optional().default(null),
+  fulfillment_type: z.string().optional().default("delivery"),
   created_at: z.string(),
 });
 
-export const OrderDetailSchema = OrderListItemSchema.extend({
+/** Normalize helper: alias total_amount → final_total so UI code can use one field name */
+function normalizeFinalTotal<T extends { final_total?: string; total_amount?: string }>(order: T): T & { final_total: string } {
+  return {
+    ...order,
+    final_total:
+      order.final_total && order.final_total !== "0.00"
+        ? order.final_total
+        : order.total_amount ?? "0.00",
+  };
+}
+
+/** Exported list schema — wraps base with the final_total normalization transform. */
+export const OrderListItemSchema = OrderListItemBaseSchema.transform(normalizeFinalTotal);
+
+export const OrderDetailSchema = OrderListItemBaseSchema.extend({
   buyer_name: z.string().optional().default(""),
   buyer_email: z.string().optional().default(""),
   buyer_phone: z.string().nullable().optional().default(null),
@@ -163,12 +191,12 @@ export const OrderDetailSchema = OrderListItemSchema.extend({
     .optional()
     .default([]),
   updated_at: z.string(),
-});
+}).transform(normalizeFinalTotal);
 
 export const PaginatedOrderListSchema = z.object({
   count: z.number().int().min(0),
-  next: z.string().url().nullable(),
-  previous: z.string().url().nullable(),
+  next: z.string().nullable().optional().default(null),
+  previous: z.string().nullable().optional().default(null),
   results: z.array(OrderListItemSchema),
 });
 

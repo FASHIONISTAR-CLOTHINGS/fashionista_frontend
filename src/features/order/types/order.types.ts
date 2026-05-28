@@ -139,10 +139,12 @@ export interface OrderRefundRequest {
 
 export interface OrderListItem {
   id: string;                        // UUID
-  order_number: string;              // Human-readable e.g. "ORD-20260428-00012"
+  order_number: string;              // Human-readable e.g. "FSN-ORD-019E3984-ACC"
   status: OrderStatus;
-  payment_status: PaymentStatus;
-  escrow_status: EscrowStatus;
+  /** Derived from is_fully_paid — not returned by list serializer directly */
+  payment_status?: PaymentStatus;
+  /** Not returned by list serializer — default "held" */
+  escrow_status?: EscrowStatus;
   amount_paid_total: string;
   percent_paid_total: string;
   amount_outstanding: string;
@@ -150,12 +152,22 @@ export interface OrderListItem {
   cash_payment_mode_snapshot: CashPaymentMode;
   delivery_mode: OrderDeliveryMode;
   item_count: number;
-  subtotal: string;
+  /** Backend list serializer field — canonical order total */
+  total_amount: string;
+  /** Not returned by list serializer — optional, defaults to "0.00" */
+  subtotal?: string;
+  /** Normalized from total_amount — used by UI components */
   final_total: string;
   currency: string;
-  requires_measurement: boolean;
+  /** Product field — not on order list serializer */
+  requires_measurement?: boolean;
+  /** Returned by OrderListSerializer */
+  vendor_name?: string | null;
+  paid_at?: string | null;
+  fulfillment_type?: string;
   created_at: string;
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ORDER DETAIL (full)
