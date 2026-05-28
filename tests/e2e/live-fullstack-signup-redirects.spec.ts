@@ -46,11 +46,16 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
 
     // Click submit and wait for OTP page redirect
     await page.locator("#register-submit-btn").click();
-    await page.waitForURL(/\/verify-otp/, { timeout: 45_000 });
-    await page.waitForLoadState("networkidle");
-
-    await captureScreenshot(page, "02_client_signup_success_otp_prompt");
-    console.log("[INFO] Client registered successfully, OTP page reached.");
+    try {
+      await page.waitForURL(/\/verify-otp/, { timeout: 30_000 });
+      await page.waitForLoadState("networkidle");
+      await captureScreenshot(page, "02_client_signup_success_otp_prompt");
+      console.log("[INFO] Client registered successfully, OTP page reached.");
+    } catch (err) {
+      await captureScreenshot(page, "01_client_signup_failed_submit");
+      console.error("[ERROR] Client signup failed to redirect to OTP page:", err);
+      throw err;
+    }
   });
 
   test("2. Register Vendor User & Verify OTP Redirect", async ({ page }) => {
@@ -70,11 +75,16 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
 
     // Click submit and wait for OTP page redirect
     await page.locator("#register-submit-btn").click();
-    await page.waitForURL(/\/verify-otp/, { timeout: 45_000 });
-    await page.waitForLoadState("networkidle");
-
-    await captureScreenshot(page, "04_vendor_signup_success_otp_prompt");
-    console.log("[INFO] Vendor registered successfully, OTP page reached.");
+    try {
+      await page.waitForURL(/\/verify-otp/, { timeout: 30_000 });
+      await page.waitForLoadState("networkidle");
+      await captureScreenshot(page, "04_vendor_signup_success_otp_prompt");
+      console.log("[INFO] Vendor registered successfully, OTP page reached.");
+    } catch (err) {
+      await captureScreenshot(page, "03_vendor_signup_failed_submit");
+      console.error("[ERROR] Vendor signup failed to redirect to OTP page:", err);
+      throw err;
+    }
   });
 
   test("3. Admin Login & Bypass Activation in Django Admin", async ({ page }) => {

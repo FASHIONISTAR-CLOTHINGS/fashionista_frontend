@@ -30,28 +30,36 @@ const NETWORK_TOAST_ID = "fashionistar-network-error" as const;
 
 export function useToast() {
   const success = useCallback((message: string, options?: ToastOptions) => {
+    const dedupId = options?.id || `toast-success-${message.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`;
     sonnerToast.success(message, {
+      id: dedupId,
       duration: 4000,
       ...options,
     });
   }, []);
 
   const error = useCallback((message: string, options?: ToastOptions) => {
+    const dedupId = options?.id || `toast-error-${message.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`;
     sonnerToast.error(message, {
+      id: dedupId,
       duration: 6000,
       ...options,
     });
   }, []);
 
   const info = useCallback((message: string, options?: ToastOptions) => {
+    const dedupId = options?.id || `toast-info-${message.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`;
     sonnerToast.info(message, {
+      id: dedupId,
       duration: 4000,
       ...options,
     });
   }, []);
 
   const warning = useCallback((message: string, options?: ToastOptions) => {
+    const dedupId = options?.id || `toast-warning-${message.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`;
     sonnerToast.warning(message, {
+      id: dedupId,
       duration: 5000,
       ...options,
     });
@@ -59,7 +67,11 @@ export function useToast() {
 
   const loading = useCallback(
     (message: string, options?: ToastOptions): string | number => {
-      return sonnerToast.loading(message, options);
+      const dedupId = options?.id || `toast-loading-${message.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`;
+      return sonnerToast.loading(message, {
+        id: dedupId,
+        ...options,
+      });
     },
     []
   );
