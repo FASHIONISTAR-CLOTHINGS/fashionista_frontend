@@ -1,0 +1,374 @@
+{
+  "timestamp": "2026-05-28T21:36:31.927Z",
+  "tests": [
+    {
+      "label": "Health check → HTTP 200",
+      "status": "PASS",
+      "time": "2026-05-28T21:36:34.199Z"
+    },
+    {
+      "label": "Ninja OpenAPI docs → HTTP 200",
+      "status": "PASS",
+      "time": "2026-05-28T21:36:34.235Z"
+    },
+    {
+      "label": "Collections (public) → HTTP 200",
+      "status": "PASS",
+      "time": "2026-05-28T21:36:37.714Z"
+    },
+    {
+      "label": "Products (public) → HTTP 200",
+      "status": "PASS",
+      "time": "2026-05-28T21:36:41.138Z"
+    },
+    {
+      "label": "Categories (public) → HTTP 200",
+      "status": "PASS",
+      "time": "2026-05-28T21:36:44.543Z"
+    },
+    {
+      "label": "DRF Vendor profile (auth guard)",
+      "status": "FAIL",
+      "reason": "No response: timeout",
+      "time": "2026-05-28T21:36:56.595Z"
+    },
+    {
+      "label": "Ninja vendor dashboard (auth guard)",
+      "status": "FAIL",
+      "reason": "No response: timeout",
+      "time": "2026-05-28T21:37:08.616Z"
+    },
+    {
+      "label": "Auth login GET (405 expected)",
+      "status": "FAIL",
+      "reason": "No response: timeout",
+      "time": "2026-05-28T21:37:20.644Z"
+    },
+    {
+      "label": "Orders (auth guard)",
+      "status": "FAIL",
+      "reason": "No response: timeout",
+      "time": "2026-05-28T21:37:32.669Z"
+    },
+    {
+      "label": "Payments (auth guard)",
+      "status": "FAIL",
+      "reason": "No response: timeout",
+      "time": "2026-05-28T21:37:44.679Z"
+    },
+    {
+      "label": "Wallet (auth guard)",
+      "status": "FAIL",
+      "reason": "No response: timeout",
+      "time": "2026-05-28T21:37:56.686Z"
+    },
+    {
+      "label": "KYC (auth guard)",
+      "status": "FAIL",
+      "reason": "No response: timeout",
+      "time": "2026-05-28T21:38:08.699Z"
+    },
+    {
+      "label": "Measurements",
+      "status": "FAIL",
+      "reason": "No response: timeout",
+      "time": "2026-05-28T21:38:20.732Z"
+    },
+    {
+      "label": "Cart (auth guard)",
+      "status": "WARN",
+      "reason": "Expected 401/403 got 200",
+      "time": "2026-05-28T21:38:20.833Z"
+    },
+    {
+      "label": "vendor registration",
+      "status": "WARN",
+      "reason": "400: {\"success\":false,\"message\":\"Validation failed.\",\"code\":\"validation_error\",\"errors\":{\"role\":[\"This fi",
+      "time": "2026-05-28T21:38:34.197Z"
+    },
+    {
+      "label": "client registration",
+      "status": "WARN",
+      "reason": "400: {\"success\":false,\"message\":\"Validation failed.\",\"code\":\"validation_error\",\"errors\":{\"role\":[\"This fi",
+      "time": "2026-05-28T21:38:47.524Z"
+    },
+    {
+      "label": "Admin JWT login",
+      "status": "WARN",
+      "reason": "HTTP 400 — credentials may need update",
+      "time": "2026-05-28T21:39:01.745Z"
+    },
+    {
+      "label": "Authenticated API tests",
+      "status": "WARN",
+      "reason": "Skipped — no admin token available",
+      "time": "2026-05-28T21:39:01.745Z"
+    },
+    {
+      "label": "Product catalog → 100 products present (seeding target met)",
+      "status": "PASS",
+      "time": "2026-05-28T21:39:05.048Z"
+    },
+    {
+      "label": "Collections API → 5 collections (HTTP 200)",
+      "status": "PASS",
+      "time": "2026-05-28T21:39:08.147Z"
+    },
+    {
+      "label": "Categories API → 5 categories (HTTP 200)",
+      "status": "PASS",
+      "time": "2026-05-28T21:39:11.663Z"
+    },
+    {
+      "label": "Frontend homepage connected → http://localhost:3000/",
+      "status": "PASS",
+      "time": "2026-05-28T21:39:36.897Z"
+    },
+    {
+      "label": "Sign-In page",
+      "status": "PASS",
+      "time": "2026-05-28T21:39:48.725Z"
+    },
+    {
+      "label": "Choose Role page",
+      "status": "PASS",
+      "time": "2026-05-28T21:39:57.042Z"
+    },
+    {
+      "label": "Vendor Sign-Up form",
+      "status": "PASS",
+      "time": "2026-05-28T21:40:02.789Z"
+    },
+    {
+      "label": "Client Sign-Up form",
+      "status": "PASS",
+      "time": "2026-05-28T21:40:08.975Z"
+    },
+    {
+      "label": "OTP Verification page",
+      "status": "PASS",
+      "time": "2026-05-28T21:40:16.861Z"
+    },
+    {
+      "label": "Forgot Password page",
+      "status": "PASS",
+      "time": "2026-05-28T21:40:37.378Z"
+    },
+    {
+      "label": "Client Dashboard",
+      "status": "PASS",
+      "time": "2026-05-28T21:40:46.786Z"
+    },
+    {
+      "label": "Client Orders",
+      "status": "PASS",
+      "time": "2026-05-28T21:40:55.008Z"
+    },
+    {
+      "label": "Client Wallet",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/client/dashboard",
+      "time": "2026-05-28T21:41:32.294Z"
+    },
+    {
+      "label": "Shopping Cart",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/cart\nCall log:\n\u001b",
+      "time": "2026-05-28T21:41:32.636Z"
+    },
+    {
+      "label": "Admin sign-in page",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/auth/sign-in\nCal",
+      "time": "2026-05-28T21:41:34.643Z"
+    },
+    {
+      "label": "01 — Admin Dashboard Home",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard\n",
+      "time": "2026-05-28T21:41:35.019Z"
+    },
+    {
+      "label": "02 — Authentication Management",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:37.012Z"
+    },
+    {
+      "label": "03 — Vendor Management",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:37.454Z"
+    },
+    {
+      "label": "04 — Client Management",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:39.462Z"
+    },
+    {
+      "label": "05 — KYC Verification",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:39.928Z"
+    },
+    {
+      "label": "06 — Product Catalog",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:41.887Z"
+    },
+    {
+      "label": "07 — Order Management",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:42.368Z"
+    },
+    {
+      "label": "08 — Custom Orders",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:44.371Z"
+    },
+    {
+      "label": "09 — Cart Sessions",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:44.839Z"
+    },
+    {
+      "label": "10 — Collections",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:46.839Z"
+    },
+    {
+      "label": "11 — Brands",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:47.302Z"
+    },
+    {
+      "label": "12 — Categories",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:49.317Z"
+    },
+    {
+      "label": "13 — Blog Editor",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:49.738Z"
+    },
+    {
+      "label": "14 — Product Reviews",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:51.794Z"
+    },
+    {
+      "label": "15 — Transactions",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:52.188Z"
+    },
+    {
+      "label": "16 — Wallet & Escrow",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:54.269Z"
+    },
+    {
+      "label": "17 — Payment Gateway",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:54.679Z"
+    },
+    {
+      "label": "18 — Measurements",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:56.738Z"
+    },
+    {
+      "label": "19 — Support Chat",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:57.244Z"
+    },
+    {
+      "label": "20 — Notifications",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:41:59.579Z"
+    },
+    {
+      "label": "21 — Support Tickets",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:42:00.597Z"
+    },
+    {
+      "label": "22 — Audit Logs",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:42:02.844Z"
+    },
+    {
+      "label": "23 — Global Settings",
+      "status": "FAIL",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/admin-dashboard/",
+      "time": "2026-05-28T21:42:03.559Z"
+    },
+    {
+      "label": "Vendor Dashboard Home",
+      "status": "WARN",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/vendor-dashboard",
+      "time": "2026-05-28T21:42:05.660Z"
+    },
+    {
+      "label": "Vendor Products",
+      "status": "WARN",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/vendor-dashboard",
+      "time": "2026-05-28T21:42:06.226Z"
+    },
+    {
+      "label": "Vendor Orders",
+      "status": "WARN",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/vendor-dashboard",
+      "time": "2026-05-28T21:42:08.094Z"
+    },
+    {
+      "label": "Vendor Analytics",
+      "status": "WARN",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/vendor-dashboard",
+      "time": "2026-05-28T21:42:08.630Z"
+    },
+    {
+      "label": "Vendor Wallet",
+      "status": "WARN",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/vendor-dashboard",
+      "time": "2026-05-28T21:42:10.513Z"
+    },
+    {
+      "label": "Vendor Settings",
+      "status": "WARN",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/vendor-dashboard",
+      "time": "2026-05-28T21:42:11.013Z"
+    },
+    {
+      "label": "Vendor Setup Wizard",
+      "status": "WARN",
+      "reason": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/vendor/setup\nCal",
+      "time": "2026-05-28T21:42:12.943Z"
+    }
+  ],
+  "summary": {
+    "total": 63,
+    "passed": 17,
+    "warned": 12,
+    "failed": 34,
+    "passRate": "27.0%",
+    "duration": "366.4s"
+  }
+}

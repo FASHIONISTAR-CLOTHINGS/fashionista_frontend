@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-26T13:01:42.156Z",
-  "duration_seconds": 108,
+  "timestamp": "2026-05-28T21:25:04.331Z",
+  "duration_seconds": 727.5,
   "ngrok": {
     "backend": "https://aeration-scabby-navy.ngrok-free.dev",
     "frontend": "https://hydrographically-tawdrier-hayley.ngrok-free.dev"
@@ -18,7 +18,7 @@
     "api_passed": 0,
     "api_failed": 14,
     "ui_pages": 22,
-    "ui_passed": 22
+    "ui_passed": 3
   },
   "layers": {
     "L1": [
@@ -100,7 +100,7 @@
       }
     ],
     "L2": {
-      "email": "vendor.e2e.1779800401742@fashionistar.ng",
+      "email": "vendor.e2e.1780002907297@fashionistar.ng",
       "token": null,
       "loginStatus": 0
     },
@@ -196,21 +196,21 @@
         "url": "http://localhost:3000",
         "name": "01_homepage",
         "label": "FASHIONISTAR Homepage",
-        "finalUrl": "http://localhost:3000/",
-        "pass": true
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+        "pass": false
       },
       {
         "url": "http://localhost:3000/login",
         "name": "02_login",
         "label": "Auth — Login Page",
-        "finalUrl": "http://localhost:3000/login",
+        "finalUrl": "http://localhost:3000/auth/sign-in",
         "pass": true
       },
       {
         "url": "http://localhost:3000/register",
         "name": "03_register",
         "label": "Auth — Register Page",
-        "finalUrl": "http://localhost:3000/register",
+        "finalUrl": "http://localhost:3000/auth/choose-role",
         "pass": true
       },
       {
@@ -224,127 +224,127 @@
         "url": "http://localhost:3000/vendor",
         "name": "05_vendor_dashboard",
         "label": "Vendor — Dashboard Home",
-        "finalUrl": "http://localhost:3000/vendor",
-        "pass": true
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+        "pass": false
       },
       {
         "url": "http://localhost:3000/vendor/products",
         "name": "06_vendor_products",
         "label": "Vendor — Products Catalog",
-        "finalUrl": "http://localhost:3000/vendor/products",
-        "pass": true
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+        "pass": false
       },
       {
         "url": "http://localhost:3000/vendor/orders",
         "name": "07_vendor_orders",
         "label": "Vendor — Orders",
-        "finalUrl": "http://localhost:3000/vendor/orders",
-        "pass": true
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+        "pass": false
       },
       {
         "url": "http://localhost:3000/vendor/analytics",
         "name": "08_vendor_analytics",
         "label": "Vendor — Analytics & Charts",
-        "finalUrl": "http://localhost:3000/vendor/analytics",
-        "pass": true
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+        "pass": false
       },
       {
         "url": "http://localhost:3000/vendor/wallet",
         "name": "09_vendor_wallet",
         "label": "Vendor — Wallet Balance",
-        "finalUrl": "http://localhost:3000/vendor/wallet",
-        "pass": true
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+        "pass": false
       },
       {
         "url": "http://localhost:3000/vendor/payouts",
         "name": "10_vendor_payouts",
         "label": "Vendor — Payouts & Bank",
-        "finalUrl": "http://localhost:3000/vendor/payouts",
-        "pass": true
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+        "pass": false
       },
       {
         "url": "http://localhost:3000/vendor/kyc",
         "name": "11_vendor_kyc",
         "label": "Vendor — KYC Verification",
-        "finalUrl": "http://localhost:3000/vendor/kyc",
-        "pass": true
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+        "pass": false
       },
       {
         "url": "http://localhost:3000/vendor/catalog",
         "name": "12_vendor_catalog",
         "label": "Vendor — Catalog Collections",
-        "finalUrl": "http://localhost:3000/vendor/catalog",
-        "pass": true
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+        "pass": false
       },
       {
         "url": "http://localhost:3000/vendor/customers",
         "name": "13_vendor_customers",
         "label": "Vendor — Customers",
-        "finalUrl": "http://localhost:3000/vendor/customers",
-        "pass": true
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+        "pass": false
       },
       {
         "url": "http://localhost:3000/vendor/reviews",
         "name": "14_vendor_reviews",
         "label": "Vendor — Reviews",
-        "finalUrl": "http://localhost:3000/vendor/reviews",
-        "pass": true
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+        "pass": false
       },
       {
         "url": "http://localhost:3000/vendor/settings",
         "name": "15_vendor_settings",
         "label": "Vendor — Settings",
-        "finalUrl": "http://localhost:3000/vendor/settings",
-        "pass": true
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+        "pass": false
       },
       {
         "url": "http://localhost:3000/vendor/transactions",
         "name": "16_vendor_transactions",
         "label": "Vendor — Transactions",
-        "finalUrl": "http://localhost:3000/vendor/transactions",
-        "pass": true
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+        "pass": false
       },
       {
         "url": "http://localhost:3000/vendor/payments",
         "name": "17_vendor_payments",
         "label": "Vendor — Payments",
-        "finalUrl": "http://localhost:3000/vendor/payments",
-        "pass": true
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+        "pass": false
       },
       {
         "url": "http://localhost:8001/swagger/",
         "name": "18_swagger_ui",
         "label": "Backend — Swagger UI",
-        "finalUrl": "http://localhost:8001/swagger/",
-        "pass": true
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+        "pass": false
       },
       {
         "url": "http://localhost:8001/api/v1/ninja/docs",
         "name": "19_ninja_docs",
         "label": "Backend — Ninja API Docs",
-        "finalUrl": "http://localhost:8001/api/v1/ninja/docs/",
-        "pass": true
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+        "pass": false
       },
       {
         "url": "https://hydrographically-tawdrier-hayley.ngrok-free.dev",
         "name": "20_ngrok_homepage",
         "label": "Frontend via ngrok tunnel",
-        "finalUrl": "https://hydrographically-tawdrier-hayley.ngrok-free.dev/",
-        "pass": true
+        "error": "page.goto: net::ERR_SOCKET_NOT_CONNECTED at https://hydrographically-tawdrier-ha",
+        "pass": false
       },
       {
         "url": "https://hydrographically-tawdrier-hayley.ngrok-free.dev/vendor",
         "name": "21_ngrok_vendor",
         "label": "Vendor Dashboard via ngrok",
-        "finalUrl": "https://hydrographically-tawdrier-hayley.ngrok-free.dev/vendor",
-        "pass": true
+        "error": "page.goto: Navigation to \"https://hydrographically-tawdrier-hayley.ngrok-free.de",
+        "pass": false
       },
       {
         "url": "https://aeration-scabby-navy.ngrok-free.dev/swagger/",
         "name": "22_ngrok_swagger",
         "label": "Backend Swagger via ngrok",
-        "finalUrl": "https://aeration-scabby-navy.ngrok-free.dev/swagger",
-        "pass": true
+        "error": "page.goto: Navigation to \"https://aeration-scabby-navy.ngrok-free.dev/swagger/\" ",
+        "pass": false
       }
     ]
   }
