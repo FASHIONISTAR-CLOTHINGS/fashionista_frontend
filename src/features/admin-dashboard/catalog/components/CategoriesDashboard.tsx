@@ -72,7 +72,7 @@ export function CategoriesDashboard() {
     setEditingCategory(category);
     reset({
       name: category.name,
-      description: category.description || "",
+      description: "", // Category model has no description — field is display-only
       active: category.active,
     });
     setIsFormOpen(true);
@@ -80,11 +80,14 @@ export function CategoriesDashboard() {
 
   const onSubmit = async (values: CategoryFormValues) => {
     try {
+      // Category model has NO 'description' field — strip it from payload
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { description: _desc, ...categoryPayload } = values;
       if (editingCategory) {
-        await updateMutation.mutateAsync({ id: editingCategory.id, data: values });
+        await updateMutation.mutateAsync({ id: editingCategory.id, data: categoryPayload });
         setIsFormOpen(false);
       } else {
-        await createMutation.mutateAsync(values);
+        await createMutation.mutateAsync(categoryPayload);
         setIsFormOpen(false);
       }
       reset();
@@ -119,8 +122,8 @@ export function CategoriesDashboard() {
       .filter((item) => {
         const matchesSearch =
           item.name.toLowerCase().includes(search.toLowerCase()) ||
-          item.slug.toLowerCase().includes(search.toLowerCase()) ||
-          (item.description && item.description.toLowerCase().includes(search.toLowerCase()));
+          item.slug.toLowerCase().includes(search.toLowerCase());
+          // Note: Category model has no 'description' field — do not filter on it
 
         const matchesStatus =
           statusFilter === "all" ||

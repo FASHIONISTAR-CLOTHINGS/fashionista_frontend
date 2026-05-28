@@ -21,8 +21,9 @@ import { TableRowSkeleton } from "@/shared/components/skeletons";
 import { toast } from "sonner";
 import { Search, RotateCcw, Edit3, Archive, Plus, AlertCircle, X } from "lucide-react";
 
+// Brand model: title, description, active, slug
 const brandFormSchema = z.object({
-  name: z.string().min(2, "Brand Name must be at least 2 characters."),
+  title: z.string().min(2, "Brand Title must be at least 2 characters."),
   description: z.string().max(500, "Description cannot exceed 500 characters.").optional().or(z.literal("")),
   active: z.boolean().default(true),
 });
@@ -54,7 +55,7 @@ export function BrandsDashboard() {
   } = useForm<BrandFormValues>({
     resolver: zodResolver(brandFormSchema),
     defaultValues: {
-      name: "",
+      title: "",
       description: "",
       active: true,
     },
@@ -64,14 +65,14 @@ export function BrandsDashboard() {
 
   const handleOpenCreate = () => {
     setEditingBrand(null);
-    reset({ name: "", description: "", active: true });
+    reset({ title: "", description: "", active: true });
     setIsFormOpen(true);
   };
 
   const handleOpenEdit = (brand: AdminBrand) => {
     setEditingBrand(brand);
     reset({
-      name: brand.name,
+      title: brand.title,
       description: brand.description || "",
       active: brand.active,
     });
@@ -107,7 +108,7 @@ export function BrandsDashboard() {
     startTransition(() => {
       void setSearch("");
       void setStatusFilter("all");
-      void setSortBy("name");
+      void setSortBy("title");
     });
     toast.success("Filters reset successfully");
   };
@@ -118,7 +119,7 @@ export function BrandsDashboard() {
     return brands
       .filter((item) => {
         const matchesSearch =
-          item.name.toLowerCase().includes(search.toLowerCase()) ||
+          item.title.toLowerCase().includes(search.toLowerCase()) ||
           item.slug.toLowerCase().includes(search.toLowerCase()) ||
           (item.description && item.description.toLowerCase().includes(search.toLowerCase()));
 
@@ -130,8 +131,8 @@ export function BrandsDashboard() {
         return matchesSearch && matchesStatus;
       })
       .sort((a, b) => {
-        if (sortBy === "name") {
-          return a.name.localeCompare(b.name);
+        if (sortBy === "title") {
+          return a.title.localeCompare(b.title);
         }
         if (sortBy === "slug") {
           return a.slug.localeCompare(b.slug);
@@ -193,7 +194,7 @@ export function BrandsDashboard() {
             onChange={(e) => setSortBy(e.target.value)}
             className="flex-1 h-11 px-3 rounded-xl border border-[#d9d9d9] focus:border-[#fda600] bg-white outline-none font-satoshi text-sm text-[#333]"
           >
-            <option value="name">Sort by Name</option>
+            <option value="title">Sort by Title</option>
             <option value="slug">Sort by Slug</option>
           </select>
 
@@ -232,14 +233,14 @@ export function BrandsDashboard() {
                   Brand Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
-                  id="brand-name"
-                  {...register("name")}
+                   id="brand-title"
+                  {...register("title")}
                   className="w-full h-11 border-[#d9d9d9] focus:border-[#fda600] rounded-xl font-satoshi"
                   placeholder="e.g. Deola Sagoe"
                 />
-                {errors.name && (
+                {errors.title && (
                   <p className="text-xs text-red-500 flex items-center gap-1 mt-1 font-satoshi">
-                    <AlertCircle className="w-3 h-3" /> {errors.name.message}
+                    <AlertCircle className="w-3 h-3" /> {errors.title.message}
                   </p>
                 )}
               </div>
@@ -337,7 +338,7 @@ export function BrandsDashboard() {
                   filteredBrands.map((brand: AdminBrand) => (
                     <tr key={brand.id} className="hover:bg-[#fcfcfa]/60 transition-colors group">
                       <td className="py-4 font-satoshi font-semibold text-black">
-                        {brand.name}
+                        {brand.title}
                       </td>
                       <td className="py-4 font-mono text-xs text-[#fda600] font-semibold bg-gray-50 px-2 py-1 rounded-md max-w-max">
                         {brand.slug}
