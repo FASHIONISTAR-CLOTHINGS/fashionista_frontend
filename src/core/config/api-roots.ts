@@ -4,9 +4,24 @@ function stripTrailingSlash(value: string): string {
   return value.replace(/\/+$/, "");
 }
 
+function getLocalBrowserBackendOverride(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const hostname = window.location.hostname;
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return DEFAULT_BACKEND_ROOT;
+  }
+
+  return null;
+}
+
 export function getClientBackendRootUrl(): string {
   return stripTrailingSlash(
-    process.env.NEXT_PUBLIC_BACKEND_URL ?? DEFAULT_BACKEND_ROOT,
+    getLocalBrowserBackendOverride() ??
+      process.env.NEXT_PUBLIC_BACKEND_URL ??
+      DEFAULT_BACKEND_ROOT,
   );
 }
 
@@ -37,4 +52,3 @@ export function getAdminSyncApiBaseUrl(): string {
 export function getAdminAsyncApiBaseUrl(): string {
   return `${getClientBackendRootUrl()}/api/v1/admin_backend`;
 }
-

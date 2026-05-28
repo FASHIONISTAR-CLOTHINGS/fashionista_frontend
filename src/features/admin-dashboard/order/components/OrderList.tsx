@@ -87,9 +87,30 @@ export function OrderList() {
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  // Reset selected IDs when orders change
+  // Keep selection in sync with the current result set without forcing a
+  // render on every query refresh.
   useEffect(() => {
-    setSelectedIds(new Set());
+    setSelectedIds((prev) => {
+      if (prev.size === 0) {
+        return prev;
+      }
+
+      const currentIds = new Set(
+        orders
+          .map((order: { id?: string }) => order.id)
+          .filter((id): id is string => Boolean(id)),
+      );
+
+      const next = new Set(
+        [...prev].filter((id) => currentIds.has(id)),
+      );
+
+      if (next.size === prev.size && [...next].every((id) => prev.has(id))) {
+        return prev;
+      }
+
+      return next;
+    });
   }, [orders]);
 
   const toggleRow = (id: string) => {
