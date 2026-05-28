@@ -11,7 +11,7 @@ import {
   rejectKycSync,
   markKycInReviewSync,
 } from "./api";
-import { toast } from "sonner";
+import { toast } from "@/shared/hooks/use-toast";
 
 export function useAdminKycSubmissions(filters?: {
   status?: string;

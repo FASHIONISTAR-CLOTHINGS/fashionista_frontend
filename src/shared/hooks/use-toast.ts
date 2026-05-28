@@ -141,3 +141,49 @@ export function useToast() {
     apiError,
   };
 }
+
+// ── Exported drop-in replacement singleton for sonner toast ──────────────────
+export const toast = {
+  success: (message: string, options?: ToastOptions) => {
+    const dedupId = options?.id || `toast-success-${message.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`;
+    return sonnerToast.success(message, {
+      id: dedupId,
+      duration: 4000,
+      ...options,
+    });
+  },
+  error: (message: string, options?: ToastOptions) => {
+    const dedupId = options?.id || `toast-error-${message.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`;
+    return sonnerToast.error(message, {
+      id: dedupId,
+      duration: 6000,
+      ...options,
+    });
+  },
+  info: (message: string, options?: ToastOptions) => {
+    const dedupId = options?.id || `toast-info-${message.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`;
+    return sonnerToast.info(message, {
+      id: dedupId,
+      duration: 4000,
+      ...options,
+    });
+  },
+  warning: (message: string, options?: ToastOptions) => {
+    const dedupId = options?.id || `toast-warning-${message.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`;
+    return sonnerToast.warning(message, {
+      id: dedupId,
+      duration: 5000,
+      ...options,
+    });
+  },
+  loading: (message: string, options?: ToastOptions) => {
+    const dedupId = options?.id || `toast-loading-${message.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`;
+    return sonnerToast.loading(message, {
+      id: dedupId,
+      ...options,
+    });
+  },
+  dismiss: (toastId?: string | number) => {
+    return sonnerToast.dismiss(toastId);
+  },
+};
