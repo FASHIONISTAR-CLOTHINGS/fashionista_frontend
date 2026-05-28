@@ -14,6 +14,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { useEffect } from "react";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -173,9 +174,13 @@ export function TransactionDashboardView({
   const { data, isLoading, isError, refetch, isFetching } =
     useNinjaTransactionDashboard();
 
-  if (isError) {
-    toast.error("Failed to load transaction data. Please refresh.");
-  }
+  useEffect(() => {
+    if (!isError) return;
+
+    toast.error("Failed to load transaction data. Please refresh.", {
+      id: `transaction-dashboard-error-${audience}`,
+    });
+  }, [audience, isError]);
 
   if (isLoading) return <DashboardSkeleton />;
 

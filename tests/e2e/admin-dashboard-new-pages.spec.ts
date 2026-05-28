@@ -45,16 +45,16 @@ async function seedAuthenticatedSession(
   }, session);
 }
 
-test.describe("Admin Dashboard New Pages — Overhauled Accounts, Sellers & KYC Desk E2E", () => {
+test.describe("Admin Dashboard Canonical Pages — Authentication, Vendor & KYC Desk E2E", () => {
   test.setTimeout(90_000);
 
-  test("admin accounts page loads, search works, and user detail drawer opens", async ({ page }) => {
+  test("admin authentication page loads, search works, and user detail drawer opens", async ({ page }) => {
     const auth = readSeededAuth();
     await seedAuthenticatedSession(page, auth.admin);
 
-    // Navigate to accounts directory
-    await page.goto("/admin-dashboard/accounts", { waitUntil: "domcontentloaded" });
-    await expect(page).toHaveURL(/\/admin-dashboard\/accounts/, { timeout: 30_000 });
+    // Navigate to the canonical authentication directory
+    await page.goto("/admin-dashboard/authentication", { waitUntil: "domcontentloaded" });
+    await expect(page).toHaveURL(/\/admin-dashboard\/authentication/, { timeout: 30_000 });
 
     // Assert that the page is loaded and contains some accounts or fallback message
     await expect(page.locator("h3:has-text('Accounts Directory')")).toBeVisible({ timeout: 20_000 });
@@ -66,25 +66,25 @@ test.describe("Admin Dashboard New Pages — Overhauled Accounts, Sellers & KYC 
 
     // Capture visual snapshot of the Accounts page
     await page.screenshot({
-      path: "tests/e2e/screenshots/admin-accounts-directory.png",
+      path: "tests/e2e/screenshots/admin-authentication-directory.png",
       fullPage: true,
     });
   });
 
-  test("admin sellers gallery loads correctly and showcases boutique cards", async ({ page }) => {
+  test("admin vendor gallery loads correctly and showcases boutique cards", async ({ page }) => {
     const auth = readSeededAuth();
     await seedAuthenticatedSession(page, auth.admin);
 
-    // Navigate to sellers gallery
-    await page.goto("/admin-dashboard/sellers", { waitUntil: "domcontentloaded" });
-    await expect(page).toHaveURL(/\/admin-dashboard\/sellers/, { timeout: 30_000 });
+    // Navigate to the canonical vendor gallery
+    await page.goto("/admin-dashboard/vendor", { waitUntil: "domcontentloaded" });
+    await expect(page).toHaveURL(/\/admin-dashboard\/vendor/, { timeout: 30_000 });
 
     // Assert that the page is loaded
     await expect(page.locator("h3:has-text('Sellers Boutique')")).toBeVisible({ timeout: 20_000 });
 
     // Capture visual snapshot of the Sellers Gallery
     await page.screenshot({
-      path: "tests/e2e/screenshots/admin-sellers-gallery.png",
+      path: "tests/e2e/screenshots/admin-vendor-gallery.png",
       fullPage: true,
     });
   });

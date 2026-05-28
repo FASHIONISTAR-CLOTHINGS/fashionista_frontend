@@ -198,8 +198,8 @@ test.describe("Seeded post-login role journeys", () => {
       fullPage: true,
     });
 
-    await gotoInAppShell(page, "/admin-dashboard/orders");
-    await expect(page).toHaveURL(/\/admin-dashboard\/orders/, {
+    await gotoInAppShell(page, "/admin-dashboard/order");
+    await expect(page).toHaveURL(/\/admin-dashboard\/order/, {
       timeout: 30_000,
     });
     await expectStableShell(page);
