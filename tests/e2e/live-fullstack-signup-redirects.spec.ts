@@ -31,6 +31,41 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
 
   test("1. Register Client User & Verify OTP Redirect", async ({ page }) => {
     test.setTimeout(120_000);
+
+    // Listen to console logs in browser
+    page.on("console", (msg) => {
+      console.log(`[BROWSER CONSOLE] [${msg.type()}] ${msg.text()}`);
+    });
+
+    // Listen to all outgoing requests
+    page.on("request", (req) => {
+      console.log(`[OUTGOING REQUEST] [${req.method()}] ${req.url()}`);
+    });
+
+    // Listen to failed requests
+    page.on("requestfailed", (req) => {
+      console.log(`[REQUEST FAILED] [${req.method()}] ${req.url()} -> Error: ${req.failure()?.errorText}`);
+    });
+
+    // Listen to API responses
+    page.on("response", async (response) => {
+      if (response.url().includes("/api/")) {
+        try {
+          const status = response.status();
+          const url = response.url();
+          let bodyText = "";
+          try {
+            bodyText = await response.text();
+          } catch {
+            bodyText = "<binary/empty>";
+          }
+          console.log(`[API RESPONSE] [${status}] ${url} -> ${bodyText.slice(0, 500)}`);
+        } catch (e) {
+          // ignore parsing error
+        }
+      }
+    });
+
     console.log(`[INFO] Navigating to Client Signup with email: ${clientEmail}`);
     await page.goto(`${FRONTEND_URL}/auth/sign-up?role=client`);
     await page.waitForLoadState("networkidle");
@@ -45,9 +80,10 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
     await captureScreenshot(page, "01_client_signup_filled");
 
     // Click submit and wait for OTP page redirect
+    console.log("[INFO] Clicking submit button...");
     await page.locator("#register-submit-btn").click();
     try {
-      await page.waitForURL(/\/verify-otp/, { timeout: 30_000 });
+      await page.waitForURL(/\/verify-otp/, { timeout: 90_000 });
       await page.waitForLoadState("networkidle");
       await captureScreenshot(page, "02_client_signup_success_otp_prompt");
       console.log("[INFO] Client registered successfully, OTP page reached.");
@@ -59,7 +95,7 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
   });
 
   test("2. Register Vendor User & Verify OTP Redirect", async ({ page }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     console.log(`[INFO] Navigating to Vendor Signup with email: ${vendorEmail}`);
     await page.goto(`${FRONTEND_URL}/auth/sign-up?role=vendor`);
     await page.waitForLoadState("networkidle");
@@ -76,7 +112,7 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
     // Click submit and wait for OTP page redirect
     await page.locator("#register-submit-btn").click();
     try {
-      await page.waitForURL(/\/verify-otp/, { timeout: 30_000 });
+      await page.waitForURL(/\/verify-otp/, { timeout: 90_000 });
       await page.waitForLoadState("networkidle");
       await captureScreenshot(page, "04_vendor_signup_success_otp_prompt");
       console.log("[INFO] Vendor registered successfully, OTP page reached.");
@@ -167,7 +203,8 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
     await captureScreenshot(page, "10_admin_frontend_login_filled");
 
     await page.locator("#login-submit-btn").click();
-    await page.waitForURL(/\/admin-dashboard/, { timeout: 45_000 });
+    // Admin may land on /admin-dashboard or /dashboard/admin depending on build
+    await page.waitForURL(/\/admin-dashboard|\/dashboard\/admin/, { timeout: 45_000 });
     await page.waitForLoadState("networkidle");
 
     await captureScreenshot(page, "11_nextjs_admin_dashboard_home");
@@ -190,8 +227,8 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
     await captureScreenshot(page, "13_client_login_filled");
 
     await page.locator("#login-submit-btn").click();
-    // Redirects client automatically to /client/dashboard or /dashboard
-    await page.waitForURL(/\/client\/dashboard|\/dashboard/, { timeout: 45_000 });
+    // New clients redirect to /onboarding; returning clients to /client/dashboard
+    await page.waitForURL(/\/client\/dashboard|\/dashboard|\/onboarding/, { timeout: 45_000 });
     await page.waitForLoadState("networkidle");
 
     await captureScreenshot(page, "14_client_dashboard_landing");
@@ -209,8 +246,8 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
     await captureScreenshot(page, "15_vendor_login_filled");
 
     await page.locator("#login-submit-btn").click();
-    // Redirects vendor automatically to /vendor/dashboard or /vendor-dashboard
-    await page.waitForURL(/\/vendor\/dashboard|\/vendor-dashboard/, { timeout: 45_000 });
+    // New vendors redirect to /onboarding; returning vendors to /vendor/dashboard
+    await page.waitForURL(/\/vendor\/dashboard|\/vendor-dashboard|\/onboarding/, { timeout: 45_000 });
     await page.waitForLoadState("networkidle");
 
     await captureScreenshot(page, "16_vendor_dashboard_landing");

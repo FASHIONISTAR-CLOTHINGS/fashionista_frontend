@@ -7,7 +7,7 @@ import {
   useRejectKyc as useQuickRejectKyc,
   useMarkKycInReview as useMarkKycInReviewSync,
 } from "../hooks";
-import { toast } from "sonner";
+import { toast } from "@/shared/hooks/use-toast";
 import {
   CheckCircle2,
   XCircle,
