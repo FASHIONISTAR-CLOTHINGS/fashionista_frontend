@@ -2,30 +2,35 @@
  * features/catalog/admin-dashboard/types.ts
  */
 
+// Category model: name, active, slug, image — NO description field
 export interface AdminCategory {
   id: string;
   name: string;
   slug: string;
-  description: string;
+  description?: string; // display only — not a model field, kept for UI compatibility
   active: boolean;
   created_at: string;
 }
 
+// Brand model: title, description, active, slug, image
 export interface AdminBrand {
   id: string;
-  name: string;
+  title: string; // Brand model uses 'title' not 'name'
+  name?: string; // alias for display compatibility
   slug: string;
   description: string;
   active: boolean;
   created_at: string;
 }
 
+// Collections model: title, sub_title, description, slug — NO active field
 export interface AdminCollection {
   id: string;
-  name: string;
+  title: string; // Collections model uses 'title' not 'name'
+  name?: string; // alias for display compatibility
+  sub_title: string;
   slug: string;
   description: string;
-  active: boolean;
   created_at: string;
 }
 

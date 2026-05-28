@@ -16,15 +16,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { TableRowSkeleton } from "@/shared/components/skeletons";
 import { toast } from "sonner";
 import { Search, RotateCcw, Edit3, Archive, Plus, AlertCircle, X } from "lucide-react";
 
+// Collections model: title, sub_title, description, slug — NO 'active' field
 const collectionFormSchema = z.object({
-  name: z.string().min(2, "Collection Name must be at least 2 characters."),
-  description: z.string().max(500, "Description cannot exceed 500 characters.").optional().or(z.literal("")),
-  active: z.boolean().default(true),
+  title: z.string().min(2, "Collection Title must be at least 2 characters."),
+  sub_title: z.string().max(255, "Sub-title cannot exceed 255 characters.").optional().or(z.literal("")),
+  description: z.string().max(2000, "Description cannot exceed 2000 characters.").optional().or(z.literal("")),
 });
 
 type CollectionFormValues = z.infer<typeof collectionFormSchema>;
@@ -38,7 +38,7 @@ export function CollectionsDashboard() {
   // Nuqs URL state synchronization
   const [search, setSearch] = useQueryState("search", { defaultValue: "" });
   const [statusFilter, setStatusFilter] = useQueryState("status", { defaultValue: "all" });
-  const [sortBy, setSortBy] = useQueryState("sortBy", { defaultValue: "name" });
+  const [sortBy, setSortBy] = useQueryState("sortBy", { defaultValue: "title" });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCollection, setEditingCollection] = useState<AdminCollection | null>(null);
@@ -47,44 +47,46 @@ export function CollectionsDashboard() {
   const {
     register,
     handleSubmit,
-    setValue,
-    watch,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<CollectionFormValues>({
     resolver: zodResolver(collectionFormSchema),
     defaultValues: {
-      name: "",
+      title: "",
+      sub_title: "",
       description: "",
-      active: true,
     },
   });
 
-  const activeWatch = watch("active");
-
   const handleOpenCreate = () => {
     setEditingCollection(null);
-    reset({ name: "", description: "", active: true });
+    reset({ title: "", sub_title: "", description: "" });
     setIsFormOpen(true);
   };
 
   const handleOpenEdit = (collection: AdminCollection) => {
     setEditingCollection(collection);
     reset({
-      name: collection.name,
+      title: collection.title,
+      sub_title: collection.sub_title || "",
       description: collection.description || "",
-      active: collection.active,
     });
     setIsFormOpen(true);
   };
 
   const onSubmit = async (values: CollectionFormValues) => {
     try {
+      // Send only fields the Collections model accepts: title, sub_title, description
+      const payload = {
+        title: values.title,
+        sub_title: values.sub_title || "",
+        description: values.description || "",
+      };
       if (editingCollection) {
-        await updateMutation.mutateAsync({ id: editingCollection.id, data: values });
+        await updateMutation.mutateAsync({ id: editingCollection.id, data: payload });
         setIsFormOpen(false);
       } else {
-        await createMutation.mutateAsync(values);
+        await createMutation.mutateAsync(payload);
         setIsFormOpen(false);
       }
       reset();
@@ -107,7 +109,7 @@ export function CollectionsDashboard() {
     startTransition(() => {
       void setSearch("");
       void setStatusFilter("all");
-      void setSortBy("name");
+      void setSortBy("title");
     });
     toast.success("Filters reset successfully");
   };
@@ -118,7 +120,7 @@ export function CollectionsDashboard() {
     return collections
       .filter((item) => {
         const matchesSearch =
-          item.name.toLowerCase().includes(search.toLowerCase()) ||
+          item.title.toLowerCase().includes(search.toLowerCase()) ||
           item.slug.toLowerCase().includes(search.toLowerCase()) ||
           (item.description && item.description.toLowerCase().includes(search.toLowerCase()));
 
@@ -130,8 +132,8 @@ export function CollectionsDashboard() {
         return matchesSearch && matchesStatus;
       })
       .sort((a, b) => {
-        if (sortBy === "name") {
-          return a.name.localeCompare(b.name);
+        if (sortBy === "title") {
+          return a.title.localeCompare(b.title);
         }
         if (sortBy === "slug") {
           return a.slug.localeCompare(b.slug);
@@ -152,7 +154,7 @@ export function CollectionsDashboard() {
             Curate design capsule lines, seasonal couture releases, and spotlight groupings
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 md:col-span-2 justify-end">
           <Button
             onClick={handleOpenCreate}
             className="bg-[#fda600] text-black hover:bg-black hover:text-[#fda600] font-satoshi font-medium transition-all duration-300 rounded-xl px-5 shadow-sm hover:shadow-md flex items-center gap-2"
@@ -168,32 +170,33 @@ export function CollectionsDashboard() {
         <div className="relative col-span-1 md:col-span-2">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4.5 h-4.4" />
           <Input
-            placeholder="Search collections by collection name, slug or description..."
+            placeholder="Search collections by title, slug or description..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 h-11 border-[#d9d9d9] focus:border-[#fda600] rounded-xl font-satoshi"
           />
         </div>
 
-        <div>
+        <div className="flex gap-2 md:col-span-2 justify-end">
+          {/* Status Filter */}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full h-11 px-3 rounded-xl border border-[#d9d9d9] focus:border-[#fda600] bg-white outline-none font-satoshi text-sm text-[#333]"
+            className="flex-1 h-11 px-3 rounded-xl border border-[#d9d9d9] focus:border-[#fda600] bg-white outline-none font-satoshi text-sm text-[#333]"
           >
-            <option value="all">All Statuses</option>
-            <option value="active">Active Only</option>
-            <option value="inactive">Inactive Only</option>
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
           </select>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 md:col-span-2 justify-end">
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             className="flex-1 h-11 px-3 rounded-xl border border-[#d9d9d9] focus:border-[#fda600] bg-white outline-none font-satoshi text-sm text-[#333]"
           >
-            <option value="name">Sort by Name</option>
+            <option value="title">Sort by Title</option>
             <option value="slug">Sort by Slug</option>
           </select>
 
@@ -226,20 +229,20 @@ export function CollectionsDashboard() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div className="space-y-1.5 md:col-span-2">
-                <Label htmlFor="collection-name" className="font-satoshi font-medium text-black">
-                  Collection Name <span className="text-red-500">*</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-1.5">
+                <Label htmlFor="collection-title" className="font-satoshi font-medium text-black">
+                  Collection Title <span className="text-red-500">*</span>
                 </Label>
                 <Input
-                  id="collection-name"
-                  {...register("name")}
+                  id="collection-title"
+                  {...register("title")}
                   className="w-full h-11 border-[#d9d9d9] focus:border-[#fda600] rounded-xl font-satoshi"
                   placeholder="e.g. Summer Regency 2026"
                 />
-                {errors.name && (
+                {errors.title && (
                   <p className="text-xs text-red-500 flex items-center gap-1 mt-1 font-satoshi">
-                    <AlertCircle className="w-3 h-3" /> {errors.name.message}
+                    <AlertCircle className="w-3 h-3" /> {errors.title.message}
                   </p>
                 )}
               </div>
@@ -255,9 +258,9 @@ export function CollectionsDashboard() {
               </div>
             </div>
 
-            <div className="space-y-1.5">
+              <div className="space-y-1.5">
               <Label htmlFor="collection-desc" className="font-satoshi font-medium text-black">
-                Luxury Description
+                Collection Description <span className="text-gray-400 text-xs">(optional)</span>
               </Label>
               <Textarea
                 id="collection-desc"
@@ -325,10 +328,10 @@ export function CollectionsDashboard() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-[#e5e5e5] pb-3">
-                  <th className="font-satoshi font-medium text-sm text-[#858585] pb-3">Collection Name</th>
+                  <th className="font-satoshi font-medium text-sm text-[#858585] pb-3">Collection Title</th>
+                  <th className="font-satoshi font-medium text-sm text-[#858585] pb-3">Sub-Title</th>
                   <th className="font-satoshi font-medium text-sm text-[#858585] pb-3">Unique Slug</th>
-                  <th className="font-satoshi font-medium text-sm text-[#858585] pb-3">Collection Description</th>
-                  <th className="font-satoshi font-medium text-sm text-[#858585] pb-3">Status</th>
+                  <th className="font-satoshi font-medium text-sm text-[#858585] pb-3">Description</th>
                   <th className="font-satoshi font-medium text-sm text-[#858585] pb-3 text-right">Actions</th>
                 </tr>
               </thead>
@@ -337,7 +340,10 @@ export function CollectionsDashboard() {
                   filteredCollections.map((collection: AdminCollection) => (
                     <tr key={collection.id} className="hover:bg-[#fcfcfa]/60 transition-colors group">
                       <td className="py-4 font-satoshi font-semibold text-black">
-                        {collection.name}
+                        {collection.title}
+                      </td>
+                      <td className="py-4 font-satoshi text-sm text-gray-500">
+                        {collection.sub_title || <span className="italic text-gray-300">—</span>}
                       </td>
                       <td className="py-4 font-mono text-xs text-[#fda600] font-semibold bg-gray-50 px-2 py-1 rounded-md max-w-max">
                         {collection.slug}
