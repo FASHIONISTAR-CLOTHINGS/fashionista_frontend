@@ -217,10 +217,20 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
     await page.waitForLoadState("domcontentloaded");
     await captureScreenshot(page, "06_admin_users_list_client");
     
-    // Select the edit link inside the table row containing the client email
-    const clientLink = page.locator(`tr:has-text("${clientEmail}") a[href*="/change/"]`).first();
+    // Select the edit link inside the table row containing the client email (handles th a or td a)
+    const clientLink = page.locator(`tr:has-text("${clientEmail}") a, tr:has-text("${clientEmail}") th a`).first();
     await clientLink.waitFor({ state: "visible", timeout: 30_000 });
     await clientLink.click({ timeout: 60_000 });
+
+    // Check if the "Permissions" tab header exists and click it if visible
+    console.log("[INFO] Checking if 'Permissions' tab is present...");
+    const permissionsTab = page.locator('.nav-link:has-text("Permissions"), a:has-text("Permissions"), li:has-text("Permissions") a, [role="tab"]:has-text("Permissions")').first();
+    if (await permissionsTab.isVisible({ timeout: 5000 }).catch(() => false)) {
+      console.log("[INFO] Clicking the 'Permissions' tab...");
+      await permissionsTab.click({ timeout: 10000 }).catch(() => {});
+    } else {
+      console.log("[INFO] 'Permissions' tab not found/not visible, continuing directly to fields.");
+    }
 
     // Wait for the edit page fields to be visible
     const activeCheck = page.locator('input[name="is_active"], #id_is_active');
@@ -246,9 +256,20 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
     await page.waitForLoadState("domcontentloaded");
     await captureScreenshot(page, "06_admin_users_list_vendor");
     
-    const vendorLink = page.locator(`tr:has-text("${vendorEmail}") a[href*="/change/"]`).first();
+    // Select the edit link inside the table row containing the vendor email (handles th a or td a)
+    const vendorLink = page.locator(`tr:has-text("${vendorEmail}") a, tr:has-text("${vendorEmail}") th a`).first();
     await vendorLink.waitFor({ state: "visible", timeout: 30_000 });
     await vendorLink.click({ timeout: 60_000 });
+
+    // Check if the "Permissions" tab header exists and click it if visible
+    console.log("[INFO] Checking if 'Permissions' tab is present for vendor...");
+    const permissionsTabVendor = page.locator('.nav-link:has-text("Permissions"), a:has-text("Permissions"), li:has-text("Permissions") a, [role="tab"]:has-text("Permissions")').first();
+    if (await permissionsTabVendor.isVisible({ timeout: 5000 }).catch(() => false)) {
+      console.log("[INFO] Clicking the 'Permissions' tab...");
+      await permissionsTabVendor.click({ timeout: 10000 }).catch(() => {});
+    } else {
+      console.log("[INFO] 'Permissions' tab not found/not visible, continuing directly to fields.");
+    }
 
     // Wait for the edit page fields to be visible
     await activeCheck.waitFor({ state: "visible", timeout: 30_000 });
