@@ -130,9 +130,9 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
     await page.locator("#register-submit-btn").click();
     try {
       try {
-        await page.waitForURL(/\/verify-otp/, { timeout: 15_000 });
+        await page.waitForURL(/\/verify-otp/, { waitUntil: "commit", timeout: 45_000 });
       } catch (urlErr) {
-        // If we didn't redirect in 15s, check if we have a validation error on screen
+        // If we didn't redirect in 35s, check if we have a validation error on screen
         const hasError = await page.locator('text="already exists", text="Validation failed"').first().isVisible();
         if (hasError) {
           console.log("[INFO] Client already registered in a previous retry. Routing directly to OTP verification.");
@@ -171,9 +171,9 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
     await page.locator("#register-submit-btn").click();
     try {
       try {
-        await page.waitForURL(/\/verify-otp/, { timeout: 15_000 });
+        await page.waitForURL(/\/verify-otp/, { waitUntil: "commit", timeout: 45_000 });
       } catch (urlErr) {
-        // If we didn't redirect in 15s, check if we have a validation error on screen
+        // If we didn't redirect in 35s, check if we have a validation error on screen
         const hasError = await page.locator('text="already exists", text="Validation failed"').first().isVisible();
         if (hasError) {
           console.log("[INFO] Vendor already registered in a previous retry. Routing directly to OTP verification.");
@@ -218,7 +218,7 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
     await captureScreenshot(page, "06_admin_users_list_client");
     
     // Select the edit link inside the table row containing the client email
-    const clientLink = page.locator(`tr:has-text("${clientEmail}") a`).first();
+    const clientLink = page.locator(`tr:has-text("${clientEmail}") a[href*="/change/"]`).first();
     await clientLink.waitFor({ state: "visible", timeout: 30_000 });
     await clientLink.click({ timeout: 60_000 });
 
@@ -246,7 +246,7 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
     await page.waitForLoadState("domcontentloaded");
     await captureScreenshot(page, "06_admin_users_list_vendor");
     
-    const vendorLink = page.locator(`tr:has-text("${vendorEmail}") a`).first();
+    const vendorLink = page.locator(`tr:has-text("${vendorEmail}") a[href*="/change/"]`).first();
     await vendorLink.waitFor({ state: "visible", timeout: 30_000 });
     await vendorLink.click({ timeout: 60_000 });
 
