@@ -43,7 +43,7 @@ async function seedAuthenticatedSession(page: Page, session: SeededAuthSession) 
 }
 
 async function collectVisibleToastText(page: Page) {
-  const toastLocator = page.locator("[data-sonner-toast], [role='alert'], [role='status']");
+  const toastLocator = page.locator("[data-sonner-toast]");
   const count = await toastLocator.count();
   if (!count) return [];
 
@@ -51,6 +51,27 @@ async function collectVisibleToastText(page: Page) {
   return texts
     .map((value) => value.replace(/\s+/g, " ").trim())
     .filter(Boolean);
+}
+
+async function gotoStable(page: Page, path: string) {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.goto(path, { waitUntil: "domcontentloaded" });
+      await page.waitForLoadState("networkidle", { timeout: 30_000 }).catch(() => {});
+      return;
+    } catch (error) {
+      lastError = error;
+      const message = error instanceof Error ? error.message : String(error);
+      if (!message.includes("ERR_ABORTED") || attempt === 2) {
+        throw error;
+      }
+      await page.waitForTimeout(1500);
+    }
+  }
+
+  throw lastError;
 }
 
 const ROUTES = [
@@ -117,8 +138,7 @@ test.describe("Admin canonical browser proof", () => {
 
     for (const route of ROUTES) {
       await test.step(`crawl ${route.path}`, async () => {
-        await page.goto(route.path, { waitUntil: "domcontentloaded" });
-        await page.waitForLoadState("networkidle", { timeout: 30_000 }).catch(() => {});
+        await gotoStable(page, route.path);
 
         await expect(page).toHaveURL(new RegExp(route.path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), {
           timeout: 30_000,

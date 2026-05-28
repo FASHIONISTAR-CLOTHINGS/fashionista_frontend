@@ -23,8 +23,7 @@ const seededAuthPath = path.resolve(
   process.cwd(),
   "tests/e2e/.tmp/seeded-auth.json",
 );
-const DEFAULT_BACKEND_PUBLIC_URL =
-  "https://hydrographically-tawdrier-hayley.ngrok-free.dev";
+const DEFAULT_BACKEND_PUBLIC_URL = "http://127.0.0.1:8001";
 
 function readSeededAuth(): Record<string, SeededAuthSession> {
   const content = fs.readFileSync(seededAuthPath, "utf8");
@@ -32,9 +31,18 @@ function readSeededAuth(): Record<string, SeededAuthSession> {
 }
 
 function getBackendPublicUrl(): string {
+  const frontendBaseUrl =
+    process.env.PLAYWRIGHT_BASE_URL ??
+    process.env.NEXT_PUBLIC_FRONTEND_TUNNEL_URL ??
+    "http://localhost:3000";
+
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(frontendBaseUrl)) {
+    return DEFAULT_BACKEND_PUBLIC_URL;
+  }
+
   return (
-    process.env.NEXT_PUBLIC_BACKEND_URL ??
     process.env.PLAYWRIGHT_BACKEND_PUBLIC_URL ??
+    process.env.NEXT_PUBLIC_BACKEND_URL ??
     DEFAULT_BACKEND_PUBLIC_URL
   ).replace(/\/+$/, "");
 }
