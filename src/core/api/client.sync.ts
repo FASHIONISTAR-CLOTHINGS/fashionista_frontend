@@ -54,7 +54,7 @@ function onRefreshed(token: string) {
 // ── Axios Instance ────────────────────────────────────────────────────────────
 export const apiSync: AxiosInstance = axios.create({
   baseURL: getSyncApiBaseUrl(),
-  timeout: 15_000,
+  timeout: 45_000,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -92,7 +92,8 @@ apiSync.interceptors.request.use(
 
     // Inject Idempotency-Key for write operations
     const method = config.method?.toUpperCase();
-    if (method && ["POST", "PUT", "PATCH"].includes(method)) {
+    const isRegister = config.url?.includes("/auth/register") || config.url?.includes("/register");
+    if (method && ["POST", "PUT", "PATCH"].includes(method) && !isRegister) {
       if (config.headers && !config.headers["X-Idempotency-Key"] && !config.headers["x-idempotency-key"]) {
         config.headers["X-Idempotency-Key"] = uuidv4();
       }

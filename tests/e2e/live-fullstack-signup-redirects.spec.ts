@@ -29,6 +29,29 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
   const vendorEmail = `vendor.vision.${Date.now()}@fashionistar.io`;
   const testPassword = "FashionTestUser2026!";
 
+  test.beforeAll(async ({ request }) => {
+    console.log("[WARMUP] Starting backend container warm-up request...");
+    const startTime = Date.now();
+    let warmed = false;
+    // Retry health check up to 5 times with a 20s interval to allow cold start
+    for (let i = 0; i < 6; i++) {
+      try {
+        const response = await request.get(`${BACKEND_URL}/health/`, { timeout: 30000 });
+        if (response.ok()) {
+          console.log(`[WARMUP] Backend container warmed up successfully in ${Date.now() - startTime}ms!`);
+          warmed = true;
+          break;
+        }
+      } catch (err) {
+        console.log(`[WARMUP] Health check attempt ${i + 1} failed or timed out: ${err instanceof Error ? err.message : String(err)}. Retrying in 15s...`);
+        await new Promise(resolve => setTimeout(resolve, 15000));
+      }
+    }
+    if (!warmed) {
+      console.warn("[WARMUP] Warning: Backend container warm-up did not complete successfully. Proceeding anyway.");
+    }
+  });
+
   test("1. Register Client User & Verify OTP Redirect", async ({ page }) => {
     test.setTimeout(120_000);
 
@@ -129,12 +152,15 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
     await page.goto(`${BACKEND_URL}/admin/`);
     await page.waitForLoadState("networkidle");
 
-    // Fill Django Admin credentials
-    await page.locator("#id_username").fill(ADMIN_EMAIL);
-    await page.locator("#id_password").fill(ADMIN_PASSWORD);
+    // Fill Django Admin credentials (handle custom styled template or standard inputs)
+    const usernameInput = page.locator('input[name="username"], #id_username');
+    const passwordInput = page.locator('input[name="password"], #id_password');
+    await usernameInput.fill(ADMIN_EMAIL);
+    await passwordInput.fill(ADMIN_PASSWORD);
     await captureScreenshot(page, "05_admin_django_login_filled");
 
-    await page.locator('input[type="submit"]').click();
+    const loginSubmitBtn = page.locator('button[type="submit"], input[type="submit"]');
+    await loginSubmitBtn.click();
     await page.waitForURL(/\/admin\//, { timeout: 45_000 });
     console.log("[INFO] Admin logged in successfully to Django panel.");
 
@@ -146,7 +172,8 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
     // Activate and Verify Client
     console.log(`[INFO] Searching for Client: ${clientEmail}`);
     await page.locator("#searchbar").fill(clientEmail);
-    await page.locator('input[type="submit"]').click();
+    const searchSubmitBtn = page.locator('input[type="submit"]');
+    await searchSubmitBtn.click();
     await page.waitForLoadState("networkidle");
     
     // Click on the client user link
@@ -154,11 +181,11 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
     await page.waitForLoadState("networkidle");
 
     // Toggle active and verified checkboxes in Django Admin
-    const activeCheck = page.locator("#id_is_active");
+    const activeCheck = page.locator('input[name="is_active"], #id_is_active');
     if (!(await activeCheck.isChecked())) {
       await activeCheck.check();
     }
-    const verifiedCheck = page.locator("#id_is_verified");
+    const verifiedCheck = page.locator('input[name="is_verified"], #id_is_verified');
     if (!(await verifiedCheck.isChecked())) {
       await verifiedCheck.check();
     }
