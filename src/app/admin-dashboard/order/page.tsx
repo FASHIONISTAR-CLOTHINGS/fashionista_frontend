@@ -1,4 +1,4 @@
-import { AdminOrderList } from "@/features/admin-dashboard";
+import { AdminOrderList } from "@/features/admin-dashboard/order";
 
 export default function AdminOrdersPage() {
   return (

@@ -1,4 +1,4 @@
-import { NotificationsDashboard } from "@/features/admin-dashboard";
+import { NotificationsDashboard } from "@/features/admin-dashboard/notification";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

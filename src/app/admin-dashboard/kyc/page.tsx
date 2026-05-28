@@ -7,7 +7,7 @@
 
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { KycDashboard } from "@/features/admin-dashboard";
+import { KycDashboard } from "@/features/admin-dashboard/kyc";
 import { TableRowSkeleton } from "@/shared/components/skeletons";
 
 export const metadata: Metadata = {
