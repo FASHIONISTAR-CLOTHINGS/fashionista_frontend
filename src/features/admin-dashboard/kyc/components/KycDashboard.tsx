@@ -193,7 +193,7 @@ export function KycDashboard() {
                       setReviewNotes(sub.review_notes || "");
                       setProviderReference(sub.provider_reference || "");
                     }}
-                    className={`border rounded-2xl p-4 cursor-pointer transition-all duration-200 flex items-center justify-between gap-3 ${
+                    className={`border rounded-2xl p-4 cursor-pointer flex items-center justify-between gap-3 transform hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-md duration-300 transition-all ${
                       isSelected
                         ? "bg-white border-[#01454A] shadow-sm"
                         : "bg-white/60 border-[#ECE6D6] hover:bg-white hover:border-[#8A9596]"

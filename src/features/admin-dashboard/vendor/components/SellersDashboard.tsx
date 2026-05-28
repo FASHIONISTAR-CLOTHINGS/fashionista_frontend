@@ -238,7 +238,7 @@ export function SellersDashboard() {
                   onClick={() => {
                     setSelectedVendorId(vendor.id);
                   }}
-                  className="bg-white border border-[#ECE6D6] hover:border-[#01454A] rounded-[28px] overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group"
+                  className="bg-white border border-[#ECE6D6] rounded-[28px] overflow-hidden flex flex-col shadow-sm transform hover:scale-[1.03] hover:-translate-y-1 hover:shadow-lg duration-300 transition-all cursor-pointer group"
                 >
                   {/* Backdrop banner */}
                   <div className="relative h-32 w-full overflow-hidden bg-gradient-to-tr from-[#01454A] to-[#FDA600]/30">
