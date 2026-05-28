@@ -1,6 +1,10 @@
 import { test } from "@playwright/test";
 import path from "node:path";
 import fs from "node:fs";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Production URLs
 const FRONTEND_URL = "https://fashionistar-frontend-259415881346.europe-west1.run.app";
@@ -22,11 +26,30 @@ async function captureScreenshot(page: any, name: string) {
   console.log(`[EVIDENCE CAPTURED] Saved screenshot: ${filePath}`);
 }
 
-test.describe.configure({ mode: "serial" });
-
 test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => {
-  const clientEmail = `client.vision.${Date.now()}@fashionistar.io`;
-  const vendorEmail = `vendor.vision.${Date.now()}@fashionistar.io`;
+  test.describe.configure({ mode: "serial" });
+  const TMP_EMAIL_FILE = path.resolve(process.cwd(), "tests/e2e/.tmp/active-test-emails.json");
+  let clientEmail: string;
+  let vendorEmail: string;
+
+  // Initialize emails consistently across worker processes/retries
+  if (fs.existsSync(TMP_EMAIL_FILE)) {
+    const saved = JSON.parse(fs.readFileSync(TMP_EMAIL_FILE, "utf8"));
+    clientEmail = saved.clientEmail;
+    vendorEmail = saved.vendorEmail;
+    console.log(`[INIT] Loaded existing test emails: client=${clientEmail}, vendor=${vendorEmail}`);
+  } else {
+    // Ensure directory exists
+    if (!fs.existsSync(path.dirname(TMP_EMAIL_FILE))) {
+      fs.mkdirSync(path.dirname(TMP_EMAIL_FILE), { recursive: true });
+    }
+    const timestamp = Date.now();
+    clientEmail = `client.vision.${timestamp}@fashionistar.io`;
+    vendorEmail = `vendor.vision.${timestamp}@fashionistar.io`;
+    fs.writeFileSync(TMP_EMAIL_FILE, JSON.stringify({ clientEmail, vendorEmail }), "utf8");
+    console.log(`[INIT] Generated and saved new test emails: client=${clientEmail}, vendor=${vendorEmail}`);
+  }
+
   const testPassword = "FashionTestUser2026!";
 
   test.beforeAll(async ({ request }) => {
@@ -160,28 +183,26 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
     await captureScreenshot(page, "05_admin_django_login_filled");
 
     const loginSubmitBtn = page.locator('button[type="submit"], input[type="submit"]');
-    await loginSubmitBtn.click();
+    await loginSubmitBtn.click({ timeout: 60_000 });
     await page.waitForURL(/\/admin\//, { timeout: 45_000 });
     console.log("[INFO] Admin logged in successfully to Django panel.");
 
-    // Go to Unified Users list
-    await page.goto(`${BACKEND_URL}/admin/authentication/unifieduser/`);
-    await page.waitForLoadState("networkidle");
-    await captureScreenshot(page, "06_admin_users_list");
-
-    // Activate and Verify Client
-    console.log(`[INFO] Searching for Client: ${clientEmail}`);
-    await page.locator("#searchbar").fill(clientEmail);
-    const searchSubmitBtn = page.locator('input[type="submit"]');
-    await searchSubmitBtn.click();
-    await page.waitForLoadState("networkidle");
+    // Go to Unified Users list directly filtered by Client email
+    console.log(`[INFO] Navigating directly to Client list view for: ${clientEmail}`);
+    await page.goto(`${BACKEND_URL}/admin/authentication/unifieduser/?q=${clientEmail}`);
+    await page.waitForLoadState("domcontentloaded");
+    await captureScreenshot(page, "06_admin_users_list_client");
     
-    // Click on the client user link
-    await page.locator(`a:has-text("${clientEmail}")`).first().click();
-    await page.waitForLoadState("networkidle");
+    // Select the edit link inside the table row containing the client email
+    const clientLink = page.locator(`tr:has-text("${clientEmail}") a`).first();
+    await clientLink.waitFor({ state: "visible", timeout: 30_000 });
+    await clientLink.click({ timeout: 60_000 });
+
+    // Wait for the edit page fields to be visible
+    const activeCheck = page.locator('input[name="is_active"], #id_is_active');
+    await activeCheck.waitFor({ state: "visible", timeout: 30_000 });
 
     // Toggle active and verified checkboxes in Django Admin
-    const activeCheck = page.locator('input[name="is_active"], #id_is_active');
     if (!(await activeCheck.isChecked())) {
       await activeCheck.check();
     }
@@ -190,19 +211,23 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
       await verifiedCheck.check();
     }
     await captureScreenshot(page, "07_client_activation_details");
-    await page.locator('input[name="_save"]').click();
-    await page.waitForLoadState("networkidle");
+    await page.locator('button[name="_save"], input[name="_save"], button:has-text("Save")').first().click({ timeout: 60_000 });
+    
+    // Wait for redirect back to list view
+    await page.waitForURL(/\/admin\/authentication\/unifieduser\//, { timeout: 45_000 });
 
-    // Activate and Verify Vendor
-    console.log(`[INFO] Searching for Vendor: ${vendorEmail}`);
-    await page.goto(`${BACKEND_URL}/admin/authentication/unifieduser/`);
-    await page.locator("#searchbar").fill(vendorEmail);
-    await page.locator('input[type="submit"]').click();
-    await page.waitForLoadState("networkidle");
+    // Go to Unified Users list directly filtered by Vendor email
+    console.log(`[INFO] Navigating directly to Vendor list view for: ${vendorEmail}`);
+    await page.goto(`${BACKEND_URL}/admin/authentication/unifieduser/?q=${vendorEmail}`);
+    await page.waitForLoadState("domcontentloaded");
+    await captureScreenshot(page, "06_admin_users_list_vendor");
+    
+    const vendorLink = page.locator(`tr:has-text("${vendorEmail}") a`).first();
+    await vendorLink.waitFor({ state: "visible", timeout: 30_000 });
+    await vendorLink.click({ timeout: 60_000 });
 
-    // Click on the vendor user link
-    await page.locator(`a:has-text("${vendorEmail}")`).first().click();
-    await page.waitForLoadState("networkidle");
+    // Wait for the edit page fields to be visible
+    await activeCheck.waitFor({ state: "visible", timeout: 30_000 });
 
     // Toggle active and verified checkboxes in Django Admin
     if (!(await activeCheck.isChecked())) {
@@ -212,8 +237,10 @@ test.describe("FASHIONISTAR AI - Real-Vision Live Fullstack E2E Testing", () => 
       await verifiedCheck.check();
     }
     await captureScreenshot(page, "08_vendor_activation_details");
-    await page.locator('input[name="_save"]').click();
-    await page.waitForLoadState("networkidle");
+    await page.locator('button[name="_save"], input[name="_save"], button:has-text("Save")').first().click({ timeout: 60_000 });
+    
+    // Wait for redirect back to list view
+    await page.waitForURL(/\/admin\/authentication\/unifieduser\//, { timeout: 45_000 });
 
     console.log("[INFO] Both test accounts successfully activated and verified!");
     await captureScreenshot(page, "09_accounts_activated_success");
