@@ -1,4 +1,4 @@
-import { SellersDashboard } from "@/features/admin-dashboard";
+import { SellersDashboard } from "@/features/admin-dashboard/vendor";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
