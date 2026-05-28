@@ -11,8 +11,19 @@ test("Inspect API network and console logs during signup", async ({ page }) => {
     console.log(`[BROWSER REQUEST] ${request.method()} ${request.url()}`);
   });
 
-  page.on('response', response => {
-    console.log(`[BROWSER RESPONSE] ${response.status()} ${response.url()}`);
+  page.on('response', async response => {
+    const status = response.status();
+    if (status >= 400) {
+      let text = "";
+      try {
+        text = await response.text();
+      } catch (e) {
+        text = "<cannot read body>";
+      }
+      console.log(`[BROWSER RESPONSE ERROR] ${status} ${response.url()} -> ${text}`);
+    } else {
+      console.log(`[BROWSER RESPONSE] ${status} ${response.url()}`);
+    }
   });
 
   page.on('requestfailed', request => {
