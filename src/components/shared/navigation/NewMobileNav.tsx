@@ -186,8 +186,8 @@ const SOCIAL_LINKS = [
 function getRoleQuickLinks(role?: string, isStaff?: boolean) {
   if (isStaff) {
     return [
-      { href: "/admin-dashboard/orders", label: "Admin Orders" },
-      { href: "/admin-dashboard/payments", label: "Admin Payments" },
+      { href: "/admin-dashboard/order", label: "Admin Orders" },
+      { href: "/admin-dashboard/payment", label: "Admin Payments" },
     ];
   }
   if (role === "vendor") {

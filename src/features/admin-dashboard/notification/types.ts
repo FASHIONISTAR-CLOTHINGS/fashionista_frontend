@@ -1,15 +1,16 @@
-/**
- * features/notification/admin-dashboard/types.ts
- */
-
-export interface AdminAnnouncement {
+export interface AdminNotification {
   id: string;
   title: string;
-  target_audience: "all" | "vendors" | "clients";
-  sent_by: string;
-  sent_at: string;
+  body: string;
   message_preview: string;
-  read_count: number;
+  target_audience: "all" | "vendors" | "clients";
+  notification_type: string;
+  channel: string;
+  sent_at: string | null;
+  created_at: string;
+  failed: boolean;
+  external_id: string;
+  recipient_email: string | null;
 }
 
 export interface SendAnnouncementInput {
