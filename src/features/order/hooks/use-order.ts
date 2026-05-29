@@ -20,6 +20,7 @@ import {
   fetchVendorOrderDetail,
   cancelOrder,
   confirmDelivery,
+  verifyPickup,
   fetchVendorOrders,
   updateVendorProductionStatus,
   getNinjaClientOrderCounts,
@@ -118,6 +119,23 @@ export function useConfirmDelivery() {
     },
     onError: () => {
       toast.error("Could not confirm delivery.");
+    },
+  });
+}
+
+export function useVerifyPickup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (pickupToken: string) => verifyPickup(pickupToken),
+    onSuccess: (order) => {
+      void qc.setQueryData(orderKeys.detail(order.id), order);
+      void qc.invalidateQueries({ queryKey: orderKeys.clientLists() });
+      void qc.invalidateQueries({ queryKey: orderKeys.clientCounts() });
+      toast.success("Order Pickup Verified! Escrow released successfully.");
+    },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || err?.message || "Could not verify pickup.";
+      toast.error(msg);
     },
   });
 }
