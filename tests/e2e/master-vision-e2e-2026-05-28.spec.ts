@@ -716,9 +716,9 @@ test.describe("Stage 5 — Order & Wallet State", () => {
     // Hard assertions
     expect(platformFee).toBe(8_500);
     expect(vendorPayout).toBe(76_500);
-    expect(PRODUCT_PRICE * 0.30).toBe(25_500);
-    expect(PRODUCT_PRICE * 0.50).toBe(42_500);
-    expect(PRODUCT_PRICE * 0.70).toBe(59_500);
+    expect(Math.round(PRODUCT_PRICE * 0.30)).toBe(25_500);
+    expect(Math.round(PRODUCT_PRICE * 0.50)).toBe(42_500);
+    expect(Math.round(PRODUCT_PRICE * 0.70)).toBe(59_500);
     console.log("\n    ✅ All escrow math assertions PASS");
   });
 
