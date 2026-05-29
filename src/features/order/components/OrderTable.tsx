@@ -172,10 +172,10 @@ const OrderTable = () => {
                   <td className="py-4 px-3 text-center">
                     <span
                       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] md:text-xs font-medium whitespace-nowrap
-                                  ${PAYMENT_STATUS_STYLES[order.payment_status] ?? "bg-gray-100 text-gray-600"}`}
+                                  ${order.payment_status ? (PAYMENT_STATUS_STYLES[order.payment_status] ?? "bg-gray-100 text-gray-600") : "bg-gray-100 text-gray-600"}`}
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
-                      {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
+                      {order.payment_status ? (order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)) : "Unpaid"}
                     </span>
                   </td>
                   <td className={`py-4 px-3 text-center font-medium capitalize ${ORDER_STATUS_STYLES[order.status] ?? ""}`}>
