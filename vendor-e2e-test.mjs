@@ -98,7 +98,7 @@ async function layer2_vendorAuth(browser) {
     reg.status < 500 ? 'INFO' : 'WARN');
 
   // Login
-  const login = await apiFetch(browser, `${LOCAL_BE}/api/v1/auth/token/`, {
+  const login = await apiFetch(browser, `${LOCAL_BE}/api/v1/auth/login/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: { email, password }
@@ -123,18 +123,18 @@ async function layer3_vendorAPIAuth(browser) {
   const h = { 'Authorization': `Bearer ${VENDOR_TOKEN}`, 'Content-Type': 'application/json' };
   const endpoints = [
     { name: 'ninja_dashboard',       url: `${LOCAL_BE}/api/v1/ninja/vendor/dashboard/`,       expect: [200, 422] },
-    { name: 'ninja_setup_state',     url: `${LOCAL_BE}/api/v1/ninja/vendor/setup-state/`,     expect: [200, 404, 422] },
+    { name: 'ninja_setup_state',     url: `${LOCAL_BE}/api/v1/ninja/vendor/setup/`,           expect: [200, 404, 422] },
     { name: 'drf_profile',           url: `${LOCAL_BE}/api/v1/vendor/profile/`,               expect: [200, 404] },
-    { name: 'drf_analytics_summary', url: `${LOCAL_BE}/api/v1/vendor/analytics/summary/`,     expect: [200, 404] },
+    { name: 'drf_analytics_summary', url: `${LOCAL_BE}/api/v1/vendor/analytics/`,             expect: [200, 404] },
     { name: 'drf_products',          url: `${LOCAL_BE}/api/v1/vendor/products/`,              expect: [200] },
     { name: 'drf_orders',            url: `${LOCAL_BE}/api/v1/vendor/orders/`,                expect: [200] },
     { name: 'drf_coupons',           url: `${LOCAL_BE}/api/v1/vendor/coupons/`,              expect: [200] },
     { name: 'drf_reviews',           url: `${LOCAL_BE}/api/v1/vendor/reviews/`,              expect: [200] },
-    { name: 'drf_revenue_chart',     url: `${LOCAL_BE}/api/v1/vendor/analytics/revenue-chart/`, expect: [200, 404] },
-    { name: 'drf_monthly_orders',    url: `${LOCAL_BE}/api/v1/vendor/analytics/monthly-orders/`, expect: [200, 404] },
-    { name: 'drf_top_categories',    url: `${LOCAL_BE}/api/v1/vendor/analytics/top-categories/`, expect: [200, 404] },
-    { name: 'drf_payment_dist',      url: `${LOCAL_BE}/api/v1/vendor/analytics/payment-distribution/`, expect: [200, 404] },
-    { name: 'drf_customers',         url: `${LOCAL_BE}/api/v1/vendor/analytics/customer-behavior/`, expect: [200, 404] },
+    { name: 'drf_revenue_chart',     url: `${LOCAL_BE}/api/v1/vendor/analytics/revenue/`,     expect: [200, 404] },
+    { name: 'drf_monthly_orders',    url: `${LOCAL_BE}/api/v1/vendor/analytics/orders/`,      expect: [200, 404] },
+    { name: 'drf_top_categories',    url: `${LOCAL_BE}/api/v1/vendor/analytics/categories/`,  expect: [200, 404] },
+    { name: 'drf_payment_dist',      url: `${LOCAL_BE}/api/v1/vendor/analytics/distribution/`,expect: [200, 404] },
+    { name: 'drf_customers',         url: `${LOCAL_BE}/api/v1/vendor/analytics/customers/`,   expect: [200, 404] },
     { name: 'drf_low_stock',         url: `${LOCAL_BE}/api/v1/vendor/products/low-stock/`,   expect: [200] },
     { name: 'ninja_kyc_status',      url: `${LOCAL_BE}/api/v1/ninja/kyc/status/`,            expect: [200, 404, 422] },
     { name: 'ninja_kyc_documents',   url: `${LOCAL_BE}/api/v1/ninja/kyc/documents/`,         expect: [200, 404, 422] },
@@ -166,7 +166,7 @@ async function layer4_authDenials(browser) {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: { email, password, confirm_password: password, role: 'client' }
   });
-  const loginR = await apiFetch(browser, `${LOCAL_BE}/api/v1/auth/token/`, {
+  const loginR = await apiFetch(browser, `${LOCAL_BE}/api/v1/auth/login/`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: { email, password }
   });
@@ -179,7 +179,7 @@ async function layer4_authDenials(browser) {
   log(`  CLIENT token obtained: ${email}`, 'INFO');
 
   const denialEndpoints = [
-    { name: 'vendor_analytics_summary', url: `${LOCAL_BE}/api/v1/vendor/analytics/summary/` },
+    { name: 'vendor_analytics_summary', url: `${LOCAL_BE}/api/v1/vendor/analytics/` },
     { name: 'vendor_products',          url: `${LOCAL_BE}/api/v1/vendor/products/` },
     { name: 'vendor_orders',            url: `${LOCAL_BE}/api/v1/vendor/orders/` },
     { name: 'vendor_coupons',           url: `${LOCAL_BE}/api/v1/vendor/coupons/` },
@@ -226,12 +226,12 @@ async function layer5_validation(browser) {
     },
     {
       name: 'login_wrong_creds',
-      url: `${LOCAL_BE}/api/v1/auth/token/`,
+      url: `${LOCAL_BE}/api/v1/auth/login/`,
       method: 'POST', body: { email: 'nobody@nobody.com', password: 'wrong' }, expect: [400, 401]
     },
     {
       name: 'login_empty_body',
-      url: `${LOCAL_BE}/api/v1/auth/token/`,
+      url: `${LOCAL_BE}/api/v1/auth/login/`,
       method: 'POST', body: {}, expect: [400]
     },
   ];

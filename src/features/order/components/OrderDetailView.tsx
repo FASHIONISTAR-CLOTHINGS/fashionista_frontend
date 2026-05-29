@@ -31,6 +31,7 @@ import {
   PackageCheck,
   ReceiptText,
   RefreshCw,
+  Sparkles,
   Truck,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -39,6 +40,7 @@ import {
   useConfirmDelivery,
   useOrderDetail,
   useVendorOrderDetail,
+  useVerifyPickup,
 } from "../hooks/use-order";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -196,6 +198,7 @@ export default function OrderDetailView({
   const { data: order, isLoading, isError } = activeQuery;
   const { mutate: cancelOrder, isPending: cancelling } = useCancelOrder();
   const { mutate: confirmDelivery, isPending: confirming } = useConfirmDelivery();
+  const { mutate: verifyPickup, isPending: verifyingPickup } = useVerifyPickup();
 
   if (isLoading) return <OrderDetailSkeleton />;
 

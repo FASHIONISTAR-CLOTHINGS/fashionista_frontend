@@ -128,6 +128,19 @@ export async function confirmDelivery(orderId: string): Promise<OrderDetail> {
   ) as OrderDetail;
 }
 
+/** Verify vendor shop pickup scan and release escrow. */
+export async function verifyPickup(pickupToken: string): Promise<OrderDetail> {
+  const { data } = await apiSync.put<unknown>(
+    `${BASE}/verify-pickup/`,
+    { pickup_token: pickupToken }
+  );
+  return parseOrderResponse(
+    OrderDetailSchema,
+    unwrapApiData(data),
+    "verifyPickup",
+  ) as OrderDetail;
+}
+
 // ── VENDOR ────────────────────────────────────────────────────────────────────
 
 /** Fetch vendor's order list. */

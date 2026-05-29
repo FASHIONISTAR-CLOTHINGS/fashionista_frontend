@@ -178,7 +178,7 @@ function MiniOrderRow({ order }: { order: ClientOrder }) {
           {fmtNgn(order.total_amount)}
         </span>
         <StatusBadge status={order.status} />
-        <Link href={`/client/dashboard/orders?id=${order.id}`}>
+        <Link href={`/client/dashboard/orders/${order.id}`}>
           <ChevronRight className="h-4 w-4 text-[#A89A7A]" />
         </Link>
       </div>
@@ -329,7 +329,7 @@ export function ClientDashboardView() {
               Custom Order
             </Link>
             <Link
-              href="/"
+              href="/products"
               className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
             >
               <Sparkles className="h-4 w-4" />
@@ -558,9 +558,10 @@ export function ClientOrdersView() {
           </div>
           <div className="divide-y divide-[#F4F3EC]">
             {orders.map((order) => (
-              <div
+              <Link
                 key={order.id}
-                className="grid items-center gap-4 px-6 py-5 transition hover:bg-[#FFFDF5] md:grid-cols-[2fr_1.5fr_1fr_1fr_1fr]"
+                href={`/client/dashboard/orders/${order.id}`}
+                className="grid items-center gap-4 px-6 py-5 transition hover:bg-[#FFFDF5] md:grid-cols-[2fr_1.5fr_1fr_1fr_1fr] cursor-pointer"
               >
                 {/* Vendor + order number */}
                 <div>
@@ -578,17 +579,22 @@ export function ClientOrdersView() {
                 {/* Status */}
                 <StatusBadge status={order.status} />
                 {/* Action */}
-                <div className="flex justify-end">
+                <div className="flex items-center justify-end gap-3">
                   {order.tracking_number && (
-                    <Link
-                      href={`/client/dashboard/orders/track-order?order=${order.order_number}`}
-                      className="flex items-center gap-1 text-xs font-semibold text-[#01454A] hover:underline"
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        window.open(`/client/dashboard/orders/track-order?order=${order.order_number}`, "_blank");
+                      }}
+                      className="flex items-center gap-1 text-xs font-semibold text-[#01454A] hover:underline cursor-pointer"
                     >
                       Track <ExternalLink className="h-3 w-3" />
-                    </Link>
+                    </span>
                   )}
+                  <ChevronRight className="h-4 w-4 text-[#A89A7A]" />
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
