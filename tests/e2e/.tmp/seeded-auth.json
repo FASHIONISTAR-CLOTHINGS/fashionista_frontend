@@ -1,44 +1,42 @@
 {
-  "client": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzgwMzc5Mjg4LCJpYXQiOjE3Nzk3NzQ0OTEsImp0aSI6IjFmZjM4ZmQxZjcwMTRmNTliYzNiMjMzNTVlYTU0ZmYwIiwidXNlcl9pZCI6IjAxOWUxNTRkLWJiZTUtNzA0MC05OTMwLTk4NzhmNDIzYzA1OSJ9.G7yBNuC-jyKjLPYX7x4wUETIyWvByq2_RToN0QJxHjw",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc4NzU1MDQ4OCwiaWF0IjoxNzc5Nzc0NDg4LCJqdGkiOiI4NGQ5MmUwODhlM2U0ZGE3YTc0MDIwNDVkZWRhMWEwZCIsInVzZXJfaWQiOiIwMTllMTU0ZC1iYmU1LTcwNDAtOTkzMC05ODc4ZjQyM2MwNTkifQ.xj7xgZd8mbvvn4quL6EyxxIYC395tlg36iCEIWy-hHI",
-    "user": {
-      "id": "019e154d-bbe5-7040-9930-9878f423c059",
-      "role": "client",
-      "is_staff": false,
-      "first_name": "Chidi",
-      "last_name": "Nwosu",
-      "is_verified": true,
-      "has_vendor_profile": false,
-      "has_client_profile": true
-    }
-  },
-  "vendor": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzgwMzc5Mjk0LCJpYXQiOjE3Nzk3NzQ0OTYsImp0aSI6ImQ1NDgxN2ZiNjQxYTQzYzU4ZGZhMTliOGFkYWFhNDRjIiwidXNlcl9pZCI6IjAxOWUxNTRkLWEzMzktNzE2NS1iMmMxLThiYjY3NzM3NTIxNiJ9.MqpsnahnndmLgd1z8osC1zS89YB1WIpOws4X2zecC0E",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc4NzU1MDQ5NCwiaWF0IjoxNzc5Nzc0NDk0LCJqdGkiOiIwM2VhZWQyNzEzMzE0Y2NhOWVjNGU2MGRlM2MxYmU5OSIsInVzZXJfaWQiOiIwMTllMTU0ZC1hMzM5LTcxNjUtYjJjMS04YmI2NzczNzUyMTYifQ.y0l6emLnhP4UxUq1T0OKAY1QvTEMbR-4NlVrx9gFev4",
-    "user": {
-      "id": "019e154d-a339-7165-b2c1-8bb677375216",
-      "role": "vendor",
-      "is_staff": false,
-      "first_name": "Amaka",
-      "last_name": "Osei",
-      "is_verified": true,
-      "has_vendor_profile": true,
-      "has_client_profile": false
-    }
-  },
+  "_note": "Tokens are obtained dynamically by master-vision-e2e-2026-05-28.spec.ts via API login at runtime",
+  "_seed_date": "2026-05-29",
   "admin": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzgwMzc5Mjk4LCJpYXQiOjE3Nzk3NzQ1MDAsImp0aSI6ImE0MWJhOTg2Mjg0MjQwYmJhODk3OTQwZjhmZmY4YjRhIiwidXNlcl9pZCI6IjAxOWUxNTRkLThjMDktN2Q2ZS05YjQxLWU1MDE0OThjMGNjYiJ9.x1WRn9zh6wF8B8bxmL_A7Ph8V8TCDQVLcgR4qvfL1z8",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc4NzU1MDQ5OCwiaWF0IjoxNzc5Nzc0NDk4LCJqdGkiOiJmMjU1Mzk5OWI3Nzk0MmFhOGY1NWU1MGMwODNhODMxOCIsInVzZXJfaWQiOiIwMTllMTU0ZC04YzA5LTdkNmUtOWI0MS1lNTAxNDk4YzBjY2IifQ.gIPECLafqLlKk3xzbwHcsvDdbEYbcqT4aWqt-26yu38",
+    "accessToken": "",
+    "refreshToken": "",
     "user": {
-      "id": "019e154d-8c09-7d6e-9b41-e501498c0ccb",
+      "id": "",
       "role": "admin",
       "is_staff": true,
       "first_name": "Admin",
-      "last_name": "Fashionistar",
+      "last_name": "FASHIONISTAR",
+      "is_verified": true
+    }
+  },
+  "vendor": {
+    "accessToken": "",
+    "refreshToken": "",
+    "user": {
+      "id": "",
+      "role": "vendor",
+      "is_staff": false,
+      "first_name": "Adaeze",
+      "last_name": "Couture",
       "is_verified": true,
-      "has_vendor_profile": false,
-      "has_client_profile": false
+      "has_vendor_profile": true
+    }
+  },
+  "client": {
+    "accessToken": "",
+    "refreshToken": "",
+    "user": {
+      "id": "",
+      "role": "client",
+      "is_staff": false,
+      "first_name": "Vision",
+      "last_name": "Client",
+      "is_verified": true,
+      "has_client_profile": true
     }
   }
 }
