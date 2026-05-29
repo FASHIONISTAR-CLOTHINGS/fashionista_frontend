@@ -39,7 +39,7 @@ export function BrandsDashboard() {
   // Nuqs URL state synchronization
   const [search, setSearch] = useQueryState("search", { defaultValue: "" });
   const [statusFilter, setStatusFilter] = useQueryState("status", { defaultValue: "all" });
-  const [sortBy, setSortBy] = useQueryState("sortBy", { defaultValue: "name" });
+  const [sortBy, setSortBy] = useQueryState("sortBy", { defaultValue: "title" });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState<AdminBrand | null>(null);
