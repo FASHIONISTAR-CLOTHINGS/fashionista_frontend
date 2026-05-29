@@ -74,15 +74,15 @@ test.describe("FASHIONISTAR AI - Real-Vision Local Fullstack E2E Testing", () =>
     }
   });
 
-  test("1. Register Client User & Verify OTP Redirect", async ({ page }) => {
-    test.setTimeout(120_000);
-
+  test.beforeEach(async ({ page }) => {
     page.on("console", (msg) => {
       console.log(`[BROWSER CONSOLE] [${msg.type()}] ${msg.text()}`);
     });
 
     page.on("request", (req) => {
-      console.log(`[OUTGOING REQUEST] [${req.method()}] ${req.url()}`);
+      if (req.url().includes("/api/")) {
+        console.log(`[OUTGOING REQUEST] [${req.method()}] ${req.url()}`);
+      }
     });
 
     page.on("requestfailed", (req) => {
@@ -106,6 +106,10 @@ test.describe("FASHIONISTAR AI - Real-Vision Local Fullstack E2E Testing", () =>
         }
       }
     });
+  });
+
+  test("1. Register Client User & Verify OTP Redirect", async ({ page }) => {
+    test.setTimeout(120_000);
 
     console.log(`[INFO] Navigating to Client Signup with email: ${clientEmail}`);
     await page.goto(`${FRONTEND_URL}/auth/sign-up?role=client`);

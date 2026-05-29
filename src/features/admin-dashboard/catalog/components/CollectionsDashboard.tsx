@@ -247,15 +247,7 @@ export function CollectionsDashboard() {
                 )}
               </div>
 
-              <div className="flex flex-col justify-end">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
-                  <span className="font-satoshi text-sm font-medium text-black">Active Status</span>
-                  <Switch
-                    checked={activeWatch}
-                    onCheckedChange={(checked) => setValue("active", checked)}
-                  />
-                </div>
-              </div>
+              {/* Collections model has no 'active' field — toggle removed */}
             </div>
 
               <div className="space-y-1.5">
