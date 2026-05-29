@@ -247,7 +247,22 @@ export function CollectionsDashboard() {
                 )}
               </div>
 
-              {/* Collections model has no 'active' field — toggle removed */}
+              <div className="space-y-1.5">
+                <Label htmlFor="collection-subtitle" className="font-satoshi font-medium text-black">
+                  Collection Sub-Title <span className="text-gray-400 text-xs">(optional)</span>
+                </Label>
+                <Input
+                  id="collection-subtitle"
+                  {...register("sub_title")}
+                  className="w-full h-11 border-[#d9d9d9] focus:border-[#fda600] rounded-xl font-satoshi"
+                  placeholder="e.g. Modern Expressions of Heritage"
+                />
+                {errors.sub_title && (
+                  <p className="text-xs text-red-500 flex items-center gap-1 mt-1 font-satoshi">
+                    <AlertCircle className="w-3 h-3" /> {errors.sub_title.message}
+                  </p>
+                )}
+              </div>
             </div>
 
               <div className="space-y-1.5">
