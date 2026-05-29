@@ -37,7 +37,6 @@ export function CollectionsDashboard() {
 
   // Nuqs URL state synchronization
   const [search, setSearch] = useQueryState("search", { defaultValue: "" });
-  const [statusFilter, setStatusFilter] = useQueryState("status", { defaultValue: "all" });
   const [sortBy, setSortBy] = useQueryState("sortBy", { defaultValue: "title" });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -108,13 +107,12 @@ export function CollectionsDashboard() {
   const handleResetFilters = () => {
     startTransition(() => {
       void setSearch("");
-      void setStatusFilter("all");
       void setSortBy("title");
     });
     toast.success("Filters reset successfully");
   };
 
-  // Filter and sort collections based on search and statusFilter state
+  // Filter and sort collections based on search state
   const filteredCollections = React.useMemo(() => {
     if (!collections) return [];
     return collections
@@ -124,12 +122,7 @@ export function CollectionsDashboard() {
           item.slug.toLowerCase().includes(search.toLowerCase()) ||
           (item.description && item.description.toLowerCase().includes(search.toLowerCase()));
 
-        const matchesStatus =
-          statusFilter === "all" ||
-          (statusFilter === "active" && item.active) ||
-          (statusFilter === "inactive" && !item.active);
-
-        return matchesSearch && matchesStatus;
+        return matchesSearch;
       })
       .sort((a, b) => {
         if (sortBy === "title") {
@@ -140,7 +133,7 @@ export function CollectionsDashboard() {
         }
         return 0;
       });
-  }, [collections, search, statusFilter, sortBy]);
+  }, [collections, search, sortBy]);
 
   return (
     <div className="space-y-8 bg-inherit">
@@ -177,20 +170,7 @@ export function CollectionsDashboard() {
           />
         </div>
 
-        <div className="flex gap-2 md:col-span-2 justify-end">
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="flex-1 h-11 px-3 rounded-xl border border-[#d9d9d9] focus:border-[#fda600] bg-white outline-none font-satoshi text-sm text-[#333]"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-        </div>
-
-        <div className="flex gap-2 md:col-span-2 justify-end">
+        <div className="flex gap-2 col-span-1 md:col-span-2 justify-end">
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
@@ -358,18 +338,7 @@ export function CollectionsDashboard() {
                       <td className="py-4 font-satoshi text-sm text-gray-500 max-w-[280px] truncate" title={collection.description}>
                         {collection.description || <span className="italic text-gray-300">No description provided</span>}
                       </td>
-                      <td className="py-4">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold font-satoshi ${
-                            collection.active
-                              ? "bg-[#C5FECB] text-[#20AB2C]"
-                              : "bg-[#FEF3D3] text-[#ECB219]"
-                          }`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${collection.active ? "bg-[#20AB2C]" : "bg-[#ECB219]"}`} />
-                          {collection.active ? "Active" : "Inactive"}
-                        </span>
-                      </td>
+
                       <td className="py-4 text-right space-x-2">
                         <Button
                           variant="ghost"

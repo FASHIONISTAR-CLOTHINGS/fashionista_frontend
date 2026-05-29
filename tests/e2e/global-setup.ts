@@ -38,6 +38,7 @@ function decodeJwtExp(token: string): number | null {
 }
 
 function shouldRefresh(token: string): boolean {
+  if (!token) return false;
   const exp = decodeJwtExp(token);
   if (!exp) return true;
   const now = Math.floor(Date.now() / 1000);
