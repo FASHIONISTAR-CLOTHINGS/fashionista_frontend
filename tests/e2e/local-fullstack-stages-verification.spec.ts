@@ -29,8 +29,8 @@ test.describe("FASHIONISTAR AI - Local Stages 1, 2, and 3 Verification", () => {
   test.describe.configure({ mode: "serial" });
 
   const TMP_EMAIL_FILE = path.resolve(process.cwd(), "tests/e2e/.tmp/active-test-emails.json");
-  let clientEmail = "client.test@fashionistar.io";
-  let vendorEmail = "vendor.test@fashionistar.io";
+  let clientEmail = "client.vision.2026@gmail.com";
+  let vendorEmail = "vendor.vision.2026@gmail.com";
   const testPassword = "FashionTestUser2026!";
 
   if (fs.existsSync(TMP_EMAIL_FILE)) {
