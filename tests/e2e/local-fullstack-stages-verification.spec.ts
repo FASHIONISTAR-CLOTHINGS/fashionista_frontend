@@ -7,8 +7,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Local URLs for E2E verification
-const FRONTEND_URL = "http://localhost:3000";
-const BACKEND_URL = "http://localhost:8001";
+const FRONTEND_URL = "http://127.0.0.1:3000";
+const BACKEND_URL = "http://127.0.0.1:8001";
 
 const ADMIN_EMAIL = "admin@fashionistar.io";
 const ADMIN_PASSWORD = "FashionAdmin2026!";
