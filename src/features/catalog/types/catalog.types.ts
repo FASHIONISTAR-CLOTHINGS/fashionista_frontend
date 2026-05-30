@@ -1,3 +1,17 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Catalog Entity Types  (read-side, from Django-Ninja async API)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface CatalogCategoryChild {
+  id: string;
+  name: string;
+  slug: string;
+  image: string | null;
+  sort_order: number;
+  icon_class: string;
+  color_hex: string;
+}
+
 export interface CatalogCategory {
   id: string;
   name: string;
@@ -9,6 +23,15 @@ export interface CatalogCategory {
   active: boolean;
   created_at: string;
   updated_at: string;
+  // v2 expanded
+  meta_title?: string;
+  meta_description?: string;
+  sort_order?: number;
+  icon_class?: string;
+  color_hex?: string;
+  banner_image?: string | null;
+  cached_product_count?: number;
+  children?: CatalogCategoryChild[];
 }
 
 export interface CatalogBrand {
@@ -23,6 +46,16 @@ export interface CatalogBrand {
   active: boolean;
   created_at: string;
   updated_at: string;
+  // v2 expanded
+  country?: string;
+  website_url?: string;
+  established_year?: number | null;
+  verified?: boolean;
+  premium?: boolean;
+  logo_banner?: string | null;
+  meta_title?: string;
+  meta_description?: string;
+  cached_product_count?: number;
 }
 
 export interface CatalogCollection {
@@ -40,6 +73,17 @@ export interface CatalogCollection {
   background_cloudinary_url: string | null;
   created_at: string;
   updated_at: string;
+  // v2 expanded
+  is_featured?: boolean;
+  sort_order?: number;
+  start_date?: string | null;
+  end_date?: string | null;
+  banner_cta_text?: string;
+  banner_cta_url?: string;
+  meta_title?: string;
+  meta_description?: string;
+  cached_product_count?: number;
+  is_active_now?: boolean;
 }
 
 export interface CatalogBlogPost {
@@ -64,11 +108,27 @@ export interface CatalogBlogPost {
   view_count: number;
   created_at: string;
   updated_at: string;
+  // v2 expanded
+  read_time_minutes?: number;
+  author_avatar?: string | null;
+  og_image?: string | null;
+  canonical_url?: string;
+  comment_count?: number;
+  likes_count?: number;
+}
+
+export interface CatalogTag {
+  id: string;
+  name: string;
+  slug: string;
+  color_hex: string;
+  is_trending: boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Phase 11 — Homepage Bundle Types
-// Returned by GET /api/v1/ninja/catalog/homepage/
+// Homepage Bundle Types
+// v1: GET /api/v1/ninja/catalog/homepage/        (5 sections)
+// v2: GET /api/v1/ninja/catalog/homepage/bundle/ (6 sections + banners)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Lean product card for homepage sections (featured + hot deals). */
@@ -115,7 +175,7 @@ export interface HomepageReviewCard {
   created_at: string | null;
 }
 
-/** Lean collection card for homepage carousel (from .values() dict). */
+/** Lean collection card for homepage carousel. */
 export interface HomepageCollectionCard {
   id: string;
   name: string;
@@ -130,7 +190,7 @@ export interface HomepageCollectionCard {
   created_at: string | null;
 }
 
-/** Lean category card for homepage grid (from .values() dict). */
+/** Lean category card for homepage grid. */
 export interface HomepageCategoryCard {
   id: string;
   name: string;
@@ -142,6 +202,22 @@ export interface HomepageCategoryCard {
   created_at: string | null;
 }
 
+/**
+ * CMS-managed homepage banner card (Phase B3).
+ * Included in bundle v2 and returned standalone from /homepage/banners/.
+ */
+export interface HomepageBannerCard {
+  id: string;
+  slot: "hero" | "mid" | "footer_cta";
+  title: string;
+  subtitle: string;
+  cta_text: string;
+  cta_url: string;
+  image_url: string | null;
+  mobile_image_url: string | null;
+  sort_order: number;
+}
+
 /** Metadata counts embedded in the bundle response. */
 export interface HomepageBundleMeta {
   collections_count: number;
@@ -149,11 +225,12 @@ export interface HomepageBundleMeta {
   products_count: number;
   hot_deals_count: number;
   reviews_count: number;
+  banners_count?: number;
 }
 
 /**
- * Full homepage data bundle — returned by GET /api/v1/ninja/catalog/homepage/
- * Replaces the previous approach of 5 separate client-side fetches.
+ * Full homepage data bundle.
+ * banners defaults to [] for v1 compatibility.
  */
 export interface HomepageBundle {
   collections: HomepageCollectionCard[];
@@ -161,5 +238,69 @@ export interface HomepageBundle {
   featured_products: HomepageProductCard[];
   hot_deals: HomepageProductCard[];
   reviews: HomepageReviewCard[];
+  banners: HomepageBannerCard[];
   meta: HomepageBundleMeta;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Paginated list wrappers (from async_ninja_paginate)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface PaginatedProducts {
+  results: HomepageProductCard[];
+  count: number;
+  page: number;
+  page_size: number;
+}
+
+export interface PaginatedCategories {
+  results: CatalogCategory[];
+  count: number;
+  page: number;
+  page_size: number;
+}
+
+export interface PaginatedBrands {
+  results: CatalogBrand[];
+  count: number;
+  page: number;
+  page_size: number;
+}
+
+export interface PaginatedCollections {
+  results: CatalogCollection[];
+  count: number;
+  page: number;
+  page_size: number;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Search result
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface CatalogSearchResult {
+  categories: HomepageCategoryCard[];
+  brands: CatalogBrand[];
+  collections: HomepageCollectionCard[];
+  query: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Filter state (mirrors Zustand catalog store)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type CatalogSortOption =
+  | "newest"
+  | "price_asc"
+  | "price_desc"
+  | "rating"
+  | "popular";
+
+export interface CatalogFilterParams {
+  priceMin: number | null;
+  priceMax: number | null;
+  selectedSizes: string[];
+  selectedColors: string[];
+  selectedBrands: string[];
+  sortBy: CatalogSortOption;
 }
