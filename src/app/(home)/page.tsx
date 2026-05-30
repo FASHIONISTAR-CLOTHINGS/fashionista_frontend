@@ -1,29 +1,129 @@
+/**
+ * app/(home)/page.tsx — Fashionistar Homepage
+ *
+ * Production 2026–2027 Architecture:
+ *   - Single RSC with ONE server fetch: getHomepageBundle()
+ *   - Backend: 5 parallel DB queries via asyncio.gather() < 30ms p95
+ *   - Frontend: ISR revalidate 300s (5 min) — matches backend Redis TTL
+ *   - All sections receive data as props — zero additional HTTP round-trips
+ *   - Suspense boundaries with pixel-perfect skeleton fallbacks
+ *
+ * Data flow:
+ *   getHomepageBundle() → HomepageBundle →
+ *     { collections, categories, featured_products, hot_deals, reviews }
+ *       ↓ props to each section component (no re-fetch)
+ */
+
 import Link from "next/link";
 import Image from "next/image";
+import { Suspense } from "react";
 import { Hero } from "@/components";
 import { CatalogCategoryGrid, CatalogCollectionGrid } from "@/features/catalog";
-import { Suspense } from "react";
-import FeaturedProductsSection from "./FeaturedProductsSection";
+import { getHomepageBundle } from "@/features/catalog";
 import { ProductGridSkeleton } from "@/features/product";
 import { RecentlyViewedSection } from "./_components/RecentlyViewedSection";
 import { DealsCountdown } from "./_components/DealsCountdown";
 import { NewsletterForm } from "./_components/NewsletterForm";
+import { HomepageHotDealsSection } from "./_components/HomepageHotDealsSection";
+import { HomepageReviewsSection } from "./_components/HomepageReviewsSection";
+import type { HomepageBundle } from "@/features/catalog/types/catalog.types";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HOMEPAGE — Production 2027 Enterprise Design
-// Live: Category Grid, Featured Products, Collection Grid
-// Live Countdown for Deals of the Week
+// Metadata — per-page SEO
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default async function Home(props: { searchParams?: Promise<Record<string, string>> }) {
-  void props;
+export const metadata = {
+  title: "Fashionistar — AI-Powered Fashion & Custom Tailoring in Nigeria",
+  description:
+    "Shop premium bespoke clothing from verified Nigerian tailors. Use our AI body measurement system for a perfect fit. Collections, senator outfits, gowns & more.",
+  keywords: ["Nigerian fashion", "bespoke tailoring", "AI measurement", "senator outfit", "custom clothing Nigeria"],
+  openGraph: {
+    title: "Fashionistar — AI-Powered Fashion & Custom Tailoring",
+    description: "Nigeria's premier AI-powered e-commerce platform connecting clients with verified tailors.",
+    type: "website",
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Featured Products sub-RSC (keeps Suspense boundary isolated)
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function FeaturedProductsSection({ bundle }: { bundle: HomepageBundle }) {
+  const products = bundle.featured_products.slice(0, 8);
+
+  if (!products.length) return null;
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+      {products.map((product) => {
+        const image = product.image_url ?? "/heroimg.png";
+        const priceNum = parseFloat(product.price);
+        const avgRating = product.computed_avg_rating || product.rating;
+        const stars = Math.min(5, Math.max(1, Math.round(avgRating || 5)));
+
+        return (
+          <Link
+            key={product.id}
+            href={`/products/${product.slug}`}
+            className="flex flex-col gap-2 group"
+          >
+            <div className="relative overflow-hidden rounded-xl bg-[#F4F5FB]">
+              <Image
+                src={image}
+                alt={product.title}
+                width={480}
+                height={480}
+                className="w-full h-[220px] md:h-[280px] object-contain group-hover:scale-105 transition-transform duration-500"
+                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              />
+              {product.hot_deal && (
+                <span className="absolute top-2 left-2 bg-[#fda600] text-white text-xs font-bold font-raleway px-2 py-1 rounded-md uppercase">
+                  Sale
+                </span>
+              )}
+              {product.requires_measurement && (
+                <span className="absolute top-2 right-2 bg-[#01454A] text-white text-xs font-semibold font-raleway px-2 py-1 rounded-md">
+                  AI Fit
+                </span>
+              )}
+            </div>
+            <span className="text-[#fda600] text-sm">
+              {"★".repeat(stars)}{"☆".repeat(5 - stars)}
+            </span>
+            <p className="font-raleway font-semibold text-sm md:text-base text-black line-clamp-2">
+              {product.title}
+            </p>
+            <p className="font-raleway font-semibold text-base md:text-lg text-[#01454A]">
+              ₦{priceNum.toLocaleString("en-NG")}
+              {product.old_price && (
+                <span className="ml-2 text-sm line-through text-[#848484] font-normal">
+                  ₦{parseFloat(product.old_price).toLocaleString("en-NG")}
+                </span>
+              )}
+            </p>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main Homepage Page — Single bundle fetch, all sections as props
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default async function Home() {
+  // ONE server-side fetch — backend asyncio.gather() runs 5 DB queries in parallel
+  // ISR: revalidate 300s, tagged "homepage-bundle" for on-demand invalidation
+  const bundle = await getHomepageBundle();
 
   return (
     <div className="flex flex-col gap-5">
-      {/* ── Slide Carousel Hero (3 animated slides) ─────────────── */}
+
+      {/* ── Hero Carousel (3 animated slides) ────────────────────────── */}
       <Hero />
 
-      {/* ── Mobile email waitlist ─────────────────────────────────── */}
+      {/* ── Mobile email waitlist ─────────────────────────────────────── */}
       <div className="mt-10 md:hidden flex z-30 px-4">
         <form className="flex w-full">
           <div className="h-[60px] w-full bg-[#F4F5FB] rounded-r-[100px] flex items-center p-1.5">
@@ -39,10 +139,15 @@ export default async function Home(props: { searchParams?: Promise<Record<string
         </form>
       </div>
 
-      {/* ── Live Category Grid ─────────────────────────────────────── */}
+      {/* ── Live Category Grid ──────────────────────────────────────────── */}
+      {/*
+        CatalogCategoryGrid has its own internal fetch — kept separate so
+        it can be independently revalidated by the catalog admin signal.
+        In a future optimization this can be switched to receive bundle.categories.
+      */}
       <CatalogCategoryGrid />
 
-      {/* ── Live Featured Products ─────────────────────────────────── */}
+      {/* ── Live Featured Products ──────────────────────────────────────── */}
       <section className="px-5 py-10 md:px-10 lg:px-20 space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="font-bon_foyage text-4xl md:text-5xl text-[#333]">
@@ -55,24 +160,26 @@ export default async function Home(props: { searchParams?: Promise<Record<string
             View all →
           </Link>
         </div>
-        <Suspense fallback={<ProductGridSkeleton count={4} />}>
-          <FeaturedProductsSection />
+        <Suspense fallback={<ProductGridSkeleton count={8} />}>
+          <FeaturedProductsSection bundle={bundle} />
         </Suspense>
       </section>
 
-      {/* ── Recently Viewed Rail ───────────────────────────────────── */}
+      {/* ── Recently Viewed Rail (client-side, localStorage) ────────────── */}
       <RecentlyViewedSection />
 
-      {/* ── Live Collection Grid ───────────────────────────────────── */}
+      {/* ── Live Collection Grid ─────────────────────────────────────────── */}
       <CatalogCollectionGrid />
 
-      {/* ── Campaign Banner ───────────────────────────────────────── */}
+      {/* ── Campaign Banner ──────────────────────────────────────────────── */}
       <div className="w-full h-[593px] bg-[#fda600] md:h-[746px] relative p-10 md:p-14 lg:p-24 flex flex-col gap-5 md:gap-10 items-center overflow-hidden">
         {/* Decorative overlay */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent" />
         </div>
-        <p className="font-raleway font-semibold text-xl text-black relative z-10">SENATOR OUTFITS</p>
+        <p className="font-raleway font-semibold text-xl text-black relative z-10">
+          SENATOR OUTFITS
+        </p>
         <p className="font-bon_foyage text-[42px] md:text-6xl lg:text-[75px] lg:leading-[74px] leading-[42px] text-center text-black md:w-1/2 relative z-10">
           {" "}The New Fashion Collection
         </p>
@@ -99,7 +206,7 @@ export default async function Home(props: { searchParams?: Promise<Record<string
         />
       </div>
 
-      {/* ── Deals of the Week (Live Countdown) ───────────────────── */}
+      {/* ── Deals of the Week (live from hot_deals bundle) ───────────────── */}
       <div className="px-5 py-10 md:p-10 lg:p-20 space-y-5 md:space-y-10">
         <div className="flex flex-wrap justify-center md:justify-normal items-center gap-5 lg:gap-20">
           <h3 className="font-bon_foyage whitespace-nowrap text-center text-5xl leading-[48px] text-[#333]">
@@ -109,59 +216,19 @@ export default async function Home(props: { searchParams?: Promise<Record<string
           <DealsCountdown />
         </div>
 
-        {/* Featured deal cards — live from featured products */}
-        <div className="flex items-center flex-wrap gap-y-6 md:gap-3 lg:gap-6 justify-between">
-          <Suspense fallback={
-            <div className="flex gap-6">
-              {[1,2,3].map(i => (
-                <div key={i} className="flex flex-col w-[45%] md:w-[32%] max-w-[300px] gap-3">
-                  <div className="w-full h-[220px] md:h-[350px] rounded-[8px] bg-[#F4F5FB] animate-pulse" />
-                  <div className="h-4 w-2/3 bg-[#F4F5FB] animate-pulse rounded" />
-                  <div className="h-4 w-1/2 bg-[#F4F5FB] animate-pulse rounded" />
-                </div>
-              ))}
-            </div>
-          }>
-            <FeaturedDealsSection />
-          </Suspense>
-        </div>
+        {/* Hot deal cards — live from homepage bundle (no extra fetch) */}
+        <HomepageHotDealsSection products={bundle.hot_deals} />
       </div>
 
-      {/* ── Reviews Section ───────────────────────────────────────── */}
-      <div className="px-5 py-10 md:p-10 lg:p-20 space-y-5">
-        <h2 className="font-bon_foyage text-5xl text-[#333]">Our Reviews</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {MOCK_REVIEWS.map((review) => (
-            <div
-              key={review.id}
-              style={{ boxShadow: "0px 4px 25px 0px #0000001A" }}
-              className="flex flex-col md:flex-row items-center gap-6 py-8 px-8 border border-[#D9D9D9] rounded-2xl hover:border-[#FDA600] transition-colors duration-300 group"
-            >
-              <div className="relative w-[80px] h-[80px] rounded-full overflow-hidden shrink-0 ring-2 ring-[#FDA600]/30 group-hover:ring-[#FDA600] transition-all">
-                <Image src={review.image} alt={review.name} fill className="object-cover" />
-              </div>
-              <div className="flex flex-col items-center md:items-start gap-2">
-                <span className="text-[#fda600] text-xl">★★★★★</span>
-                <p className="font-raleway text-center md:text-left text-lg text-[#333] leading-relaxed">
-                  &ldquo;{review.text}&rdquo;
-                </p>
-                <p className="font-raleway font-semibold text-xl text-black">{review.name}</p>
-                <p className="font-raleway text-sm text-[#848484]">{review.role}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="flex items-center gap-3 justify-center pt-4">
-          <span className="w-6 h-6 rounded-full bg-[#01454A] border-2 border-[#01454A]" />
-          <span className="w-4 h-4 rounded-full bg-transparent border-2 border-[#01454A]/40" />
-          <span className="w-4 h-4 rounded-full bg-transparent border-2 border-[#01454A]/40" />
-        </div>
-      </div>
+      {/* ── Live Customer Reviews (from homepage bundle) ──────────────────── */}
+      <HomepageReviewsSection reviews={bundle.reviews} />
 
-      {/* ── Newsletter CTA ────────────────────────────────────────── */}
+      {/* ── Newsletter CTA ────────────────────────────────────────────────── */}
       <div className="mx-5 md:mx-10 lg:mx-20 mb-10 rounded-3xl bg-gradient-to-r from-[#01454A] to-[#01454A]/80 p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8">
         <div>
-          <h3 className="font-bon_foyage text-3xl md:text-4xl text-white mb-2">Stay in Style</h3>
+          <h3 className="font-bon_foyage text-3xl md:text-4xl text-white mb-2">
+            Stay in Style
+          </h3>
           <p className="font-raleway text-[#ECE6D6]/80 text-base md:text-lg">
             Get exclusive deals, new arrivals and style tips delivered to your inbox.
           </p>
@@ -171,119 +238,3 @@ export default async function Home(props: { searchParams?: Promise<Record<string
     </div>
   );
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// DEAL CARDS — lightweight placeholder with real product images from catalog
-// ─────────────────────────────────────────────────────────────────────────────
-
-async function FeaturedDealsSection() {
-  const { getFeaturedProductsServer } = await import("@/features/product/api/product.server");
-  let products: Awaited<ReturnType<typeof getFeaturedProductsServer>> = [];
-  try {
-    products = await getFeaturedProductsServer();
-    products = products.slice(0, 3);
-  } catch {
-    products = [];
-  }
-
-  if (!products.length) {
-    return (
-      <p className="text-[#848484] font-raleway">
-        New deals dropping soon — check back later!
-      </p>
-    );
-  }
-
-  return (
-    <>
-      {products.map((product) => {
-        const image = product.image_url ?? "/heroimg.png";
-        const priceNum = parseFloat(product.price);
-        const oldPriceNum = product.old_price ? parseFloat(product.old_price) : null;
-        return (
-          <Link
-            key={product.id}
-            href={`/products/${product.slug}`}
-            className="flex flex-col w-[45%] md:w-[32%] max-w-[300px] group"
-          >
-            <div className="relative overflow-hidden rounded-[8px]">
-              <Image
-                src={image}
-                className="w-full h-[220px] md:h-[350px] object-contain group-hover:scale-105 transition-transform duration-500"
-                alt={product.title}
-                width={500}
-                height={500}
-              />
-              {product.hot_deal && (
-                <div className="absolute top-7 left-2 md:top-10">
-                  <p className="w-[83px] h-7 rounded-[5px] flex items-center justify-center uppercase bg-[#fda600] text-white font-semibold font-raleway text-xs">
-                    sales
-                  </p>
-                </div>
-              )}
-            </div>
-            <div className="flex flex-col gap-2 pt-3">
-              <span className="text-[#fda600] text-lg">
-                {"★".repeat(Math.round(product.rating || 5))}{"☆".repeat(5 - Math.round(product.rating || 5))}
-              </span>
-              <p className="font-raleway font-semibold text-base md:text-xl text-black line-clamp-2">
-                {product.title}
-              </p>
-              <div className="flex items-center gap-2">
-                <p className="font-raleway font-semibold text-lg md:text-xl text-[#01454A]">
-                  ₦{priceNum.toLocaleString()}
-                </p>
-                {oldPriceNum && (
-                  <p className="font-raleway md:text-lg line-through text-[#848484]">
-                    ₦{oldPriceNum.toLocaleString()}
-                  </p>
-                )}
-              </div>
-            </div>
-          </Link>
-        );
-      })}
-    </>
-  );
-}
-
-
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STATIC REVIEW DATA (upgrade to API later)
-// ─────────────────────────────────────────────────────────────────────────────
-
-const MOCK_REVIEWS = [
-  {
-    id: "1",
-    image: "/man2_asset.svg",
-    text: "Amazing quality and perfect fit! The AI measurement system is a game-changer. My senator outfit fit perfectly from day one.",
-    rating: 5,
-    name: "Emeka Okafor",
-    role: "Business Executive, Lagos",
-  },
-  {
-    id: "2",
-    image: "/woman.svg",
-    text: "Exceeded all my expectations! Fashionistar delivered an exquisite gown that made me the star of my event. Will order again!",
-    rating: 5,
-    name: "Adunni Bello",
-    role: "Fashion Enthusiast, Abuja",
-  },
-  {
-    id: "3",
-    image: "/man2_asset.svg",
-    text: "The custom order feature is outstanding. I uploaded my measurement and the vendor delivered exactly what I envisioned.",
-    rating: 5,
-    name: "Chukwuemeka Eze",
-    role: "Legal Practitioner, Enugu",
-  },
-  {
-    id: "4",
-    image: "/woman.svg",
-    text: "Fashionistar has redefined online fashion for me. The quality, service, and attention to detail are unmatched in Nigeria.",
-    rating: 5,
-    name: "Fatima Aliyu",
-    role: "Entrepreneur, Kano",
-  },
-];
