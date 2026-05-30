@@ -11,6 +11,8 @@ export {
   getCatalogBrands,
   getCatalogCategories,
   getCatalogCollections,
+  // Phase 11 — homepage bundle (single endpoint, 5 parallel DB reads)
+  getHomepageBundle,
 } from "./api/catalog.server";
 export { default as CatalogBlogList } from "./components/CatalogBlogList";
 export { default as CatalogCategoryGrid } from "./components/CatalogCategoryGrid";
