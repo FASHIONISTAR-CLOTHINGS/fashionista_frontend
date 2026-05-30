@@ -229,12 +229,14 @@ export async function getHomepageBundle(): Promise<HomepageBundle> {
     featured_products: [],
     hot_deals: [],
     reviews: [],
+    banners: [],
     meta: {
       collections_count: 0,
       categories_count: 0,
       products_count: 0,
       hot_deals_count: 0,
       reviews_count: 0,
+      banners_count: 0,
     },
   };
 
@@ -255,5 +257,317 @@ export async function getHomepageBundle(): Promise<HomepageBundle> {
   } catch (err) {
     console.error("[catalog.server] getHomepageBundle unexpected error:", err);
     return EMPTY_BUNDLE;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase C4 — Detail + Paginated Catalog Server Functions
+// ─────────────────────────────────────────────────────────────────────────────
+
+import type {
+  CatalogSearchResult,
+  CatalogTag,
+  HomepageBannerCard,
+  PaginatedProducts,
+} from "../types/catalog.types";
+
+const EMPTY_BUNDLE_V2: HomepageBundle = {
+  collections: [],
+  categories: [],
+  featured_products: [],
+  hot_deals: [],
+  reviews: [],
+  banners: [],
+  meta: {
+    collections_count: 0,
+    categories_count: 0,
+    products_count: 0,
+    hot_deals_count: 0,
+    reviews_count: 0,
+    banners_count: 0,
+  },
+};
+
+/**
+ * Homepage bundle v2 — 6 sections including hero banners.
+ * Calls /catalog/homepage/bundle/ (Phase B3 endpoint).
+ */
+export async function getHomepageBundleV2(): Promise<HomepageBundle> {
+  try {
+    const raw = await fetchHomepageBundle(
+      "/api/v1/ninja/catalog/homepage/bundle/"
+    );
+    if (!raw) return EMPTY_BUNDLE_V2;
+    const result = HomepageBundleSchema.safeParse(raw);
+    if (!result.success) {
+      console.warn("[catalog.server] getHomepageBundleV2 parse error:", result.error.flatten());
+      return EMPTY_BUNDLE_V2;
+    }
+    return result.data as HomepageBundle;
+  } catch (err) {
+    console.error("[catalog.server] getHomepageBundleV2 error:", err);
+    return EMPTY_BUNDLE_V2;
+  }
+}
+
+/**
+ * Single category detail + sub-categories.
+ * ISR tag: ["categories", `category-${slug}`]
+ */
+export async function getCategoryDetail(
+  slug: string
+): Promise<CatalogCategory | null> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FALLBACK_TIMEOUT_MS);
+  try {
+    const res = await fetch(
+      `${getServerBackendRootUrl()}/api/v1/ninja/catalog/categories/${slug}/detail/`,
+      {
+        headers: { Accept: "application/json", "ngrok-skip-browser-warning": "true" },
+        next: { revalidate: ISR_REVALIDATE_SECONDS, tags: ["categories", `category-${slug}`] },
+        signal: controller.signal,
+      }
+    );
+    if (!res.ok) return null;
+    const raw = await res.json();
+    const data = raw?.data ?? raw;
+    return data as CatalogCategory;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * Paginated products by category slug.
+ * ISR tag: [`category-products-${slug}`]
+ */
+export async function getCategoryProducts(
+  slug: string,
+  page = 1,
+  page_size = 12
+): Promise<PaginatedProducts> {
+  const EMPTY: PaginatedProducts = { results: [], count: 0, page, page_size };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FALLBACK_TIMEOUT_MS);
+  try {
+    const res = await fetch(
+      `${getServerBackendRootUrl()}/api/v1/ninja/catalog/categories/${slug}/products/?page=${page}&page_size=${page_size}`,
+      {
+        headers: { Accept: "application/json", "ngrok-skip-browser-warning": "true" },
+        next: { revalidate: 60, tags: [`category-products-${slug}`] },
+        signal: controller.signal,
+      }
+    );
+    if (!res.ok) return EMPTY;
+    const raw = await res.json();
+    return (raw?.data ?? raw) as PaginatedProducts;
+  } catch {
+    return EMPTY;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * Single brand detail.
+ * ISR tag: ["brands", `brand-${slug}`]
+ */
+export async function getBrandDetail(
+  slug: string
+): Promise<CatalogBrand | null> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FALLBACK_TIMEOUT_MS);
+  try {
+    const res = await fetch(
+      `${getServerBackendRootUrl()}/api/v1/ninja/catalog/brands/${slug}/detail/`,
+      {
+        headers: { Accept: "application/json", "ngrok-skip-browser-warning": "true" },
+        next: { revalidate: ISR_REVALIDATE_SECONDS, tags: ["brands", `brand-${slug}`] },
+        signal: controller.signal,
+      }
+    );
+    if (!res.ok) return null;
+    const raw = await res.json();
+    return (raw?.data ?? raw) as CatalogBrand;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * Paginated products by brand slug.
+ * ISR tag: [`brand-products-${slug}`]
+ */
+export async function getBrandProducts(
+  slug: string,
+  page = 1,
+  page_size = 12
+): Promise<PaginatedProducts> {
+  const EMPTY: PaginatedProducts = { results: [], count: 0, page, page_size };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FALLBACK_TIMEOUT_MS);
+  try {
+    const res = await fetch(
+      `${getServerBackendRootUrl()}/api/v1/ninja/catalog/brands/${slug}/products/?page=${page}&page_size=${page_size}`,
+      {
+        headers: { Accept: "application/json", "ngrok-skip-browser-warning": "true" },
+        next: { revalidate: 60, tags: [`brand-products-${slug}`] },
+        signal: controller.signal,
+      }
+    );
+    if (!res.ok) return EMPTY;
+    const raw = await res.json();
+    return (raw?.data ?? raw) as PaginatedProducts;
+  } catch {
+    return EMPTY;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * Single collection detail.
+ * ISR tag: ["collections", `collection-${slug}`]
+ */
+export async function getCollectionDetail(
+  slug: string
+): Promise<CatalogCollection | null> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FALLBACK_TIMEOUT_MS);
+  try {
+    const res = await fetch(
+      `${getServerBackendRootUrl()}/api/v1/ninja/catalog/collections/${slug}/detail/`,
+      {
+        headers: { Accept: "application/json", "ngrok-skip-browser-warning": "true" },
+        next: { revalidate: ISR_REVALIDATE_SECONDS, tags: ["collections", `collection-${slug}`] },
+        signal: controller.signal,
+      }
+    );
+    if (!res.ok) return null;
+    const raw = await res.json();
+    return (raw?.data ?? raw) as CatalogCollection;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * Paginated products by collection slug.
+ * ISR tag: [`collection-products-${slug}`]
+ */
+export async function getCollectionProducts(
+  slug: string,
+  page = 1,
+  page_size = 12
+): Promise<PaginatedProducts> {
+  const EMPTY: PaginatedProducts = { results: [], count: 0, page, page_size };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FALLBACK_TIMEOUT_MS);
+  try {
+    const res = await fetch(
+      `${getServerBackendRootUrl()}/api/v1/ninja/catalog/collections/${slug}/products/?page=${page}&page_size=${page_size}`,
+      {
+        headers: { Accept: "application/json", "ngrok-skip-browser-warning": "true" },
+        next: { revalidate: 60, tags: [`collection-products-${slug}`] },
+        signal: controller.signal,
+      }
+    );
+    if (!res.ok) return EMPTY;
+    const raw = await res.json();
+    return (raw?.data ?? raw) as PaginatedProducts;
+  } catch {
+    return EMPTY;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * Active homepage hero banners from CMS.
+ * ISR tag: ["banners"] — short revalidate: 60s for fast CMS updates.
+ */
+export async function getCatalogBanners(
+  slot = "hero"
+): Promise<HomepageBannerCard[]> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FALLBACK_TIMEOUT_MS);
+  try {
+    const res = await fetch(
+      `${getServerBackendRootUrl()}/api/v1/ninja/catalog/homepage/banners/?slot=${slot}`,
+      {
+        headers: { Accept: "application/json", "ngrok-skip-browser-warning": "true" },
+        next: { revalidate: 60, tags: ["banners"] },
+        signal: controller.signal,
+      }
+    );
+    if (!res.ok) return [];
+    const raw = await res.json();
+    const data = raw?.data ?? raw;
+    return Array.isArray(data?.banners) ? data.banners : [];
+  } catch {
+    return [];
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * Trending catalog tags.
+ * ISR tag: ["tags"] — revalidate: 600s (10 min).
+ */
+export async function getCatalogTags(): Promise<CatalogTag[]> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FALLBACK_TIMEOUT_MS);
+  try {
+    const res = await fetch(
+      `${getServerBackendRootUrl()}/api/v1/ninja/catalog/tags/`,
+      {
+        headers: { Accept: "application/json", "ngrok-skip-browser-warning": "true" },
+        next: { revalidate: 600, tags: ["tags"] },
+        signal: controller.signal,
+      }
+    );
+    if (!res.ok) return [];
+    const raw = await res.json();
+    const data = raw?.data ?? raw;
+    return Array.isArray(data?.tags) ? data.tags : [];
+  } catch {
+    return [];
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * Full-text search across categories, brands, collections.
+ * No ISR cache — always fresh (client-side search via TanStack Query).
+ */
+export async function getCatalogSearch(q: string): Promise<CatalogSearchResult> {
+  const EMPTY: CatalogSearchResult = { categories: [], brands: [], collections: [], query: q };
+  if (!q.trim()) return EMPTY;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 3_000);
+  try {
+    const res = await fetch(
+      `${getServerBackendRootUrl()}/api/v1/ninja/catalog/search/?q=${encodeURIComponent(q)}`,
+      {
+        headers: { Accept: "application/json", "ngrok-skip-browser-warning": "true" },
+        cache: "no-store",
+        signal: controller.signal,
+      }
+    );
+    if (!res.ok) return EMPTY;
+    const raw = await res.json();
+    return ((raw?.data ?? raw) || EMPTY) as CatalogSearchResult;
+  } catch {
+    return EMPTY;
+  } finally {
+    clearTimeout(timeout);
   }
 }

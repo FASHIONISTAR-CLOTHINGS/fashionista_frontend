@@ -39,24 +39,36 @@ const PaymentStatusSchema = z
 export const OrderItemSnapshotSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
   product_id: z.union([z.string(), z.number()]).optional().transform((value) => String(value ?? "")),
-  product_title: z.string(),
-  product_sku: z.string().optional().default(""),
-  product_cover_image_url: z.string().nullable().optional().default(null),
+  product_title: z.string().optional(),
+  product_title_snapshot: z.string().optional(),
+  product_sku: z.string().optional(),
+  product_sku_snapshot: z.string().optional(),
+  product_cover_image_url: z.string().nullable().optional(),
+  product_cover_image_url_snapshot: z.string().nullable().optional(),
   vendor_id: z.union([z.string(), z.number()]).optional().transform((value) => String(value ?? "")),
   vendor_name: z.string().optional().default(""),
+  vendor_name_snapshot: z.string().optional().default(""),
   variant_id: z.union([z.string(), z.number()]).nullable().optional().transform((value) => value === null || value === undefined ? null : String(value)),
   size_label: z.string().nullable().optional().default(null),
   color_label: z.string().nullable().optional().default(null),
-  quantity: z.number().int().min(1),
-  unit_price: z.string(),
-  line_total: z.string(),
-  commission_rate: z.string().optional().default("0.00"),
+  quantity: z.number().int().min(1).catch(1),
+  unit_price: z.union([z.string(), z.number()]).transform(String).catch("0.00"),
+  line_total: z.union([z.string(), z.number()]).transform(String).catch("0.00"),
+  commission_rate: z.union([z.string(), z.number()]).transform(String).optional().default("0.00"),
   currency_code: z.string().optional().default("NGN"),
   requires_measurement: z.boolean().optional().default(false),
+}).transform((data) => {
+  return {
+    ...data,
+    product_title: data.product_title || data.product_title_snapshot || "Custom Tailored Outfit",
+    product_sku: data.product_sku || data.product_sku_snapshot || "",
+    product_cover_image_url: data.product_cover_image_url || data.product_cover_image_url_snapshot || null,
+    vendor_name: data.vendor_name || data.vendor_name_snapshot || "",
+  };
 });
 
 export const OrderStatusHistorySchema = z.object({
-  id: z.union([z.string(), z.number()]).transform(String),
+  id: z.union([z.string(), z.number()]).optional().default("").transform((val) => val ? String(val) : Math.random().toString(36).substring(2)),
   status: OrderStatusSchema.optional(),
   from_status: z.string().nullable().optional(),
   to_status: z.string().nullable().optional(),
@@ -155,9 +167,26 @@ const OrderListItemBaseSchema = z.object({
 });
 
 /** Normalize helper: alias total_amount → final_total so UI code can use one field name */
-function normalizeFinalTotal<T extends { final_total?: string; total_amount?: string }>(order: T): T & { final_total: string } {
+function normalizeFinalTotal<T extends { final_total?: string; total_amount?: string; delivery_address?: any; buyer_name?: string; buyer_phone?: string; buyer_address?: any; buyer_email?: string }>(order: T): T & { final_total: string; buyer_name: string; buyer_phone: string; buyer_address: any; buyer_email: string } {
+  let deliveryAddress = order.delivery_address;
+  if (typeof deliveryAddress === "string") {
+    try {
+      deliveryAddress = JSON.parse(deliveryAddress);
+    } catch {
+      deliveryAddress = {};
+    }
+  }
+  const buyer_name = order.buyer_name || deliveryAddress?.full_name || deliveryAddress?.buyer_name || "";
+  const buyer_phone = order.buyer_phone || deliveryAddress?.phone || deliveryAddress?.buyer_phone || "";
+  const buyer_email = order.buyer_email || deliveryAddress?.email || deliveryAddress?.buyer_email || "";
+  const buyer_address = order.buyer_address && Object.keys(order.buyer_address).length > 0 ? order.buyer_address : (deliveryAddress || {});
+
   return {
     ...order,
+    buyer_name,
+    buyer_phone,
+    buyer_email,
+    buyer_address,
     final_total:
       order.final_total && order.final_total !== "0.00"
         ? order.final_total
@@ -173,6 +202,7 @@ export const OrderDetailSchema = OrderListItemBaseSchema.extend({
   buyer_email: z.string().optional().default(""),
   buyer_phone: z.string().nullable().optional().default(null),
   buyer_address: z.record(z.unknown()).optional().default({}),
+  delivery_address: z.any().optional(),
   items: z.array(OrderItemSnapshotSchema),
   status_history: z.array(OrderStatusHistorySchema),
   delivery_tracking: OrderDeliveryTrackingSchema.nullable().optional().default(null),

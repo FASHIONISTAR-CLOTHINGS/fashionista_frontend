@@ -558,3 +558,145 @@ progress {
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   PHASE D1 — Mobile-First Homepage Extensions
+   Safe Area · Responsive Typography · Homepage Utilities
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Safe Area Insets (iPhone notch / Dynamic Island / Android navigation) ── */
+@layer utilities {
+  .safe-top    { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-left   { padding-left: env(safe-area-inset-left); }
+  .safe-right  { padding-right: env(safe-area-inset-right); }
+  .safe-x      { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+
+  /* Touch target helpers — Apple HIG & Material spec minimum 44×44px */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── Homepage Section Utilities ───────────────────────────────────────────── */
+  .section-wrapper {
+    padding-left: 1.25rem;   /* 20px mobile */
+    padding-right: 1.25rem;
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+  }
+  @media (min-width: 768px) {
+    .section-wrapper {
+      padding-left: 2.5rem;
+      padding-right: 2.5rem;
+      padding-top: 3.5rem;
+      padding-bottom: 3.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .section-wrapper {
+      padding-left: 5rem;
+      padding-right: 5rem;
+      padding-top: 5rem;
+      padding-bottom: 5rem;
+    }
+  }
+
+  .section-title {
+    font-family: var(--font-bon-foyage, serif);
+    font-size: clamp(1.75rem, 5vw, 3.5rem);
+    line-height: 1.15;
+    color: hsl(var(--foreground));
+  }
+
+  /* ── Product Card ────────────────────────────────────────────────────────── */
+  .product-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    cursor: pointer;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background-color: #F4F5FB;
+    box-shadow: 0 2px 12px 0 rgba(1, 69, 74, 0.08);
+    transition: box-shadow 300ms ease, transform 300ms ease;
+  }
+  .product-card:hover {
+    box-shadow: 0 8px 32px 0 rgba(1, 69, 74, 0.18);
+    transform: translateY(-2px);
+  }
+
+  /* ── CTA Buttons (homepage-specific) ─────────────────────────────────────── */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    background-color: #01454A;
+    color: white;
+    font-family: var(--font-satoshi, sans-serif);
+    font-weight: 600;
+    font-size: clamp(0.875rem, 2vw, 1rem);
+    transition: all 300ms ease;
+    min-height: 44px;
+  }
+  .btn-primary:hover {
+    background-color: rgba(1, 69, 74, 0.9);
+    transform: scale(1.05);
+  }
+  .btn-primary:active { transform: scale(0.95); }
+  .btn-primary:focus-visible { outline: 3px solid #01454A; outline-offset: 2px; }
+
+  .btn-gold {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    background-color: #FDA600;
+    color: black;
+    font-family: var(--font-satoshi, sans-serif);
+    font-weight: 700;
+    font-size: clamp(0.875rem, 2vw, 1rem);
+    transition: all 300ms ease;
+    min-height: 44px;
+  }
+  .btn-gold:hover { background-color: rgba(253, 166, 0, 0.9); transform: scale(1.05); }
+  .btn-gold:active { transform: scale(0.95); }
+
+  /* ── Mobile Product Grid (overrides) ─────────────────────────────────────── */
+  .product-grid-mobile { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+  .category-grid-mobile { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+  .collection-grid-mobile { grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 1rem; }
+
+  /* ── Responsive Typography Clamps ────────────────────────────────────────── */
+  .text-fluid-xl  { font-size: clamp(1.25rem, 4vw, 2rem); }
+  .text-fluid-2xl { font-size: clamp(1.5rem, 5vw, 2.5rem); }
+  .text-fluid-3xl { font-size: clamp(1.75rem, 6vw, 3.5rem); }
+  .text-fluid-4xl { font-size: clamp(2rem, 8vw, 4.5rem); }
+  .text-fluid-5xl { font-size: clamp(2.5rem, 10vw, 6rem); }
+}
+
+/* ── @theme brand color tokens (accessible via text-brand-teal etc.) ────── */
+@theme inline {
+  --color-brand-teal:   #01454A;
+  --color-brand-gold:   #FDA600;
+  --color-brand-cream:  #ECE6D6;
+  --color-brand-light:  #F4F5FB;
+  --color-brand-dark:   #333333;
+  --color-brand-muted:  #848484;
+}
+
+/* ── Reduced Motion — respect prefers-reduced-motion globally ─────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
