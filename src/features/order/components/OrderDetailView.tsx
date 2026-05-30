@@ -528,7 +528,7 @@ export default function OrderDetailView({
         </div>
         <div className="space-y-3">
           {(order.payment_records || []).length > 0 ? (
-            order.payment_records.map((record) => (
+            (order.payment_records || []).map((record) => (
               <div
                 key={`${record.sequence_number}-${record.correlation_id}`}
                 className="rounded-xl border border-[hsl(var(--border))] p-4"
@@ -608,7 +608,7 @@ export default function OrderDetailView({
           </button>
           {showHistory && (
             <div className="mt-4 space-y-3">
-              {order.status_history.map((entry) => (
+              {(order.status_history || []).map((entry) => (
                 <div key={entry.id} className="rounded-xl border border-[hsl(var(--border))] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
