@@ -12,3 +12,17 @@ coverage/
 .env.test.local
 .env.production.local
 *.log
+
+# Large testing and backup folders
+.git_disabled/
+REAL_LIVE_VISION_BROWSER_AUTH_FULLSTACK_TESTING/
+GLOBAL_MAIN_BRANCH_ORIGINAL_CSS_STYLES_FONTS_AND_GUIDELINES/
+test-evidence/
+test-results/
+temp_git/
+tests/playwright-report/
+*.png
+*.mp4
+*.zip
+*.tar.gz
+*.tgz

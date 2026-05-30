@@ -24,11 +24,11 @@ RUN pnpm install --frozen-lockfile --offline
 
 COPY . .
 
-ARG NEXT_PUBLIC_BACKEND_URL=https://fashionistar-backend-259415881346.europe-west1.run.app
-ARG NEXT_PUBLIC_API_V1_URL=https://fashionistar-backend-259415881346.europe-west1.run.app/api
-ARG NEXT_PUBLIC_API_NINJA_URL=https://fashionistar-backend-259415881346.europe-west1.run.app/api/v1/ninja
-ARG BACKEND_INTERNAL_URL=https://fashionistar-backend-259415881346.europe-west1.run.app
-ARG NEXT_PUBLIC_APP_URL=https://fashionistar-frontend-259415881346.europe-west1.run.app
+ARG NEXT_PUBLIC_BACKEND_URL=https://fashionistar-backend-644178250108.europe-west1.run.app
+ARG NEXT_PUBLIC_API_V1_URL=https://fashionistar-backend-644178250108.europe-west1.run.app/api
+ARG NEXT_PUBLIC_API_NINJA_URL=https://fashionistar-backend-644178250108.europe-west1.run.app/api/v1/ninja
+ARG BACKEND_INTERNAL_URL=https://fashionistar-backend-644178250108.europe-west1.run.app
+ARG NEXT_PUBLIC_APP_URL=https://fashionistar-frontend-644178250108.europe-west1.run.app
 ARG NEXT_PUBLIC_APP_NAME=FASHIONISTAR
 ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID=
 
