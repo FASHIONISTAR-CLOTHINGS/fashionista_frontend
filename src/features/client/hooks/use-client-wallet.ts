@@ -13,6 +13,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { clientApi } from "@/features/client/api/client.api";
+import { getNinjaTransactionDashboard } from "@/features/transaction/api/transaction.api";
 import type {
   WalletDashboardData,
   WalletTransferPayload,
@@ -26,24 +27,59 @@ export const clientWalletKeys = {
 
 /**
  * Returns an enriched WalletDashboardData object derived from the backend
- * balance endpoint.  When the backend starts returning transactions on the
- * same endpoint (or a dedicated /transactions/ endpoint), this hook can be
- * updated to call both in parallel with Promise.all and merge the results.
+ * balance endpoint and the Ninja transaction dashboard.
  */
 export function useClientWalletBalance() {
   return useQuery<WalletDashboardData>({
     queryKey:  clientWalletKeys.dashboard,
     queryFn:   async (): Promise<WalletDashboardData> => {
-      const raw = await clientApi.getWalletBalance();
+      const [raw, txDashboard] = await Promise.all([
+        clientApi.getWalletBalance(),
+        getNinjaTransactionDashboard().catch((err) => {
+          console.error("Failed to load Ninja transaction dashboard:", err);
+          return {
+            inflow: "0",
+            outflow: "0",
+            net: "0",
+            count: 0,
+            status_breakdown: {},
+            recent_transactions: [],
+          };
+        }),
+      ]);
+
       const balanceNgn = parseFloat(raw.balance || "0");
+      const inflowNgn = parseFloat(txDashboard.inflow || "0");
+
+      const mappedTransactions = (txDashboard.recent_transactions || []).map((record) => {
+        let status: "pending" | "paid" | "completed" | "failed" | "refunded" = "pending";
+        if (record.status === "completed") {
+          status = "completed";
+        } else if (record.status === "failed") {
+          status = "failed";
+        } else if (record.status === "reversed") {
+          status = "refunded";
+        }
+
+        return {
+          id: record.id,
+          order: record.order_id || record.reference,
+          amount: record.amount,
+          currency: "NGN",
+          description: record.description,
+          payment_system: "Wallet",
+          transaction_type: record.direction === "inbound" ? ("deposit" as const) : ("withdrawal" as const),
+          status,
+          created_at: record.created_at,
+          date_and_time: record.created_at,
+        };
+      });
 
       return {
         balance_ngn:       balanceNgn,
-        // total_amount_ngn would require a separate history call;
-        // default to balance until the backend exposes a cumulative field.
-        total_amount_ngn:  balanceNgn,
-        transaction_count: 0,
-        transactions:      [],
+        total_amount_ngn:  inflowNgn || balanceNgn,
+        transaction_count: txDashboard.count || mappedTransactions.length,
+        transactions:      mappedTransactions,
       };
     },
     staleTime: 15_000,

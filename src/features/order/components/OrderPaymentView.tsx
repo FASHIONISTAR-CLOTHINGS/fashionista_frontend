@@ -438,13 +438,13 @@ export default function OrderPaymentView({ orderId }: { orderId: string }) {
       </div>
 
       {/* ── Payment Timeline ─────────────────────────────────────────────────── */}
-      {order.payment_records.length > 0 && (
+      {(order.payment_records || []).length > 0 && (
         <div className="rounded-[2rem] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-[var(--card-shadow)]">
           <h2 className="mb-4 text-base font-bold text-[hsl(var(--foreground))]">
             Payment Timeline
           </h2>
           <div className="space-y-3">
-            {order.payment_records.map((record) => (
+            {(order.payment_records || []).map((record) => (
               <div
                 key={`${record.sequence_number}-${record.correlation_id}`}
                 className="rounded-xl border border-[hsl(var(--border))] p-4"
