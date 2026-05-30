@@ -71,7 +71,8 @@ export interface BankOption {
 export interface TransferRecipientInput {
   account_number: string;
   bank_code: string;
-  account_name?: string;
+  account_name: string;
+  bank_name: string;
 }
 
 // ── Ninja Async Dashboard Types ───────────────────────────────────────────────

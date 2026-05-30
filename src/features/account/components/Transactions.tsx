@@ -13,7 +13,7 @@
  *  - Code preserved for backward-compat: showWalletDashboard prop retained.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,6 +30,8 @@ import {
   Wallet,
   Loader2,
 } from "lucide-react";
+import { BankSelectField, getBankOption } from "@/shared/reference-data";
+import { vendorApi } from "@/features/vendor";
 
 // ── Transaction types ─────────────────────────────────────────────────────────
 
@@ -363,27 +365,63 @@ function WithdrawalForm() {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<WithdrawalFormValues>({
     resolver: zodResolver(withdrawalSchema),
+    defaultValues: {
+      amount: "",
+      bank_code: "",
+      account_number: "",
+      account_name: "",
+      pin: "",
+    },
   });
+
+  const bankCode = watch("bank_code");
+  const accountNumber = watch("account_number");
+
+  useEffect(() => {
+    if (bankCode && accountNumber && accountNumber.length === 10) {
+      const resolveAccount = async () => {
+        try {
+          const res = await vendorApi.resolveAccountName({
+            account_number: accountNumber,
+            bank_code: bankCode,
+          });
+          if (res && res.account_name) {
+            setValue("account_name", res.account_name, { shouldValidate: true });
+            toast.success("Account name verified successfully!");
+          }
+        } catch (err) {
+          console.error("Failed to resolve account name:", err);
+          setValue("account_name", "");
+        }
+      };
+      resolveAccount();
+    } else {
+      setValue("account_name", "");
+    }
+  }, [bankCode, accountNumber, setValue]);
 
   const onSubmit = async (data: WithdrawalFormValues) => {
     try {
-      /**
-       * POST /api/v1/client/wallet/withdraw/
-       * ClientWalletWithdrawView → WalletWithdrawalService.request_withdrawal()
-       *
-       * Service guarantees:
-       *   - KYC gate (assert_kyc_approved)
-       *   - PIN verified (bcrypt, wallet locked after 5 failures)
-       *   - Atomic DB transaction: available_balance → pending_balance
-       *   - Immutable PAYOUT ledger row (CBN compliance)
-       *   - Idempotency-Key prevents double-submission on network retry
-       *
-       * Body fields map 1-to-1 to WalletWithdrawalSerializer:
-       *   amount, pin, bank_code, account_number, account_name
-       */
+      // 1. Register Transfer Recipient first
+      const bankOpt = getBankOption(data.bank_code);
+      const bankName = bankOpt?.name ?? "Unknown Bank";
+
+      await apiSync.post(
+        "/api/v1/payment/transfer-recipient/",
+        {
+          account_number: data.account_number,
+          account_name: data.account_name,
+          bank_name: bankName,
+          bank_code: data.bank_code,
+        }
+      );
+
+      // 2. Trigger Withdrawal
       await apiSync.post(
         "/api/v1/client/wallet/withdraw/",
         {
@@ -414,15 +452,6 @@ function WithdrawalForm() {
     }
   };
 
-  // Fields map 1:1 to WalletWithdrawalSerializer fields.
-  const fields = [
-    { label: "Amount (₦)",      name: "amount"         as const, type: "number",   full: false, placeholder: "Minimum ₦1,000" },
-    { label: "Bank Code",       name: "bank_code"      as const, type: "text",     full: false, placeholder: "e.g. 057 (Zenith), 011 (FirstBank)" },
-    { label: "Account Number", name: "account_number" as const, type: "text",     full: false, placeholder: "10-digit NUBAN" },
-    { label: "Account Name",   name: "account_name"   as const, type: "text",     full: true,  placeholder: "Name as registered with your bank" },
-    { label: "Transaction PIN", name: "pin"            as const, type: "password", full: false, placeholder: "4-digit security PIN" },
-  ];
-
   return (
     <div className="shadow-card_shadow rounded-[10px] bg-white p-[30px] space-y-6">
       <div>
@@ -439,37 +468,110 @@ function WithdrawalForm() {
         className="flex flex-wrap gap-6"
         noValidate
       >
-        {fields.map((field) => (
-          <div
-            key={field.name}
-            className={`flex flex-col gap-1.5 ${field.full ? "w-full" : "w-full md:w-[48%]"}`}
-          >
-            <label
-              htmlFor={field.name}
-              className="font-satoshi text-[15px] leading-5 text-black"
-            >
-              {field.label}
-            </label>
-            <input
-              id={field.name}
-              type={field.type}
-              placeholder={field.placeholder}
-              {...register(field.name)}
-              className={`border-[1.5px] h-[56px] rounded-[70px] w-full px-5 outline-none text-black transition-colors ${
-                errors[field.name]
-                  ? "border-[#EA1705] focus:border-[#EA1705]"
-                  : "border-[#D9D9D9] focus:border-[#fda600]"
-              }`}
-            />
-            {errors[field.name] && (
-              <p className="text-xs text-[#EA1705] px-2">
-                {errors[field.name]?.message}
-              </p>
-            )}
-          </div>
-        ))}
+        {/* Amount */}
+        <div className="flex flex-col gap-1.5 w-full md:w-[48%]">
+          <label htmlFor="amount" className="font-satoshi text-[15px] leading-5 text-black">
+            Amount (₦)
+          </label>
+          <input
+            id="amount"
+            type="number"
+            placeholder="Minimum ₦1,000"
+            {...register("amount")}
+            className={`border-[1.5px] h-[56px] rounded-[70px] w-full px-5 outline-none text-black transition-colors ${
+              errors.amount
+                ? "border-[#EA1705] focus:border-[#EA1705]"
+                : "border-[#D9D9D9] focus:border-[#01454A]"
+            }`}
+          />
+          {errors.amount && (
+            <p className="text-xs text-[#EA1705] px-2">
+              {errors.amount.message}
+            </p>
+          )}
+        </div>
 
-        <div className="flex justify-end items-end w-full md:w-[48%]">
+        {/* Bank Dropdown */}
+        <div className="flex flex-col gap-1.5 w-full md:w-[48%] relative z-20">
+          <BankSelectField
+            value={bankCode}
+            onChange={(val) => setValue("bank_code", val, { shouldValidate: true })}
+            error={errors.bank_code?.message}
+            disabled={isSubmitting}
+            label="Bank Name"
+          />
+        </div>
+
+        {/* Account Number */}
+        <div className="flex flex-col gap-1.5 w-full md:w-[48%]">
+          <label htmlFor="account_number" className="font-satoshi text-[15px] leading-5 text-black">
+            Account Number
+          </label>
+          <input
+            id="account_number"
+            type="text"
+            maxLength={10}
+            placeholder="10-digit NUBAN"
+            {...register("account_number")}
+            className={`border-[1.5px] h-[56px] rounded-[70px] w-full px-5 outline-none text-black transition-colors ${
+              errors.account_number
+                ? "border-[#EA1705] focus:border-[#EA1705]"
+                : "border-[#D9D9D9] focus:border-[#01454A]"
+            }`}
+          />
+          {errors.account_number && (
+            <p className="text-xs text-[#EA1705] px-2">
+              {errors.account_number.message}
+            </p>
+          )}
+        </div>
+
+        {/* Account Name */}
+        <div className="flex flex-col gap-1.5 w-full">
+          <label htmlFor="account_name" className="font-satoshi text-[15px] leading-5 text-black">
+            Account Name
+          </label>
+          <input
+            id="account_name"
+            type="text"
+            placeholder="Auto-resolved account name"
+            {...register("account_name")}
+            readOnly
+            className={`border-[1.5px] h-[56px] rounded-[70px] w-full px-5 outline-none text-black bg-[#F8F9FC] border-[#D9D9D9] cursor-not-allowed`}
+          />
+          {errors.account_name && (
+            <p className="text-xs text-[#EA1705] px-2">
+              {errors.account_name.message}
+            </p>
+          )}
+        </div>
+
+        {/* Transaction PIN */}
+        <div className="flex flex-col gap-1.5 w-full md:w-[48%]">
+          <label htmlFor="pin" className="font-satoshi text-[15px] leading-5 text-black">
+            Transaction PIN
+          </label>
+          <input
+            id="pin"
+            type="password"
+            maxLength={4}
+            placeholder="4-digit security PIN"
+            {...register("pin")}
+            className={`border-[1.5px] h-[56px] rounded-[70px] w-full px-5 outline-none text-black transition-colors ${
+              errors.pin
+                ? "border-[#EA1705] focus:border-[#EA1705]"
+                : "border-[#D9D9D9] focus:border-[#01454A]"
+            }`}
+          />
+          {errors.pin && (
+            <p className="text-xs text-[#EA1705] px-2">
+              {errors.pin.message}
+            </p>
+          )}
+        </div>
+
+        {/* Submit */}
+        <div className="flex justify-end items-end w-full md:w-[48%] pb-1">
           <button
             type="submit"
             disabled={isSubmitting}

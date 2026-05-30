@@ -152,13 +152,13 @@ export const clientApi = {
   // ── Wallet ─────────────────────────────────────────────────────────────────
   /** Full balance snapshot: balance + available + pending + escrow + has_pin */
   async getWalletBalance(): Promise<WalletBalance> {
-    const data = await apiAsync.get("v1/client/wallet/balance/").json();
+    const data = await apiAsync.get("wallet/balance/").json();
     return unwrapData<WalletBalance>(data);
   },
 
   /** Full wallet dashboard: balance snapshot + hold aggregates */
   async getWalletDashboard(): Promise<WalletBalance> {
-    const data = await apiAsync.get("v1/client/wallet/dashboard/").json();
+    const data = await apiAsync.get("wallet/dashboard/").json();
     return unwrapData<WalletBalance>(data);
   },
 
