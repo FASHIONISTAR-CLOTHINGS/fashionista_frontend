@@ -315,9 +315,9 @@ async function main() {
       await navigate(page, '/get-measured', 'Opening MirrorSize Measurement Flow');
       
       // Fill out MirrorSize measurement session fields
-      await page.locator('input[placeholder="Your name"]').fill('TestClientDASHBOARD');
-      await page.locator('input[type="email"]').fill(CLIENT_EMAIL);
-      await page.locator('input[placeholder="080..."]').fill('08012345678');
+      await page.locator('input[placeholder="Your name"]').first().fill('TestClientDASHBOARD');
+      await page.locator('input[placeholder="you@example.com"], input[type="email"]').first().fill(CLIENT_EMAIL);
+      await page.locator('input[placeholder="080..."]').first().fill('08012345678');
       
       await screenshot(page, 'stage3_customization_form', 'Stage 3 — MirrorSize Measurement Form');
       
