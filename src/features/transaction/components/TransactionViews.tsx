@@ -54,7 +54,7 @@ const ROLE_CONFIG: Record<
     inflowLabel: "Total Received",
     outflowLabel: "Total Spent",
     netLabel: "Net Balance",
-    accentColor: "#25784A",
+    accentColor: "#01454A",
     inflowIcon: ArrowDownLeft,
     outflowIcon: ArrowUpRight,
     netIcon: Wallet,

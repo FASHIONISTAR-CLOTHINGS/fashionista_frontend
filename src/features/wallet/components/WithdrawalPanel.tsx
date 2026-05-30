@@ -221,7 +221,7 @@ export function WithdrawalPanel({ audience = "client" }: WithdrawalPanelProps) {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
-              className="w-full rounded-[14px] border border-[#E5E7EB] py-3 pl-9 pr-4 text-sm text-black placeholder-[#C4C4C4] focus:border-[#FDA600] focus:outline-none"
+              className="w-full rounded-[14px] border border-[#E5E7EB] bg-white py-3 pl-9 pr-4 text-sm text-black placeholder-[#C4C4C4] outline-none transition-all focus:border-[#01454A] focus:ring-2 focus:ring-[#01454A]/15"
             />
           </div>
           {amount && !amountValid && (
@@ -253,7 +253,7 @@ export function WithdrawalPanel({ audience = "client" }: WithdrawalPanelProps) {
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
               placeholder="••••"
-              className="w-full rounded-[14px] border border-[#E5E7EB] py-3 pl-10 pr-4 text-sm tracking-[0.5em] text-black placeholder-[#C4C4C4] focus:border-[#FDA600] focus:outline-none"
+              className="w-full rounded-[14px] border border-[#E5E7EB] bg-white py-3 pl-10 pr-4 text-sm tracking-[0.5em] text-black placeholder-[#C4C4C4] outline-none transition-all focus:border-[#01454A] focus:ring-2 focus:ring-[#01454A]/15"
             />
           </div>
           {pin.length > 0 && !pinValid && (
@@ -274,7 +274,7 @@ export function WithdrawalPanel({ audience = "client" }: WithdrawalPanelProps) {
               value={bankCode}
               onChange={(e) => setBankCode(e.target.value)}
               placeholder="058, 044, 033..."
-              className="w-full rounded-[14px] border border-[#E5E7EB] px-4 py-3 text-sm text-black placeholder-[#C4C4C4] focus:border-[#FDA600] focus:outline-none"
+              className="w-full rounded-[14px] border border-[#E5E7EB] bg-white px-4 py-3 text-sm text-black placeholder-[#C4C4C4] outline-none transition-all focus:border-[#01454A] focus:ring-2 focus:ring-[#01454A]/15"
             />
           </div>
           <div>
@@ -290,7 +290,7 @@ export function WithdrawalPanel({ audience = "client" }: WithdrawalPanelProps) {
               value={accountNumber}
               onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
               placeholder="0123456789"
-              className="w-full rounded-[14px] border border-[#E5E7EB] px-4 py-3 text-sm text-black placeholder-[#C4C4C4] focus:border-[#FDA600] focus:outline-none"
+              className="w-full rounded-[14px] border border-[#E5E7EB] bg-white px-4 py-3 text-sm text-black placeholder-[#C4C4C4] outline-none transition-all focus:border-[#01454A] focus:ring-2 focus:ring-[#01454A]/15"
             />
             {accountNumber.length > 0 && !accountNumberValid && (
               <p className="mt-1.5 text-xs text-red-500">
@@ -308,7 +308,7 @@ export function WithdrawalPanel({ audience = "client" }: WithdrawalPanelProps) {
               value={accountName}
               onChange={(e) => setAccountName(e.target.value)}
               placeholder="Verified bank account name"
-              className="w-full rounded-[14px] border border-[#E5E7EB] px-4 py-3 text-sm text-black placeholder-[#C4C4C4] focus:border-[#FDA600] focus:outline-none"
+              className="w-full rounded-[14px] border border-[#E5E7EB] bg-white px-4 py-3 text-sm text-black placeholder-[#C4C4C4] outline-none transition-all focus:border-[#01454A] focus:ring-2 focus:ring-[#01454A]/15"
             />
           </div>
         </div>
@@ -325,7 +325,7 @@ export function WithdrawalPanel({ audience = "client" }: WithdrawalPanelProps) {
         <button
           type="submit"
           disabled={!formValid || withdraw.isPending}
-          className="w-full rounded-[14px] bg-[#FDA600] py-4 text-sm font-bold text-white hover:bg-[#e59500] disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-full bg-[#FDA600] py-4 text-sm font-bold text-black shadow-md transition-all duration-300 hover:bg-[#e59500] hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {withdraw.isPending ? "Processing..." : "Initiate Withdrawal"}
         </button>

@@ -222,12 +222,12 @@ export default function OrderDetailView({
   const safeOrder = order;
 
   const badgeCls =
-    STATUS_COLORS[safeOrder.status] ?? "bg-gray-50 text-gray-600 border-gray-200";
-  const canCancel = scope === "client" && CANCELLABLE_STATUSES.has(safeOrder.status);
+    STATUS_COLORS[safeOrder.status ?? ""] ?? "bg-gray-50 text-gray-600 border-gray-200";
+  const canCancel = scope === "client" && safeOrder.status && CANCELLABLE_STATUSES.has(safeOrder.status);
   const canConfirm =
     scope === "client" && safeOrder.status === "delivered" && safeOrder.escrow_status === "held";
-  const hasOutstanding = !safeOrder.is_fully_paid && parseFloat(safeOrder.amount_outstanding) > 0;
-  const paidPercent = Math.min(100, parseFloat(safeOrder.percent_paid_total));
+  const hasOutstanding = !safeOrder.is_fully_paid && parseFloat(safeOrder.amount_outstanding ?? "0") > 0;
+  const paidPercent = Math.min(100, parseFloat(safeOrder.percent_paid_total ?? "0") || 0);
 
   function handleCancel() {
     if (!cancelReason.trim()) {
@@ -270,7 +270,7 @@ export default function OrderDetailView({
             </p>
           </div>
           <span className={`inline-flex items-center self-start rounded-full border px-4 py-2 text-sm font-bold capitalize ${badgeCls}`}>
-            {STATUS_LABELS[order.status] ?? order.status.replace(/_/g, " ")}
+            {STATUS_LABELS[order.status ?? ""] ?? (order.status ?? "pending_payment").replace(/_/g, " ")}
           </span>
         </div>
 

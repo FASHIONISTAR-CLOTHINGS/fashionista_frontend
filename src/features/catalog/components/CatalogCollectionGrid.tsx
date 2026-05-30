@@ -3,8 +3,11 @@ import Link from "next/link";
 
 import { getCatalogCollections } from "../api/catalog.server";
 import { fallbackCatalogCollections } from "../lib/catalog-fallbacks";
+import type { HomepageCollectionCard } from "../types/catalog.types";
 
 interface CatalogCollectionGridProps {
+  /** Pre-fetched collections from HomepageBundle (avoids double-fetch). */
+  collections?: HomepageCollectionCard[];
   searchParams?:
     | Promise<{ [key: string]: string | string[] | undefined }>
     | { [key: string]: string | string[] | undefined };
@@ -13,13 +16,15 @@ interface CatalogCollectionGridProps {
 }
 
 export default async function CatalogCollectionGrid({
+  collections: collectionsProp,
   searchParams,
   limit,
   showCta = true,
 }: CatalogCollectionGridProps) {
   const resolvedParams = await Promise.resolve(searchParams ?? {});
   const selectedCollection = typeof resolvedParams.collection === "string" ? resolvedParams.collection : "";
-  const collections = await getCatalogCollections();
+  // C1 fix: use prop when provided (bundle flow), otherwise fetch standalone.
+  const collections = collectionsProp ?? await getCatalogCollections();
   const baseItems = collections.length ? collections : fallbackCatalogCollections;
   const filteredItems = selectedCollection
     ? baseItems.filter((item) => item.slug === selectedCollection)
@@ -72,6 +77,7 @@ export default async function CatalogCollectionGrid({
             key={item.id}
             href={`/collections/${item.slug}`}
             className="card-shadow card-shadow-hover group overflow-hidden rounded-lg border border-border bg-card text-card-foreground"
+            data-testid="collection-card"
           >
             <div className="relative h-56 bg-[hsl(var(--brand-cream))]">
               <Image

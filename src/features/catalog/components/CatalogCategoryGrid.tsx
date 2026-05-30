@@ -3,17 +3,22 @@ import Link from "next/link";
 
 import { getCatalogCategories } from "../api/catalog.server";
 import { fallbackCatalogCategories } from "../lib/catalog-fallbacks";
+import type { HomepageCategoryCard } from "../types/catalog.types";
 
 interface CatalogCategoryGridProps {
+  /** Pre-fetched categories from HomepageBundle (avoids double-fetch). */
+  categories?: HomepageCategoryCard[];
   limit?: number;
   showCta?: boolean;
 }
 
 export default async function CatalogCategoryGrid({
+  categories: categoriesProp,
   limit,
   showCta = true,
 }: CatalogCategoryGridProps) {
-  const categories = await getCatalogCategories();
+  // C1 fix: if caller passes bundle.categories, skip the internal fetch entirely.
+  const categories = categoriesProp ?? await getCatalogCategories();
   const items = (categories.length ? categories : fallbackCatalogCategories).slice(0, limit);
 
   return (
@@ -33,6 +38,7 @@ export default async function CatalogCategoryGrid({
             key={item.id}
             href={`/categories/${item.slug}`}
             className="card-shadow card-shadow-hover group flex min-h-[165px] flex-col justify-between rounded-lg border border-border bg-card p-4 text-card-foreground focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] md:min-h-[245px] md:p-6"
+            data-testid="category-card"
           >
             <div className="relative flex h-20 items-center justify-center rounded-lg bg-[hsl(var(--brand-cream))] md:h-32">
               <Image
