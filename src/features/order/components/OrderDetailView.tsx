@@ -487,7 +487,7 @@ export default function OrderDetailView({
           </h2>
         </div>
         <div className="divide-y divide-[hsl(var(--border))]">
-          {order.items.map((item) => (
+          {order.items?.map((item) => (
             <div
               key={item.id}
               className="flex items-center justify-between gap-4 py-4 text-sm"
@@ -527,7 +527,7 @@ export default function OrderDetailView({
           </h2>
         </div>
         <div className="space-y-3">
-          {order.payment_records.length > 0 ? (
+          {(order.payment_records || []).length > 0 ? (
             order.payment_records.map((record) => (
               <div
                 key={`${record.sequence_number}-${record.correlation_id}`}
