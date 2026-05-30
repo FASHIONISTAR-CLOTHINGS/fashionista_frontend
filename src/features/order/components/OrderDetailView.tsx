@@ -379,6 +379,105 @@ export default function OrderDetailView({
         <StatusStepper currentStatus={order.status} />
       </div>
 
+      {/* ── QR Code Shop Pickup Card ────────────────────────────────────────── */}
+      {order.delivery_mode === "vendor_shop_pickup" && (
+        <div className="rounded-[2rem] border border-[hsl(var(--border))] bg-gradient-to-br from-white to-[#FFFDF5] p-6 shadow-[var(--card-shadow)] relative overflow-hidden">
+          {/* Decorative design elements */}
+          <div className="absolute right-0 top-0 h-32 w-32 translate-x-8 translate-y-[-8px] rounded-full bg-[#FDA600]/10 blur-2xl pointer-events-none" />
+          <div className="absolute left-0 bottom-0 h-32 w-32 translate-x-[-16px] translate-y-[16px] rounded-full bg-[#01454A]/5 blur-2xl pointer-events-none" />
+          
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#01454A]/10 text-[#01454A]">
+                <Package className="h-4 w-4" />
+              </span>
+              <h2 className="text-base font-bold text-black">
+                Shop Pickup Pass
+              </h2>
+            </div>
+            <span className={`rounded-full px-3 py-1 text-xs font-bold ${order.status === "completed" ? "bg-emerald-100 text-emerald-800" : "bg-[#FDA600]/15 text-[#7A6B44]"}`}>
+              {order.status === "completed" ? "Verified & Released" : "Ready for Pickup"}
+            </span>
+          </div>
+
+          <div className="flex flex-col items-center justify-center gap-6 py-6 text-center">
+            {/* Elegant QR Code SVG */}
+            <div className="relative rounded-2xl bg-white p-4 shadow-sm border border-[#F4F3EC]">
+              {order.status === "completed" && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-white/95 backdrop-blur-sm z-10">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 mb-2">
+                    <CheckCircle2 className="h-6 w-6" />
+                  </div>
+                  <p className="text-xs font-bold text-emerald-800">PICKUP VERIFIED</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">Escrow Released</p>
+                </div>
+              )}
+              
+              <svg width="160" height="160" viewBox="0 0 100 100" className="text-black">
+                <rect x="5" y="5" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="4" />
+                <rect x="10" y="10" width="10" height="10" fill="currentColor" />
+                <rect x="75" y="5" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="4" />
+                <rect x="80" y="10" width="10" height="10" fill="currentColor" />
+                <rect x="5" y="75" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="4" />
+                <rect x="10" y="80" width="10" height="10" fill="currentColor" />
+                
+                <rect x="35" y="5" width="5" height="5" fill="currentColor" />
+                <rect x="45" y="10" width="10" height="5" fill="currentColor" />
+                <rect x="60" y="5" width="5" height="15" fill="currentColor" />
+                <rect x="35" y="20" width="15" height="5" fill="currentColor" />
+                <rect x="55" y="25" width="5" height="5" fill="currentColor" />
+                <rect x="5" y="35" width="5" height="10" fill="currentColor" />
+                <rect x="15" y="40" width="15" height="5" fill="currentColor" />
+                <rect x="25" y="30" width="5" height="15" fill="currentColor" />
+                <rect x="35" y="35" width="10" height="10" fill="currentColor" />
+                <rect x="50" y="45" width="15" height="5" fill="currentColor" />
+                <rect x="70" y="35" width="5" height="5" fill="currentColor" />
+                <rect x="80" y="30" width="15" height="5" fill="currentColor" />
+                <rect x="85" y="45" width="5" height="10" fill="currentColor" />
+                <rect x="5" y="55" width="15" height="5" fill="currentColor" />
+                <rect x="25" y="50" width="10" height="10" fill="currentColor" />
+                <rect x="40" y="60" width="5" height="10" fill="currentColor" />
+                <rect x="50" y="55" width="15" height="5" fill="currentColor" />
+                <rect x="70" y="50" width="5" height="15" fill="currentColor" />
+                <rect x="80" y="60" width="10" height="5" fill="currentColor" />
+                <rect x="35" y="75" width="5" height="10" fill="currentColor" />
+                <rect x="45" y="85" width="15" height="5" fill="currentColor" />
+                <rect x="55" y="75" width="10" height="5" fill="currentColor" />
+                <rect x="70" y="80" width="15" height="10" fill="currentColor" />
+                <rect x="90" y="75" width="5" height="5" fill="currentColor" />
+              </svg>
+            </div>
+
+            <div className="max-w-md">
+              <p className="text-xs font-bold tracking-widest text-[#7A6B44] uppercase">Secure Verification Token</p>
+              <p className="mt-1 font-mono text-sm font-semibold select-all text-black bg-[#F8F5ED] px-4 py-2 rounded-xl border border-[#EDE7D9] break-all">
+                FASHIONISTAR-PICKUP-644178250108-{order.id}
+              </p>
+              <p className="mt-3 text-xs text-gray-500 max-w-sm mx-auto leading-relaxed">
+                Present this QR code or secure verification token to the store manager during pickup. Once scanned, your pickup is instant and escrow is safely released.
+              </p>
+            </div>
+
+            {/* Simulated QR Scan trigger (PUT request to verify-pickup) */}
+            {order.status !== "completed" && (
+              <button
+                type="button"
+                disabled={verifyingPickup}
+                onClick={() => verifyPickup(`FASHIONISTAR-PICKUP-644178250108-${order.id}`)}
+                className="inline-flex items-center gap-2 rounded-full bg-[#01454A] hover:bg-[#01454A]/90 text-white px-6 py-2.5 text-xs font-bold tracking-wide transition shadow disabled:opacity-60 cursor-pointer"
+              >
+                {verifyingPickup ? (
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5 text-[#FDA600]" />
+                )}
+                Simulate Shop-Owner QR Scan
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Items ────────────────────────────────────────────────────────────── */}
       <div className="rounded-[2rem] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-[var(--card-shadow)]">
         <div className="mb-4 flex items-center gap-2">

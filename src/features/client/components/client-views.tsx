@@ -164,7 +164,10 @@ function StatCard({
 // ── Mini Order Row ─────────────────────────────────────────────────────────────
 function MiniOrderRow({ order }: { order: ClientOrder }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-[16px] bg-[#F8F5ED] px-5 py-3.5 transition hover:bg-[#ECE6D6]">
+    <Link
+      href={`/client/dashboard/orders/${order.id}`}
+      className="flex items-center justify-between gap-4 rounded-[16px] bg-[#F8F5ED] px-5 py-3.5 transition hover:bg-[#ECE6D6] cursor-pointer"
+    >
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold text-black">
           {order.vendor__store_name || "Order"}
@@ -178,11 +181,9 @@ function MiniOrderRow({ order }: { order: ClientOrder }) {
           {fmtNgn(order.total_amount)}
         </span>
         <StatusBadge status={order.status} />
-        <Link href={`/client/dashboard/orders/${order.id}`}>
-          <ChevronRight className="h-4 w-4 text-[#A89A7A]" />
-        </Link>
+        <ChevronRight className="h-4 w-4 text-[#A89A7A]" />
       </div>
-    </div>
+    </Link>
   );
 }
 
