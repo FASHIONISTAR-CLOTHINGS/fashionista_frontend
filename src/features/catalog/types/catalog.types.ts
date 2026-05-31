@@ -274,6 +274,34 @@ export interface PaginatedCollections {
   page_size: number;
 }
 
+/**
+ * Lean vendor card for collection-vendor pages.
+ * Returned by GET /api/v1/ninja/catalog/collections/{slug}/vendors/
+ */
+export interface CatalogVendorCard {
+  id: string;
+  store_name: string;
+  store_slug: string;
+  tagline: string;
+  description: string;
+  city: string;
+  state: string;
+  country: string;
+  logo_url: string | null;
+  is_verified: boolean;
+  is_featured: boolean;
+  total_products: number;
+  average_rating: number;
+  review_count: number;
+}
+
+export interface PaginatedVendors {
+  results: CatalogVendorCard[];
+  count: number;
+  page: number;
+  page_size: number;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Search result
 // ─────────────────────────────────────────────────────────────────────────────

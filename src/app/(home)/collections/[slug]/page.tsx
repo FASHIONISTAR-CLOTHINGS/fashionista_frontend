@@ -6,9 +6,8 @@ import {
   getCatalogCollections,
   getCatalogCategories,
 } from "@/features/catalog";
-import { ProductGridSkeleton } from "@/features/product";
 import { FashionistarImage } from "@/components/media";
-import CollectionProductsClient from "./CollectionVendorClient";
+import CollectionVendorClient from "./CollectionVendorClient";
 
 interface CollectionDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -172,15 +171,30 @@ export default async function CollectionDetailPage({
         </section>
       ) : null}
 
-      {/* ── Products Grid ─────────────────────────────────────────── */}
+      {/* ── Vendors in Collection ─────────────────────────────── */}
       <section className="px-5 py-10 md:px-10 lg:px-20">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-2">
           <h2 className="font-bon_foyage text-2xl text-foreground md:text-4xl">
-            Products in this Collection
+            Vendors in this Collection
           </h2>
         </div>
-        <Suspense fallback={<ProductGridSkeleton count={8} />}>
-          <CollectionProductsClient collectionSlug={slug} />
+        <p className="text-sm text-muted-foreground mb-8 max-w-xl">
+          These stores specialise in the {collection.title} collection — browse
+          their shops to find your perfect look.
+        </p>
+        <Suspense
+          fallback={
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-48 animate-pulse rounded-2xl bg-gray-100"
+                />
+              ))}
+            </div>
+          }
+        >
+          <CollectionVendorClient collectionSlug={slug} />
         </Suspense>
       </section>
 

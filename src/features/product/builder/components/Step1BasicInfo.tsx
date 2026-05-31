@@ -75,7 +75,7 @@ async function fetchSubCategories(parentId: string): Promise<SelectOption[]> {
 
 async function fetchTags(): Promise<SelectOption[]> {
   const data = await apiAsync
-    .get("product/tags/?page_size=100")
+    .get("catalog/tags/?page_size=100")
     .json<PaginatedOptions>();
   return data.results ?? [];
 }

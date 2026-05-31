@@ -1688,7 +1688,7 @@ export function VendorProductComposerView() {
           Open catalog
         </Link>
       </div>
-      <div className="rounded-3xl bg-white border border-[#ECE6D6] p-8 shadow-sm">
+      <div className="rounded-3xl bg-[#01454A] border border-[#013032] text-white p-8 shadow-xl shadow-[#01454A]/10 relative overflow-hidden">
         <ProductBuilderProvider vendorId={vendorId} onSubmit={handleBuilderSubmit}>
           <ProductBuilder />
         </ProductBuilderProvider>

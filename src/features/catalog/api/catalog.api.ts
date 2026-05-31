@@ -17,9 +17,11 @@ import type {
   CatalogBrand,
   CatalogCategory,
   CatalogCollection,
+  CatalogVendorCard,
   CatalogSearchResult,
   CatalogTag,
   PaginatedProducts,
+  PaginatedVendors,
 } from "../types/catalog.types";
 
 function safeUnwrap<T>(data: unknown): T[] {
@@ -146,8 +148,18 @@ export const catalogApi = {
     slug: string,
     page = 1,
     page_size = 12
-  ): Promise<PaginatedProducts> {
-    return this.getCollectionProducts(slug, page, page_size);
+  ): Promise<PaginatedVendors> {
+    const data = await apiAsync
+      .get(`catalog/collections/${slug}/vendors/`, {
+        searchParams: { page, page_size },
+      })
+      .json();
+    return (safeUnwrapObject<PaginatedVendors>(data) ?? {
+      results: [] as CatalogVendorCard[],
+      count: 0,
+      page,
+      page_size,
+    });
   },
 
   async search(q: string): Promise<CatalogSearchResult> {

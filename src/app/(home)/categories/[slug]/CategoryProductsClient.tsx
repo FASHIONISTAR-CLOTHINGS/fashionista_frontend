@@ -53,6 +53,7 @@ export default function CategoryProductsClient({
       skeletonCount={12}
       pageSize={12}
       showPageInfo
+      onPageChange={onPageChange}
     />
   );
 }
