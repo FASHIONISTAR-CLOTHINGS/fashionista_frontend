@@ -4,6 +4,7 @@ import {
   CatalogBlogPostListSchema,
   CatalogCategoryListSchema,
   CatalogCollectionListSchema,
+  HomepageBundleSchema,
 } from "@/features/catalog";
 
 describe("catalog contracts", () => {
@@ -77,5 +78,40 @@ describe("catalog contracts", () => {
     ];
 
     expect(CatalogBlogPostListSchema.parse(payload)[0]?.slug).toBe("digital-measurements-tailor-fit");
+  });
+
+  it("parses homepage bundle payloads with banners and banners_count", () => {
+    const payload = {
+      collections: [],
+      categories: [],
+      featured_products: [],
+      hot_deals: [],
+      reviews: [],
+      banners: [
+        {
+          id: 11,
+          slot: "hero",
+          title: "Hero Banner",
+          subtitle: "Live storefront promo",
+          cta_text: "Shop now",
+          cta_url: "/collections/wedding-edit",
+          image_url: "https://cdn.example/banner.jpg",
+          mobile_image_url: "https://cdn.example/banner-mobile.jpg",
+          sort_order: 0,
+        },
+      ],
+      meta: {
+        collections_count: 0,
+        categories_count: 0,
+        products_count: 0,
+        hot_deals_count: 0,
+        reviews_count: 0,
+        banners_count: 1,
+      },
+    };
+
+    const result = HomepageBundleSchema.parse(payload);
+    expect(result.banners).toHaveLength(1);
+    expect(result.meta.banners_count).toBe(1);
   });
 });

@@ -11,6 +11,15 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { publicEngagementApi } from "@/features/public-engagement";
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (typeof error === "object" && error !== null) {
+    const maybeResponse = error as { response?: { data?: { message?: string } } };
+    return maybeResponse.response?.data?.message ?? fallback;
+  }
+  return fallback;
+}
 
 export function WaitlistMobileForm() {
   const [email, setEmail] = useState("");
@@ -21,12 +30,19 @@ export function WaitlistMobileForm() {
     if (!email.trim()) return;
     setSubmitting(true);
     try {
-      // Simulate waitlist submission — replace with real API call when ready
-      await new Promise((r) => setTimeout(r, 600));
-      toast.success("You're on the waitlist! We'll be in touch soon.");
+      const result = await publicEngagementApi.submitWaitlist({
+        email,
+        source: "homepage_mobile_waitlist",
+      });
+      toast.success(result.message);
       setEmail("");
-    } catch {
-      toast.error("Something went wrong. Please try again.");
+    } catch (error) {
+      toast.error(
+        getErrorMessage(
+          error,
+          "We could not add you to the waitlist right now. Please try again.",
+        ),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -37,6 +53,7 @@ export function WaitlistMobileForm() {
       <div className="h-[56px] w-full bg-[#F4F5FB] rounded-r-[100px] flex items-center p-1.5">
         <input
           id="mobile-email-input"
+          data-testid="waitlist-email-input"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -47,6 +64,7 @@ export function WaitlistMobileForm() {
           disabled={submitting}
         />
         <button
+          data-testid="waitlist-submit"
           type="submit"
           disabled={submitting}
           className="w-1/3 h-full rounded-r-[100px] bg-[#01454a] text-white shrink-0 text-sm font-bold font-raleway min-h-[44px] hover:bg-[#01454a]/90 transition-colors disabled:opacity-70"

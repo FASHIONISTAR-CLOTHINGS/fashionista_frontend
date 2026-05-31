@@ -26,7 +26,7 @@ export default function GetMeasuredPage() {
         </section>
         <section className="space-y-4">
           <div className="rounded-[8px] bg-[#F4F5FB] px-4 py-3 font-satoshi text-base text-[#475367] md:text-lg">
-            Measurement provider fees are handled by the backend wallet and transaction layer before live charging is enabled.
+            Save your measurements once and reuse them across custom fashion orders for a smoother, more accurate fitting experience.
           </div>
           <MirrorSizeMeasurementFlow />
         </section>

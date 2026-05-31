@@ -8,6 +8,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FashionistarImage } from "@/components/media";
+import { NewsletterForm } from "../_components/NewsletterForm";
 
 export const metadata: Metadata = {
   title: "About Us | Fashionistar",
@@ -100,11 +101,11 @@ const SERVICES = [
 ];
 
 const STATS = [
-  { value: "5+", label: "Glorious Years" },
-  { value: "10K+", label: "Happy Clients" },
-  { value: "200+", label: "Orders Completed" },
-  { value: "15+", label: "Expert Team" },
-  { value: "50K+", label: "Products Sold" },
+  { value: "AI", label: "Measurement Guided" },
+  { value: "Live", label: "Vendor Marketplace" },
+  { value: "Secure", label: "Escrow Payments" },
+  { value: "Custom", label: "Tailoring Friendly" },
+  { value: "Mobile", label: "Shopper Ready" },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -147,8 +148,8 @@ export default function AboutUsPage() {
           </p>
           <p className="font-raleway text-base leading-7 text-[#282828]">
             Founded with a mission to formalize and digitize the African fashion
-            industry, Fashionistar empowers over 200 artisans with tools, payments,
-            and a global storefront — while guaranteeing clients the fit, quality,
+            industry, Fashionistar equips artisans with tools, payments,
+            and a global storefront while helping clients expect the fit, quality,
             and trust they deserve.
           </p>
           <div className="flex flex-wrap gap-3">
@@ -231,9 +232,9 @@ export default function AboutUsPage() {
             with enterprise-grade tools to build, sell, and grow.
           </p>
           <p className="font-raleway text-base leading-7 text-[#282828]">
-            Our platform processes thousands of transactions monthly with 99.9% uptime,
-            serving clients across Nigeria, the diaspora, and fashion buyers worldwide
-            who love authentic African craftsmanship.
+            We are focused on a trustworthy shopper experience: verified storefronts,
+            clearer communication, secure transactions, and better measurement capture
+            for custom fashion across Nigeria and beyond.
           </p>
           <Link
             href="/vendors"
@@ -307,23 +308,7 @@ export default function AboutUsPage() {
             Get the latest drops, exclusive deals, and style guides from Fashionistar
             delivered directly to your inbox.
           </p>
-          <div
-            role="group"
-            aria-label="Newsletter signup"
-            className="flex flex-col gap-3 sm:flex-row"
-          >
-            <input
-              type="email"
-              placeholder="Your email address"
-              className="flex-1 rounded-xl border border-white/20 bg-white/10 px-4 py-3 font-raleway text-sm text-white placeholder:text-white/50 outline-none focus:border-[#fda600] transition-colors backdrop-blur-sm"
-            />
-            <button
-              type="button"
-              className="rounded-xl bg-[#fda600] px-7 py-3 font-raleway text-sm font-bold text-black hover:bg-[#e09500] transition-all duration-200 hover:-translate-y-0.5 shadow-lg"
-            >
-              Subscribe
-            </button>
-          </div>
+          <NewsletterForm />
           <p className="mt-3 font-raleway text-xs text-white/40">
             No spam. Unsubscribe anytime.
           </p>

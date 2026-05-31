@@ -18,6 +18,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCatalogTags } from "@/features/catalog";
+import type { CatalogTag } from "@/features/catalog";
 
 interface CatalogTagsRailProps {
   /** If provided, wraps the rail in a section with a heading. */
@@ -40,7 +41,7 @@ export function CatalogTagsRail({
   const searchParams = useSearchParams();
   const activeTag = searchParams.get("tag") ?? "";
 
-  const tags = limit ? (data?.tags ?? []).slice(0, limit) : (data?.tags ?? []);
+  const tags = limit ? (data ?? []).slice(0, limit) : (data ?? []);
 
   if (isLoading) {
     return (
@@ -99,7 +100,7 @@ export function CatalogTagsRail({
             All
           </Link>
 
-          {tags.map((tag) => {
+          {tags.map((tag: CatalogTag) => {
             const isActive = activeTag === tag.slug;
             // Use the tag's brand color if provided, fallback to gold
             const accentColor = tag.color_hex || "#FDA600";

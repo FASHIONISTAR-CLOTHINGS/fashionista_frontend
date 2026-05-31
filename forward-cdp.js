@@ -1,7 +1,7 @@
 import net from 'net';
 
 const server = net.createServer((socket) => {
-  const client = net.connect(9223, '127.0.0.1');
+  const client = net.connect(9222, '::1');
   
   socket.pipe(client);
   client.pipe(socket);
@@ -19,6 +19,6 @@ server.on('error', (err) => {
 });
 
 server.listen(9222, '127.0.0.1', () => {
-  console.log('Forwarding from IPv4 127.0.0.1:9222 to IPv4 127.0.0.1:9223');
+  console.log('Forwarding from IPv4 127.0.0.1:9222 to IPv6 [::1]:9222');
 });
 

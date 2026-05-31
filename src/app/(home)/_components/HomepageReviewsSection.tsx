@@ -111,9 +111,6 @@ function ReviewCard({
           fill
           className="object-cover"
           sizes="80px"
-          onError={() => {
-            // Next.js Image falls back gracefully — no JS error surfaced
-          }}
         />
       </div>
 

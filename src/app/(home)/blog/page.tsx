@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { CatalogBlogList } from "@/features/catalog";
+import { NewsletterForm } from "../_components/NewsletterForm";
 
 export const metadata: Metadata = {
   title: "Fashionistar Blog | Digital Measurements, Tailoring, Fashion Commerce",
@@ -102,7 +103,7 @@ export default function BlogPage() {
       <section className="border-b border-border/40 bg-card/60 px-4 py-5 md:px-8 lg:px-20">
         <div className="mx-auto flex max-w-screen-xl flex-wrap items-center justify-between gap-4">
           <p className="font-raleway text-sm text-muted-foreground">
-            Empowering 200+ artisans · 5,000+ products · AI measurements in 60s
+            AI measurement guidance · verified storefronts · practical commerce insights
           </p>
           <Link
             href="/get-measured"
@@ -144,18 +145,8 @@ export default function BlogPage() {
             Weekly style guides, artisan spotlights, measurement tips, and
             platform updates delivered straight to your inbox.
           </p>
-          <div className="flex flex-col gap-3 sm:flex-row max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="your@email.com"
-              className="flex-1 rounded-xl border border-white/20 bg-white/10 px-4 py-3 font-raleway text-sm text-white placeholder:text-white/50 outline-none focus:border-[#fda600] transition-colors"
-            />
-            <button
-              type="button"
-              className="rounded-xl bg-[#fda600] px-7 py-3 font-raleway text-sm font-bold text-black hover:bg-[#e09500] transition-all duration-200 hover:-translate-y-0.5 shadow-lg whitespace-nowrap"
-            >
-              Subscribe Free
-            </button>
+          <div className="max-w-md mx-auto">
+            <NewsletterForm />
           </div>
         </div>
       </section>

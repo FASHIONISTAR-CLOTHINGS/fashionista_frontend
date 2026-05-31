@@ -11,8 +11,7 @@
  *  - Premium glassmorphism store info and stats card
  *  - Social sharing center (copy link, WhatsApp share, Twitter share)
  *  - Custom sizing guide CTA with step-by-step bespoke tailoring process
- *  - Live testimonials slider / review carousel
- *  - Modern category filter chips with micro-animations
+ *  - Honest live catalog states (no fabricated testimonials or category tabs)
  *  - Live product grid integration
  */
 
@@ -32,9 +31,6 @@ import {
   Zap,
   Share2,
   Link2,
-  ChevronLeft,
-  ChevronRight,
-  Quote,
   CheckCircle2,
 } from "lucide-react";
 import { useProducts } from "@/features/product";
@@ -99,15 +95,10 @@ function StatCard({
 
 function ProductGrid({
   vendorSlug,
-  activeTab,
 }: {
   vendorSlug: string;
-  activeTab:  string;
 }) {
-  const { data, isLoading, isError } = useProducts({
-    vendor: vendorSlug,
-    ...(activeTab !== "all" ? { category: activeTab } : {}),
-  });
+  const { data, isLoading, isError } = useProducts({ vendor: vendorSlug });
 
   const products: ProductListItem[] = data?.results ?? [];
 
@@ -145,7 +136,7 @@ function ProductGrid({
         </div>
         <p className="text-lg font-bon_foyage text-[#01454A]">No products found</p>
         <p className="text-sm text-[hsl(var(--muted-foreground))] max-w-xs">
-          This category is currently empty. Explore other categories or check back later!
+          This vendor does not have live published products on the storefront right now.
         </p>
       </div>
     );
@@ -159,15 +150,6 @@ function ProductGrid({
     </div>
   );
 }
-
-// ── Category tabs ─────────────────────────────────────────────────────────────
-const CATEGORY_TABS = [
-  { key: "all",           label: "All Products" },
-  { key: "dresses",       label: "Dresses"      },
-  { key: "suits",         label: "Suits"        },
-  { key: "traditional",   label: "Traditional"  },
-  { key: "accessories",   label: "Accessories"  },
-];
 
 interface VendorPublicProfileClientProps {
   vendorSlug:    string;
@@ -212,9 +194,7 @@ export default function VendorPublicProfileClient({
   reviewCount   = 0,
   collections   = [],
 }: VendorPublicProfileClientProps) {
-  const [activeTab, setActiveTab] = useState("all");
   const [shareCopied, setShareCopied] = useState(false);
-  const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
 
   const location = [city, vendorState].filter(Boolean).join(", ");
   const whatsappHref = whatsapp
@@ -241,45 +221,6 @@ export default function VendorPublicProfileClient({
       const url = `https://twitter.com/intent/tweet?text=Check%20out%20this%20amazing%20store%20on%20Fashionistar%20%40Fashionistar%3A%20&url=${encodeURIComponent(window.location.href)}`;
       window.open(url, "_blank");
     }
-  };
-
-  const reviewsData = [
-    {
-      name: "Chioma A.",
-      location: "Lagos",
-      comment: "Absolutely flawless dress! The bespoke measurement option is a game-changer. It fits like a glove and the fabrics are top tier.",
-      rating: 5,
-      date: "2 weeks ago"
-    },
-    {
-      name: "Babajide O.",
-      location: "Abuja",
-      comment: "Excellent response time and the traditional attire was custom made for my wedding. Highly recommend this vendor.",
-      rating: 5,
-      date: "1 month ago"
-    },
-    {
-      name: "Emeka N.",
-      location: "Enugu",
-      comment: "Perfect suit tailoring. The gold accents on the cuffs are details you won't get anywhere else. Outstanding craftsmanship.",
-      rating: 5,
-      date: "3 weeks ago"
-    },
-    {
-      name: "Fatimah Y.",
-      location: "Kano",
-      comment: "Fast delivery and the seller is very responsive on WhatsApp. The measurements wizard was so simple to use.",
-      rating: 5,
-      date: "1 month ago"
-    }
-  ];
-
-  const nextReview = () => {
-    setCurrentReviewIndex((prev) => (prev + 1) % reviewsData.length);
-  };
-
-  const prevReview = () => {
-    setCurrentReviewIndex((prev) => (prev - 1 + reviewsData.length) % reviewsData.length);
   };
 
   return (
@@ -436,37 +377,12 @@ export default function VendorPublicProfileClient({
             </Link>
           </div>
 
-          {/* Categorization chips */}
-          <div
-            className="flex gap-2 overflow-x-auto pb-1 scrollbar-none"
-            role="tablist"
-            aria-label="Filter products by category"
-          >
-            {CATEGORY_TABS.map((tab) => {
-              const isActive = activeTab === tab.key;
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  role="tab"
-                  id={`vendor-tab-${tab.key}`}
-                  aria-selected={isActive}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={[
-                    "flex-shrink-0 rounded-full px-5 py-2.5 text-sm font-bold transition-all duration-300",
-                    isActive
-                      ? "bg-[#01454A] text-white shadow-md shadow-[#01454A]/20"
-                      : "border border-[#ECE6D6] bg-white text-[#7A6B44] hover:border-[#FDA600] hover:text-[#01454A]",
-                  ].join(" ")}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
+          <div className="rounded-2xl border border-[#ECE6D6] bg-white px-5 py-4 text-sm leading-6 text-[#7A6B44]">
+            This catalog reflects the vendor&apos;s currently published storefront items. We removed the old hardcoded category tabs so only live inventory or an explicit empty state appears here.
           </div>
 
           {/* Product grid */}
-          <ProductGrid vendorSlug={vendorSlug} activeTab={activeTab} />
+          <ProductGrid vendorSlug={vendorSlug} />
         </section>
 
         {/* Custom Order CTA Section */}
@@ -475,7 +391,7 @@ export default function VendorPublicProfileClient({
             Request a Custom Masterpiece
           </h3>
           <p className="text-sm text-[hsl(var(--muted-foreground))] max-w-lg mx-auto leading-7">
-            Can't find your exact style or color? Send us your references, sketches, and specifications. We will send back a custom quote and begin crafting.
+            Can&apos;t find your exact style or color? Send us your references, sketches, and specifications. We will send back a custom quote and begin crafting.
           </p>
           <div className="flex flex-wrap justify-center gap-3 pt-2">
             <Link
@@ -539,7 +455,7 @@ export default function VendorPublicProfileClient({
             </div>
             <div className="flex items-center gap-2.5">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#FDA600] font-bold text-black">2</span>
-              <span>Select 'Custom Sizing' on product page.</span>
+              <span>Select &apos;Custom Sizing&apos; on product page.</span>
             </div>
             <div className="flex items-center gap-2.5">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#FDA600] font-bold text-black">3</span>
@@ -569,54 +485,36 @@ export default function VendorPublicProfileClient({
           </div>
         </div>
 
-        {/* Live Testimonials Slider Carousel */}
+        {/* Honest storefront proof */}
         <div className="rounded-[2rem] border border-[#ECE6D6] bg-white p-6 shadow-sm space-y-5">
           <div className="flex items-center justify-between">
             <h3 className="font-bon_foyage text-2xl text-[#01454A]">
-              Testimonials
+              Storefront Snapshot
             </h3>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={prevReview}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F8F5ED] text-[#01454A] transition hover:bg-[#FDA600] hover:text-black active:scale-95"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={nextReview}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F8F5ED] text-[#01454A] transition hover:bg-[#FDA600] hover:text-black active:scale-95"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+            {reviewCount > 0 ? (
+              <span className="rounded-full bg-[#F8F5ED] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#7A6B44]">
+                {reviewCount} live reviews
+              </span>
+            ) : null}
           </div>
 
-          <div className="relative min-h-[140px] flex flex-col justify-between rounded-2xl bg-[#F8F5ED] p-5">
-            <Quote className="absolute right-4 top-4 h-8 w-8 text-[#01454A]/5 rotate-180" />
-            <div className="space-y-3">
-              <div className="flex">
-                {Array.from({ length: reviewsData[currentReviewIndex].rating }).map((_, i) => (
-                  <Star key={i} className="h-3.5 w-3.5 fill-[#FDA600] text-[#FDA600]" />
-                ))}
-              </div>
-              <p className="text-xs italic leading-6 text-[hsl(var(--muted-foreground))]">
-                "{reviewsData[currentReviewIndex].comment}"
-              </p>
-            </div>
-            <div className="mt-4 flex items-center justify-between border-t border-[#ECE6D6]/40 pt-3">
-              <div>
-                <p className="text-xs font-black text-[#01454A]">
-                  {reviewsData[currentReviewIndex].name}
-                </p>
-                <p className="text-[10px] text-[#7A6B44] font-medium">
-                  {reviewsData[currentReviewIndex].location}
+          <div className="rounded-2xl bg-[#F8F5ED] p-5 space-y-4">
+            <p className="text-xs leading-6 text-[hsl(var(--muted-foreground))]">
+              We removed the old static testimonial carousel from this storefront. Shopper trust on this page now comes from live catalog data, verified vendor status, published product volume, and real rating totals when they are available.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-white px-4 py-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#7A6B44]">Rating</p>
+                <p className="mt-2 font-bon_foyage text-3xl text-[#01454A]">
+                  {avgRating > 0 ? avgRating.toFixed(1) : "N/A"}
                 </p>
               </div>
-              <span className="text-[10px] font-bold text-[hsl(var(--muted-foreground))]">
-                {reviewsData[currentReviewIndex].date}
-              </span>
+              <div className="rounded-2xl bg-white px-4 py-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#7A6B44]">Published products</p>
+                <p className="mt-2 font-bon_foyage text-3xl text-[#01454A]">
+                  {totalProducts}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -624,4 +522,3 @@ export default function VendorPublicProfileClient({
     </div>
   );
 }
-

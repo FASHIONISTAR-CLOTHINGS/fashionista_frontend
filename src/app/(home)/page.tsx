@@ -20,7 +20,6 @@
  */
 
 import Link from "next/link";
-import Image from "next/image";
 import { Suspense } from "react";
 import { CatalogCategoryGrid, CatalogCollectionGrid } from "@/features/catalog";
 import { getHomepageBundleV2 } from "@/features/catalog/api/catalog.server";
@@ -70,6 +69,9 @@ export default async function Home() {
    * On error → EMPTY_BUNDLE (homepage never crashes).
    */
   const bundle = await getHomepageBundleV2();
+  const highlightedCollection = bundle.collections[0] ?? null;
+  const categoryCount = bundle.meta.categories_count || bundle.categories.length;
+  const collectionCount = bundle.meta.collections_count || bundle.collections.length;
 
   return (
     <div className="flex flex-col gap-0" data-testid="homepage">
@@ -105,45 +107,62 @@ export default async function Home() {
         <CatalogCollectionGrid collections={bundle.collections} />
       </div>
 
-      {/* ── Campaign Banner — Senator Outfits CTA ────────────────────────── */}
+      {/* ── Honest Live Promo Surface ─────────────────────────────────────── */}
       <div
-        className="w-full bg-[#fda600] relative p-8 md:p-14 lg:p-24 flex flex-col gap-5 md:gap-8 items-center overflow-hidden min-h-[480px] md:min-h-[600px]"
+        className="w-full bg-[#fda600] relative p-8 md:p-14 lg:p-24 overflow-hidden"
         data-testid="campaign-banner"
       >
-        {/* Decorative gradient overlay */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/5 to-transparent" />
-
-        <p className="font-raleway font-semibold text-lg text-black relative z-10 tracking-widest uppercase">
-          Senator Outfits
-        </p>
-        <h2 className="font-bon_foyage text-[clamp(2rem,6vw,4.5rem)] leading-tight text-center text-black md:max-w-xl relative z-10">
-          The New Fashion Collection
-        </h2>
-        <Link
-          href="/categories"
-          className="px-10 py-3 md:py-4 rounded-[100px] bg-[#01454A] text-white font-raleway font-semibold text-base relative z-10 hover:bg-[#01454A]/90 transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg min-h-[44px] inline-flex items-center"
-        >
-          Shop Now
-        </Link>
-
-        {/* Decorative model images */}
-        <Image
-          src="/man.png"
-          alt=""
-          width={500}
-          height={582}
-          aria-hidden="true"
-          className="w-[160px] md:w-[300px] lg:w-[440px] h-auto absolute left-0 md:left-6 bottom-0"
-          style={{ height: "auto" }}
-        />
-        <Image
-          src="/adunni.png"
-          alt=""
-          width={1000}
-          height={1000}
-          aria-hidden="true"
-          className="w-[160px] md:w-[300px] lg:w-[500px] absolute right-0 bottom-0 object-cover"
-        />
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/10 via-transparent to-[#01454A]/10" />
+        <div className="relative z-10 grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+          <div className="space-y-5">
+            <p className="font-raleway font-semibold text-sm md:text-base text-black/70 tracking-[0.25em] uppercase">
+              Live Fashionistar Edit
+            </p>
+            <h2 className="font-bon_foyage text-[clamp(2rem,6vw,4.5rem)] leading-tight text-black md:max-w-3xl">
+              {highlightedCollection
+                ? highlightedCollection.title
+                : "Discover live collections, verified vendors, and tailored fashion with zero placeholder merchandising."}
+            </h2>
+            <p className="max-w-2xl font-raleway text-sm leading-7 text-black/75 md:text-base">
+              {highlightedCollection?.description ||
+                "Browse the latest live categories and collections published on Fashionistar. Every card on this page now reflects real catalog data or an explicit empty state."}
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href={highlightedCollection ? `/collections/${highlightedCollection.slug}` : "/collections"}
+                className="px-10 py-3 md:py-4 rounded-[100px] bg-[#01454A] text-white font-raleway font-semibold text-base hover:bg-[#01454A]/90 transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg min-h-[44px] inline-flex items-center"
+              >
+                {highlightedCollection ? "Explore Collection" : "Browse Collections"}
+              </Link>
+              <Link
+                href="/products"
+                className="px-10 py-3 md:py-4 rounded-[100px] border border-[#01454A]/20 bg-white/60 text-[#01454A] font-raleway font-semibold text-base hover:bg-white transition-all duration-300 min-h-[44px] inline-flex items-center"
+              >
+                Shop Products
+              </Link>
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-[2rem] bg-white/70 p-6 shadow-sm backdrop-blur">
+              <p className="font-raleway text-xs font-bold uppercase tracking-[0.25em] text-[#01454A]/70">
+                Categories
+              </p>
+              <p className="mt-3 font-bon_foyage text-5xl text-[#01454A]">{categoryCount}</p>
+              <p className="mt-2 font-raleway text-sm leading-6 text-[#01454A]/80">
+                Live discovery lanes published for shoppers right now.
+              </p>
+            </div>
+            <div className="rounded-[2rem] bg-white/70 p-6 shadow-sm backdrop-blur">
+              <p className="font-raleway text-xs font-bold uppercase tracking-[0.25em] text-[#01454A]/70">
+                Collections
+              </p>
+              <p className="mt-3 font-bon_foyage text-5xl text-[#01454A]">{collectionCount}</p>
+              <p className="mt-2 font-raleway text-sm leading-6 text-[#01454A]/80">
+                Curated edits pulled from the live catalog bundle.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ── Deals of the Week (live from hot_deals in bundle) ────────────── */}

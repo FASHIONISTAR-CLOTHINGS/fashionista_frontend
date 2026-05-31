@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { getCatalogCollections } from "../api/catalog.server";
-import { fallbackCatalogCollections } from "../lib/catalog-fallbacks";
 import type { HomepageCollectionCard } from "../types/catalog.types";
 
 interface CatalogCollectionGridProps {
@@ -25,7 +24,7 @@ export default async function CatalogCollectionGrid({
   const selectedCollection = typeof resolvedParams.collection === "string" ? resolvedParams.collection : "";
   // C1 fix: use prop when provided (bundle flow), otherwise fetch standalone.
   const collections = collectionsProp ?? await getCatalogCollections();
-  const baseItems = collections.length ? collections : fallbackCatalogCollections;
+  const baseItems = collections;
   const filteredItems = selectedCollection
     ? baseItems.filter((item) => item.slug === selectedCollection)
     : baseItems;
@@ -43,66 +42,77 @@ export default async function CatalogCollectionGrid({
         </p>
       </div>
 
-      <nav className="flex flex-wrap items-center gap-2" aria-label="Collection filters">
-        <Link
-          href="/"
-          scroll={false}
-          className={`rounded-full border border-[hsl(var(--accent))] px-5 py-2 text-sm font-semibold transition md:px-6 md:py-3 ${
-            !selectedCollection
-              ? "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]"
-              : "text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
-          }`}
-        >
-          All
-        </Link>
-        {navItems.map((item) => (
-          <Link
-            key={item.id}
-            href={`/?collection=${item.slug}`}
-            scroll={false}
-            className={`rounded-full border border-[hsl(var(--accent))] px-5 py-2 text-sm font-semibold transition md:px-6 md:py-3 ${
-              selectedCollection === item.slug
-                ? "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]"
-                : "text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
-            }`}
-          >
-            {item.title}
-          </Link>
-        ))}
-      </nav>
+      {baseItems.length > 0 ? (
+        <>
+          <nav className="flex flex-wrap items-center gap-2" aria-label="Collection filters">
+            <Link
+              href="/"
+              scroll={false}
+              className={`rounded-full border border-[hsl(var(--accent))] px-5 py-2 text-sm font-semibold transition md:px-6 md:py-3 ${
+                !selectedCollection
+                  ? "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]"
+                  : "text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+              }`}
+            >
+              All
+            </Link>
+            {navItems.map((item) => (
+              <Link
+                key={item.id}
+                href={`/?collection=${item.slug}`}
+                scroll={false}
+                className={`rounded-full border border-[hsl(var(--accent))] px-5 py-2 text-sm font-semibold transition md:px-6 md:py-3 ${
+                  selectedCollection === item.slug
+                    ? "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]"
+                    : "text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"
+                }`}
+              >
+                {item.title}
+              </Link>
+            ))}
+          </nav>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {items.map((item) => (
-          <Link
-            key={item.id}
-            href={`/collections/${item.slug}`}
-            className="card-shadow card-shadow-hover group overflow-hidden rounded-lg border border-border bg-card text-card-foreground"
-            data-testid="collection-card"
-          >
-            <div className="relative h-56 bg-[hsl(var(--brand-cream))]">
-              <Image
-                src={item.image_url || item.image || "/gown.svg"}
-                alt={item.title}
-                fill
-                sizes="(max-width: 768px) 100vw, 33vw"
-                className="h-full w-full object-contain p-6"
-              />
-              <span className="absolute right-4 top-4 rounded-full bg-[hsl(var(--accent))] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[hsl(var(--accent-foreground))]">
-                Featured
-              </span>
-            </div>
-            <div className="space-y-3 p-5">
-              <p className="text-sm font-semibold uppercase tracking-wide text-[hsl(var(--primary))]">
-                {item.sub_title || "Fashionistar edit"}
-              </p>
-              <h3 className="text-xl font-semibold leading-7">{item.title}</h3>
-              <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
-                {item.description || "A curated collection for precise fit and modern fashion commerce."}
-              </p>
-            </div>
-          </Link>
-        ))}
-      </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {items.map((item) => (
+              <Link
+                key={item.id}
+                href={`/collections/${item.slug}`}
+                className="card-shadow card-shadow-hover group overflow-hidden rounded-lg border border-border bg-card text-card-foreground"
+                data-testid="collection-card"
+              >
+                <div className="relative h-56 bg-[hsl(var(--brand-cream))]">
+                  <Image
+                    src={item.image_url || item.image || "/gown.svg"}
+                    alt={item.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    className="h-full w-full object-contain p-6"
+                  />
+                  <span className="absolute right-4 top-4 rounded-full bg-[hsl(var(--accent))] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[hsl(var(--accent-foreground))]">
+                    Featured
+                  </span>
+                </div>
+                <div className="space-y-3 p-5">
+                  <p className="text-sm font-semibold uppercase tracking-wide text-[hsl(var(--primary))]">
+                    {item.sub_title || "Fashionistar edit"}
+                  </p>
+                  <h3 className="text-xl font-semibold leading-7">{item.title}</h3>
+                  <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
+                    {item.description || "A curated collection for precise fit and modern fashion commerce."}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="rounded-3xl border border-dashed border-border bg-card px-6 py-14 text-center">
+          <p className="font-bon_foyage text-3xl text-foreground">Collections Will Appear Here Soon</p>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground md:text-base">
+            We only show live published collections on this surface. Once they are available, they will appear here automatically.
+          </p>
+        </div>
+      )}
 
       {showCta ? (
         <div className="flex justify-center">

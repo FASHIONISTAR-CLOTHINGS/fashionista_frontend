@@ -26,9 +26,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
+import { toast } from "sonner";
 import { MapPin, Phone, Mail, Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useId } from "react";
+import { publicEngagementApi } from "@/features/public-engagement";
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -58,11 +61,39 @@ interface NewFooterProps {
 function NewsletterForm() {
   const emailId = useId();
   const descId = useId();
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!email.trim()) return;
+
+    setSubmitting(true);
+    try {
+      const result = await publicEngagementApi.submitWaitlist({
+        email,
+        source: "footer_waitlist",
+      });
+      toast.success(result.message);
+      setEmail("");
+    } catch (error) {
+      const message =
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        typeof (error as { response?: { data?: { message?: string } } }).response?.data?.message === "string"
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : "We could not save your email right now. Please try again.";
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <form
       className="flex z-30 w-full"
-      onSubmit={(e) => e.preventDefault()}
+      onSubmit={handleSubmit}
       aria-labelledby={descId}
     >
       <div
@@ -78,8 +109,12 @@ function NewsletterForm() {
           id={emailId}
           name="email"
           type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
           autoComplete="email"
           aria-describedby={descId}
+          required
+          disabled={submitting}
           className={cn(
             "w-2/3 h-full outline-none bg-inherit",
             "placeholder:font-raleway placeholder:font-medium placeholder:text-muted-foreground",
@@ -89,15 +124,17 @@ function NewsletterForm() {
         />
         <button
           type="submit"
+          disabled={submitting}
           className={cn(
             "w-1/3 lg:min-h-[66px] h-full rounded-r-[100px] shrink-0",
             "bg-[hsl(218_47%_20%)] text-white",
             "text-sm lg:text-xl font-bold font-raleway",
             "hover:opacity-90 transition-opacity",
+            "disabled:opacity-60",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
           )}
         >
-          Join Waitlist
+          {submitting ? "Joining..." : "Join Waitlist"}
         </button>
       </div>
     </form>
