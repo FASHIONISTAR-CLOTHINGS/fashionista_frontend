@@ -48,3 +48,45 @@ Creating turbopack project {
  GET / 200 in 26.7s (next.js: 466ms, application-code: 26.3s)
 ✓ Finished filesystem cache database compaction in 44s
 ○ Compiling /categories ...
+ GET /categories 200 in 34.6s (next.js: 22.7s, application-code: 11.8s)
+ GET /categories 200 in 32.6s (next.js: 21.1s, application-code: 11.6s)
+ GET /categories 200 in 32.9s (next.js: 21.1s, application-code: 11.7s)
+ GET /categories 200 in 57s (next.js: 51s, application-code: 6.3s)
+✓ Finished writing to filesystem cache in 23.9s
+✓ Finished filesystem cache database compaction in 12.1s
+○ Compiling /products ...
+ GET /products 200 in 10.6s (next.js: 8.2s, application-code: 2.4s)
+✓ Finished filesystem cache database compaction in 21.3s
+✓ Finished filesystem cache database compaction in 14.8s
+ GET /products 200 in 5.0s (next.js: 77ms, application-code: 4.9s)
+ GET /collections 200 in 8.8s (next.js: 2.3s, application-code: 6.4s)
+✓ Finished writing to filesystem cache in 14.9s
+○ Compiling /get-measured ...
+ GET /get-measured 200 in 10.9s (next.js: 9.9s, application-code: 976ms)
+○ Compiling /auth/sign-in ...
+ GET /auth/sign-in 200 in 22.1s (next.js: 12.1s, application-code: 10.1s)
+✓ Finished writing to filesystem cache in 11.3s
+○ Compiling /client/dashboard ...
+ GET /client/dashboard 200 in 105s (next.js: 103s, application-code: 2.3s)
+ GET /client/dashboard 200 in 78s (next.js: 75s, application-code: 3.4s)
+ GET /client/dashboard 200 in 2.8s (next.js: 31ms, application-code: 2.7s)
+○ Compiling /client/dashboard/notifications ...
+ GET /client/dashboard/notifications 200 in 8.4s (next.js: 3.3s, application-code: 5.1s)
+✓ Finished writing to filesystem cache in 15.1s
+✓ Compiled in 3.3s
+ GET /client/dashboard/notifications 200 in 9.0s (next.js: 1811ms, application-code: 7.2s)
+ GET /client/dashboard/notifications 200 in 1661ms (next.js: 18ms, application-code: 1643ms)
+ GET /client/dashboard/notifications 200 in 3.5s (next.js: 192ms, application-code: 3.3s)
+ GET /client/dashboard/notifications 200 in 167ms (next.js: 25ms, application-code: 142ms)
+ GET /client/dashboard/notifications 200 in 429ms (next.js: 45ms, application-code: 384ms)
+ GET /client/dashboard/notifications 200 in 33ms (next.js: 5ms, application-code: 28ms)
+ GET /client/dashboard/notifications 200 in 91ms (next.js: 7ms, application-code: 83ms)
+ GET /client/dashboard/notifications 200 in 33ms (next.js: 6ms, application-code: 27ms)
+ GET /client/dashboard/notifications 200 in 117ms (next.js: 10ms, application-code: 107ms)
+ GET /client/dashboard 200 in 1170ms (next.js: 412ms, application-code: 758ms)
+ GET /products 200 in 297ms (next.js: 102ms, application-code: 195ms)
+○ Compiling /products/[slug] ...
+✓ Finished writing to filesystem cache in 16.2s
+✓ Finished filesystem cache database compaction in 23.6s
+ GET /products/vision-browser-product-1779776978161 200 in 50s (next.js: 43s, generate-params: 35.1s, application-code: 7.6s)
+✓ Finished filesystem cache database compaction in 14.9s
