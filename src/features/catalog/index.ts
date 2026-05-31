@@ -52,7 +52,7 @@ export {
   // Phase C5 — new paginated + detail + search hooks
   useCategoryProducts,
   useBrandProducts,
-  useCollectionProducts,
+  useCollectionVendors,
   useCatalogSearch,
   useCatalogTags,
   useCategoryDetail,

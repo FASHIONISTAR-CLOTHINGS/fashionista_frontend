@@ -105,16 +105,16 @@ export function useBrandProducts(
 }
 
 /**
- * Infinite paginated products by collection slug.
+ * Infinite paginated vendors by collection slug.
  */
-export function useCollectionProducts(
+export function useCollectionVendors(
   slug: string,
   sortBy: CatalogSortOption = "newest"
 ) {
   return useInfiniteQuery({
-    queryKey: ["catalog", "collection-products", slug, sortBy],
+    queryKey: ["catalog", "collection-vendors", slug, sortBy],
     queryFn: ({ pageParam = 1 }) =>
-      catalogApi.getCollectionProducts(slug, pageParam as number, PAGE_SIZE),
+      catalogApi.getCollectionVendors(slug, pageParam as number, PAGE_SIZE),
     getNextPageParam: (lastPage) => {
       const loaded = lastPage.page * lastPage.page_size;
       return loaded < lastPage.count ? lastPage.page + 1 : undefined;

@@ -32,6 +32,7 @@ import { DealsCountdown } from "./_components/DealsCountdown";
 import { NewsletterForm } from "./_components/NewsletterForm";
 import { HomepageHotDealsSection } from "./_components/HomepageHotDealsSection";
 import { HomepageReviewsSection } from "./_components/HomepageReviewsSection";
+import { WaitlistMobileForm } from "./_components/WaitlistMobileForm";
 import { Hero } from "@/components";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -80,25 +81,10 @@ export default async function Home() {
         <Hero />
       )}
 
-      {/* ── Mobile email waitlist ─────────────────────────────────────────── */}
+      {/* ── Mobile email waitlist ───────────────────────────────────── */}
       <div className="mt-8 md:hidden flex z-30 px-4" data-testid="mobile-email-waitlist">
-        <form className="flex w-full" onSubmit={(e) => e.preventDefault()}>
-          <div className="h-[56px] w-full bg-[#F4F5FB] rounded-r-[100px] flex items-center p-1.5">
-            <input
-              id="mobile-email-input"
-              type="email"
-              className="w-2/3 h-full outline-none bg-inherit placeholder:font-raleway placeholder:font-medium placeholder:text-base placeholder:text-[#333] text-[#333] text-sm px-3"
-              placeholder="Enter Email Address"
-              aria-label="Email for waitlist"
-            />
-            <button
-              type="submit"
-              className="w-1/3 h-full rounded-r-[100px] bg-[#01454a] text-white shrink-0 text-sm font-bold font-raleway min-h-[44px] hover:bg-[#01454a]/90 transition-colors"
-            >
-              Join Waitlist
-            </button>
-          </div>
-        </form>
+        {/* WaitlistMobileForm is a client component — form action handled there */}
+        <WaitlistMobileForm />
       </div>
 
       {/* ── Live Category Grid (C1 FIX: no internal fetch — uses bundle.categories) ── */}
@@ -199,7 +185,7 @@ export default async function Home() {
         <NewsletterForm />
       </div>
 
-      {/* ── JSON-LD Structured Data ───────────────────────────────────────── */}
+      {/* ── JSON-LD Structured Data ─────────────────────────────────── */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -207,10 +193,10 @@ export default async function Home() {
             "@context": "https://schema.org",
             "@type": "WebSite",
             name: "Fashionistar",
-            url: "https://fashionistar.com",
+            url: "https://fashionistar.net",
             potentialAction: {
               "@type": "SearchAction",
-              target: "https://fashionistar.com/products?q={search_term_string}",
+              target: "https://fashionistar.net/products?q={search_term_string}",
               "query-input": "required name=search_term_string",
             },
           }),
@@ -228,12 +214,12 @@ export default async function Home() {
                 "@type": "ListItem",
                 position: i + 1,
                 name: p.title,
-                url: `https://fashionistar.com/products/${p.slug}`,
+                url: `https://fashionistar.net/products/${p.slug}`,
               })),
             }),
           }}
         />
-      )}
+      )}  
     </div>
   );
 }

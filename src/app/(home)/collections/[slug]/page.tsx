@@ -8,7 +8,7 @@ import {
 } from "@/features/catalog";
 import { ProductGridSkeleton } from "@/features/product";
 import { FashionistarImage } from "@/components/media";
-import CollectionProductsClient from "./CollectionProductsClient";
+import CollectionProductsClient from "./CollectionVendorClient";
 
 interface CollectionDetailPageProps {
   params: Promise<{ slug: string }>;
