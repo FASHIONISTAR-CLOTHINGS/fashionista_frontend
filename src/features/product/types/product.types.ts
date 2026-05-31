@@ -373,7 +373,7 @@ export interface CouponValidateInput {
 
 export interface ProductFilterParams {
   q?: string;
-  /** Filter products by category slug (maps to category__slug on backend). */
+  /** Filter products by category and sub category slug (maps to category__slug on backend). */
   category?: string;
   /** Filter products by sub-category slug (maps to sub_categories__slug on backend). */
   sub_category?: string;

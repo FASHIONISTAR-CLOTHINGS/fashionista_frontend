@@ -78,6 +78,7 @@
     "node_modules",
     ".next",
     "dist",
-    "GLOBAL_MAIN_BRANCH_ORIGINAL_CSS_STYLES_FONTS_AND_GUIDELINES"
+    "GLOBAL_MAIN_BRANCH_ORIGINAL_CSS_STYLES_FONTS_AND_GUIDELINES",
+    "tests"
   ]
 }

@@ -167,7 +167,7 @@ const OrderListItemBaseSchema = z.object({
 });
 
 /** Normalize helper: alias total_amount → final_total so UI code can use one field name */
-function normalizeFinalTotal<T extends { final_total?: string; total_amount?: string; delivery_address?: any; buyer_name?: string; buyer_phone?: string; buyer_address?: any; buyer_email?: string }>(order: T): T & { final_total: string; buyer_name: string; buyer_phone: string; buyer_address: any; buyer_email: string } {
+function normalizeFinalTotal<T extends { final_total?: string; total_amount?: string; delivery_address?: any; buyer_name?: string; buyer_phone?: string | null; buyer_address?: any; buyer_email?: string }>(order: T): T & { final_total: string; buyer_name: string; buyer_phone: string | null; buyer_address: any; buyer_email: string } {
   let deliveryAddress = order.delivery_address;
   if (typeof deliveryAddress === "string") {
     try {
@@ -231,7 +231,7 @@ export const PaginatedOrderListSchema = z.object({
 });
 
 /** Parse helper — warns on mismatch but always returns data so UI can render. */
-export function parseOrderResponse<T>(schema: z.ZodType<T>, data: unknown, ctx?: string): T {
+export function parseOrderResponse<T>(schema: z.ZodType<T, any, any>, data: unknown, ctx?: string): T {
   const result = schema.safeParse(data);
   if (!result.success) {
     const msg = `[Zod/Order] Schema mismatch${ctx ? ` in ${ctx}` : ""}: ${result.error.message}`;

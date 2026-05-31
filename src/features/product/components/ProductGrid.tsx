@@ -27,6 +27,8 @@ interface ProductGridProps {
   pageSize?: number;
   /** If true, show page X of Y text under controls. */
   showPageInfo?: boolean;
+  /** Optional callback when page changes */
+  onPageChange?: (page: number) => void;
 }
 
 export default function ProductGrid({
@@ -35,6 +37,7 @@ export default function ProductGrid({
   skeletonCount = 12,
   pageSize = 12,
   showPageInfo = true,
+  onPageChange,
 }: ProductGridProps) {
   const [page, setPage] = useState<number>(params?.page ?? 1);
 
@@ -57,11 +60,12 @@ export default function ProductGrid({
     (next: number) => {
       if (next < 1 || next > totalPages) return;
       setPage(next);
+      onPageChange?.(next);
       // Smooth scroll to the grid top on page change
       const el = document.getElementById("product-grid-anchor");
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     },
-    [totalPages]
+    [totalPages, onPageChange]
   );
 
   // ── Loading (first fetch) ─────────────────────────────────────────────────

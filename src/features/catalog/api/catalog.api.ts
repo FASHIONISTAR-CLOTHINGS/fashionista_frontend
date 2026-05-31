@@ -142,6 +142,14 @@ export const catalogApi = {
     });
   },
 
+  async getCollectionVendors(
+    slug: string,
+    page = 1,
+    page_size = 12
+  ): Promise<PaginatedProducts> {
+    return this.getCollectionProducts(slug, page, page_size);
+  },
+
   async search(q: string): Promise<CatalogSearchResult> {
     const EMPTY: CatalogSearchResult = {
       categories: [],

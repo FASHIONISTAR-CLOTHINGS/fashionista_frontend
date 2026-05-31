@@ -21,6 +21,9 @@ export interface PresignedUploadData {
   upload_preset: string;
   folder: string;
   resource_type: "image" | "video" | "auto" | "raw";
+  eager?: string;
+  eager_async?: boolean;
+  notification_url?: string;
 }
 
 export interface CloudinaryUploadResult {
@@ -83,6 +86,15 @@ export async function uploadToCloudinary(
   formData.append("folder", presigned.folder);
   if (presigned.upload_preset) {
     formData.append("upload_preset", presigned.upload_preset);
+  }
+  if (presigned.eager) {
+    formData.append("eager", presigned.eager);
+  }
+  if (presigned.eager_async !== undefined) {
+    formData.append("eager_async", String(presigned.eager_async));
+  }
+  if (presigned.notification_url) {
+    formData.append("notification_url", presigned.notification_url);
   }
 
   const uploadUrl = `https://api.cloudinary.com/v1_1/${presigned.cloud_name}/${presigned.resource_type}/upload`;
