@@ -14,6 +14,8 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { FashionistarImage } from "@/components/media";
+import { publicEngagementApi } from "@/features/public-engagement";
+import { toast } from "sonner";
 import {
   Mail,
   Phone,
@@ -125,11 +127,39 @@ function ContactForm() {
     }
     setErrors({});
     setSubmitting(true);
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 1200));
-    setSubmitting(false);
-    setSubmitted(true);
-    form.reset();
+    try {
+      const vendor = typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("vendor") ?? ""
+        : "";
+      const inquiryType = typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("type") ?? ""
+        : "";
+
+      const result = await publicEngagementApi.submitContact({
+        full_name: ((data.get("fullName") as string) ?? "").trim(),
+        email: ((data.get("email") as string) ?? "").trim(),
+        phone: ((data.get("phone") as string) ?? "").trim(),
+        subject: ((data.get("subject") as string) ?? "").trim(),
+        message: ((data.get("message") as string) ?? "").trim(),
+        vendor,
+        inquiry_type: inquiryType,
+        page_url: typeof window !== "undefined" ? window.location.href : undefined,
+      });
+      toast.success(result.message);
+      setSubmitted(true);
+      form.reset();
+    } catch (error) {
+      const message =
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        typeof (error as { response?: { data?: { message?: string } } }).response?.data?.message === "string"
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : "We could not send your message right now. Please try again.";
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -158,6 +188,7 @@ function ContactForm() {
           Full Name *
         </label>
         <input
+          data-testid="contact-name-input"
           id="contact-name"
           name="fullName"
           type="text"
@@ -177,6 +208,7 @@ function ContactForm() {
             Email Address *
           </label>
           <input
+            data-testid="contact-email-input"
             id="contact-email"
             name="email"
             type="email"
@@ -193,6 +225,7 @@ function ContactForm() {
             Phone Number
           </label>
           <input
+            data-testid="contact-phone-input"
             id="contact-phone"
             name="phone"
             type="tel"
@@ -209,6 +242,7 @@ function ContactForm() {
           Subject
         </label>
         <select
+          data-testid="contact-subject-select"
           id="contact-subject"
           name="subject"
           className="w-full rounded-xl border border-border/40 bg-card px-4 py-3.5 font-raleway text-sm text-foreground outline-none focus:border-[#fda600] transition-colors"
@@ -228,6 +262,7 @@ function ContactForm() {
           Message *
         </label>
         <textarea
+          data-testid="contact-message-input"
           id="contact-message"
           name="message"
           rows={6}
@@ -241,6 +276,7 @@ function ContactForm() {
 
       {/* Submit */}
       <button
+        data-testid="contact-submit"
         type="submit"
         disabled={submitting}
         className="flex items-center justify-center gap-2.5 rounded-full bg-[#fda600] px-8 py-4 font-raleway text-sm font-bold text-black shadow-lg hover:bg-[#e09500] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"

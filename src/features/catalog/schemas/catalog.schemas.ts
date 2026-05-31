@@ -188,12 +188,25 @@ const HomepageCategoryCardSchema = z.object({
   created_at: z.string().nullable().optional().default(null),
 });
 
+const HomepageBannerCardSchema = z.object({
+  id: IdSchema,
+  slot: z.enum(["hero", "mid", "footer_cta"]).default("hero"),
+  title: z.string().default(""),
+  subtitle: z.string().default(""),
+  cta_text: z.string().default("Shop Now"),
+  cta_url: z.string().default(""),
+  image_url: z.string().nullable().optional().default(null),
+  mobile_image_url: z.string().nullable().optional().default(null),
+  sort_order: z.number().default(0),
+});
+
 const HomepageBundleMetaSchema = z.object({
   collections_count: z.number().default(0),
   categories_count: z.number().default(0),
   products_count: z.number().default(0),
   hot_deals_count: z.number().default(0),
   reviews_count: z.number().default(0),
+  banners_count: z.number().default(0),
 });
 
 export const HomepageBundleSchema = z.object({
@@ -202,5 +215,6 @@ export const HomepageBundleSchema = z.object({
   featured_products: z.array(HomepageProductCardSchema).default([]),
   hot_deals: z.array(HomepageProductCardSchema).default([]),
   reviews: z.array(HomepageReviewCardSchema).default([]),
+  banners: z.array(HomepageBannerCardSchema).default([]),
   meta: HomepageBundleMetaSchema.default({}),
 });

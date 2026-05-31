@@ -1,12 +1,12 @@
 import { chromium } from 'playwright';
 
 async function main() {
-  console.log("Launching Chromium server on port 9222...");
+  console.log("Launching standard Chromium with remote debugging on port 9222...");
   try {
-    const server = await chromium.launchServer({
-      port: 9222,
+    const browser = await chromium.launch({
       headless: true,
       args: [
+        '--remote-debugging-port=9222',
         '--remote-allow-origins=*',
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -14,19 +14,18 @@ async function main() {
         '--disable-gpu'
       ]
     });
-    console.log("Chromium server successfully launched on port 9222!");
-    console.log("WS Endpoint:", server.wsEndpoint());
+    console.log("Chromium standard browser successfully launched with remote debugging on port 9222!");
     
     // Keep process alive
     process.on('SIGINT', async () => {
-      await server.close();
+      await browser.close();
       process.exit(0);
     });
     
     // Run forever
     await new Promise(() => {});
   } catch (error) {
-    console.error("Failed to launch Chromium server on port 9223:", error);
+    console.error("Failed to launch standard Chromium:", error);
     process.exit(1);
   }
 }

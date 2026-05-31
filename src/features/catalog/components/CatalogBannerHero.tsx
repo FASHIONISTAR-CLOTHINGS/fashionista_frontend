@@ -29,10 +29,12 @@ interface Props {
   autoPlayMs?: number;
 }
 
-const REDUCED_MOTION =
-  typeof window !== "undefined"
+function prefersReducedMotion(): boolean {
+  return typeof window !== "undefined" &&
+    typeof window.matchMedia === "function"
     ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
     : false;
+}
 
 export function CatalogBannerHero({ banners, autoPlayMs = 5_000 }: Props) {
   const [current, setCurrent] = useState(0);
@@ -55,7 +57,7 @@ export function CatalogBannerHero({ banners, autoPlayMs = 5_000 }: Props) {
 
   // Auto-advance
   useEffect(() => {
-    if (!autoPlayMs || paused || REDUCED_MOTION || count <= 1) return;
+    if (!autoPlayMs || paused || prefersReducedMotion() || count <= 1) return;
     intervalRef.current = setInterval(next, autoPlayMs);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);

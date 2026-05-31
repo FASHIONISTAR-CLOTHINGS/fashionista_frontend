@@ -94,6 +94,8 @@ test.describe("Homepage — Full Bundle Render", () => {
   test("newsletter section renders with subscribe form", async ({ page }) => {
     const section = page.getByTestId("newsletter-section");
     await expect(section).toBeVisible({ timeout: TIMEOUT_MS });
+    await expect(page.getByTestId("newsletter-email-input")).toBeVisible();
+    await expect(page.getByTestId("newsletter-submit")).toBeVisible();
   });
 
   // ── 10. Campaign banner renders ─────────────────────────────────────────────
@@ -137,10 +139,11 @@ test.describe("Homepage — Full Bundle Render", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 test.describe("Homepage — Navigation Links", () => {
-  test("Shop Now CTA in campaign banner navigates to categories", async ({ page }) => {
+  test("live promo CTA in campaign banner points to catalog discovery", async ({ page }) => {
     await page.goto(BASE_URL, { waitUntil: "networkidle" });
-    const shopNow = page.getByTestId("campaign-banner").getByRole("link", { name: /shop now/i }).first();
-    await expect(shopNow).toHaveAttribute("href", "/categories");
+    const primaryCta = page.getByTestId("campaign-banner").getByRole("link").first();
+    const href = await primaryCta.getAttribute("href");
+    expect(href).toMatch(/^\/(collections|products)/);
   });
 
   test("collection grid section links navigate to /collections/*", async ({ page }) => {

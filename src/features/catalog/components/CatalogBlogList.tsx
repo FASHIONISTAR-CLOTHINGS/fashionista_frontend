@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { FashionistarImage } from "@/components/media";
 import { getCatalogBlogPosts } from "../api/catalog.server";
-import { fallbackCatalogBlogPosts } from "../lib/catalog-fallbacks";
 
 interface CatalogBlogListProps {
   limit?: number;
@@ -14,7 +13,7 @@ export default async function CatalogBlogList({
   showHeading = true,
 }: CatalogBlogListProps) {
   const posts = await getCatalogBlogPosts();
-  const items = (posts.length ? posts : fallbackCatalogBlogPosts).slice(0, limit);
+  const items = posts.slice(0, limit);
   const featuredPost = items.find((item) => item.is_featured) ?? items[0];
   const secondaryPosts = items.filter((item) => item.id !== featuredPost?.id);
 
@@ -77,37 +76,46 @@ export default async function CatalogBlogList({
             </p>
           </div>
         </Link>
-      ) : null}
+      ) : (
+        <div className="rounded-3xl border border-dashed border-border bg-card px-6 py-14 text-center">
+          <p className="font-bon_foyage text-3xl text-foreground">Editorial Stories Are Coming Soon</p>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground md:text-base">
+            We do not render demo articles here. New blog stories will appear once the editorial team publishes them.
+          </p>
+        </div>
+      )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {secondaryPosts.map((post) => (
-          <Link
-            key={post.id}
-            href={`/blog/${post.slug}`}
-            className="card-shadow card-shadow-hover group overflow-hidden rounded-lg border border-border bg-card text-card-foreground"
-          >
-            <div className="relative h-52 bg-[hsl(var(--brand-cream))]">
-              <FashionistarImage
-                src={post.image_url || post.featured_image || "/minimalist.svg"}
-                alt={post.title}
-                fill
-                sizes="(max-width: 768px) 100vw, 33vw"
-                className="h-full w-full"
-                imgClassName="h-full w-full object-contain p-6"
-              />
-            </div>
-            <div className="space-y-3 p-5">
-              <span className="inline-flex rounded-full bg-[hsl(var(--accent)/0.14)] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[hsl(var(--accent))]">
-                {post.category_name || "Fashion guide"}
-              </span>
-              <h2 className="text-xl font-semibold leading-7">{post.title}</h2>
-              <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
-                {post.excerpt || post.seo_description}
-              </p>
-            </div>
-          </Link>
-        ))}
-      </div>
+      {secondaryPosts.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {secondaryPosts.map((post) => (
+            <Link
+              key={post.id}
+              href={`/blog/${post.slug}`}
+              className="card-shadow card-shadow-hover group overflow-hidden rounded-lg border border-border bg-card text-card-foreground"
+            >
+              <div className="relative h-52 bg-[hsl(var(--brand-cream))]">
+                <FashionistarImage
+                  src={post.image_url || post.featured_image || "/minimalist.svg"}
+                  alt={post.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="h-full w-full"
+                  imgClassName="h-full w-full object-contain p-6"
+                />
+              </div>
+              <div className="space-y-3 p-5">
+                <span className="inline-flex rounded-full bg-[hsl(var(--accent)/0.14)] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[hsl(var(--accent))]">
+                  {post.category_name || "Fashion guide"}
+                </span>
+                <h2 className="text-xl font-semibold leading-7">{post.title}</h2>
+                <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
+                  {post.excerpt || post.seo_description}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -1,0 +1,47 @@
+
+> fashionistar-ai@2.0.0 dev C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionista_frontend
+> next dev
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.198:3000
+- Environments: .env.local
+✓ Ready in 4.0s
+Creating turbopack project {
+  dir: 'C:\\Users\\FASHIONISTAR\\OneDrive\\Documenti\\FASHIONISTAR_ANTAGRAVITY\\fashionista_frontend',
+  testMode: true
+}
+- Cache Components enabled
+- Experiments (use with caution):
+  ✓ workerThreads
+
+ GET / 200 in 27.6s (next.js: 2.5s, application-code: 25.1s)
+ GET / 200 in 9.6s (next.js: 22ms, application-code: 9.6s)
+ GET / 200 in 5.2s (next.js: 11ms, application-code: 5.2s)
+ GET / 200 in 6.9s (next.js: 18ms, application-code: 6.8s)
+ GET / 200 in 6.4s (next.js: 12ms, application-code: 6.4s)
+○ Compiling /contact-us ...
+ GET /contact-us 200 in 7.4s (next.js: 4.8s, application-code: 2.5s)
+ GET /contact-us 200 in 2.1s (next.js: 9ms, application-code: 2.1s)
+✓ Compiled in 1720ms
+ GET / 200 in 12.5s (next.js: 619ms, application-code: 11.9s)
+ GET / 200 in 8.1s (next.js: 11ms, application-code: 8.0s)
+ GET /contact-us 200 in 2.5s (next.js: 53ms, application-code: 2.4s)
+ GET / 200 in 6.2s (next.js: 11ms, application-code: 6.2s)
+ GET /contact-us 200 in 4.0s (next.js: 25ms, application-code: 4.0s)
+ GET / 200 in 3.2s (next.js: 8ms, application-code: 3.2s)
+ GET /contact-us 200 in 3.0s (next.js: 15ms, application-code: 3.0s)
+ GET / 200 in 4.2s (next.js: 8ms, application-code: 4.2s)
+ GET / 200 in 8.9s (next.js: 209ms, application-code: 8.7s)
+ GET / 200 in 9.6s (next.js: 9ms, application-code: 9.6s)
+ GET / 200 in 6.9s (next.js: 11ms, application-code: 6.9s)
+ GET / 200 in 7.4s (next.js: 9ms, application-code: 7.4s)
+ GET / 200 in 3.0s (next.js: 11ms, application-code: 3.0s)
+ GET / 200 in 5.4s (next.js: 11ms, application-code: 5.4s)
+ GET / 200 in 4.2s (next.js: 9ms, application-code: 4.2s)
+ GET / 200 in 4.0s (next.js: 6ms, application-code: 4.0s)
+ GET / 200 in 6.4s (next.js: 15ms, application-code: 6.4s)
+ GET / 200 in 5.6s (next.js: 7ms, application-code: 5.6s)
+ GET / 200 in 9.0s (next.js: 16ms, application-code: 8.9s)
+ GET / 200 in 4.8s (next.js: 11ms, application-code: 4.8s)
+ GET / 200 in 9.8s (next.js: 8ms, application-code: 9.8s)
