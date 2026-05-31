@@ -56,6 +56,7 @@ export async function getPresignedToken(
 ): Promise<PresignedUploadData> {
   const { data } = await apiSync.post(COMMON_ENDPOINTS.UPLOAD_PRESIGN, {
     folder,
+    asset_type: folder,
     resource_type: resourceType,
   });
   return data as PresignedUploadData;
