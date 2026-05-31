@@ -81,7 +81,9 @@ export async function uploadToCloudinary(
   formData.append("timestamp", String(presigned.timestamp));
   formData.append("api_key", presigned.api_key);
   formData.append("folder", presigned.folder);
-  formData.append("upload_preset", presigned.upload_preset);
+  if (presigned.upload_preset) {
+    formData.append("upload_preset", presigned.upload_preset);
+  }
 
   const uploadUrl = `https://api.cloudinary.com/v1_1/${presigned.cloud_name}/${presigned.resource_type}/upload`;
 
