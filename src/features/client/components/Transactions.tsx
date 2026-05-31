@@ -37,7 +37,6 @@ import {
   Coins,
   History,
   HelpCircle,
-  Clock,
   Check,
   AlertTriangle,
 } from "lucide-react";
@@ -133,7 +132,7 @@ const parseAmount = (amtStr: string): number => {
 const Transactions = ({
   transactions = [],
   isLoading = false,
-  showWalletDashboard = true,
+  showWalletDashboard: _showWalletDashboard = true,
 }: TransactionsProps) => {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -379,8 +378,9 @@ const Transactions = ({
                       Select Destination Bank
                     </label>
                     <BankSelectField
-                      {...register("bank_code")}
-                      className="border border-[#D9D9D9] hover:border-[#01454A]/40 focus:border-[#01454A] h-[55px] rounded-xl w-full px-4 outline-none text-black bg-white transition-all duration-200"
+                      value={watchBankCode}
+                      onChange={(code) => setValue("bank_code", code, { shouldValidate: true })}
+                      disabled={isSubmitting}
                     />
                     {errors.bank_code && (
                       <p className="text-xs font-medium text-red-500 mt-1 flex items-center gap-1">
