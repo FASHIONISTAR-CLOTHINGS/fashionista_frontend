@@ -39,9 +39,15 @@ function TimeBox({ value, label }: { value: number; label: string }) {
 }
 
 export function DealsCountdown() {
-  const [timeLeft, setTimeLeft] = useState<TimeLeft>(getTimeUntilMidnight());
+  // Start from a stable SSR-safe value, then hydrate to the live countdown.
+  const [timeLeft, setTimeLeft] = useState<TimeLeft>({
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
 
   useEffect(() => {
+    setTimeLeft(getTimeUntilMidnight());
     const timer = setInterval(() => {
       setTimeLeft(getTimeUntilMidnight());
     }, 1000);
