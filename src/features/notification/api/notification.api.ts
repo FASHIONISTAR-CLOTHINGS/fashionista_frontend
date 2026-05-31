@@ -36,21 +36,21 @@ export const NotificationListSchema = z.array(NotificationSchema);
 
 export async function fetchNotifications(page = 1): Promise<PaginatedNotifications> {
   const { data } = await apiSync.get<Notification[]>(
-    `/notifications/?page=${page}`,
+    `v1/notifications/?page=${page}`,
   );
   return NotificationListSchema.parse(data);
 }
 
 export async function markNotificationRead(notifId: string): Promise<Notification> {
   const { data } = await apiSync.post<Notification>(
-    `/notifications/mark-read/${notifId}/`,
+    `v1/notifications/mark-read/${notifId}/`,
   );
   return NotificationSchema.parse(data);
 }
 
 export async function markAllNotificationsRead(): Promise<MarkReadResponse> {
   const { data } = await apiSync.post<MarkReadResponse>(
-    "/notifications/mark-all-read/",
+    "v1/notifications/mark-all-read/",
   );
   return data;
 }
