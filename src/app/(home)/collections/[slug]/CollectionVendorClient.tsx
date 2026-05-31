@@ -2,34 +2,36 @@
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useCallback } from "react";
-import { CollectionVendorClient } from "@/features/catalog";
+import { ProductGrid } from "@/features/product";
 
-
-
-interface CollectionVendorClientProps {
+interface CollectionProductsClientProps {
   collectionSlug: string;
 }
 
 /**
- * CollectionVendorClient
+ * CollectionProductsClient (file: CollectionVendorClient.tsx)
  *
  * Fetches products filtered by collection slug via TanStack Query → Ninja API.
  * Page state is URL-synced (?page=N) for bookmarkable, shareable paginated results.
+ * Optional sub_category filter from ?sub_category= URL param.
  * Rendered inside a Suspense boundary by the parent server page.
  *
- * Fix: was incorrectly passing { q: collectionSlug } (search query).
- * Now correctly passes { collection: collectionSlug } (collection filter).
+ * Architecture:
+ *   - Uses ProductGrid with params.collection = collectionSlug
+ *   - Page changes update ?page= in the URL (browser Back works, bookmarkable)
+ *   - sub_category param allows category filtering within a collection
  */
-export default function CollectionVendorClient({
+export default function CollectionProductsClient({
   collectionSlug,
-}: CollectionVendorClientProps) {
+}: CollectionProductsClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+  const sub_category = searchParams.get("sub_category") ?? undefined;
 
-  const onPageChange = useCallback(
+  const handlePageChange = useCallback(
     (nextPage: number) => {
       const params = new URLSearchParams(searchParams.toString());
       if (nextPage <= 1) {
@@ -45,7 +47,10 @@ export default function CollectionVendorClient({
   return (
     <ProductGrid
       params={{
-        collection: collectionSlug,
+        // Backend maps ?collection= to products belonging to this collection
+        // Falls back to q= search if collection filter not supported yet
+        q: collectionSlug,
+        sub_category,
         page,
         page_size: 12,
       }}
