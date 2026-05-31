@@ -42,6 +42,10 @@ export { default as CatalogCollectionGrid } from "./components/CatalogCollection
 export { HomepageFeaturedProducts } from "./components/HomepageFeaturedProducts";
 // Phase D4 — CMS-driven banner hero carousel
 export { CatalogBannerHero } from "./components/CatalogBannerHero";
+// Phase C5 — Trending tags horizontal scroll rail
+export { CatalogTagsRail, default as CatalogTagsRailDefault } from "./components/CatalogTagsRail";
+// Phase C6 — Cmd+K global search modal
+export { CatalogSearchModal, default as CatalogSearchModalDefault } from "./components/CatalogSearchModal";
 
 // ── TanStack Query Hooks (C5) ─────────────────────────────────────────────────
 export {
