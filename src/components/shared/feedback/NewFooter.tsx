@@ -24,7 +24,7 @@
  *   <NewFooter address="Custom address" phone="+2349000000000" email="hello@fashionistar.net" />
  */
 
-import Image from "next/image";
+import { FashionistarImage } from "@/components/media";
 import Link from "next/link";
 import { MapPin, Phone, Mail, Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -249,7 +249,7 @@ const NewFooter = ({
         <div className="flex flex-col md:flex-row border-t border-background/10 justify-between items-center pt-6 mt-10 gap-4">
           {/* Brand */}
           <div className="flex items-center gap-2">
-            <Image
+            <FashionistarImage
               src="/logo.svg"
               alt="Fashionistar logo"
               width={55}
