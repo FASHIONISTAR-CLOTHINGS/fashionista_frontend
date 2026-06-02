@@ -1,13 +1,14 @@
 /**
- * features/catalog/components/CatalogBannerHero.tsx — D4
+ * features/catalog/components/CatalogBannerHero.tsx — D4 (v2)
  *
  * CMS-driven hero banner carousel for the homepage.
+ * Migrated from next/image → FashionistarImage (Phase 2 overhaul).
  *
  * Data flow:
  *   bundle.banners[] (from RSC props) → no extra fetch
  *   Falls back to static <Hero /> if no banners in bundle.
  *
- * Mobile: single image, touch-swipe with Embla Carousel
+ * Mobile: single image, touch-swipe
  * Desktop: full-width image with text overlay + CTA
  *
  * Accessibility:
@@ -19,8 +20,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { FashionistarImage } from "@/components/media";
 import type { HomepageBannerCard } from "../types/catalog.types";
 
 interface Props {
@@ -96,36 +97,43 @@ export function CatalogBannerHero({ banners, autoPlayMs = 5_000 }: Props) {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Banner slide */}
+      {/* ── Banner slide ────────────────────────────────────────────────── */}
       <div className="relative w-full h-[56vw] min-h-[280px] max-h-[720px]">
-        {/* Desktop image */}
+        {/* Desktop image — FashionistarImage handles fill with absolute inset-0 */}
         {banner.image_url && (
-          <Image
+          <FashionistarImage
             src={banner.image_url}
-            alt={banner.title}
+            alt={banner.title || "Fashionistar banner"}
             fill
-            priority
-            className="object-cover hidden sm:block"
+            priority={current === 0}
+            transformation="banner"
+            objectFit="cover"
+            className="hidden sm:block"
             sizes="100vw"
+            showBlurUp={false}
           />
         )}
+
         {/* Mobile image */}
         {(banner.mobile_image_url || banner.image_url) && (
-          <Image
-            src={banner.mobile_image_url ?? banner.image_url ?? ""}
-            alt={banner.title}
+          <FashionistarImage
+            src={banner.mobile_image_url ?? banner.image_url ?? null}
+            alt={banner.title || "Fashionistar banner"}
             fill
-            priority
-            className="object-cover sm:hidden"
+            priority={current === 0}
+            transformation="banner"
+            objectFit="cover"
+            className="sm:hidden"
             sizes="100vw"
+            showBlurUp={false}
           />
         )}
 
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent z-10" />
 
         {/* Text + CTA */}
-        <div className="absolute inset-0 flex flex-col justify-center px-6 md:px-12 lg:px-24 gap-4 md:gap-6">
+        <div className="absolute inset-0 z-20 flex flex-col justify-center px-6 md:px-12 lg:px-24 gap-4 md:gap-6">
           <p className="font-bon_foyage text-3xl md:text-5xl lg:text-7xl text-white leading-tight max-w-xl">
             {banner.title}
           </p>
@@ -145,43 +153,59 @@ export function CatalogBannerHero({ banners, autoPlayMs = 5_000 }: Props) {
         </div>
       </div>
 
-      {/* Dot navigation (only if multiple banners) */}
+      {/* ── Dot navigation ──────────────────────────────────────────────── */}
       {count > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-30">
           {banners.map((_, idx) => (
             <button
               key={idx}
               onClick={() => goTo(idx)}
               aria-pressed={idx === current}
               aria-label={`Go to slide ${idx + 1}`}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                idx === current
-                  ? "bg-white w-6"
-                  : "bg-white/50 hover:bg-white/80"
+              className={`h-2 rounded-full transition-all duration-300 ${
+                idx === current ? "bg-white w-6" : "bg-white/50 hover:bg-white/80 w-2"
               }`}
             />
           ))}
         </div>
       )}
 
-      {/* Prev/Next arrows (desktop only) */}
+      {/* ── Prev / Next arrows (desktop only) ───────────────────────────── */}
       {count > 1 && (
         <>
           <button
             onClick={prev}
             aria-label="Previous banner"
-            className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm items-center justify-center hover:bg-white/40 transition-all"
+            className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm items-center justify-center hover:bg-white/40 transition-all"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
           <button
             onClick={next}
             aria-label="Next banner"
-            className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm items-center justify-center hover:bg-white/40 transition-all"
+            className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm items-center justify-center hover:bg-white/40 transition-all"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polyline points="9 18 15 12 9 6" />
             </svg>
           </button>

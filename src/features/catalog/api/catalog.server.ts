@@ -291,22 +291,47 @@ const EMPTY_BUNDLE_V2: HomepageBundle = {
 /**
  * Homepage bundle v2 — 6 sections including hero banners.
  * Calls /catalog/homepage/bundle/ (Phase B3 endpoint).
+ *
+ * RESILIENT FALLBACK CHAIN:
+ *   1. Try /api/v1/ninja/catalog/homepage/bundle/ (v2 with banners)
+ *   2. If that fails (500 / CatalogBanner table missing), fall back to
+ *      /api/v1/ninja/catalog/homepage/ (v1, always works) + banners: []
  */
 export async function getHomepageBundleV2(): Promise<HomepageBundle> {
   try {
     const raw = await fetchHomepageBundle(
       "/api/v1/ninja/catalog/homepage/bundle/"
     );
-    if (!raw) return EMPTY_BUNDLE_V2;
+    if (!raw) throw new Error("bundle_v2_empty");
     const result = HomepageBundleSchema.safeParse(raw);
     if (!result.success) {
       console.warn("[catalog.server] getHomepageBundleV2 parse error:", result.error.flatten());
-      return EMPTY_BUNDLE_V2;
+      throw new Error("bundle_v2_parse_fail");
     }
     return result.data as HomepageBundle;
   } catch (err) {
-    console.error("[catalog.server] getHomepageBundleV2 error:", err);
-    return EMPTY_BUNDLE_V2;
+    // ── Fallback: try v1 endpoint which is guaranteed to work ─────────
+    console.warn(
+      "[catalog.server] getHomepageBundleV2 falling back to v1 endpoint:",
+      err instanceof Error ? err.message : err
+    );
+    try {
+      const raw = await fetchHomepageBundle("/api/v1/ninja/catalog/homepage/");
+      if (!raw) return EMPTY_BUNDLE_V2;
+      // v1 doesn't have banners — inject empty array so schema passes
+      const merged = typeof raw === "object" && raw !== null
+        ? { banners: [], ...raw as object }
+        : {};
+      const result = HomepageBundleSchema.safeParse(merged);
+      if (!result.success) {
+        console.warn("[catalog.server] getHomepageBundleV2 v1-fallback parse error:", result.error.flatten());
+        return EMPTY_BUNDLE_V2;
+      }
+      return result.data as HomepageBundle;
+    } catch (fallbackErr) {
+      console.error("[catalog.server] getHomepageBundleV2 v1-fallback also failed:", fallbackErr);
+      return EMPTY_BUNDLE_V2;
+    }
   }
 }
 

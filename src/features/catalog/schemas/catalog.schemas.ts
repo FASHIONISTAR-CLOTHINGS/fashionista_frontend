@@ -3,7 +3,28 @@ import { z } from "zod";
 const IdSchema = z.union([z.string(), z.number()]).transform(String);
 const NullableStringSchema = z.string().nullable();
 const OptionalNullableStringSchema = z.string().nullable().optional().default(null);
-const ImageUrlSchema = z.string().nullable().optional().transform((value) => value ?? "");
+/** Sanitizes image URLs — treats null, undefined, /media/None, /media/null etc. as empty string. */
+const ImageUrlSchema = z
+  .string()
+  .nullable()
+  .optional()
+  .transform((value) => {
+    if (!value) return "";
+    const s = value.trim();
+    // Guard against Django serializer bug: /media/None, /media/null, /media/undefined
+    if (
+      s === "null" ||
+      s === "undefined" ||
+      s === "None" ||
+      s.endsWith("/media/None") ||
+      s.endsWith("/media/null") ||
+      s.endsWith("/media/undefined")
+    ) {
+      return "";
+    }
+    return s;
+  });
+
 
 export const CatalogCategorySchema = z.object({
   id: IdSchema,
