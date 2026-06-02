@@ -54,9 +54,11 @@ function BlogSkeleton() {
 export default async function BlogPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const params = await Promise.resolve(searchParams ?? {});
+  const params: Record<string, string | string[] | undefined> = await Promise.resolve(
+    (searchParams ?? Promise.resolve({})) as Promise<Record<string, string | string[] | undefined>>
+  );
   const page = Math.max(1, parseInt(String(params.page ?? "1"), 10) || 1);
 
   return (

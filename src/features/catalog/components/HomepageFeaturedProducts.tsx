@@ -2,9 +2,10 @@
  * features/catalog/components/HomepageFeaturedProducts.tsx — C2 (v2)
  *
  * Standalone RSC for the Featured Products section on the homepage.
- * Migrated from next/image → FashionistarImage (Phase 2 overhaul).
+ * Extracted from inline page.tsx so it can be independently Suspense-wrapped
+ * and cache-tagged ("featured-products").
  *
- * Props:
+ * Migrated from next/image → FashionistarImage (Phase 2 overhaul). * Props:
  *   bundle — HomepageBundle passed from page.tsx (zero extra fetch)
  *
  * Design: 2-col mobile → 3-col tablet → 4-col desktop
