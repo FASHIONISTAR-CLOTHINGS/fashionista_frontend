@@ -26,12 +26,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import { toast } from "sonner";
 import { MapPin, Phone, Mail, Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useId } from "react";
-import { publicEngagementApi } from "@/features/public-engagement";
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -53,95 +49,7 @@ interface NewFooterProps {
   email?: string;
 }
 
-// ─── Sub-components ────────────────────────────────────────────────────────────
 
-/**
- * NewsletterForm — newsletter signup form with accessible inputs.
- */
-function NewsletterForm() {
-  const emailId = useId();
-  const descId = useId();
-  const [email, setEmail] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!email.trim()) return;
-
-    setSubmitting(true);
-    try {
-      const result = await publicEngagementApi.submitWaitlist({
-        email,
-        source: "footer_waitlist",
-      });
-      toast.success(result.message);
-      setEmail("");
-    } catch (error) {
-      const message =
-        typeof error === "object" &&
-        error !== null &&
-        "response" in error &&
-        typeof (error as { response?: { data?: { message?: string } } }).response?.data?.message === "string"
-          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
-          : "We could not save your email right now. Please try again.";
-      toast.error(message);
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  return (
-    <form
-      className="flex z-30 w-full"
-      onSubmit={handleSubmit}
-      aria-labelledby={descId}
-    >
-      <div
-        className={cn(
-          "h-[60px] lg:h-[85px] w-full lg:w-[85%]",
-          "bg-muted rounded-r-[100px] flex items-center p-1.5 lg:p-3",
-        )}
-      >
-        <label htmlFor={emailId} className="sr-only">
-          Email address for newsletter
-        </label>
-        <input
-          id={emailId}
-          name="email"
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          autoComplete="email"
-          aria-describedby={descId}
-          required
-          disabled={submitting}
-          className={cn(
-            "w-2/3 h-full outline-none bg-inherit",
-            "placeholder:font-raleway placeholder:font-medium placeholder:text-muted-foreground",
-            "text-foreground font-raleway text-sm",
-          )}
-          placeholder="Enter Email Address"
-        />
-        <button
-          type="submit"
-          disabled={submitting}
-          className={cn(
-            "w-1/3 lg:min-h-[66px] h-full rounded-r-[100px] shrink-0",
-            "bg-[hsl(218_47%_20%)] text-white",
-            "text-sm lg:text-xl font-bold font-raleway",
-            "hover:opacity-90 transition-opacity",
-            "disabled:opacity-60",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
-          )}
-        >
-          {submitting ? "Joining..." : "Join Waitlist"}
-        </button>
-      </div>
-    </form>
-  );
-}
-
-// ─── Component ─────────────────────────────────────────────────────────────────
 
 /**
  * NewFooter — Fashionistar canonical footer.
@@ -172,12 +80,7 @@ const NewFooter = ({
     { label: "Influencers", href: "/contact-us" },
     { label: "Join our team", href: "/contact-us" },
   ];
-  const customerLinks = [
-    { label: "Contact Us", href: "/contact-us" },
-    { label: "Customer Service", href: "/contact-us" },
-    { label: "Find Store", href: "/contact-us" },
-    { label: "Shipping and Returns", href: "/contact-us" },
-  ];
+ 
   const accountLinks = [
     { label: "Sign In", href: "/auth/sign-in" },
     { label: "View Cart", href: "/cart" },
@@ -198,38 +101,6 @@ const NewFooter = ({
         className="bg-background pt-8 md:pt-16 border-t border-border"
         style={{ boxShadow: "0px 4px 20px 0px hsl(var(--foreground) / 0.06)" }}
       >
-        <div className="w-full px-8 md:px-12 lg:px-20 flex flex-col md:flex-row justify-between gap-10 md:gap-0 items-center">
-          {/* Brand tagline */}
-          <div className="w-full md:w-[46%] border-b border-border md:border-none py-8 flex flex-col gap-5 items-center md:items-start">
-            <div className="flex items-center gap-2">
-              <Image
-                src="/logo.svg"
-                width={78}
-                height={76}
-                alt="Fashionistar Logo"
-                className="w-10 md:w-[55px] h-auto"
-                style={{ height: "auto" }}
-              />
-              <h2 className="font-bon_foyage text-4xl text-foreground">Fashionistar</h2>
-            </div>
-            <p className="font-raleway text-xl text-muted-foreground text-center md:text-left max-w-[416px] w-full">
-              Step into the world of innovation and style as you embark on a captivating fashion
-              experience and a journey to explore our collections.
-            </p>
-          </div>
-
-          {/* Newsletter form */}
-          <div className="border-b border-border md:border-none pb-8 w-full md:w-[46%] space-y-5">
-            <p className="font-raleway text-center md:text-left font-semibold text-2xl leading-10 text-foreground">
-              SIGN UP FOR EMAILS
-            </p>
-            <p id="newsletter-desc" className="font-raleway text-center md:text-left text-xl text-muted-foreground">
-              Enjoy 15% off* your first order when you sign up to our newsletter
-            </p>
-            <NewsletterForm />
-          </div>
-        </div>
-
         {/* Quick link row */}
         <div className="w-full px-8 md:px-20 flex items-center gap-y-8 md:gap-4 flex-wrap justify-between py-8">
           <ul className="md:order-2 space-y-1">
@@ -248,18 +119,6 @@ const NewFooter = ({
             <li>Tel: {phone}</li>
             <li>Mon–Fri: 8am – 8pm</li>
             <li>Sat–Sun: 8am – 7pm</li>
-          </ul>
-          <ul className="md:order-2 max-w-[50%] w-full md:max-w-fit space-y-1">
-            {customerLinks.map(({ label, href }) => (
-              <li key={label}>
-                <Link
-                  href={href}
-                  className="text-foreground/80 hover:text-[hsl(var(--accent))] md:text-xl font-raleway font-medium transition-colors"
-                >
-                  {label}
-                </Link>
-              </li>
-            ))}
           </ul>
         </div>
       </div>
