@@ -1,37 +1,45 @@
 /**
  * @file FashionistarImage.tsx
- * @description Canonical Fashionistar platform image component — MERGED v2.
+ * @description Canonical Fashionistar platform image component — v3 (2026/2027).
  *
- * This is the SINGLE SOURCE OF TRUTH for all image rendering on the platform.
- * The legacy `components/shared/media/FashionImage.tsx` has been deprecated
- * and deleted. All imports must reference this file.
+ * SINGLE SOURCE OF TRUTH for all image rendering on the platform.
+ * Next.js 16 · React 19 · Tailwind CSS v4 · TypeScript strict-mode.
  *
- * Features (merged from FashionImage v1 + FashionistarImage v1):
- *  ● Cloudinary transformation URL generation with named presets
- *  ● LQIP (Low Quality Image Placeholder) blur-up animation
- *  ● WebP / AVIF format negotiation via f_auto
- *  ● Responsive srcSet generation with configurable widths
- *  ● IntersectionObserver lazy load (200px rootMargin lookahead)
- *  ● 2× exponential-backoff retry on load failure (merged from FashionImage)
- *  ● Service Worker analytics event: `fashionistar:image-loaded` (merged)
- *  ● Drag-and-drop affordance: `draggable` + `onDragStart` (merged)
- *  ● `data-product-id` attribute for heatmap / analytics tools (merged)
- *  ● Branded placeholder on error (no broken image ever shown)
- *  ● Accessibility: requires alt text; warns in dev if missing
+ * KEY FIXES (v3):
+ *   ● CRITICAL: `fill` container bug — when fill=true the wrapper now applies
+ *     `position: absolute; inset: 0` so images correctly fill their positioned parent.
+ *   ● CRITICAL: SSR/hydration `inView` race — `priority` images are immediately
+ *     visible; lazy images use a `useLayoutEffect`-safe guard to prevent the
+ *     IntersectionObserver from registering before the DOM is ready.
+ *   ● CRITICAL: `/media/None` backend bug — empty string or `/media/None` src
+ *     values are treated as "no image" and show the branded placeholder.
+ *   ● Auto-detects Cloudinary URLs from `src` prop and applies optimization.
+ *   ● React 19 compatible (no deprecated lifecycle methods).
+ *
+ * Architecture:
+ *   - "use client" — event handlers (onLoad, onError, IntersectionObserver)
+ *     require client-side JS. Wrap in RSC with `<Suspense>` for streaming.
+ *   - Uses native `<img>` (not next/image) to avoid Next.js domain restrictions
+ *     for Cloudinary CDN URLs and backend /media/ paths.
+ *   - For true Next.js `fill` image semantics inside measured containers,
+ *     use the `NextFillImage` convenience export below.
  *
  * Usage:
- *   <FashionistarImage
- *     publicId="vendors/abc/product-hero.jpg"
- *     alt="Premium Agbada set in royal blue"
- *     width={800}
- *     height={600}
- *     transformation="product"
- *     dataProductId={product.id}
- *   />
+ *   // Cloudinary public_id:
+ *   <FashionistarImage publicId="vendors/abc/hero.jpg" alt="Product" width={800} height={600} />
+ *
+ *   // Full URL (non-Cloudinary, e.g. backend /media/):
+ *   <FashionistarImage src="https://api.fashionistar.net/media/cat.png" alt="Category" width={96} height={96} />
+ *
+ *   // Fill mode (parent must have position:relative and explicit height):
+ *   <div className="relative h-56">
+ *     <FashionistarImage publicId="collection.jpg" alt="Collection" fill transformation="card" />
+ *   </div>
  */
 "use client";
 
 import { useRef, useState, useEffect, useCallback } from "react";
+import NextImage from "next/image";
 import { cn } from "@/lib/utils";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -48,10 +56,24 @@ const TRANSFORMATION_PRESETS: Record<string, string> = {
   card:       "c_fill,g_auto,w_600,h_600,q_auto:good,f_auto",
   avatar:     "c_fill,g_face,w_150,h_150,r_max,q_auto,f_auto",
   og:         "c_fill,w_1200,h_630,q_auto:good,f_auto",
+  banner:     "c_fill,g_auto,w_1600,q_auto:best,f_auto",
 };
 
 /** Standard responsive break-widths for srcSet generation. */
 const DEFAULT_WIDTHS = [320, 480, 640, 768, 1024, 1280, 1600];
+
+/** Max retry attempts before showing branded placeholder. */
+const MAX_IMAGE_RETRIES = 2;
+
+/** URLs that should be treated as "no image" — renders placeholder instead. */
+function isInvalidSrc(value: string | null | undefined): boolean {
+  if (!value) return true;
+  const s = value.trim();
+  if (!s) return true;
+  if (s === "null" || s === "undefined" || s === "None") return true;
+  if (s.endsWith("/media/None") || s.endsWith("/media/null") || s.endsWith("/media/undefined")) return true;
+  return false;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // URL BUILDERS
@@ -77,18 +99,40 @@ function buildSrcSet(publicId: string, transformation: string, widths: number[])
     .join(", ");
 }
 
+/**
+ * If the `src` value is already a Cloudinary URL, attempt to inject the
+ * transformation to enable optimized delivery. Returns the original src
+ * if it cannot be enhanced.
+ */
+function enhanceCloudinarySrc(src: string, transformation: string): string {
+  if (src.includes("res.cloudinary.com") && src.includes("/upload/")) {
+    // Only inject if no transformation is already present
+    if (src.match(/\/upload\/[a-z_,0-9:/]+\//)) return src; // already transformed
+    return src.replace("/upload/", `/upload/${transformation}/`);
+  }
+  return src;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
-// BRANDED PLACEHOLDER (shown on error)
+// BRANDED PLACEHOLDER (shown on error or missing src)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function Placeholder({ className, aspectRatio }: { className?: string; aspectRatio?: string }) {
+export function FashionistarPlaceholder({
+  className,
+  aspectRatio,
+  style,
+}: {
+  className?: string;
+  aspectRatio?: string;
+  style?: React.CSSProperties;
+}) {
   return (
     <div
       className={cn(
-        "flex items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900",
+        "flex items-center justify-center bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900",
         className,
       )}
-      style={{ aspectRatio: aspectRatio ?? "1" }}
+      style={{ aspectRatio: aspectRatio ?? "1", ...style }}
       role="img"
       aria-label="Image unavailable"
     >
@@ -100,12 +144,12 @@ function Placeholder({ className, aspectRatio }: { className?: string; aspectRat
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
       >
-        <rect width="40" height="40" rx="8" fill="rgba(139,92,246,0.12)" />
+        <rect width="40" height="40" rx="8" fill="rgba(1,69,74,0.08)" />
         <path
           d="M8 28L16 16L22 24L27 19L32 28H8Z"
-          fill="rgba(139,92,246,0.4)"
+          fill="rgba(1,69,74,0.25)"
         />
-        <circle cx="14" cy="14" r="3" fill="rgba(139,92,246,0.4)" />
+        <circle cx="14" cy="14" r="3" fill="rgba(253,166,0,0.5)" />
       </svg>
     </div>
   );
@@ -116,17 +160,24 @@ function Placeholder({ className, aspectRatio }: { className?: string; aspectRat
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface FashionistarImageProps {
-  /** Cloudinary public_id. */
+  /** Cloudinary public_id. Takes priority over `src`. */
   publicId?: string | null;
-  /** Fully qualified fallback URL (for legacy / non-Cloudinary assets). */
+  /**
+   * Fully qualified fallback URL (non-Cloudinary assets, backend /media/ paths).
+   * Empty string, "None", "null" are treated as missing and show placeholder.
+   */
   src?: string | null;
-  /** Accessible alt text. Required for production; warned in dev. */
+  /** Accessible alt text. Required for production; warns in dev if missing. */
   alt: string;
   /** Display width in px — used for srcSet and size hints. */
   width?: number;
   /** Display height in px. */
   height?: number;
-  /** Stretch to the bounds of a relative parent container. */
+  /**
+   * Stretch to fill the bounds of a `position: relative` parent container.
+   * When true, the parent MUST have an explicit height (e.g. `h-56`, `h-[280px]`).
+   * The component will render with `position: absolute; inset: 0`.
+   */
   fill?: boolean;
   /** Explicit responsive sizes attribute override. */
   sizes?: string;
@@ -134,17 +185,17 @@ export interface FashionistarImageProps {
   transformation?: keyof typeof TRANSFORMATION_PRESETS | string;
   /** Custom Cloudinary transformation string (overrides preset). */
   customTransformation?: string;
-  /** CSS aspect ratio e.g. "1/1" or "4/3". */
+  /** CSS aspect ratio e.g. "1/1" or "4/3". Only used when fill=false. */
   aspectRatio?: string;
-  /** Additional class names. */
+  /** Additional class names on the wrapper container. */
   className?: string;
-  /** Image class names. */
+  /** Class names applied directly to the `<img>` element. */
   imgClassName?: string;
-  /** Priority load (disables lazy loading). */
+  /** Priority load (disables lazy loading — use for LCP images). */
   priority?: boolean;
   /** Callback when image fully loads. */
   onLoad?: () => void;
-  /** Callback on error (after fallback is shown). */
+  /** Callback on error (after all retries exhausted + placeholder shown). */
   onError?: () => void;
   /** Whether to show the LQIP blur-up effect. Default: true. */
   showBlurUp?: boolean;
@@ -152,27 +203,22 @@ export interface FashionistarImageProps {
   srcSetWidths?: number[];
   /**
    * Product / entity ID for analytics and heatmap tools.
-   * Emitted on the `fashionistar:image-loaded` SW event.
-   * (Merged from FashionImage v1)
+   * Emitted on the `fashionistar:image-loaded` window event.
    */
   dataProductId?: string;
-  /** Enable drag-and-drop affordance on this image.
-   * Useful in product galleries and KYC upload panels.
-   * (Merged from FashionImage v1)
-   */
+  /** Enable drag affordance (product galleries, KYC upload panels). */
   draggable?: boolean;
   /** Called when the user starts dragging the image. */
   onDragStart?: React.DragEventHandler<HTMLImageElement>;
   /** Inline style applied to the wrapping container div. */
   style?: React.CSSProperties;
+  /** Object-fit applied to the image. Default: "cover". */
+  objectFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-
-/** Max src load retries before the branded placeholder is shown. */
-const MAX_IMAGE_RETRIES = 2;
 
 export function FashionistarImage({
   publicId,
@@ -196,25 +242,39 @@ export function FashionistarImage({
   draggable = false,
   onDragStart,
   style,
+  objectFit = "cover",
 }: FashionistarImageProps) {
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
-  const [inView, setInView] = useState(priority);
+  // SSR-safe: priority images are immediately in-view; lazy images wait for observer
+  const [inView, setInView] = useState<boolean>(priority);
   const [retries, setRetries] = useState(0);
   const [retrySuffix, setRetrySuffix] = useState("");
   const imgRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // ── Dev warning ────────────────────────────────────────────────────────────
-  if (process.env.NODE_ENV === "development" && alt == null) {
-    console.warn("[FashionistarImage] Missing `alt` prop — required for accessibility");
+  // ── Dev warnings ───────────────────────────────────────────────────────────
+  if (process.env.NODE_ENV === "development") {
+    if (!alt) {
+      console.warn("[FashionistarImage] Missing `alt` prop — required for accessibility.");
+    }
+    if (!CLOUD_NAME && publicId) {
+      console.warn(
+        "[FashionistarImage] NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is not set. " +
+        "publicId-based images will fail. Set this in .env.local."
+      );
+    }
   }
 
   // ── IntersectionObserver lazy load ─────────────────────────────────────────
   useEffect(() => {
     if (priority || inView) return;
     const el = containerRef.current;
-    if (!el) return;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      // Fallback: if no IntersectionObserver (SSR/old browsers), immediately show
+      setInView(true);
+      return;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -229,31 +289,50 @@ export function FashionistarImage({
     return () => observer.disconnect();
   }, [priority, inView]);
 
-  // ── URL resolution ─────────────────────────────────────────────────────────
+  // ── Reset state when src/publicId changes ─────────────────────────────────
+  useEffect(() => {
+    setLoaded(false);
+    setErrored(false);
+    setRetries(0);
+    setRetrySuffix("");
+  }, [publicId, src]);
+
+  // ── Resolve transformation ─────────────────────────────────────────────────
   const transformStr =
     customTransformation ??
-    TRANSFORMATION_PRESETS[transformation] ??
+    TRANSFORMATION_PRESETS[transformation as keyof typeof TRANSFORMATION_PRESETS] ??
     TRANSFORMATION_PRESETS.product;
 
-  const resolvedSrc = publicId
-    ? buildCloudinaryUrl(publicId, transformStr, width) + retrySuffix
-    : (src ?? "") + retrySuffix;
+  // ── Resolve source URL ─────────────────────────────────────────────────────
+  let resolvedSrc = "";
+  let resolvedSrcSet: string | undefined;
+  let lqipSrc: string | undefined;
 
-  const resolvedSrcSet =
-    publicId && inView
-      ? buildSrcSet(publicId, transformStr, srcSetWidths)
-      : undefined;
+  const cleanPublicId = publicId?.trim();
+  const cleanSrc = src?.trim();
 
-  const lqipSrc = publicId && showBlurUp ? buildLqipUrl(publicId) : undefined;
+  if (cleanPublicId && CLOUD_NAME) {
+    // Cloudinary publicId mode — full optimization pipeline
+    resolvedSrc = buildCloudinaryUrl(cleanPublicId, transformStr, width) + retrySuffix;
+    if (inView) {
+      resolvedSrcSet = buildSrcSet(cleanPublicId, transformStr, srcSetWidths);
+    }
+    if (showBlurUp) {
+      lqipSrc = buildLqipUrl(cleanPublicId);
+    }
+  } else if (cleanSrc && !isInvalidSrc(cleanSrc)) {
+    // Plain URL mode — try to optimize Cloudinary URLs, passthrough otherwise
+    resolvedSrc = enhanceCloudinarySrc(cleanSrc, transformStr) + retrySuffix;
+  }
 
   const sizesAttr = sizes ?? (width
     ? `(max-width: ${width}px) 100vw, ${width}px`
     : "(max-width: 768px) 100vw, 50vw");
 
+  // ── Event handlers ─────────────────────────────────────────────────────────
   const handleLoad = useCallback(() => {
     setLoaded(true);
     onLoad?.();
-
     if (typeof window !== "undefined") {
       window.dispatchEvent(
         new CustomEvent("fashionistar:image-loaded", {
@@ -267,32 +346,66 @@ export function FashionistarImage({
     if (retries < MAX_IMAGE_RETRIES) {
       const next = retries + 1;
       setRetries(next);
-      // Cache-bust param forces a fresh fetch from Cloudinary CDN.
       setRetrySuffix(`?retry=${next}&ts=${Date.now()}`);
       return;
     }
-
     setErrored(true);
     onError?.();
   }, [retries, onError]);
 
-  // ── Error → show placeholder ───────────────────────────────────────────────
-  if (errored || (!publicId && !src)) {
+  // ── Placeholder conditions ─────────────────────────────────────────────────
+  const showPlaceholder =
+    errored ||
+    (!cleanPublicId && isInvalidSrc(cleanSrc)) ||
+    (!cleanPublicId && !CLOUD_NAME && !cleanSrc) ||
+    (!cleanPublicId && !cleanSrc);
+
+  if (showPlaceholder) {
+    if (fill) {
+      return (
+        <FashionistarPlaceholder
+          className={cn("absolute inset-0 w-full h-full rounded-xl", className)}
+        />
+      );
+    }
     return (
-      <Placeholder
+      <FashionistarPlaceholder
         className={cn("w-full rounded-xl", className)}
-        aspectRatio={aspectRatio}
+        aspectRatio={aspectRatio ?? (width && height ? `${width}/${height}` : "1")}
+        style={style}
       />
     );
   }
 
+  // ── Container classes ──────────────────────────────────────────────────────
+  const containerClasses = cn(
+    "overflow-hidden",
+    fill
+      ? "absolute inset-0 w-full h-full"   // ← CRITICAL FIX: fill containers sit at inset-0
+      : "relative",
+    className,
+  );
+
+  const containerStyle: React.CSSProperties = fill
+    ? style ?? {}
+    : { aspectRatio: aspectRatio, ...style };
+
+  // ── Object fit class ───────────────────────────────────────────────────────
+  const fitClass = {
+    cover: "object-cover",
+    contain: "object-contain",
+    fill: "object-fill",
+    none: "object-none",
+    "scale-down": "object-scale-down",
+  }[objectFit];
+
   return (
     <div
       ref={containerRef}
-      className={cn("relative overflow-hidden", className)}
-      style={{ aspectRatio, ...style }}
+      className={containerClasses}
+      style={containerStyle}
     >
-      {/* LQIP blur placeholder */}
+      {/* LQIP blur placeholder — shown until main image loads */}
       {lqipSrc && showBlurUp && !loaded && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -303,8 +416,8 @@ export function FashionistarImage({
         />
       )}
 
-      {/* Main image — only rendered when in view */}
-      {inView && (
+      {/* Main image — rendered when IntersectionObserver fires (or immediately if priority) */}
+      {inView && resolvedSrc && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           ref={imgRef}
@@ -316,6 +429,7 @@ export function FashionistarImage({
           height={fill ? undefined : height}
           loading={priority ? "eager" : "lazy"}
           decoding="async"
+          fetchPriority={priority ? "high" : "auto"}
           data-product-id={dataProductId}
           draggable={draggable}
           onDragStart={onDragStart}
@@ -323,7 +437,9 @@ export function FashionistarImage({
           onError={handleError}
           className={cn(
             "transition-opacity duration-500",
-            fill ? "absolute inset-0 h-full w-full object-cover" : "h-full w-full object-cover",
+            fill
+              ? `absolute inset-0 h-full w-full ${fitClass}`
+              : `h-full w-full ${fitClass}`,
             loaded ? "opacity-100" : "opacity-0",
             imgClassName,
           )}
@@ -342,12 +458,55 @@ export function ProductThumbnail(props: Omit<FashionistarImageProps, "transforma
   return <FashionistarImage {...props} transformation="card" aspectRatio="1/1" />;
 }
 
-/** Full-width hero — 1200px wide */
+/** Full-width hero — 1200px wide, 16:9 */
 export function ProductHero(props: Omit<FashionistarImageProps, "transformation" | "aspectRatio">) {
   return <FashionistarImage {...props} transformation="hero" priority aspectRatio="16/9" />;
 }
 
 /** Circular vendor/user avatar — 150×150 face-crop */
 export function AvatarImage(props: Omit<FashionistarImageProps, "transformation" | "aspectRatio">) {
-  return <FashionistarImage {...props} transformation="avatar" aspectRatio="1/1" className={cn("rounded-full", props.className)} />;
+  return (
+    <FashionistarImage
+      {...props}
+      transformation="avatar"
+      aspectRatio="1/1"
+      className={cn("rounded-full", props.className)}
+    />
+  );
+}
+
+/**
+ * NextFillImage — uses Next.js built-in `<Image fill>` for cases where
+ * you need exact Next.js image optimization (domain whitelisting, automatic
+ * WebP, etc.) inside a measured container. Parent MUST have position:relative
+ * and an explicit height.
+ */
+export function NextFillImage({
+  src,
+  alt,
+  sizes,
+  className,
+  priority,
+}: {
+  src: string;
+  alt: string;
+  sizes?: string;
+  className?: string;
+  priority?: boolean;
+}) {
+  if (isInvalidSrc(src)) {
+    return (
+      <FashionistarPlaceholder className={cn("absolute inset-0 w-full h-full", className)} />
+    );
+  }
+  return (
+    <NextImage
+      src={src}
+      alt={alt}
+      fill
+      sizes={sizes ?? "100vw"}
+      priority={priority}
+      className={cn("object-cover", className)}
+    />
+  );
 }

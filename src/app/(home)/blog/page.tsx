@@ -51,7 +51,14 @@ function BlogSkeleton() {
 // Page
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function BlogPage() {
+export default async function BlogPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await Promise.resolve(searchParams ?? {});
+  const page = Math.max(1, parseInt(String(params.page ?? "1"), 10) || 1);
+
   return (
     <main className="bg-background text-foreground">
       {/* ── Hero ──────────────────────────────────────────────────────── */}
@@ -70,7 +77,7 @@ export default function BlogPage() {
           <p className="font-raleway text-xs font-bold uppercase tracking-[0.25em] text-[#fda600] mb-4">
             Style Intelligence
           </p>
-          <h1 className="font-bon_foyage text-5xl leading-none text-white md:text-7xl">
+          <h1 className="font-bon_foyage text-[clamp(2.5rem,7vw,5.5rem)] leading-none text-white">
             The Fashionistar Blog
           </h1>
           <p className="mt-5 max-w-2xl font-raleway text-base leading-7 text-white/70">
@@ -128,8 +135,9 @@ export default function BlogPage() {
         </div>
 
         <Suspense fallback={<BlogSkeleton />}>
-          <CatalogBlogList />
+          <CatalogBlogList page={page} />
         </Suspense>
+
       </section>
 
       {/* ── Newsletter Footer CTA ─────────────────────────────────────── */}
