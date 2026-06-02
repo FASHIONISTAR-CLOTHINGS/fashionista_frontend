@@ -41,35 +41,3 @@ next-env.d.ts
 # Live Reset Build Output
 .next-live-reset
 .next-live-reset/
-
-
-
-.gcloudignore
-.git
-.github
-node_modules/
-.next/
-.pnpm-store/
-dist/
-build/
-coverage/
-.env.docker
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-*.log
-
-# Large testing and backup folders
-.git_disabled/
-REAL_LIVE_VISION_BROWSER_AUTH_FULLSTACK_TESTING/
-GLOBAL_MAIN_BRANCH_ORIGINAL_CSS_STYLES_FONTS_AND_GUIDELINES/
-test-evidence/
-test-results/
-temp_git/
-tests/playwright-report/
-*.png
-*.mp4
-*.zip
-*.tar.gz
-*.tgz
