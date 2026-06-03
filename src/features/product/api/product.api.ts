@@ -70,6 +70,7 @@ import {
   CouponValidateResultSchema,
   ProductInventoryLogSchema,
   PaginatedInventoryLogsSchema,
+  ProductDraftSessionSchema,
 } from "../schemas/product.schemas";
 import type {
   PaginatedProductList,
@@ -92,6 +93,7 @@ import type {
   InventoryAdjustInput,
   CouponValidateInput,
   ProductFilterParams,
+  ProductDraftSession,
 } from "../types/product.types";
 
 function guestOptions() {
@@ -539,3 +541,97 @@ export async function updateProductStatus(
   }
   return { slug, status: "rejected" };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VENDOR PRODUCT DRAFTS  (apiSync → DRF writes; apiAsync → Ninja reads)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Create a new draft session (vendor only).
+ * Endpoint: POST /api/v1/products/vendor/drafts/
+ */
+export async function createDraftSession(input: {
+  draft_key?: string;
+  idempotency_key?: string;
+  payload: Record<string, any>;
+  current_step?: number;
+}): Promise<ProductDraftSession> {
+  const { data } = await apiSync.post<ProductDraftSession>(
+    "v1/products/vendor/drafts/",
+    input,
+    { _suppressGlobalToast: true } as never,
+  );
+  return parseApiResponse(ProductDraftSessionSchema, data, "createDraftSession") as ProductDraftSession;
+}
+
+/**
+ * Update an existing draft session (vendor only).
+ * Endpoint: PATCH /api/v1/products/vendor/drafts/<draft_key>/
+ */
+export async function updateDraftSession(
+  draftKey: string,
+  input: {
+    payload: Record<string, any>;
+    current_step?: number;
+    idempotency_key?: string;
+  },
+): Promise<ProductDraftSession> {
+  const { data } = await apiSync.patch<ProductDraftSession>(
+    `v1/products/vendor/drafts/${draftKey}/`,
+    input,
+    { _suppressGlobalToast: true } as never,
+  );
+  return parseApiResponse(ProductDraftSessionSchema, data, "updateDraftSession") as ProductDraftSession;
+}
+
+/**
+ * Discard an existing draft session (vendor only).
+ * Endpoint: DELETE /api/v1/products/vendor/drafts/<draft_key>/
+ */
+export async function discardDraftSession(draftKey: string): Promise<void> {
+  await apiSync.delete(`v1/products/vendor/drafts/${draftKey}/`, {
+    _suppressGlobalToast: true,
+  } as never);
+}
+
+/**
+ * Commit a draft session to create/update a canonical Product (vendor only).
+ * Endpoint: POST /api/v1/products/vendor/drafts/<draft_key>/commit/
+ */
+export async function commitDraftSession(draftKey: string): Promise<ProductDetail> {
+  const { data } = await apiSync.post<ProductDetail>(
+    `v1/products/vendor/drafts/${draftKey}/commit/`,
+    undefined,
+    { _suppressGlobalToast: true } as never,
+  );
+  return parseApiResponse(ProductDetailSchema, data, "commitDraftSession") as ProductDetail;
+}
+
+/**
+ * Fetch all active draft sessions (vendor only).
+ * Endpoint: GET /api/v1/ninja/products/vendor/drafts/
+ */
+export async function fetchActiveDraftSessions(): Promise<ProductDraftSession[]> {
+  const raw = await apiAsync.get("products/vendor/drafts/").json();
+  const list = unwrapApiData(raw);
+  if (!Array.isArray(list)) return [];
+  return list.map((item) =>
+    parseApiResponse(ProductDraftSessionSchema, item, "fetchActiveDraftSessions") as ProductDraftSession,
+  );
+}
+
+/**
+ * Fetch a specific draft session detail (vendor only).
+ * Endpoint: GET /api/v1/ninja/products/vendor/drafts/<draft_key>/
+ */
+export async function fetchDraftSessionDetail(
+  draftKey: string,
+): Promise<ProductDraftSession> {
+  const raw = await apiAsync.get(`products/vendor/drafts/${draftKey}/`).json();
+  return parseApiResponse(
+    ProductDraftSessionSchema,
+    unwrapApiData(raw),
+    "fetchDraftSessionDetail",
+  ) as ProductDraftSession;
+}
+

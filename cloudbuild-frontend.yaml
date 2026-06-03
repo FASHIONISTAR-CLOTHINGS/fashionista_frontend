@@ -17,7 +17,7 @@ steps:
       - '--build-arg'
       - 'NEXT_PUBLIC_GOOGLE_CLIENT_ID=${_NEXT_PUBLIC_GOOGLE_CLIENT_ID}'
       - '-t'
-      - 'europe-west1-docker.pkg.dev/fashionistar-497717/fashionistar-repo/frontend:latest'
+      - 'europe-west1-docker.pkg.dev/fashionistar-498122/fashionistar-repo/frontend:latest'
       - '.'
 images:
-  - 'europe-west1-docker.pkg.dev/fashionistar-497717/fashionistar-repo/frontend:latest'
+  - 'europe-west1-docker.pkg.dev/fashionistar-498122/fashionistar-repo/frontend:latest'

@@ -29,7 +29,7 @@ export function BuilderStepper() {
       {/* ── Progress bar ── */}
       <div className="relative h-1.5 bg-zinc-100 rounded-full overflow-hidden mb-6">
         <div
-          className="absolute inset-y-0 left-0 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full transition-all duration-500 ease-out"
+          className="absolute inset-y-0 left-0 bg-[#01454A] rounded-full transition-all duration-500 ease-out"
           style={{ width: `${progress}%` }}
           role="progressbar"
           aria-valuenow={progress}
@@ -54,7 +54,7 @@ export function BuilderStepper() {
                 disabled={!isCompleted && !isActive}
                 className={cn(
                   "w-full flex flex-col items-center gap-1.5 px-2 py-2 rounded-xl transition-all duration-200",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#01454A]",
                   isActive && "bg-zinc-100",
                   isCompleted && "cursor-pointer hover:bg-zinc-50",
                   !isCompleted && !isActive && "opacity-50 cursor-not-allowed",
@@ -64,8 +64,8 @@ export function BuilderStepper() {
                 <span
                   className={cn(
                     "flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all",
-                    isCompleted && "border-violet-500 bg-violet-50 text-violet-600",
-                    isActive && "border-fuchsia-500 bg-fuchsia-50 text-fuchsia-600",
+                    isCompleted && "border-[#01454A] bg-[#01454A]/5 text-[#01454A]",
+                    isActive && "border-[#FDA600] bg-[#FFF6E3] text-[#FDA600]",
                     !isCompleted && !isActive && "border-zinc-200 text-zinc-400",
                   )}
                 >
@@ -81,7 +81,7 @@ export function BuilderStepper() {
                   className={cn(
                     "text-[10px] font-medium text-center leading-tight",
                     isActive && "text-zinc-900 font-bold",
-                    isCompleted && "text-violet-600",
+                    isCompleted && "text-[#01454A]",
                     !isCompleted && !isActive && "text-zinc-400",
                   )}
                 >

@@ -126,7 +126,7 @@ export function Step8Publish() {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-zinc-800 font-semibold text-base">
-                Publish Setting <span className="text-fuchsia-600">*</span>
+                Publish Setting <span className="text-[#FDA600]">*</span>
               </FormLabel>
               <FormDescription className="text-zinc-500 text-xs mb-4">
                 Choose how this product should be saved
@@ -143,16 +143,16 @@ export function Step8Publish() {
                   className={cn(
                     "flex flex-col gap-2 rounded-xl border-2 p-5 cursor-pointer transition-all",
                     field.value === "draft"
-                      ? "border-violet-500 bg-violet-50"
-                      : "border-[#D9D9D9] bg-white hover:border-violet-500/50",
+                      ? "border-[#01454A] bg-[#01454A]/5"
+                      : "border-[#D9D9D9] bg-white hover:border-[#01454A]/50",
                   )}
                 >
                   <RadioGroupItem value="draft" id="intent-draft" className="hidden" />
                   <div className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-violet-600" />
+                    <FileText className="w-5 h-5 text-[#01454A]" />
                     <span className="font-semibold text-[#1A1208]">Save as Draft</span>
                     {field.value === "draft" && (
-                      <Badge className="ml-auto bg-violet-500 text-white text-xs border-none">Selected</Badge>
+                      <Badge className="ml-auto bg-[#01454A] text-white text-xs border-none">Selected</Badge>
                     )}
                   </div>
                   <p className="text-zinc-600 text-xs leading-relaxed">
@@ -166,16 +166,16 @@ export function Step8Publish() {
                   className={cn(
                     "flex flex-col gap-2 rounded-xl border-2 p-5 cursor-pointer transition-all",
                     field.value === "pending"
-                      ? "border-fuchsia-500 bg-fuchsia-50"
-                      : "border-[#D9D9D9] bg-white hover:border-fuchsia-500/50",
+                      ? "border-[#FDA600] bg-[#FFF6E3]"
+                      : "border-[#D9D9D9] bg-white hover:border-[#FDA600]/50",
                   )}
                 >
                   <RadioGroupItem value="pending" id="intent-pending" className="hidden" />
                   <div className="flex items-center gap-2">
-                    <SendHorizontal className="w-5 h-5 text-fuchsia-600" />
+                    <SendHorizontal className="w-5 h-5 text-[#FDA600]" />
                     <span className="font-semibold text-[#1A1208]">Submit for Review</span>
                     {field.value === "pending" && (
-                      <Badge className="ml-auto bg-fuchsia-500 text-white text-xs border-none">Selected</Badge>
+                      <Badge className="ml-auto bg-[#FDA600] text-black text-xs border-none">Selected</Badge>
                     )}
                   </div>
                   <p className="text-zinc-600 text-xs leading-relaxed">
@@ -203,9 +203,9 @@ export function Step8Publish() {
                 name={name}
                 render={({ field }) => (
                   <FormItem className="flex flex-col gap-3 rounded-xl bg-[#FAFAF8] border border-[#D9D9D9] p-4">
-                    <div className="flex items-center justify-between">
+                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Icon className="w-4 h-4 text-violet-600" />
+                        <Icon className="w-4 h-4 text-[#01454A]" />
                         <FormLabel className="text-[#1A1208] font-semibold cursor-pointer text-sm">
                           {label}
                         </FormLabel>
@@ -214,7 +214,7 @@ export function Step8Publish() {
                         <Switch
                           checked={field.value}
                           onCheckedChange={field.onChange}
-                          className="data-[state=checked]:bg-violet-500"
+                          className="data-[state=checked]:bg-[#01454A]"
                         />
                       </FormControl>
                     </div>
@@ -229,7 +229,7 @@ export function Step8Publish() {
         {/* ── SEO Overrides ── */}
         <div className="space-y-5">
           <h4 className="text-zinc-800 font-semibold flex items-center gap-2 text-sm">
-            <Search className="w-4 h-4 text-violet-600" />
+            <Search className="w-4 h-4 text-[#01454A]" />
             SEO Overrides <span className="text-zinc-400 font-normal text-xs">(optional)</span>
           </h4>
 
@@ -244,7 +244,7 @@ export function Step8Publish() {
                     {...field}
                     placeholder="Defaults to product title if blank"
                     maxLength={160}
-                    className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:border-violet-500 focus:ring-violet-500 rounded-xl px-4 py-3"
+                    className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:border-[#01454A] focus:ring-[#01454A] rounded-xl px-4 py-3"
                   />
                 </FormControl>
                 <FormDescription className="text-zinc-500 text-xs">
@@ -267,7 +267,7 @@ export function Step8Publish() {
                     rows={3}
                     placeholder="Defaults to product short description if blank"
                     maxLength={320}
-                    className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:border-violet-500 focus:ring-violet-500 rounded-xl px-4 py-3 resize-none"
+                    className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:border-[#01454A] focus:ring-[#01454A] rounded-xl px-4 py-3 resize-none"
                   />
                 </FormControl>
                 <FormDescription className="text-zinc-500 text-xs">

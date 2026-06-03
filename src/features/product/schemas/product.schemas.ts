@@ -433,3 +433,21 @@ export function parseApiResponse<T>(
   }
   return result.data;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DRAFT SESSIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const ProductDraftSessionSchema = z
+  .object({
+    id: z.string(),
+    draft_key: z.string(),
+    idempotency_key: z.string().nullable(),
+    payload: z.record(z.string(), z.any()),
+    current_step: z.number().int(),
+    status: z.enum(["active", "committed", "discarded", "expired"]),
+    linked_product_id: z.string().nullable(),
+    expires_at: z.string(),
+    last_synced_at: z.string(),
+  })
+  .passthrough();

@@ -13,6 +13,7 @@
 
 import React from "react";
 import { useBuilderContext } from "./ProductBuilderProvider";
+import { useDraftStore } from "../store";
 import { BuilderStepper } from "./BuilderStepper";
 import { Step1BasicInfo } from "./Step1BasicInfo";
 import { Step2Pricing } from "./Step2Pricing";
@@ -51,6 +52,20 @@ function BuilderNavigation() {
   const isFirst = currentStep === 1;
   const isLast = currentStep === BUILDER_STEPS.length;
   const publishIntent = form.watch("publish_intent");
+  const syncStatus = useDraftStore((state) => state.syncStatus);
+
+  const renderSyncStatus = () => {
+    switch (syncStatus) {
+      case "saving":
+        return <span className="text-zinc-400 text-xs animate-pulse">Syncing...</span>;
+      case "synced":
+        return <span className="text-emerald-600 text-xs font-semibold">Synced to cloud</span>;
+      case "failed":
+        return <span className="text-red-500 text-xs font-semibold">Sync failed</span>;
+      default:
+        return <span className="text-zinc-400 text-xs">Saved locally</span>;
+    }
+  };
 
   return (
     <div className="flex items-center justify-between pt-6 border-t border-zinc-200 mt-8">
@@ -70,9 +85,12 @@ function BuilderNavigation() {
       </Button>
 
       {/* ── Step indicator (center) ── */}
-      <span className="text-zinc-400 text-sm select-none">
-        Step {currentStep} of {BUILDER_STEPS.length}
-      </span>
+      <div className="flex flex-col items-center select-none">
+        <span className="text-zinc-400 text-sm">
+          Step {currentStep} of {BUILDER_STEPS.length}
+        </span>
+        {renderSyncStatus()}
+      </div>
 
       {/* ── Next / Submit ── */}
       {isLast ? (
@@ -82,8 +100,8 @@ function BuilderNavigation() {
           className={cn(
             "gap-2 px-6 font-semibold",
             publishIntent === "pending"
-              ? "bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white shadow-lg shadow-violet-500/25"
-              : "bg-zinc-700 hover:bg-zinc-600 text-white",
+              ? "bg-[#01454A] hover:bg-[#01454A]/90 text-white shadow-lg shadow-[#01454A]/25"
+              : "bg-[#7A6B44] hover:bg-[#7A6B44]/90 text-white",
           )}
         >
           {isSubmitting ? (
@@ -99,7 +117,7 @@ function BuilderNavigation() {
           type="button"
           onClick={nextStep}
           disabled={isSubmitting}
-          className="gap-2 px-6 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold shadow-lg shadow-violet-500/20"
+          className="gap-2 px-6 bg-[#01454A] hover:bg-[#01454A]/90 text-white font-semibold shadow-lg shadow-[#01454A]/20"
         >
           Continue
           <ChevronRight className="w-4 h-4" />
@@ -121,7 +139,7 @@ export function ProductBuilder() {
   if (!draftLoaded) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-violet-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#01454A]" />
       </div>
     );
   }

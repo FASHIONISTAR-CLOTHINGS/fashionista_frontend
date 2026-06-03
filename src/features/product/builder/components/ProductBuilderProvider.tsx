@@ -36,6 +36,14 @@ import React, {
 } from "react";
 import { useForm, FormProvider, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { useDraftStore } from "../store";
+import {
+  createDraftSession,
+  updateDraftSession,
+  commitDraftSession,
+  fetchDraftSessionDetail,
+} from "../../api/product.api";
 
 import {
   ProductBuilderFormSchema,
@@ -43,6 +51,17 @@ import {
   TOTAL_STEPS,
   builderProgress,
 } from "../schemas/builder.schemas";
+
+function generateUUID(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONTEXT SHAPE
@@ -151,8 +170,6 @@ export function ProductBuilderProvider({
   onSubmit,
   children,
 }: ProductBuilderProviderProps) {
-  const draftKey = `product-draft-${vendorId}`;
-
   // ── Form ──────────────────────────────────────────────────────────────────
   const form = useForm<ProductBuilderFormValues>({
     resolver: zodResolver(ProductBuilderFormSchema),
@@ -170,18 +187,57 @@ export function ProductBuilderProvider({
   // ── Draft persistence ─────────────────────────────────────────────────────
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const saveDraft = useCallback(() => {
+  const saveDraft = useCallback(async () => {
+    const store = useDraftStore.getState();
+    const key = store.draft_key;
+    if (!key || initialValues) return;
+
     try {
       const values = form.getValues();
-      localStorage.setItem(draftKey, JSON.stringify({ values, step: currentStep, productId }));
-    } catch {
-      // localStorage may be full or unavailable in incognito
+      store.setPayload(values);
+      store.setCurrentStep(currentStep);
+      store.setSyncStatus("saving");
+
+      const updated = await updateDraftSession(key, {
+        payload: values,
+        current_step: currentStep,
+        idempotency_key: store.idempotency_key || undefined,
+      });
+      store.setLastSyncedAt(updated.last_synced_at);
+      store.setSyncStatus("synced");
+    } catch (err) {
+      console.error("Auto-syncing draft to backend failed:", err);
+      store.setSyncStatus("failed");
     }
-  }, [form, draftKey, currentStep, productId]);
+  }, [form, currentStep, initialValues]);
+
+  const saveDraftStep = useCallback(async (step: number) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const store = useDraftStore.getState();
+    const key = store.draft_key;
+    if (!key || initialValues) return;
+
+    try {
+      const values = form.getValues();
+      store.setPayload(values);
+      store.setCurrentStep(step);
+      store.setSyncStatus("saving");
+      const updated = await updateDraftSession(key, {
+        payload: values,
+        current_step: step,
+        idempotency_key: store.idempotency_key || undefined,
+      });
+      store.setLastSyncedAt(updated.last_synced_at);
+      store.setSyncStatus("synced");
+    } catch (err) {
+      console.error(`Draft step ${step} sync failed:`, err);
+      store.setSyncStatus("failed");
+    }
+  }, [form, initialValues]);
 
   const clearDraft = useCallback(() => {
-    localStorage.removeItem(draftKey);
-  }, [draftKey]);
+    useDraftStore.getState().resetStore();
+  }, []);
 
   // Load draft on mount (skip if initialValues provided = edit mode)
   useEffect(() => {
@@ -189,22 +245,83 @@ export function ProductBuilderProvider({
       setDraftLoaded(true);
       return;
     }
-    try {
-      const raw = localStorage.getItem(draftKey);
-      if (raw) {
-        const { values, step, productId: savedId } = JSON.parse(raw) as {
-          values: Partial<ProductBuilderFormValues>;
-          step: number;
-          productId: string | null;
-        };
-        form.reset({ ...DEFAULT_VALUES, ...values });
-        setCurrentStep(step ?? 1);
-        if (savedId) setProductId(savedId);
+
+    async function initDraft() {
+      const store = useDraftStore.getState();
+      let key = store.draft_key;
+      let idempotency = store.idempotency_key;
+      let step = store.current_step;
+      let payload = store.payload;
+
+      // If no session key exists, check backup
+      if (!key) {
+        const loadedBackup = store.loadBackup();
+        if (loadedBackup) {
+          const updatedStore = useDraftStore.getState();
+          key = updatedStore.draft_key;
+          idempotency = updatedStore.idempotency_key;
+          step = updatedStore.current_step;
+          payload = updatedStore.payload;
+        }
       }
-    } catch {
-      // Corrupt draft — ignore
+
+      // If still no key, generate new ones
+      if (!key) {
+        key = generateUUID();
+        idempotency = generateUUID();
+        store.setDraftKey(key);
+        store.setIdempotencyKey(idempotency);
+        store.setCurrentStep(1);
+        store.setPayload({});
+      }
+
+      // Reconcile/sync with backend
+      try {
+        store.setSyncStatus("saving");
+        let remote = null;
+        try {
+          remote = await fetchDraftSessionDetail(key);
+        } catch (e) {
+          // Does not exist on backend yet
+        }
+
+        if (remote && remote.status === "active") {
+          // Update store with remote values
+          store.setDraftKey(remote.draft_key);
+          store.setIdempotencyKey(remote.idempotency_key);
+          store.setCurrentStep(remote.current_step ?? 1);
+          store.setPayload(remote.payload || {});
+          store.setSyncStatus("synced");
+          store.setLastSyncedAt(remote.last_synced_at);
+
+          // Populate form
+          form.reset({ ...DEFAULT_VALUES, ...(remote.payload || {}) });
+          setCurrentStep(remote.current_step ?? 1);
+        } else {
+          // Create draft session on backend if not exists
+          const created = await createDraftSession({
+            draft_key: key,
+            idempotency_key: idempotency || undefined,
+            payload: payload || {},
+            current_step: step,
+          });
+          store.setLastSyncedAt(created.last_synced_at);
+          store.setSyncStatus("synced");
+          form.reset({ ...DEFAULT_VALUES, ...payload });
+          setCurrentStep(step ?? 1);
+        }
+      } catch (err) {
+        console.error("Backend draft sync failed, using offline values:", err);
+        store.setSyncStatus("failed");
+        // Fallback to local store values
+        form.reset({ ...DEFAULT_VALUES, ...payload });
+        setCurrentStep(step ?? 1);
+      } finally {
+        setDraftLoaded(true);
+      }
     }
-    setDraftLoaded(true);
+
+    initDraft();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -221,40 +338,69 @@ export function ProductBuilderProvider({
   }, [form, saveDraft]);
 
   // ── Navigation ────────────────────────────────────────────────────────────
-  /**
-   * Validate only current step's fields before advancing.
-   * Returns true if navigation succeeded, false if validation failed.
-   */
   const nextStep = useCallback(async (): Promise<boolean> => {
     const fields = STEP_FIELDS[currentStep] ?? [];
     const valid = await form.trigger(fields);
     if (!valid) return false;
-    setCurrentStep((s) => Math.min(s + 1, TOTAL_STEPS));
+    const nextS = Math.min(currentStep + 1, TOTAL_STEPS);
+    setCurrentStep(nextS);
+    await saveDraftStep(nextS);
     window.scrollTo({ top: 0, behavior: "smooth" });
     return true;
-  }, [currentStep, form]);
+  }, [currentStep, form, saveDraftStep]);
 
-  const prevStep = useCallback(() => {
-    setCurrentStep((s) => Math.max(s - 1, 1));
+  const prevStep = useCallback(async () => {
+    const prevS = Math.max(currentStep - 1, 1);
+    setCurrentStep(prevS);
+    await saveDraftStep(prevS);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+  }, [currentStep, saveDraftStep]);
 
   const goToStep = useCallback(
-    (step: number) => {
+    async (step: number) => {
       if (step >= 1 && step <= TOTAL_STEPS) {
         setCurrentStep(step);
+        await saveDraftStep(step);
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     },
-    [],
+    [saveDraftStep],
   );
 
   // ── Final submit ──────────────────────────────────────────────────────────
   const handleFinalSubmit = form.handleSubmit(async (values) => {
     setIsSubmitting(true);
     try {
-      await onSubmit(values, productId);
-      clearDraft();
+      const store = useDraftStore.getState();
+      const key = store.draft_key;
+
+      if (key && !initialValues) {
+        // 1. Sync final values to backend draft session
+        store.setPayload(values);
+        store.setSyncStatus("saving");
+        await updateDraftSession(key, {
+          payload: values,
+          current_step: currentStep,
+          idempotency_key: store.idempotency_key || undefined,
+        });
+
+        // 2. Commit draft session on backend (creates product)
+        const committedProduct = await commitDraftSession(key);
+
+        // 3. Clear draft
+        clearDraft();
+
+        // 4. Submit to parent with the newly created product slug/id
+        await onSubmit(values, committedProduct.slug || committedProduct.id);
+      } else {
+        await onSubmit(values, productId);
+        clearDraft();
+      }
+    } catch (err) {
+      console.error("Failed to commit draft:", err);
+      toast.error("Submission failed", {
+        description: err instanceof Error ? err.message : "Could not save product.",
+      });
     } finally {
       setIsSubmitting(false);
     }
