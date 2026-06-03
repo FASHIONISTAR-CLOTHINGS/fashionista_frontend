@@ -70,7 +70,7 @@ export function Step4SizesColors() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-6 h-6 animate-spin text-violet-400" />
+        <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
       </div>
     );
   }
@@ -83,10 +83,10 @@ export function Step4SizesColors() {
         name="size_ids"
         render={() => (
           <FormItem>
-            <FormLabel className="text-white/90 font-semibold text-base">
+            <FormLabel className="text-zinc-800 font-semibold text-base">
               Sizes
             </FormLabel>
-            <FormDescription className="text-white/40 text-xs mb-4">
+            <FormDescription className="text-zinc-500 text-xs mb-4">
               Select all sizes you stock. These define the size axis of your variants.
             </FormDescription>
 
@@ -98,7 +98,7 @@ export function Step4SizesColors() {
                   return (
                     <Badge
                       key={id}
-                      className="bg-violet-500/20 text-violet-300 border-violet-500/30 cursor-pointer hover:bg-red-500/20 hover:text-red-300"
+                      className="bg-violet-50 text-violet-600 border border-violet-200 cursor-pointer hover:bg-red-50 hover:text-red-600 pl-3 pr-2 py-1 gap-1 rounded-full font-medium"
                       onClick={() => toggleSize(id)}
                     >
                       {s?.name} ×
@@ -118,15 +118,15 @@ export function Step4SizesColors() {
                     type="button"
                     onClick={() => toggleSize(size.id)}
                     className={cn(
-                      "relative px-4 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-150",
+                      "relative px-4 py-2.5 rounded-xl text-sm font-medium border transition-all duration-150",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500",
                       selected
-                        ? "bg-violet-500/20 border-violet-500 text-violet-200"
-                        : "bg-white/5 border-white/10 text-white/60 hover:border-white/25 hover:text-white/80",
+                        ? "bg-violet-50 border-violet-500 text-violet-700 font-semibold"
+                        : "bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-800",
                     )}
                   >
                     {selected && (
-                      <Check className="absolute top-0.5 right-0.5 w-3 h-3 text-violet-400" />
+                      <Check className="absolute top-1 right-1 w-3 h-3 text-violet-500" />
                     )}
                     {size.name}
                   </button>
@@ -144,10 +144,10 @@ export function Step4SizesColors() {
         name="color_ids"
         render={() => (
           <FormItem>
-            <FormLabel className="text-white/90 font-semibold text-base">
+            <FormLabel className="text-zinc-800 font-semibold text-base">
               Colours
             </FormLabel>
-            <FormDescription className="text-white/40 text-xs mb-4">
+            <FormDescription className="text-zinc-500 text-xs mb-4">
               Select all colour options you offer. These define the colour axis of your variants.
             </FormDescription>
 
@@ -159,11 +159,11 @@ export function Step4SizesColors() {
                   return (
                     <Badge
                       key={id}
-                      className="flex items-center gap-1.5 bg-white/5 border-white/15 text-white/70 cursor-pointer hover:bg-red-500/20 hover:text-red-300"
+                      className="flex items-center gap-1.5 bg-white border border-zinc-200 text-zinc-700 cursor-pointer hover:bg-red-50 hover:text-red-600 pl-3 pr-2 py-1 rounded-full font-medium"
                       onClick={() => toggleColor(id)}
                     >
                       <span
-                        className="w-3 h-3 rounded-full border border-white/20 flex-shrink-0"
+                        className="w-3 h-3 rounded-full border border-zinc-200 flex-shrink-0"
                         style={{ backgroundColor: c?.hex_code ?? "#888" }}
                       />
                       {c?.name} ×
@@ -184,23 +184,23 @@ export function Step4SizesColors() {
                     title={color.name}
                     onClick={() => toggleColor(color.id)}
                     className={cn(
-                      "flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 transition-all duration-150 w-[72px]",
+                      "flex flex-col items-center gap-2 p-2 rounded-xl border transition-all duration-150 w-[72px] bg-white",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500",
                       selected
-                        ? "border-fuchsia-500 bg-fuchsia-500/10"
-                        : "border-white/10 bg-white/3 hover:border-white/25",
+                        ? "border-[#FDA600] bg-[#FFF6E3] shadow-sm"
+                        : "border-zinc-200 hover:border-zinc-300",
                     )}
                   >
                     <span
                       className={cn(
-                        "w-9 h-9 rounded-full border-2 flex items-center justify-center",
-                        selected ? "border-fuchsia-400" : "border-white/20",
+                        "w-9 h-9 rounded-full border flex items-center justify-center",
+                        selected ? "border-[#FDA600]" : "border-zinc-200",
                       )}
                       style={{ backgroundColor: color.hex_code }}
                     >
-                      {selected && <Check className="w-4 h-4 text-white drop-shadow" />}
+                      {selected && <Check className="w-4 h-4 text-black font-extrabold" />}
                     </span>
-                    <span className="text-[10px] text-white/60 text-center leading-tight line-clamp-2">
+                    <span className="text-[10px] text-zinc-600 font-semibold text-center leading-tight line-clamp-2">
                       {color.name}
                     </span>
                   </button>
@@ -214,7 +214,7 @@ export function Step4SizesColors() {
 
       {/* ── Helper note ── */}
       {(selectedSizes.length > 0 || selectedColors.length > 0) && (
-        <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl p-4 text-sm text-violet-300">
+        <div className="bg-violet-50 border border-violet-100 rounded-xl p-4 text-sm text-violet-700">
           <strong>Next:</strong> Step 5 will generate a variant table with{" "}
           <strong>{Math.max(selectedSizes.length, 1) * Math.max(selectedColors.length, 1)}</strong>{" "}
           combination{selectedSizes.length * selectedColors.length !== 1 ? "s" : ""}.

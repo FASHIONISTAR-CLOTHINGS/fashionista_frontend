@@ -52,8 +52,8 @@ function SummaryPanel() {
   const values = form.getValues();
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/3 p-5 space-y-4 text-sm">
-      <h4 className="text-white/80 font-semibold text-base">Pre-publish Summary</h4>
+    <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-5 space-y-4 text-sm">
+      <h4 className="text-[#1A1208] font-semibold text-base">Pre-publish Summary</h4>
 
       <div className="space-y-2">
         <Row label="Title" value={values.title || "—"} />
@@ -72,7 +72,7 @@ function SummaryPanel() {
         )}
       </div>
 
-      <div className="border-t border-white/10 pt-3 flex flex-wrap gap-2">
+      <div className="border-t border-[#ECE6D6] pt-3 flex flex-wrap gap-2">
         {values.featured && <Flag icon="⭐" label="Featured" color="amber" />}
         {values.hot_deal && <Flag icon="⚡" label="Hot Deal" color="red" />}
         {values.digital && <Flag icon="📥" label="Digital" color="blue" />}
@@ -86,22 +86,22 @@ function SummaryPanel() {
 function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="flex justify-between gap-4">
-      <span className="text-white/40">{label}</span>
-      <span className={cn("text-white/80 text-right truncate max-w-[60%]", mono && "font-mono text-xs")}>{value}</span>
+      <span className="text-zinc-500">{label}</span>
+      <span className={cn("text-[#1A1208] font-medium text-right truncate max-w-[60%]", mono && "font-mono text-xs")}>{value}</span>
     </div>
   );
 }
 
 function Flag({ icon, label, color }: { icon: string; label: string; color: string }) {
   const colorMap: Record<string, string> = {
-    amber: "bg-amber-500/15 text-amber-300 border-amber-500/25",
-    red: "bg-red-500/15 text-red-300 border-red-500/25",
-    blue: "bg-blue-500/15 text-blue-300 border-blue-500/25",
-    green: "bg-emerald-500/15 text-emerald-300 border-emerald-500/25",
-    purple: "bg-violet-500/15 text-violet-300 border-violet-500/25",
+    amber: "bg-amber-50 text-amber-700 border-amber-200",
+    red: "bg-red-50 text-red-700 border-red-200",
+    blue: "bg-blue-50 text-blue-700 border-blue-200",
+    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    purple: "bg-violet-50 text-violet-700 border-violet-200",
   };
   return (
-    <Badge className={cn("text-xs gap-1 border", colorMap[color])}>
+    <Badge className={cn("text-xs gap-1 border shadow-none font-medium", colorMap[color])}>
       {icon} {label}
     </Badge>
   );
@@ -125,10 +125,10 @@ export function Step8Publish() {
           name="publish_intent"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-white/90 font-semibold text-base">
-                Publish Setting <span className="text-fuchsia-400">*</span>
+              <FormLabel className="text-zinc-800 font-semibold text-base">
+                Publish Setting <span className="text-fuchsia-600">*</span>
               </FormLabel>
-              <FormDescription className="text-white/40 text-xs mb-4">
+              <FormDescription className="text-zinc-500 text-xs mb-4">
                 Choose how this product should be saved
               </FormDescription>
 
@@ -143,19 +143,19 @@ export function Step8Publish() {
                   className={cn(
                     "flex flex-col gap-2 rounded-xl border-2 p-5 cursor-pointer transition-all",
                     field.value === "draft"
-                      ? "border-violet-500 bg-violet-500/10"
-                      : "border-white/10 bg-white/3 hover:border-white/20",
+                      ? "border-violet-500 bg-violet-50"
+                      : "border-[#D9D9D9] bg-white hover:border-violet-500/50",
                   )}
                 >
                   <RadioGroupItem value="draft" id="intent-draft" className="hidden" />
                   <div className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-violet-400" />
-                    <span className="font-semibold text-white">Save as Draft</span>
+                    <FileText className="w-5 h-5 text-violet-600" />
+                    <span className="font-semibold text-[#1A1208]">Save as Draft</span>
                     {field.value === "draft" && (
-                      <Badge className="ml-auto bg-violet-500 text-white text-xs">Selected</Badge>
+                      <Badge className="ml-auto bg-violet-500 text-white text-xs border-none">Selected</Badge>
                     )}
                   </div>
-                  <p className="text-white/50 text-xs leading-relaxed">
+                  <p className="text-zinc-600 text-xs leading-relaxed">
                     Product is saved privately. Not visible to customers. You can come back and complete it later.
                   </p>
                 </Label>
@@ -166,19 +166,19 @@ export function Step8Publish() {
                   className={cn(
                     "flex flex-col gap-2 rounded-xl border-2 p-5 cursor-pointer transition-all",
                     field.value === "pending"
-                      ? "border-fuchsia-500 bg-fuchsia-500/10"
-                      : "border-white/10 bg-white/3 hover:border-white/20",
+                      ? "border-fuchsia-500 bg-fuchsia-50"
+                      : "border-[#D9D9D9] bg-white hover:border-fuchsia-500/50",
                   )}
                 >
                   <RadioGroupItem value="pending" id="intent-pending" className="hidden" />
                   <div className="flex items-center gap-2">
-                    <SendHorizontal className="w-5 h-5 text-fuchsia-400" />
-                    <span className="font-semibold text-white">Submit for Review</span>
+                    <SendHorizontal className="w-5 h-5 text-fuchsia-600" />
+                    <span className="font-semibold text-[#1A1208]">Submit for Review</span>
                     {field.value === "pending" && (
-                      <Badge className="ml-auto bg-fuchsia-500 text-white text-xs">Selected</Badge>
+                      <Badge className="ml-auto bg-fuchsia-500 text-white text-xs border-none">Selected</Badge>
                     )}
                   </div>
-                  <p className="text-white/50 text-xs leading-relaxed">
+                  <p className="text-zinc-600 text-xs leading-relaxed">
                     Product enters admin moderation queue. Typically approved within 24 hours. A cover image is required.
                   </p>
                 </Label>
@@ -190,7 +190,7 @@ export function Step8Publish() {
 
         {/* ── Visibility Flags ── */}
         <div className="space-y-3">
-          <h4 className="text-white/80 font-semibold">Visibility Flags</h4>
+          <h4 className="text-zinc-800 font-semibold text-sm">Visibility Flags</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {([
               { name: "featured" as const, label: "Featured", desc: "Shown in homepage hero carousel", icon: Star },
@@ -202,11 +202,11 @@ export function Step8Publish() {
                 control={form.control}
                 name={name}
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-3 rounded-xl bg-white/5 border border-white/10 p-4">
+                  <FormItem className="flex flex-col gap-3 rounded-xl bg-[#FAFAF8] border border-[#D9D9D9] p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Icon className="w-4 h-4 text-violet-400" />
-                        <FormLabel className="text-white/80 font-medium cursor-pointer text-sm">
+                        <Icon className="w-4 h-4 text-violet-600" />
+                        <FormLabel className="text-[#1A1208] font-semibold cursor-pointer text-sm">
                           {label}
                         </FormLabel>
                       </div>
@@ -218,7 +218,7 @@ export function Step8Publish() {
                         />
                       </FormControl>
                     </div>
-                    <FormDescription className="text-white/40 text-xs">{desc}</FormDescription>
+                    <FormDescription className="text-zinc-500 text-xs">{desc}</FormDescription>
                   </FormItem>
                 )}
               />
@@ -228,9 +228,9 @@ export function Step8Publish() {
 
         {/* ── SEO Overrides ── */}
         <div className="space-y-5">
-          <h4 className="text-white/80 font-semibold flex items-center gap-2">
-            <Search className="w-4 h-4 text-violet-400" />
-            SEO Overrides <span className="text-white/30 font-normal text-xs">(optional)</span>
+          <h4 className="text-zinc-800 font-semibold flex items-center gap-2 text-sm">
+            <Search className="w-4 h-4 text-violet-600" />
+            SEO Overrides <span className="text-zinc-400 font-normal text-xs">(optional)</span>
           </h4>
 
           <FormField
@@ -238,16 +238,16 @@ export function Step8Publish() {
             name="meta_title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white/70 text-sm">Meta Title</FormLabel>
+                <FormLabel className="text-zinc-700 text-sm font-semibold">Meta Title</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     placeholder="Defaults to product title if blank"
                     maxLength={160}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-violet-500"
+                    className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:border-violet-500 focus:ring-violet-500 rounded-xl px-4 py-3"
                   />
                 </FormControl>
-                <FormDescription className="text-white/40 text-xs">
+                <FormDescription className="text-zinc-500 text-xs">
                   {field.value?.length ?? 0} / 160 characters. Recommended: 50–60 characters.
                 </FormDescription>
                 <FormMessage />
@@ -260,17 +260,17 @@ export function Step8Publish() {
             name="meta_description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white/70 text-sm">Meta Description</FormLabel>
+                <FormLabel className="text-zinc-700 text-sm font-semibold">Meta Description</FormLabel>
                 <FormControl>
                   <Textarea
                     {...field}
                     rows={3}
                     placeholder="Defaults to product short description if blank"
                     maxLength={320}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-violet-500 resize-none"
+                    className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:border-violet-500 focus:ring-violet-500 rounded-xl px-4 py-3 resize-none"
                   />
                 </FormControl>
-                <FormDescription className="text-white/40 text-xs">
+                <FormDescription className="text-zinc-500 text-xs">
                   {field.value?.length ?? 0} / 320 characters. Recommended: 120–160 characters.
                 </FormDescription>
                 <FormMessage />

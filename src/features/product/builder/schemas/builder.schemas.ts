@@ -87,13 +87,13 @@ export const Step1Schema = z.object({
   category_ids: z
     .array(z.string().uuid("Select a valid category"))
     .min(1, "Select at least one category")
-    .max(5, "You can select up to 5 categories")
+    .max(15, "You can select up to 15 categories")
     .default([]),
 
-  /** Optional deeper discovery facets. Also capped at five backend-side. */
+  /** Optional deeper discovery facets. Also capped at 15 backend-side. */
   sub_category_ids: z
     .array(z.string().uuid("Select a valid sub-category"))
-    .max(5, "You can select up to 5 sub-categories")
+    .max(15, "You can select up to 15 sub-categories")
     .default([]),
 
   /** Comma-separated tag UUIDs — multi-select from ProductTag catalog. */
@@ -122,6 +122,13 @@ export const Step2BaseSchema = z.object({
 
   /** Physical stock quantity. */
   stock_qty: QtySchema.min(1, "Stock must be at least 1 unit"),
+
+  /** Weight in kilograms. */
+  weight_kg: z
+    .string()
+    .regex(/^(\d+(\.\d{1,3})?)?$/, "Enter a valid weight in kg (e.g. 1.5)")
+    .optional()
+    .or(z.literal("")),
 
   /**
    * Whether this product requires a body measurement before ordering.

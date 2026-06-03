@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Check } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -94,8 +94,8 @@ async function fetchTags(): Promise<SelectOption[]> {
 function FieldSkeleton({ label }: { label: string }) {
   return (
     <div className="space-y-2">
-      <div className="text-white/90 font-semibold text-sm">{label}</div>
-      <div className="h-10 w-full rounded-lg bg-white/5 animate-pulse" />
+      <div className="text-zinc-800 font-semibold text-sm">{label}</div>
+      <div className="h-10 w-full rounded-lg bg-zinc-100 animate-pulse" />
     </div>
   );
 }
@@ -150,29 +150,33 @@ export function Step1BasicInfo() {
   });
 
   // ── Category helpers ───────────────────────────────────────────────────────
-  const addCategory = (categoryId: string) => {
+  const toggleCategory = (categoryId: string) => {
     const current = form.getValues("category_ids") ?? [];
-    if (!current.includes(categoryId) && current.length < 5) {
-      form.setValue("category_ids", [...current, categoryId], {
-        shouldValidate: true,
-      });
-      if (current.length === 0) {
-        // Sub-categories are loaded from the first selected category only.
-        form.setValue("sub_category_ids", [], { shouldValidate: true });
-      }
+    let next: string[];
+    if (current.includes(categoryId)) {
+      next = current.filter((id) => id !== categoryId);
+    } else {
+      if (current.length >= 15) return;
+      next = [...current, categoryId];
+    }
+    form.setValue("category_ids", next, { shouldValidate: true });
+    
+    // Clear subcategories if the primary category changes
+    if (next.length === 0 || next[0] !== current[0]) {
+      form.setValue("sub_category_ids", [], { shouldValidate: true });
     }
   };
 
-  const removeCategory = (categoryId: string) => {
-    const current = form.getValues("category_ids") ?? [];
-    form.setValue(
-      "category_ids",
-      current.filter((id) => id !== categoryId),
-      { shouldValidate: true },
-    );
-    if (categoryId === current[0]) {
-      form.setValue("sub_category_ids", [], { shouldValidate: true });
+  const toggleSubCategory = (subId: string) => {
+    const current = form.getValues("sub_category_ids") ?? [];
+    let next: string[];
+    if (current.includes(subId)) {
+      next = current.filter((id) => id !== subId);
+    } else {
+      if (current.length >= 15) return;
+      next = [...current, subId];
     }
+    form.setValue("sub_category_ids", next, { shouldValidate: true });
   };
 
   // ── Tag helpers ────────────────────────────────────────────────────────────
@@ -202,7 +206,7 @@ export function Step1BasicInfo() {
         <FieldSkeleton label="Short Description" />
         <FieldSkeleton label="Full Description *" />
         <FieldSkeleton label="Condition *" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-4">
           <FieldSkeleton label="Categories *" />
           <FieldSkeleton label="Sub-Category" />
         </div>
@@ -219,18 +223,18 @@ export function Step1BasicInfo() {
         name="title"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-white/90 font-semibold">
-              Product Title <span className="text-fuchsia-400">*</span>
+            <FormLabel className="text-zinc-800 font-semibold text-sm">
+              Product Title <span className="text-fuchsia-600">*</span>
             </FormLabel>
             <FormControl>
               <Input
                 {...field}
                 placeholder="e.g. Premium Hand-Stitched Agbada Set"
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-violet-500"
+                className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-xl px-4 py-3"
                 maxLength={255}
               />
             </FormControl>
-            <FormDescription className="text-white/40 text-xs">
+            <FormDescription className="text-zinc-500 text-xs">
               {field.value?.length ?? 0} / 255 characters
             </FormDescription>
             <FormMessage />
@@ -244,7 +248,7 @@ export function Step1BasicInfo() {
         name="short_description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-white/90 font-semibold">
+            <FormLabel className="text-zinc-800 font-semibold text-sm">
               Short Description
             </FormLabel>
             <FormControl>
@@ -252,11 +256,11 @@ export function Step1BasicInfo() {
                 {...field}
                 rows={2}
                 placeholder="Brief marketing copy shown on listing cards (max 500 chars)"
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-violet-500 resize-none"
+                className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-xl resize-none px-4 py-3"
                 maxLength={500}
               />
             </FormControl>
-            <FormDescription className="text-white/40 text-xs">
+            <FormDescription className="text-zinc-500 text-xs">
               {field.value?.length ?? 0} / 500 characters
             </FormDescription>
             <FormMessage />
@@ -270,18 +274,18 @@ export function Step1BasicInfo() {
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-white/90 font-semibold">
-              Full Description <span className="text-fuchsia-400">*</span>
+            <FormLabel className="text-zinc-800 font-semibold text-sm">
+              Full Description <span className="text-fuchsia-600">*</span>
             </FormLabel>
             <FormControl>
               <Textarea
                 {...field}
-                rows={8}
+                rows={6}
                 placeholder="Detailed product description — fabric, craftsmanship, sizing, care instructions…"
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-violet-500"
+                className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-xl px-4 py-3"
               />
             </FormControl>
-            <FormDescription className="text-white/40 text-xs">
+            <FormDescription className="text-zinc-500 text-xs">
               {field.value?.length ?? 0} / 10,000 characters
             </FormDescription>
             <FormMessage />
@@ -295,19 +299,19 @@ export function Step1BasicInfo() {
         name="condition"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-white/90 font-semibold">
-              Condition <span className="text-fuchsia-400">*</span>
+            <FormLabel className="text-zinc-800 font-semibold text-sm">
+              Condition <span className="text-fuchsia-600">*</span>
             </FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-violet-500">
+                <SelectTrigger className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-violet-500 focus:border-violet-500 rounded-xl px-4 py-3">
                   <SelectValue placeholder="Select condition" />
                 </SelectTrigger>
               </FormControl>
-              <SelectContent className="bg-zinc-900 border-white/10">
-                <SelectItem value="new">New — brand new item</SelectItem>
-                <SelectItem value="used">Used — pre-owned item</SelectItem>
-                <SelectItem value="refurbished">Refurbished — professionally restored</SelectItem>
+              <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208]">
+                <SelectItem value="new" className="hover:bg-zinc-50 focus:bg-zinc-50">New — brand new item</SelectItem>
+                <SelectItem value="used" className="hover:bg-zinc-50 focus:bg-zinc-50">Used — pre-owned item</SelectItem>
+                <SelectItem value="refurbished" className="hover:bg-zinc-50 focus:bg-zinc-50">Refurbished — professionally restored</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />
@@ -315,108 +319,116 @@ export function Step1BasicInfo() {
         )}
       />
 
-      {/* ── Categories + Sub-Category ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <FormField
-          control={form.control}
-          name="category_ids"
-          render={() => (
-            <FormItem>
-              <FormLabel className="text-white/90 font-semibold">
-                Categories <span className="text-fuchsia-400">*</span>
-              </FormLabel>
-              <Select
-                onValueChange={addCategory}
-                disabled={selectedCategoryIds.length >= 5}
-              >
-                <FormControl>
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-violet-500">
-                    <SelectValue placeholder="Add category" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="bg-zinc-900 border-white/10 max-h-60 overflow-y-auto">
-                  {categories
-                    .filter((cat) => !selectedCategoryIds.includes(cat.id))
-                    .map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-              <FormDescription className="text-white/40 text-xs">
-                Select 1 to 5 categories for search, SEO, and recommendations.
-              </FormDescription>
-              {selectedCategoryIds.length > 0 && (
-                <div className="flex flex-wrap gap-2 pt-2">
-                  {selectedCategoryIds.map((categoryId) => {
-                    const category = categories.find((cat) => cat.id === categoryId);
-                    return (
-                      <Badge
-                        key={categoryId}
-                        variant="secondary"
-                        className="bg-violet-500/20 text-violet-300 border-violet-500/30 pl-3 pr-1 gap-1"
+      {/* ── Categories (Checkable Grid) ── */}
+      <FormField
+        control={form.control}
+        name="category_ids"
+        render={() => (
+          <FormItem className="space-y-3">
+            <FormLabel className="text-zinc-800 font-semibold text-sm">
+              Categories <span className="text-fuchsia-600">*</span>
+            </FormLabel>
+            <FormDescription className="text-zinc-500 text-xs">
+              Select 1 to 15 categories your product specializes in. Powers search, catalog filtering, and AI matching.
+            </FormDescription>
+            <div className="rounded-xl border border-[#D9D9D9] bg-[#FAFAF8] p-4">
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                {categories.map((cat) => {
+                  const selected = selectedCategoryIds.includes(cat.id);
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => toggleCategory(cat.id)}
+                      className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${
+                        selected
+                          ? "border-[#FDA600] bg-[#FFF6E3] shadow-sm"
+                          : "border-[#D9D9D9] bg-white hover:border-[#FDA600]/50"
+                      }`}
+                    >
+                      <span
+                        className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all ${
+                          selected ? "border-[#FDA600] bg-[#FDA600]" : "border-[#D9D9D9]"
+                        }`}
                       >
-                        {category?.name ?? categoryId}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeCategory(categoryId)}
-                          className="h-4 w-4 p-0 text-violet-400 hover:text-red-400 hover:bg-transparent"
-                          aria-label={`Remove ${category?.name ?? "category"}`}
+                        {selected && <Check className="h-3 w-3 text-black" />}
+                      </span>
+                      <span className="text-sm font-semibold text-[#1A1208] truncate">
+                        {cat.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* ── Sub-Category (Checkable Grid, Dependent on Primary) ── */}
+      <FormField
+        control={form.control}
+        name="sub_category_ids"
+        render={() => (
+          <FormItem className="space-y-3">
+            <FormLabel className="text-zinc-800 font-semibold text-sm font-outfit">
+              Sub-Categories
+            </FormLabel>
+            <FormDescription className="text-zinc-500 text-xs">
+              Select up to 15 sub-categories to refine catalog discovery.
+            </FormDescription>
+            <div className="rounded-xl border border-[#D9D9D9] bg-[#FAFAF8] p-4">
+              {!selectedPrimaryCategoryId ? (
+                <div className="rounded-xl border border-dashed border-[#D9D9D9] p-5 text-center bg-white">
+                  <p className="text-sm font-semibold text-[#5A6465]">Select a category above first</p>
+                  <p className="mt-1 text-xs text-[#7A6B44]">Sub-categories will populate once a primary category is chosen.</p>
+                </div>
+              ) : subsLoading ? (
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-14 rounded-xl bg-zinc-100 animate-pulse" />
+                  ))}
+                </div>
+              ) : subCategories.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-[#D9D9D9] p-5 text-center bg-white">
+                  <p className="text-sm font-semibold text-[#5A6465]">No sub-categories available for this category</p>
+                </div>
+              ) : (
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                  {subCategories.map((sub) => {
+                    const selected = selectedSubCategoryIds.includes(sub.id);
+                    return (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={() => toggleSubCategory(sub.id)}
+                        className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${
+                          selected
+                            ? "border-[#FDA600] bg-[#FFF6E3] shadow-sm"
+                            : "border-[#D9D9D9] bg-white hover:border-[#FDA600]/50"
+                        }`}
+                      >
+                        <span
+                          className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all ${
+                            selected ? "border-[#FDA600] bg-[#FDA600]" : "border-[#D9D9D9]"
+                          }`}
                         >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </Badge>
+                          {selected && <Check className="h-3 w-3 text-black" />}
+                        </span>
+                        <span className="text-sm font-semibold text-[#1A1208] truncate">
+                          {sub.name}
+                        </span>
+                      </button>
                     );
                   })}
                 </div>
               )}
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="sub_category_ids"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-white/90 font-semibold">
-                Sub-Category
-              </FormLabel>
-              <Select
-                onValueChange={(value) => field.onChange(value ? [value] : [])}
-                value={selectedSubCategoryIds[0] ?? ""}
-                disabled={!selectedPrimaryCategoryId || subsLoading}
-              >
-                <FormControl>
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-violet-500 disabled:opacity-40">
-                    <SelectValue
-                      placeholder={
-                        !selectedPrimaryCategoryId
-                          ? "Select a category first"
-                          : subsLoading
-                            ? "Loading…"
-                            : "Select sub-category"
-                      }
-                    />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="bg-zinc-900 border-white/10 max-h-60 overflow-y-auto">
-                  {subCategories.map((sub) => (
-                    <SelectItem key={sub.id} value={sub.id}>
-                      {sub.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+            </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
       {/* ── Tags ── */}
       <FormField
@@ -424,8 +436,8 @@ export function Step1BasicInfo() {
         name="tag_ids"
         render={() => (
           <FormItem>
-            <FormLabel className="text-white/90 font-semibold">Tags</FormLabel>
-            <FormDescription className="text-white/40 text-xs mb-2">
+            <FormLabel className="text-zinc-800 font-semibold text-sm">Tags</FormLabel>
+            <FormDescription className="text-zinc-500 text-xs mb-2">
               Add up to 10 tags to improve searchability
             </FormDescription>
 
@@ -438,7 +450,7 @@ export function Step1BasicInfo() {
                     <Badge
                       key={tagId}
                       variant="secondary"
-                      className="bg-violet-500/20 text-violet-300 border-violet-500/30 pl-3 pr-1 gap-1"
+                      className="bg-violet-50 text-violet-700 border-violet-200 pl-3 pr-1 gap-1"
                     >
                       {tag?.name ?? tagId}
                       <Button
@@ -446,7 +458,7 @@ export function Step1BasicInfo() {
                         variant="ghost"
                         size="icon"
                         onClick={() => removeTag(tagId)}
-                        className="h-4 w-4 p-0 text-violet-400 hover:text-red-400 hover:bg-transparent"
+                        className="h-4 w-4 p-0 text-violet-500 hover:text-red-600 hover:bg-transparent"
                       >
                         <X className="h-3 w-3" />
                       </Button>
@@ -462,7 +474,7 @@ export function Step1BasicInfo() {
               value=""
               disabled={selectedTagIds.length >= 10}
             >
-              <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-violet-500">
+              <SelectTrigger className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-violet-500 focus:border-violet-500 rounded-xl px-4 py-3">
                 <SelectValue
                   placeholder={
                     selectedTagIds.length >= 10
@@ -471,11 +483,11 @@ export function Step1BasicInfo() {
                   }
                 />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-900 border-white/10 max-h-60 overflow-y-auto">
+              <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208] max-h-60 overflow-y-auto">
                 {tags
                   .filter((t) => !selectedTagIds.includes(t.id))
                   .map((tag) => (
-                    <SelectItem key={tag.id} value={tag.id}>
+                    <SelectItem key={tag.id} value={tag.id} className="hover:bg-zinc-50 focus:bg-zinc-50">
                       {tag.name}
                     </SelectItem>
                   ))}

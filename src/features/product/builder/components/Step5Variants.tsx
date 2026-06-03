@@ -116,10 +116,10 @@ export function Step5Variants() {
   if (fields.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-        <div className="p-4 rounded-full bg-white/5">
+        <div className="p-4 rounded-full bg-zinc-100">
           <span className="text-3xl">📦</span>
         </div>
-        <p className="text-white/60 text-sm">
+        <p className="text-zinc-500 text-sm">
           Go back to Step 4 to select sizes and/or colours.
           <br />
           Variant rows will appear here automatically.
@@ -131,25 +131,25 @@ export function Step5Variants() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-sm text-white/60">
+        <p className="text-sm text-zinc-500">
           {fields.length} variant{fields.length !== 1 ? "s" : ""} generated
         </p>
-        <Badge className="bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/30 text-xs">
+        <Badge className="bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-200 text-xs py-1 px-3 rounded-full font-medium">
           Set stock &amp; price per variant
         </Badge>
       </div>
 
       {/* ── Responsive table ── */}
-      <div className="overflow-x-auto rounded-xl border border-white/10">
+      <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-white/10 bg-white/5">
-              <th className="text-left text-white/50 font-medium px-4 py-3 whitespace-nowrap">Size</th>
-              <th className="text-left text-white/50 font-medium px-4 py-3 whitespace-nowrap">Colour</th>
-              <th className="text-left text-white/50 font-medium px-4 py-3 whitespace-nowrap">SKU</th>
-              <th className="text-left text-white/50 font-medium px-4 py-3 whitespace-nowrap">Price Override</th>
-              <th className="text-left text-white/50 font-medium px-4 py-3 whitespace-nowrap">Stock</th>
-              <th className="text-center text-white/50 font-medium px-4 py-3 whitespace-nowrap">Active</th>
+            <tr className="border-b border-zinc-200 bg-zinc-50">
+              <th className="text-left text-zinc-500 font-semibold px-4 py-3.5 whitespace-nowrap">Size</th>
+              <th className="text-left text-zinc-500 font-semibold px-4 py-3.5 whitespace-nowrap">Colour</th>
+              <th className="text-left text-zinc-500 font-semibold px-4 py-3.5 whitespace-nowrap">SKU</th>
+              <th className="text-left text-zinc-500 font-semibold px-4 py-3.5 whitespace-nowrap">Price Override</th>
+              <th className="text-left text-zinc-500 font-semibold px-4 py-3.5 whitespace-nowrap">Stock</th>
+              <th className="text-center text-zinc-500 font-semibold px-4 py-3.5 whitespace-nowrap">Active</th>
             </tr>
           </thead>
           <tbody>
@@ -161,18 +161,18 @@ export function Step5Variants() {
                 <tr
                   key={field.id}
                   className={cn(
-                    "border-b border-white/5 last:border-0",
-                    idx % 2 === 0 ? "bg-transparent" : "bg-white/2",
+                    "border-b border-zinc-100 last:border-0 hover:bg-zinc-50/50 transition-colors",
+                    idx % 2 === 0 ? "bg-transparent" : "bg-zinc-50/30",
                   )}
                 >
                   {/* Size */}
                   <td className="px-4 py-3">
                     {size ? (
-                      <Badge className="bg-violet-500/20 text-violet-300 border-violet-500/30">
+                      <Badge className="bg-violet-50 text-violet-600 border border-violet-100 rounded-full font-semibold">
                         {size.name}
                       </Badge>
                     ) : (
-                      <span className="text-white/30 text-xs">—</span>
+                      <span className="text-zinc-400 text-xs">—</span>
                     )}
                   </td>
 
@@ -181,13 +181,13 @@ export function Step5Variants() {
                     {color ? (
                       <div className="flex items-center gap-2">
                         <span
-                          className="w-4 h-4 rounded-full border border-white/20 flex-shrink-0"
+                          className="w-4 h-4 rounded-full border border-zinc-200 flex-shrink-0"
                           style={{ backgroundColor: color.hex_code }}
                         />
-                        <span className="text-white/70 text-xs">{color.name}</span>
+                        <span className="text-zinc-700 text-xs font-semibold">{color.name}</span>
                       </div>
                     ) : (
-                      <span className="text-white/30 text-xs">—</span>
+                      <span className="text-zinc-400 text-xs">—</span>
                     )}
                   </td>
 
@@ -201,7 +201,7 @@ export function Step5Variants() {
                           <FormControl>
                             <Input
                               {...f}
-                              className="bg-white/5 border-white/10 text-white text-xs h-8 w-36 focus:border-violet-500"
+                              className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-lg text-xs h-9 w-36 px-2.5"
                               placeholder="Auto"
                             />
                           </FormControl>
@@ -223,7 +223,7 @@ export function Step5Variants() {
                               type="number"
                               step="0.01"
                               min="0"
-                              className="bg-white/5 border-white/10 text-white text-xs h-8 w-28 focus:border-violet-500"
+                              className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-lg text-xs h-9 w-28 px-2.5"
                               placeholder="Base price"
                             />
                           </FormControl>
@@ -246,7 +246,7 @@ export function Step5Variants() {
                               min="0"
                               step="1"
                               onChange={(e) => f.onChange(parseInt(e.target.value, 10) || 0)}
-                              className="bg-white/5 border-white/10 text-white text-xs h-8 w-20 focus:border-violet-500"
+                              className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-lg text-xs h-9 w-20 px-2.5"
                               placeholder="0"
                             />
                           </FormControl>
