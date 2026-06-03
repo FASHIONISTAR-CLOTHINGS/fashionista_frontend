@@ -430,6 +430,46 @@ export function Step1BasicInfo() {
         )}
       />
 
+        <FormField
+          control={form.control}
+          name="sub_category_ids"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-white/90 font-semibold">
+                Sub-Category
+              </FormLabel>
+              <Select
+                onValueChange={(value) => field.onChange(value ? [value] : [])}
+                value={selectedSubCategoryIds[0] ?? ""}
+                disabled={!selectedPrimaryCategoryId || subsLoading}
+              >
+                <FormControl>
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-violet-500 disabled:opacity-40">
+                    <SelectValue
+                      placeholder={
+                        !selectedPrimaryCategoryId
+                          ? "Select a category first"
+                          : subsLoading
+                            ? "Loading…"
+                            : "Select sub-category"
+                      }
+                    />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="bg-zinc-900 border-white/10 max-h-60 overflow-y-auto">
+                  {subCategories.map((sub) => (
+                    <SelectItem key={sub.id} value={sub.id}>
+                      {sub.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
       {/* ── Tags ── */}
       <FormField
         control={form.control}
