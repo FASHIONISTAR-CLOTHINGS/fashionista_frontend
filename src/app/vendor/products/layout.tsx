@@ -7,4 +7,5 @@ export default function VendorProductsLayout({
   children: ReactNode;
 }) {
   return <VendorProductBuilderWrapper>{children}</VendorProductBuilderWrapper>;
+  // return <>{children}</>;
 }

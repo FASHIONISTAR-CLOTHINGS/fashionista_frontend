@@ -188,17 +188,17 @@ export const VendorDashboardSchema = z.object({
 export const VendorSetupSchema = z.object({
   store_name:     z.string().min(1, "Store name is required"),
   description:    z.string().min(1, "Description is required"),
-  tagline:        z.string().optional(),
-  logo_url:       z.string().url().optional().or(z.literal("")),
-  cover_url:      z.string().url().optional().or(z.literal("")),
+  tagline:        z.string().optional().default(""),
+  logo_url:       z.string().optional().or(z.literal("")),
+  cover_url:      z.string().optional().or(z.literal("")),
   city:           z.string().min(1, "City is required"),
   state:          z.string().min(1, "State is required"),
-  country:        z.string().optional(),
-  collection_ids: z.array(z.string()),
-  instagram_url:  z.string().url().optional().or(z.literal("")),
-  tiktok_url:     z.string().url().optional().or(z.literal("")),
-  twitter_url:    z.string().url().optional().or(z.literal("")),
-  website_url:    z.string().url().optional().or(z.literal("")),
+  country:        z.string().optional().default("NG"),
+  collection_ids: z.array(z.string()).default([]),
+  instagram_url:  z.string().optional().or(z.literal("")),
+  tiktok_url:     z.string().optional().or(z.literal("")),
+  twitter_url:    z.string().optional().or(z.literal("")),
+  website_url:    z.string().optional().or(z.literal("")),
 });
 
 // ── Payout ────────────────────────────────────────────────────────────────────

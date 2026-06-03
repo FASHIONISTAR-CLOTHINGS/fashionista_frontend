@@ -65,12 +65,19 @@ async function fetchCategories(): Promise<SelectOption[]> {
   return data.results ?? [];
 }
 
-async function fetchSubCategories(parentId: string): Promise<SelectOption[]> {
-  if (!parentId) return [];
+interface CategoryDetail {
+  id: string;
+  name: string;
+  slug: string;
+  children: SelectOption[];
+}
+
+async function fetchSubCategories(parentSlug: string): Promise<SelectOption[]> {
+  if (!parentSlug) return [];
   const data = await apiAsync
-    .get(`catalog/categories/${parentId}/children/?page_size=50`)
-    .json<PaginatedOptions>();
-  return data.results ?? [];
+    .get(`catalog/categories/${parentSlug}/detail/`)
+    .json<CategoryDetail>();
+  return data.children ?? [];
 }
 
 async function fetchTags(): Promise<SelectOption[]> {
@@ -116,14 +123,17 @@ export function Step1BasicInfo() {
     gcTime: 10 * 60_000,
   });
 
+  const primaryCategory = categories.find((cat) => cat.id === selectedPrimaryCategoryId);
+  const selectedPrimaryCategorySlug = primaryCategory?.slug ?? "";
+
   // ── TanStack Query — sub-categories (dependent on primary category) ────────
   const {
     data: subCategories = [],
     isLoading: subsLoading,
   } = useQuery({
-    queryKey: ["catalog", "subcategories", selectedPrimaryCategoryId],
-    queryFn: () => fetchSubCategories(selectedPrimaryCategoryId),
-    enabled: !!selectedPrimaryCategoryId,
+    queryKey: ["catalog", "subcategories", selectedPrimaryCategorySlug],
+    queryFn: () => fetchSubCategories(selectedPrimaryCategorySlug),
+    enabled: !!selectedPrimaryCategorySlug,
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
   });
