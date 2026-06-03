@@ -66,6 +66,10 @@ const imageRemotePatterns = unique([
   },
   {
     protocol: "https",
+    hostname: "res.cloudinary",
+  },
+  {
+    protocol: "https",
     hostname: "**.cloudinary.com",
   },
   {
