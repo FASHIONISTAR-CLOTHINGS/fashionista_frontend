@@ -1661,6 +1661,18 @@ export function VendorProductComposerView() {
       sub_category_ids: values.sub_category_ids ?? [],
       size_ids: sizeIds, color_ids: colorIds, tag_ids: tagIds,
       hot_deal: hotDeal, digital: isDigital,
+      weight_kg: values.weight_kg || undefined,
+      condition: values.condition,
+      meta_title: values.meta_title || undefined,
+      meta_description: values.meta_description || undefined,
+      variants: (values.variants ?? []).map(v => ({
+        size_id: v.size_id || null,
+        color_id: v.color_id || null,
+        price_override: v.price_override || null,
+        stock_qty: v.stock_qty ?? 0,
+        sku: v.sku || undefined,
+        is_active: v.is_active ?? true,
+      })),
     };
 
     if (!productSlugRef.current) {
@@ -1688,7 +1700,7 @@ export function VendorProductComposerView() {
           Open catalog
         </Link>
       </div>
-      <div className="rounded-3xl bg-[#01454A] border border-[#013032] text-white p-8 shadow-xl shadow-[#01454A]/10 relative overflow-hidden">
+      <div className="rounded-3xl bg-white border border-[#ECE6D6] text-[#1A1208] p-8 shadow-sm relative overflow-hidden">
         <ProductBuilderProvider vendorId={vendorId} onSubmit={handleBuilderSubmit}>
           <ProductBuilder />
         </ProductBuilderProvider>

@@ -53,7 +53,7 @@ function BuilderNavigation() {
   const publishIntent = form.watch("publish_intent");
 
   return (
-    <div className="flex items-center justify-between pt-6 border-t border-white/10 mt-8">
+    <div className="flex items-center justify-between pt-6 border-t border-zinc-200 mt-8">
       {/* ── Back ── */}
       <Button
         type="button"
@@ -61,7 +61,7 @@ function BuilderNavigation() {
         onClick={prevStep}
         disabled={isFirst || isSubmitting}
         className={cn(
-          "text-white/60 hover:text-white hover:bg-white/5 gap-2",
+          "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 gap-2",
           isFirst && "invisible",
         )}
       >
@@ -70,7 +70,7 @@ function BuilderNavigation() {
       </Button>
 
       {/* ── Step indicator (center) ── */}
-      <span className="text-white/30 text-sm select-none">
+      <span className="text-zinc-400 text-sm select-none">
         Step {currentStep} of {BUILDER_STEPS.length}
       </span>
 
@@ -132,11 +132,11 @@ export function ProductBuilder() {
       <BuilderStepper />
 
       {/* ── Step header ── */}
-      <div className="pb-2 border-b border-white/10">
-        <h2 className="text-white font-bold text-xl">
+      <div className="pb-2 border-b border-zinc-200">
+        <h2 className="text-zinc-900 font-bold text-xl">
           {stepMeta.label}
         </h2>
-        <p className="text-white/40 text-sm mt-0.5">{stepMeta.description}</p>
+        <p className="text-zinc-500 text-sm mt-0.5">{stepMeta.description}</p>
       </div>
 
       {/* ── Active step content ── */}

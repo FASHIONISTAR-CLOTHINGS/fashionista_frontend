@@ -4,7 +4,7 @@
  * @file Step2Pricing.tsx
  * @description Step 2 — Pricing & Stock
  *
- * Fields: price, old_price, currency, stock_qty,
+ * Fields: price, old_price, currency, stock_qty, weight_kg,
  *         requires_measurement, is_customisable, shipping_amount, courier_id
  *
  * Features:
@@ -90,22 +90,22 @@ export function Step2Pricing() {
   return (
     <div className="space-y-8">
       {/* ── Currency + Price row ── */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <FormField
           control={form.control}
           name="currency"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-white/90 font-semibold">Currency</FormLabel>
+              <FormLabel className="text-zinc-800 font-semibold text-sm">Currency</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-violet-500">
+                  <SelectTrigger className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-violet-500 focus:border-violet-500 rounded-xl px-4 py-3">
                     <SelectValue />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent className="bg-zinc-900 border-white/10">
+                <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208]">
                   {CURRENCIES.map((c) => (
-                    <SelectItem key={c.code} value={c.code}>
+                    <SelectItem key={c.code} value={c.code} className="hover:bg-zinc-50 focus:bg-zinc-50">
                       {c.label}
                     </SelectItem>
                   ))}
@@ -120,9 +120,9 @@ export function Step2Pricing() {
           control={form.control}
           name="price"
           render={({ field }) => (
-            <FormItem className="col-span-2">
-              <FormLabel className="text-white/90 font-semibold">
-                Selling Price <span className="text-fuchsia-400">*</span>
+            <FormItem className="sm:col-span-2">
+              <FormLabel className="text-zinc-800 font-semibold text-sm">
+                Selling Price <span className="text-fuchsia-600">*</span>
               </FormLabel>
               <FormControl>
                 <Input
@@ -131,7 +131,7 @@ export function Step2Pricing() {
                   step="0.01"
                   min="0"
                   placeholder="e.g. 25000.00"
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-violet-500"
+                  className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-xl px-4 py-3"
                 />
               </FormControl>
               <FormMessage />
@@ -147,11 +147,11 @@ export function Step2Pricing() {
         render={({ field }) => (
           <FormItem>
             <div className="flex items-center gap-3">
-              <FormLabel className="text-white/90 font-semibold">
+              <FormLabel className="text-zinc-800 font-semibold text-sm">
                 Original Price (before discount)
               </FormLabel>
               {discountPct !== null && (
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 gap-1">
+                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 gap-1 font-semibold">
                   <TrendingDown className="w-3 h-3" />
                   {discountPct}% OFF
                 </Badge>
@@ -164,10 +164,10 @@ export function Step2Pricing() {
                 step="0.01"
                 min="0"
                 placeholder="Leave blank if no discount"
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-violet-500"
+                className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-xl px-4 py-3"
               />
             </FormControl>
-            <FormDescription className="text-white/40 text-xs">
+            <FormDescription className="text-zinc-500 text-xs">
               Must be higher than the selling price if provided
             </FormDescription>
             <FormMessage />
@@ -175,33 +175,61 @@ export function Step2Pricing() {
         )}
       />
 
-      {/* ── Stock ── */}
-      <FormField
-        control={form.control}
-        name="stock_qty"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="text-white/90 font-semibold">
-              Stock Quantity <span className="text-fuchsia-400">*</span>
-            </FormLabel>
-            <FormControl>
-              <Input
-                {...field}
-                type="number"
-                min="1"
-                step="1"
-                placeholder="e.g. 50"
-                onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-violet-500"
-              />
-            </FormControl>
-            <FormDescription className="text-white/40 text-xs">
-              Total units available across all variants
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {/* ── Stock & Weight Row ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <FormField
+          control={form.control}
+          name="stock_qty"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-zinc-800 font-semibold text-sm">
+                Stock Quantity <span className="text-fuchsia-600">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="e.g. 50"
+                  onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
+                  className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-xl px-4 py-3"
+                />
+              </FormControl>
+              <FormDescription className="text-zinc-500 text-xs">
+                Total units available across all variants
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="weight_kg"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-zinc-800 font-semibold text-sm">
+                Weight (kg)
+              </FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  placeholder="e.g. 1.5"
+                  className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-xl px-4 py-3"
+                />
+              </FormControl>
+              <FormDescription className="text-zinc-500 text-xs">
+                Physical weight in kilograms (used for shipping calculations)
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
 
       {/* ── Toggle flags ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -209,22 +237,22 @@ export function Step2Pricing() {
           control={form.control}
           name="requires_measurement"
           render={({ field }) => (
-            <FormItem className="flex items-center justify-between rounded-xl bg-white/5 border border-white/10 p-4">
+            <FormItem className="flex items-center justify-between rounded-xl bg-white border border-[#D9D9D9] p-4">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <FormLabel className="text-white/90 font-semibold cursor-pointer">
+                  <FormLabel className="text-zinc-800 font-semibold text-sm cursor-pointer">
                     Requires Measurement
                   </FormLabel>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <InfoIcon className="w-3.5 h-3.5 text-white/40 cursor-help" />
+                      <InfoIcon className="w-3.5 h-3.5 text-zinc-400 cursor-help" />
                     </TooltipTrigger>
-                    <TooltipContent className="bg-zinc-800 text-white/80 text-xs max-w-xs">
+                    <TooltipContent className="bg-zinc-800 text-white text-xs max-w-xs p-2 rounded-lg">
                       Enable this for tailored/made-to-measure items. Customers will be asked to provide body measurements during checkout.
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <FormDescription className="text-white/40 text-xs">
+                <FormDescription className="text-zinc-500 text-xs">
                   Made-to-measure / tailored items
                 </FormDescription>
               </div>
@@ -243,12 +271,12 @@ export function Step2Pricing() {
           control={form.control}
           name="is_customisable"
           render={({ field }) => (
-            <FormItem className="flex items-center justify-between rounded-xl bg-white/5 border border-white/10 p-4">
+            <FormItem className="flex items-center justify-between rounded-xl bg-white border border-[#D9D9D9] p-4">
               <div className="space-y-0.5">
-                <FormLabel className="text-white/90 font-semibold cursor-pointer">
+                <FormLabel className="text-zinc-800 font-semibold text-sm cursor-pointer">
                   Allow Customisation
                 </FormLabel>
-                <FormDescription className="text-white/40 text-xs">
+                <FormDescription className="text-zinc-500 text-xs">
                   Customer can add personalisation notes
                 </FormDescription>
               </div>
@@ -271,7 +299,7 @@ export function Step2Pricing() {
           name="shipping_amount"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-white/90 font-semibold">
+              <FormLabel className="text-zinc-800 font-semibold text-sm">
                 Flat Shipping Fee
               </FormLabel>
               <FormControl>
@@ -281,7 +309,7 @@ export function Step2Pricing() {
                   step="0.01"
                   min="0"
                   placeholder="Leave blank for free / calculated"
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-violet-500"
+                  className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-xl px-4 py-3"
                 />
               </FormControl>
               <FormMessage />
@@ -294,19 +322,19 @@ export function Step2Pricing() {
           name="courier_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-white/90 font-semibold">
+              <FormLabel className="text-zinc-800 font-semibold text-sm">
                 Preferred Courier
               </FormLabel>
               <Select onValueChange={field.onChange} value={field.value ?? ""}>
                 <FormControl>
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-violet-500">
+                  <SelectTrigger className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-violet-500 focus:border-violet-500 rounded-xl px-4 py-3">
                     <SelectValue placeholder="Platform default" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent className="bg-zinc-900 border-white/10">
-                  <SelectItem value="">— Platform default —</SelectItem>
+                <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208]">
+                  <SelectItem value="" className="hover:bg-zinc-50 focus:bg-zinc-50">— Platform default —</SelectItem>
                   {couriers.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
+                    <SelectItem key={c.id} value={c.id} className="hover:bg-zinc-50 focus:bg-zinc-50">
                       {c.name} — ₦{parseFloat(c.base_fee).toLocaleString()} ({c.estimated_days_min}–{c.estimated_days_max} days)
                     </SelectItem>
                   ))}

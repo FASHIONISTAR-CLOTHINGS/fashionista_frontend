@@ -27,7 +27,7 @@ export function BuilderStepper() {
       className="w-full"
     >
       {/* ── Progress bar ── */}
-      <div className="relative h-1.5 bg-white/10 rounded-full overflow-hidden mb-6">
+      <div className="relative h-1.5 bg-zinc-100 rounded-full overflow-hidden mb-6">
         <div
           className="absolute inset-y-0 left-0 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full transition-all duration-500 ease-out"
           style={{ width: `${progress}%` }}
@@ -55,18 +55,18 @@ export function BuilderStepper() {
                 className={cn(
                   "w-full flex flex-col items-center gap-1.5 px-2 py-2 rounded-xl transition-all duration-200",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500",
-                  isActive && "bg-white/10",
-                  isCompleted && "cursor-pointer hover:bg-white/5",
-                  !isCompleted && !isActive && "opacity-40 cursor-not-allowed",
+                  isActive && "bg-zinc-100",
+                  isCompleted && "cursor-pointer hover:bg-zinc-50",
+                  !isCompleted && !isActive && "opacity-50 cursor-not-allowed",
                 )}
               >
                 {/* Icon */}
                 <span
                   className={cn(
                     "flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all",
-                    isCompleted && "border-violet-500 bg-violet-500/20 text-violet-400",
-                    isActive && "border-fuchsia-400 bg-fuchsia-400/15 text-fuchsia-300",
-                    !isCompleted && !isActive && "border-white/20 text-white/40",
+                    isCompleted && "border-violet-500 bg-violet-50 text-violet-600",
+                    isActive && "border-fuchsia-500 bg-fuchsia-50 text-fuchsia-600",
+                    !isCompleted && !isActive && "border-zinc-200 text-zinc-400",
                   )}
                 >
                   {isCompleted ? (
@@ -80,9 +80,9 @@ export function BuilderStepper() {
                 <span
                   className={cn(
                     "text-[10px] font-medium text-center leading-tight",
-                    isActive && "text-white",
-                    isCompleted && "text-violet-300",
-                    !isCompleted && !isActive && "text-white/40",
+                    isActive && "text-zinc-900 font-bold",
+                    isCompleted && "text-violet-600",
+                    !isCompleted && !isActive && "text-zinc-400",
                   )}
                 >
                   {label}

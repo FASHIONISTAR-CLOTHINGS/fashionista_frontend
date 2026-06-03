@@ -244,19 +244,19 @@ export function Step3Gallery() {
           onClick={() => fileInputRef.current?.click()}
           className={cn(
             "relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed cursor-pointer",
-            "border-white/15 hover:border-violet-500/50 bg-white/3 hover:bg-white/5",
+            "border-zinc-200 hover:border-violet-500/50 bg-zinc-50 hover:bg-zinc-100",
             "transition-all duration-200 p-10 min-h-[200px]",
           )}
         >
           <div className="flex flex-col items-center gap-3 pointer-events-none">
             <div className="p-4 rounded-full bg-violet-500/10 border border-violet-500/20">
-              <ImagePlus className="w-8 h-8 text-violet-400" />
+              <ImagePlus className="w-8 h-8 text-violet-500" />
             </div>
             <div className="text-center">
-              <p className="text-white/80 font-semibold">
+              <p className="text-zinc-800 font-semibold">
                 Drag & drop or click to upload
               </p>
-              <p className="text-white/40 text-sm mt-1">
+              <p className="text-zinc-500 text-sm mt-1">
                 JPEG, PNG, WebP, AVIF, MP4 · Max {MAX_GALLERY} items · {gallery.length}/{MAX_GALLERY} used
               </p>
             </div>
@@ -278,8 +278,8 @@ export function Step3Gallery() {
           {activeUploads.map((u) => (
             <div key={u.tempId} className="flex items-center gap-3">
               <Loader2 className="w-4 h-4 animate-spin text-violet-400 flex-shrink-0" />
-              <Progress value={u.progress} className="flex-1 h-1.5 bg-white/10" />
-              <span className="text-xs text-white/60 w-10 text-right">{u.progress}%</span>
+              <Progress value={u.progress} className="flex-1 h-1.5 bg-zinc-100" />
+              <span className="text-xs text-zinc-500 w-10 text-right">{u.progress}%</span>
             </div>
           ))}
         </div>
@@ -298,7 +298,7 @@ export function Step3Gallery() {
       {/* ── Gallery grid ── */}
       {gallery.length > 0 && (
         <div>
-          <p className="text-sm text-white/50 mb-3">
+          <p className="text-sm text-zinc-500 mb-3">
             Drag to reorder · Star to set cover · First image is cover by default
           </p>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -314,7 +314,7 @@ export function Step3Gallery() {
                     "relative group rounded-xl overflow-hidden border-2 transition-all duration-200 aspect-square",
                     isCover
                       ? "border-fuchsia-500 ring-2 ring-fuchsia-500/30"
-                      : "border-white/10 hover:border-white/20",
+                      : "border-zinc-200 hover:border-zinc-300",
                   )}
                 >
                   {/* Thumbnail */}
