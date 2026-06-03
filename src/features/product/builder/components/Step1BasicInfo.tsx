@@ -224,13 +224,13 @@ export function Step1BasicInfo() {
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-zinc-800 font-semibold text-sm">
-              Product Title <span className="text-fuchsia-600">*</span>
+              Product Title <span className="text-[#FDA600]">*</span>
             </FormLabel>
             <FormControl>
               <Input
                 {...field}
                 placeholder="e.g. Premium Hand-Stitched Agbada Set"
-                className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-xl px-4 py-3"
+                className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
                 maxLength={255}
               />
             </FormControl>
@@ -256,7 +256,7 @@ export function Step1BasicInfo() {
                 {...field}
                 rows={2}
                 placeholder="Brief marketing copy shown on listing cards (max 500 chars)"
-                className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-xl resize-none px-4 py-3"
+                className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl resize-none px-4 py-3"
                 maxLength={500}
               />
             </FormControl>
@@ -275,14 +275,14 @@ export function Step1BasicInfo() {
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-zinc-800 font-semibold text-sm">
-              Full Description <span className="text-fuchsia-600">*</span>
+              Full Description <span className="text-[#FDA600]">*</span>
             </FormLabel>
             <FormControl>
               <Textarea
                 {...field}
                 rows={6}
                 placeholder="Detailed product description — fabric, craftsmanship, sizing, care instructions…"
-                className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-xl px-4 py-3"
+                className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
               />
             </FormControl>
             <FormDescription className="text-zinc-500 text-xs">
@@ -300,11 +300,11 @@ export function Step1BasicInfo() {
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-zinc-800 font-semibold text-sm">
-              Condition <span className="text-fuchsia-600">*</span>
+              Condition <span className="text-[#FDA600]">*</span>
             </FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
-                <SelectTrigger className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-violet-500 focus:border-violet-500 rounded-xl px-4 py-3">
+                <SelectTrigger className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3">
                   <SelectValue placeholder="Select condition" />
                 </SelectTrigger>
               </FormControl>
@@ -326,7 +326,7 @@ export function Step1BasicInfo() {
         render={() => (
           <FormItem className="space-y-3">
             <FormLabel className="text-zinc-800 font-semibold text-sm">
-              Categories <span className="text-fuchsia-600">*</span>
+              Categories <span className="text-[#FDA600]">*</span>
             </FormLabel>
             <FormDescription className="text-zinc-500 text-xs">
               Select 1 to 15 categories your product specializes in. Powers search, catalog filtering, and AI matching.
@@ -430,45 +430,7 @@ export function Step1BasicInfo() {
         )}
       />
 
-        <FormField
-          control={form.control}
-          name="sub_category_ids"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-white/90 font-semibold">
-                Sub-Category
-              </FormLabel>
-              <Select
-                onValueChange={(value) => field.onChange(value ? [value] : [])}
-                value={selectedSubCategoryIds[0] ?? ""}
-                disabled={!selectedPrimaryCategoryId || subsLoading}
-              >
-                <FormControl>
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-violet-500 disabled:opacity-40">
-                    <SelectValue
-                      placeholder={
-                        !selectedPrimaryCategoryId
-                          ? "Select a category first"
-                          : subsLoading
-                            ? "Loading…"
-                            : "Select sub-category"
-                      }
-                    />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="bg-zinc-900 border-white/10 max-h-60 overflow-y-auto">
-                  {subCategories.map((sub) => (
-                    <SelectItem key={sub.id} value={sub.id}>
-                      {sub.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+
 
       {/* ── Tags ── */}
       <FormField
@@ -490,7 +452,7 @@ export function Step1BasicInfo() {
                     <Badge
                       key={tagId}
                       variant="secondary"
-                      className="bg-violet-50 text-violet-700 border-violet-200 pl-3 pr-1 gap-1"
+                      className="bg-[#FFF6E3] text-[#7A6B44] border-[#FDA600]/25 pl-3 pr-1 gap-1"
                     >
                       {tag?.name ?? tagId}
                       <Button
@@ -498,7 +460,7 @@ export function Step1BasicInfo() {
                         variant="ghost"
                         size="icon"
                         onClick={() => removeTag(tagId)}
-                        className="h-4 w-4 p-0 text-violet-500 hover:text-red-600 hover:bg-transparent"
+                        className="h-4 w-4 p-0 text-[#01454A] hover:text-red-600 hover:bg-transparent"
                       >
                         <X className="h-3 w-3" />
                       </Button>
@@ -514,7 +476,7 @@ export function Step1BasicInfo() {
               value=""
               disabled={selectedTagIds.length >= 10}
             >
-              <SelectTrigger className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-violet-500 focus:border-violet-500 rounded-xl px-4 py-3">
+              <SelectTrigger className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3">
                 <SelectValue
                   placeholder={
                     selectedTagIds.length >= 10

@@ -6,3 +6,5 @@
  */
 
 export { useBuilderContext } from "../components/ProductBuilderProvider";
+export { useDraftStore } from "./draftStore";
+export type { DraftState } from "./draftStore";

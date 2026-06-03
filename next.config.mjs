@@ -218,6 +218,7 @@ const nextConfig = {
     { source: "/client", destination: "/client/dashboard", permanent: true },
     { source: "/wallet", destination: "/client/dashboard/wallet", permanent: true },
     { source: "/orders", destination: "/client/dashboard/orders", permanent: true },
+    { source: "/vendor-dashboard/product/create", destination: "/vendor/products", permanent: true },
   ],
   rewrites: async () => ({
     beforeFiles: [
