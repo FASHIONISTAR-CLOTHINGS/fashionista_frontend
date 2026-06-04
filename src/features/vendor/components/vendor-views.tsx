@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -124,8 +124,8 @@ import {
 const BV = {
   gold:     "#FDA600",
   goldD:    "#E8960A",
-  green:    "#1a2e14",
-  greenM:   "#2d5016",
+  green:    "#01454A",
+  greenM:   "#01454A",
   cream:    "#F8F5ED",
   creamB:   "#ECE6D6",
   muted:    "#7A6B44",
@@ -142,7 +142,7 @@ function Badge({
 }) {
   const map = {
     gold:  "bg-[#FFF6E3] text-[#B37700] border border-[#FDA600]/30",
-    green: "bg-[#E8F5E0] text-[#2D5016] border border-[#2D5016]/20",
+    green: "bg-[#E6F4F5] text-[#01454A] border border-[#01454A]/20",
     red:   "bg-[#FFF0F0] text-[#8A3030] border border-red-200",
     blue:  "bg-[#EDF4FF] text-[#1A4B8C] border border-blue-200",
     gray:  "bg-[#F5F5F5] text-[#5A6465] border border-[#D9D9D9]",
@@ -180,7 +180,7 @@ function KpiCard({
 }) {
   const accentMap = {
     gold:  { bg: "rgba(253,166,0,0.10)",  icon: "#FDA600", orb: "rgba(253,166,0,0.06)"  },
-    green: { bg: "rgba(45,80,22,0.08)",   icon: "#2D5016", orb: "rgba(45,80,22,0.05)"   },
+    green: { bg: "rgba(1,69,74,0.08)",   icon: "#01454A", orb: "rgba(1,69,74,0.05)"   },
     blue:  { bg: "rgba(26,75,140,0.08)",  icon: "#1A4B8C", orb: "rgba(26,75,140,0.05)"  },
     red:   { bg: "rgba(220,38,38,0.08)",  icon: "#DC2626", orb: "rgba(220,38,38,0.05)"  },
   };
@@ -206,7 +206,7 @@ function KpiCard({
         )}
       </div>
       {trend !== undefined && (
-        <div className={`mt-3 flex items-center gap-1.5 text-[11px] font-bold ${trend >= 0 ? "text-[#2D5016]" : "text-red-500"}`}>
+        <div className={`mt-3 flex items-center gap-1.5 text-[11px] font-bold ${trend >= 0 ? "text-[#01454A]" : "text-red-500"}`}>
           <TrendingUp className={`h-3 w-3 ${trend < 0 ? "rotate-180" : ""}`} />
           <span>{trend >= 0 ? "+" : ""}{trend.toFixed(1)}% vs prior period</span>
         </div>
@@ -595,8 +595,8 @@ export function VendorSetupView() {
       {/* Steps tracker */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {steps.map(({ key, label, done }) => (
-          <div key={key} className={`rounded-2xl border p-4 transition-all ${done ? "border-[#2D5016]/30 bg-[#E8F5E0]" : "border-[#ECE6D6] bg-white"}`}>
-            <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${done ? "bg-[#2D5016] text-white" : "bg-[#ECE6D6] text-[#7A6B44]"}`}>
+          <div key={key} className={`rounded-2xl border p-4 transition-all ${done ? "border-[#01454A]/30 bg-[#E6F4F5]" : "border-[#ECE6D6] bg-white"}`}>
+            <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${done ? "bg-[#01454A] text-white" : "bg-[#ECE6D6] text-[#7A6B44]"}`}>
               {done ? <Check className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
             </div>
             <p className="mt-2 text-xs font-semibold text-[#1A1208]">{label}</p>
@@ -826,7 +826,7 @@ export function VendorDashboardView() {
       <div
         className="relative overflow-hidden rounded-3xl text-white shadow-2xl"
         style={{
-          background: "linear-gradient(135deg, #0f1d0b 0%, #1a2e14 38%, #2D1A00 68%, #1a1208 100%)",
+          background: "linear-gradient(135deg, #0f1d0b 0%, #01454A 38%, #2D1A00 68%, #1a1208 100%)",
           boxShadow: "0 20px 60px rgba(15,29,11,0.4), 0 8px 24px rgba(253,166,0,0.08)",
         }}
       >
@@ -928,7 +928,7 @@ export function VendorDashboardView() {
         <div
           className="flex items-center justify-between gap-4 rounded-2xl border px-5 py-4"
           style={{
-            background: "linear-gradient(135deg, #1a2e14 0%, #0f1d0b 100%)",
+            background: "linear-gradient(135deg, #01454A 0%, #0f1d0b 100%)",
             borderColor: "rgba(253,166,0,0.2)",
             boxShadow: "0 2px 16px rgba(253,166,0,0.08)",
           }}
@@ -1208,7 +1208,7 @@ function VendorTopProductsWidget() {
                 <p className="text-sm font-semibold text-[#1A1208] truncate">{p.title}</p>
                 <p className="text-xs text-[#7A6B44]">{(p.total_qty ?? 0)} sold · ₦{Number(p.price).toLocaleString()}</p>
               </div>
-              <div className="text-xs font-semibold text-[#2D5016] flex items-center gap-1">
+              <div className="text-xs font-semibold text-[#01454A] flex items-center gap-1">
                 <Package className="h-3 w-3" /> {p.stock_qty}
               </div>
             </div>
@@ -1243,7 +1243,7 @@ function VendorLowStockWidget() {
       <div className="p-5 space-y-3">
         {lowStock.length === 0 ? (
           <div className="py-8 text-center">
-            <PackageCheck className="mx-auto mb-2 h-8 w-8 text-[#2D5016]/40" />
+            <PackageCheck className="mx-auto mb-2 h-8 w-8 text-[#01454A]/40" />
             <p className="text-xs text-[#7A6B44]">All products are well stocked.</p>
           </div>
         ) : (
@@ -1454,14 +1454,14 @@ export function VendorOrderDetailView({ orderOid }: { orderOid: string }) {
                     <div className="flex w-full items-center">
                       <div className={["flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 font-bold text-xs transition-all",
                         active ? "border-[#FDA600] bg-[#FDA600] text-black shadow-md shadow-[#FDA600]/30" :
-                        done   ? "border-[#2D5016] bg-[#2D5016] text-white" :
+                        done   ? "border-[#01454A] bg-[#01454A] text-white" :
                                  "border-[#D9D9D9] bg-white text-[#BDBDBD]",
                       ].join(" ")}>
                         {done && !active ? <Check className="h-4 w-4" /> : <span>{idx + 1}</span>}
                       </div>
-                      {!isLast && <div className={"flex-1 h-0.5 mx-1 rounded-full " + (idx < currentStepIdx ? "bg-[#2D5016]" : "bg-[#ECE6D6]")} />}
+                      {!isLast && <div className={"flex-1 h-0.5 mx-1 rounded-full " + (idx < currentStepIdx ? "bg-[#01454A]" : "bg-[#ECE6D6]")} />}
                     </div>
-                    <p className={"mt-2 text-xs font-semibold text-center " + (active ? "text-[#FDA600]" : done ? "text-[#2D5016]" : "text-[#BDBDBD]")}>
+                    <p className={"mt-2 text-xs font-semibold text-center " + (active ? "text-[#FDA600]" : done ? "text-[#01454A]" : "text-[#BDBDBD]")}>
                       {step.label}
                     </p>
                   </div>
@@ -1849,7 +1849,7 @@ export function VendorProductCatalogView() {
 }
 
 // ── Analytics View ────────────────────────────────────────────────────────────
-const PIE_COLORS = ["#FDA600", "#01454A", "#2D5016", "#7A6B44", "#E8960A", "#1a2e14"];
+const PIE_COLORS = ["#FDA600", "#01454A", "#01454A", "#7A6B44", "#E8960A", "#01454A"];
 
 export function VendorAnalyticsView() {
   const { data: summary, isLoading, isError } = useVendorAnalyticsSummary();
@@ -1927,8 +1927,8 @@ export function VendorAnalyticsView() {
         <div className="rounded-3xl bg-white border border-[#ECE6D6] p-7 shadow-sm">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2D5016]/10">
-                <ShoppingCart className="h-4 w-4 text-[#2D5016]" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#01454A]/10">
+                <ShoppingCart className="h-4 w-4 text-[#01454A]" />
               </div>
               <h2 className="text-base font-bold text-[#1A1208]">Monthly Orders</h2>
             </div>
@@ -2196,7 +2196,7 @@ export function VendorWalletView() {
       <div
         className="relative overflow-hidden rounded-3xl text-white"
         style={{
-          background: "linear-gradient(135deg, #0f1d0b 0%, #1a2e14 50%, #0a2010 100%)",
+          background: "linear-gradient(135deg, #0f1d0b 0%, #01454A 50%, #0a2010 100%)",
           boxShadow: "0 20px 60px rgba(15,29,11,0.35), 0 4px 20px rgba(253,166,0,0.08)",
         }}
       >
@@ -2504,7 +2504,7 @@ export function VendorKycView() {
               <div key={idx} className="relative flex flex-col items-start p-4 rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] transition-all hover:shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className={["flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all",
-                    isCompleted ? "border-[#2D5016] bg-[#2D5016] text-white" : "border-[#FDA600]/40 bg-[#FFF6E3] text-[#B37700]",
+                    isCompleted ? "border-[#01454A] bg-[#01454A] text-white" : "border-[#FDA600]/40 bg-[#FFF6E3] text-[#B37700]",
                   ].join(" ")}>
                     {isCompleted ? <Check className="h-4 w-4" /> : <span>{idx + 1}</span>}
                   </div>
@@ -2520,14 +2520,14 @@ export function VendorKycView() {
 
       {/* Main compliance status card */}
       {kycStatus === "approved" ? (
-        <div className="rounded-3xl border border-[#2D5016]/20 bg-[#E8F5E0] p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="rounded-3xl border border-[#01454A]/20 bg-[#E6F4F5] p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#2D5016] text-white">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#01454A] text-white">
               <BadgeCheck className="h-6 w-6" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-[#2D5016]">Store KYC Approved ✓</h3>
-              <p className="mt-1 text-sm max-w-xl leading-relaxed text-[#2D5016]/80">
+              <h3 className="text-lg font-bold text-[#01454A]">Store KYC Approved ✓</h3>
+              <p className="mt-1 text-sm max-w-xl leading-relaxed text-[#01454A]/80">
                 Congratulations! Your store is fully verified. You have full withdrawal privileges and featured placement on the Fashionistar marketplace.
               </p>
             </div>
@@ -2711,7 +2711,7 @@ export function VendorKycView() {
                       </div>
                     </div>
                     <span className={["rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider",
-                      doc.provider_verified ? "bg-[#E8F5E0] text-[#2D5016]" : "bg-[#FFF6E3] text-[#B37700]"
+                      doc.provider_verified ? "bg-[#E6F4F5] text-[#01454A]" : "bg-[#FFF6E3] text-[#B37700]"
                     ].join(" ")}>
                       {doc.provider_verified ? "Verified" : "Under review"}
                     </span>
@@ -3305,3 +3305,4 @@ export function VendorOverviewTiles() {
     </div>
   );
 }
+

@@ -39,9 +39,9 @@ import { useConversations } from "@/features/chat/hooks/use-chat";
 
 // ── Brand Palette ─────────────────────────────────────────────────────────────
 const C = {
-  green:    "#0f1d0b",
-  greenMid: "#1a2e14",
-  greenEnd: "#0a120a",
+  green:    "#01272C",
+  greenMid: "#01454A",
+  greenEnd: "#012028",
   gold:     "#FDA600",
   goldDark: "#E8960A",
   cream:    "#F8F5ED",
@@ -222,7 +222,7 @@ function VendorSidebar({
               {/* Live dot */}
               <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-[#0f1d0b]" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-[#01272C]" />
               </span>
             </div>
 
@@ -332,7 +332,7 @@ function VendorSidebar({
                         "focus-visible:ring-2 focus-visible:ring-[#FDA600]/60",
                         collapsed ? "justify-center" : "gap-3",
                         active
-                          ? "text-[#0f1d0b] font-semibold shadow-lg"
+                          ? "text-[#01272C] font-semibold shadow-lg"
                           : "text-white/60 hover:bg-white/8 hover:text-white",
                       ].join(" ")}
                       style={active ? {
@@ -352,7 +352,7 @@ function VendorSidebar({
                           className={[
                             "h-4 w-4 transition-transform duration-200",
                             "group-hover:scale-110",
-                            active ? "text-[#0f1d0b]" : "text-white/60 group-hover:text-white",
+                            active ? "text-[#01272C]" : "text-white/60 group-hover:text-white",
                           ].join(" ")}
                           aria-hidden="true"
                         />
@@ -368,7 +368,7 @@ function VendorSidebar({
                         <>
                           <span className="flex-1 truncate">{label}</span>
                           {active && (
-                            <ChevronRight className="h-3 w-3 text-[#0f1d0b]/50" aria-hidden="true" />
+                            <ChevronRight className="h-3 w-3 text-[#01272C]/50" aria-hidden="true" />
                           )}
                         </>
                       )}
