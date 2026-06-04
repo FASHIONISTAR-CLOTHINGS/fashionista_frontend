@@ -2,10 +2,11 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
-    '--build-arg', 'NEXT_PUBLIC_BACKEND_URL=https://fashionistar-backend-259415881346.europe-west1.run.app',
-    '--build-arg', 'NEXT_PUBLIC_APP_URL=https://fashionistar-frontend-259415881346.europe-west1.run.app',
+    '--build-arg', 'NEXT_PUBLIC_BACKEND_URL=https://fashionistar-backend-964702203189.europe-west1.run.app',
+    '--build-arg', 'NEXT_PUBLIC_APP_URL=https://fashionistar-frontend-964702203189.europe-west1.run.app',
     '-t', 'europe-west1-docker.pkg.dev/fashionistar-498122/fashionistar-repo/frontend:latest',
     '.'
   ]
 images:
 - 'europe-west1-docker.pkg.dev/fashionistar-498122/fashionistar-repo/frontend:latest'
+
