@@ -126,6 +126,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
+    unoptimized: true,
     remotePatterns: imageRemotePatterns,
     formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -229,6 +230,10 @@ const nextConfig = {
       {
         source: "/api/v1/ninja/:path*",
         destination: `${backendUrl}/api/v1/ninja/:path*`,
+      },
+      {
+        source: "/media/:path*",
+        destination: `${backendUrl}/media/:path*`,
       },
     ],
   }),

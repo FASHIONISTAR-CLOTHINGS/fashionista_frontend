@@ -21,7 +21,6 @@ test-evidence/
 test-results/
 temp_git/
 tests/playwright-report/
-*.png
 *.mp4
 *.zip
 *.tar.gz

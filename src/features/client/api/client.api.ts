@@ -205,16 +205,23 @@ export const clientApi = {
   // ── Notifications ──────────────────────────────────────────────────────────
   async getNotifications(unreadOnly = false): Promise<ClientNotification[]> {
     const query = unreadOnly ? "?unread=true" : "";
-    const data = await apiAsync.get(`client/notifications/${query}`).json();
-    return unwrapData<ClientNotification[]>(data);
+    const { data } = await apiSync.get<any[]>(`v1/notifications/${query}`);
+    return (data ?? []).map((n) => ({
+      id: n.id,
+      type: n.notification_type,
+      title: n.title,
+      message: n.body,
+      is_read: n.is_read,
+      created_at: n.created_at,
+    }));
   },
 
   async markNotificationRead(id: string): Promise<void> {
-    await apiAsync.post(`client/notifications/${id}/read/`).json();
+    await apiSync.post(`v1/notifications/mark-read/${id}/`);
   },
 
   async markAllNotificationsRead(): Promise<void> {
-    await apiAsync.post("client/notifications/mark-all-read/").json();
+    await apiSync.post("v1/notifications/mark-all-read/");
   },
 
   // ── Reference Data ─────────────────────────────────────────────────────────

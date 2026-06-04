@@ -417,9 +417,9 @@ function CreateCustomOrderModal({ onClose }: { onClose: () => void }) {
 }
 
 // ── Main Custom Orders View ────────────────────────────────────────────────────
-export function ClientCustomOrderView() {
+export function ClientCustomOrderView({ defaultShowCreate = false }: { defaultShowCreate?: boolean }) {
   const [statusFilter, setStatusFilter] = useState("");
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreate, setShowCreate] = useState(defaultShowCreate);
   const queryClient = useQueryClient();
 
   const { data: customOrders = [], isLoading } = useQuery({
@@ -544,6 +544,7 @@ export function ClientCustomOrderDetailView({ orderId }: { orderId: string }) {
   const { data: order, isLoading, isError } = useQuery({
     queryKey: ["client-custom-orders", "detail", orderId],
     queryFn: () => clientApi.getCustomOrder(orderId),
+    enabled: !!orderId && orderId !== "new",
     staleTime: 30_000,
   });
 
