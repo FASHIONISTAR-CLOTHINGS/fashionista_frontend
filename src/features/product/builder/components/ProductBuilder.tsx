@@ -57,18 +57,18 @@ function BuilderNavigation() {
   const renderSyncStatus = () => {
     switch (syncStatus) {
       case "saving":
-        return <span className="text-zinc-400 text-xs animate-pulse">Syncing...</span>;
+        return <span className="text-[#7A6B44] text-xs animate-pulse">Syncing…</span>;
       case "synced":
-        return <span className="text-emerald-600 text-xs font-semibold">Synced to cloud</span>;
+        return <span className="text-[#01454A] text-xs font-semibold">✓ Synced to cloud</span>;
       case "failed":
         return <span className="text-red-500 text-xs font-semibold">Sync failed</span>;
       default:
-        return <span className="text-zinc-400 text-xs">Saved locally</span>;
+        return <span className="text-[#7A6B44] text-xs">Saved locally</span>;
     }
   };
 
   return (
-    <div className="flex items-center justify-between pt-6 border-t border-zinc-200 mt-8">
+    <div className="flex items-center justify-between pt-6 border-t border-[#ECE6D6] mt-8">
       {/* ── Back ── */}
       <Button
         type="button"
@@ -76,7 +76,7 @@ function BuilderNavigation() {
         onClick={prevStep}
         disabled={isFirst || isSubmitting}
         className={cn(
-          "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 gap-2",
+          "text-[#7A6B44] hover:text-[#1A1208] hover:bg-[#F8F5ED] border border-[#ECE6D6] gap-2",
           isFirst && "invisible",
         )}
       >
@@ -86,7 +86,7 @@ function BuilderNavigation() {
 
       {/* ── Step indicator (center) ── */}
       <div className="flex flex-col items-center select-none">
-        <span className="text-zinc-400 text-sm">
+        <span className="text-[#7A6B44] text-sm font-medium">
           Step {currentStep} of {BUILDER_STEPS.length}
         </span>
         {renderSyncStatus()}
@@ -99,17 +99,17 @@ function BuilderNavigation() {
           disabled={isSubmitting}
           className={cn(
             "gap-2 px-6 font-semibold",
-            publishIntent === "pending"
-              ? "bg-[#01454A] hover:bg-[#01454A]/90 text-white shadow-lg shadow-[#01454A]/25"
-              : "bg-[#7A6B44] hover:bg-[#7A6B44]/90 text-white",
+            publishIntent === "published"
+              ? "bg-[#FDA600] hover:bg-[#E8960A] text-black shadow-lg shadow-[#FDA600]/30"
+              : "bg-[#01454A] hover:bg-[#01454A]/90 text-white shadow-lg shadow-[#01454A]/25",
           )}
         >
           {isSubmitting ? (
             <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
-          ) : publishIntent === "pending" ? (
-            <><SendHorizontal className="w-4 h-4" /> Submit for Review</>
+          ) : publishIntent === "published" ? (
+            <><SendHorizontal className="w-4 h-4" /> Publish Product</>
           ) : (
-            <><Save className="w-4 h-4" /> Save Draft</>
+            <><Save className="w-4 h-4" /> Save as Draft</>
           )}
         </Button>
       ) : (
@@ -117,7 +117,7 @@ function BuilderNavigation() {
           type="button"
           onClick={nextStep}
           disabled={isSubmitting}
-          className="gap-2 px-6 bg-[#01454A] hover:bg-[#01454A]/90 text-white font-semibold shadow-lg shadow-[#01454A]/20"
+          className="gap-2 px-6 bg-[#FDA600] hover:bg-[#E8960A] text-black font-semibold shadow-lg shadow-[#FDA600]/25"
         >
           Continue
           <ChevronRight className="w-4 h-4" />
@@ -150,11 +150,11 @@ export function ProductBuilder() {
       <BuilderStepper />
 
       {/* ── Step header ── */}
-      <div className="pb-2 border-b border-zinc-200">
-        <h2 className="text-zinc-900 font-bold text-xl">
+      <div className="pb-3 border-b border-[#ECE6D6]">
+        <h2 className="text-[#1A1208] font-bold text-xl">
           {stepMeta.label}
         </h2>
-        <p className="text-zinc-500 text-sm mt-0.5">{stepMeta.description}</p>
+        <p className="text-[#7A6B44] text-sm mt-0.5">{stepMeta.description}</p>
       </div>
 
       {/* ── Active step content ── */}

@@ -231,7 +231,8 @@ export const VendorProductListItemSchema = z.object({
   title:          z.string(),
   price:          z.coerce.number(),
   stock_qty:      z.coerce.number(),
-  status:         z.enum(["published", "draft", "disabled", "in-review"]),
+  // Backend status enum: draft | pending | published | archived | rejected
+  status:         z.enum(["draft", "pending", "published", "archived", "rejected"]),
   category__name: z.string().optional(),
   date:           z.string(),
 });
@@ -243,15 +244,35 @@ export const VendorProductListSchema = z.object({
 });
 
 // ── Product Create / Update ───────────────────────────────────────────────────
+/**
+ * VendorProductCreateSchema — aligned with backend ProductWriteSerializer.
+ * Source: apps/product/serializers/product_serializers.py
+ */
 export const VendorProductCreateSchema = z.object({
-  title:       z.string().min(1, "Product title is required"),
-  description: z.string().min(1, "Description is required"),
-  price:       z.number().positive("Price must be positive"),
-  old_price:   z.number().optional(),
-  category:    z.string().min(1, "Category is required"),
-  tags:        z.string().optional(),
-  stock_qty:   z.number().int().min(0).optional(),
-  status:      z.enum(["published", "draft", "disabled", "in-review"]).optional().default("draft"),
+  title:               z.string().min(1, "Product title is required"),
+  description:         z.string().min(1, "Description is required"),
+  short_description:   z.string().max(500).optional(),
+  price:               z.string().regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid decimal string"),
+  old_price:           z.string().regex(/^\d+(\.\d{1,2})?$/).optional().nullable(),
+  currency:            z.string().default("NGN"),
+  shipping_amount:     z.string().optional(),
+  stock_qty:           z.number().int().min(0),
+  max_stock:           z.number().int().nullable().optional(),
+  // Relations — arrays of UUID strings matching PrimaryKeyRelatedField(many=True)
+  category_ids:        z.array(z.string().uuid()).min(1, "At least one category is required").max(15),
+  sub_category_ids:    z.array(z.string().uuid()).optional(),
+  size_ids:            z.array(z.string().uuid()).optional(),
+  color_ids:           z.array(z.string().uuid()).optional(),
+  tag_ids:             z.array(z.string().uuid()).optional(),
+  // Flags
+  requires_measurement: z.boolean().optional().default(false),
+  is_customisable:      z.boolean().optional().default(false),
+  hot_deal:             z.boolean().optional().default(false),
+  digital:              z.boolean().optional().default(false),
+  featured:             z.boolean().optional().default(false),
+  commission_rate:      z.string().optional(),
+  status:               z.enum(["draft", "pending", "published", "archived", "rejected"]).optional().default("draft"),
+  idempotency_key:      z.string().uuid().optional(),
 });
 
 export const VendorProductUpdateSchema = VendorProductCreateSchema.partial();
