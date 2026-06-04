@@ -219,7 +219,7 @@ export const clientApi = {
 
   // ── Reference Data ─────────────────────────────────────────────────────────
   async getCountries(): Promise<Country[]> {
-    const data = await apiAsync.get("common/countries/").json();
+    const data = await apiAsync.get("common/reference/countries/").json();
     return unwrapData<Country[]>(data);
   },
 
