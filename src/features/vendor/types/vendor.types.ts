@@ -11,7 +11,16 @@ export type VendorOnboardingStatus =
   | "active"
   | "restricted";
 
-export type ProductStatus   = "published" | "draft" | "disabled" | "in-review";
+/**
+ * ProductStatus mirrors the backend Product.ProductStatus choices exactly.
+ * Backend model: apps/product/models.py
+ *   DRAFT      = "draft"
+ *   PENDING    = "pending"   (formerly "in-review" in legacy frontend)
+ *   PUBLISHED  = "published"
+ *   ARCHIVED   = "archived"  (formerly "disabled" in legacy frontend)
+ *   REJECTED   = "rejected"
+ */
+export type ProductStatus   = "draft" | "pending" | "published" | "archived" | "rejected";
 export type OrderStatus     = "Pending" | "Processing" | "Shipped" | "Fulfilled" | "Cancelled";
 export type VendorOrderStatus = OrderStatus;
 export type PaymentStatus   = "paid" | "pending" | "failed";
@@ -191,19 +200,44 @@ export interface VendorProductListItem {
   date:           string;
 }
 
+/**
+ * VendorProductCreatePayload — aligned with ProductWriteSerializer.
+ * Source of truth: apps/product/serializers/product_serializers.py
+ *
+ * Key differences from legacy shape:
+ *   - category_ids: string[]  (was: category: string — singular)
+ *   - tag_ids: string[]       (was: tags: string — CSV)
+ *   - size_ids: string[]      (was: sizes: {name,price}[] — embedded objects)
+ *   - color_ids: string[]     (was: colors: {name,hex}[] — embedded objects)
+ *   - price: string           (decimal string, not number, to match DRF DecimalField)
+ *   - shipping_amount: string (decimal string)
+ *   - variants: handled separately via ProductBuilderProvider
+ */
 export interface VendorProductCreatePayload {
-  title:         string;
-  description:   string;
-  price:         number;
-  old_price?:    number;
-  category:      string;
-  tags?:         string;
-  stock_qty?:    number;
-  status?:       ProductStatus;
-  // nested (multipart keys built by FormData)
-  specifications?: { title: string; content: string }[];
-  colors?:         { name: string; color_code: string; image?: string }[];
-  sizes?:          { name: string; price: number }[];
+  title:                 string;
+  description:           string;
+  short_description?:    string;
+  price:                 string;         // Decimal string e.g. "25000.00"
+  old_price?:            string | null;  // Decimal string or null
+  currency?:             string;         // default "NGN"
+  shipping_amount?:      string;         // Decimal string
+  stock_qty:             number;
+  max_stock?:            number | null;
+  // Relations — all sent as arrays of UUID strings (PrimaryKeyRelatedField many=True)
+  category_ids:          string[];       // 1–15 category IDs, min 1 required
+  sub_category_ids?:     string[];       // optional sub-category IDs
+  size_ids?:             string[];       // pre-existing Size object IDs
+  color_ids?:            string[];       // pre-existing Color object IDs
+  tag_ids?:              string[];       // pre-existing Tag object IDs
+  // Flags
+  requires_measurement?: boolean;
+  is_customisable?:      boolean;
+  hot_deal?:             boolean;
+  digital?:              boolean;
+  featured?:             boolean;
+  commission_rate?:      string;         // Decimal string
+  status?:               ProductStatus;
+  idempotency_key?:      string;         // UUID v4
 }
 
 export type VendorProductUpdatePayload = Partial<VendorProductCreatePayload>;

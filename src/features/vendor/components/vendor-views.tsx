@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -118,6 +118,7 @@ import {
 import {
   useVendorTopSellingProducts,
 } from "@/features/vendor/hooks/use-vendor-dashboard";
+import { useDraftStore } from "@/features/product/builder/store";
 
 
 // ── Brand Palette (local) ────────────────────────────────────────────────────
@@ -1631,6 +1632,47 @@ export function VendorOrderDetailView({ orderOid }: { orderOid: string }) {
 
 
 // ── Product Composer ──────────────────────────────────────────────────────────
+// ── Resume Draft Banner ─────────────────────────────────────────────────────────────
+function ResumeDraftBanner() {
+  const draftKey   = useDraftStore((s) => s.draft_key);
+  const syncStatus = useDraftStore((s) => s.syncStatus);
+  const step       = useDraftStore((s) => s.current_step);
+  const resetStore = useDraftStore((s) => s.resetStore);
+
+  if (!draftKey || syncStatus === "idle") return null;
+
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-2xl border border-[#01454A]/30 bg-[#E6F4F5] px-6 py-4">
+      <div className="flex items-start gap-3">
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#01454A] text-white">
+          <RefreshCw className="h-4 w-4" />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-[#01454A]">Unsaved product draft detected</p>
+          <p className="mt-0.5 text-xs text-[#01454A]/70">
+            You started building a product (step {step ?? 1} of 8). Resume where you left off or discard.
+          </p>
+        </div>
+      </div>
+      <div className="flex gap-2 flex-shrink-0">
+        <button
+          type="button"
+          onClick={() => { resetStore(); }}
+          className="rounded-xl border border-[#01454A]/30 px-4 py-2 text-xs font-semibold text-[#01454A] hover:bg-[#01454A]/10 transition"
+        >
+          Discard draft
+        </button>
+        <Link
+          href="/vendor/products"
+          className="rounded-xl bg-[#01454A] px-4 py-2 text-xs font-bold text-white hover:bg-[#01454A]/90 transition"
+        >
+          Resume building
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export function VendorProductComposerView() {
   const router   = useRouter();
   const qc       = useQueryClient();
@@ -1683,13 +1725,17 @@ export function VendorProductComposerView() {
       await updateMutation.mutateAsync(sharedPayload);
     }
 
-    if (values.publish_intent === "pending" && savedSlug) await publishProduct(savedSlug);
+    // publish_intent === "published" triggers a publish API call after create/update
+    if (values.publish_intent === "published" && savedSlug) await publishProduct(savedSlug);
     void qc.invalidateQueries({ queryKey: productKeys.lists() });
     router.push("/vendor/products/catalog");
   };
 
   return (
     <div className="space-y-6">
+      {/* Resume Draft banner — shown if a draft session is active */}
+      <ResumeDraftBanner />
+
       <div className="flex items-center justify-between rounded-2xl bg-white border border-[#ECE6D6] px-8 py-6 shadow-sm">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44]">Product Studio</p>
