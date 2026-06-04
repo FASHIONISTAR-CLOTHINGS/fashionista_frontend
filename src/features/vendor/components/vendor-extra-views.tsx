@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * vendor-extra-views.tsx — Phase 7-9 Rewire (2026-Enterprise)
@@ -10,7 +10,7 @@
  *
  * Design Rules:
  *   - Consumes every existing shared primitive before creating anything new
- *   - Brand palette: Forest Green #1a2e14, Gold #FDA600, Cream #F8F5ED
+ *   - Brand palette: Forest Green #01454A, Gold #FDA600, Cream #F8F5ED
  *   - Zero hardcoded demo data — all from real API hooks
  */
 
@@ -80,8 +80,8 @@ import type { Conversation, Message } from "@/features/chat";
 
 import { useAuthStore, selectToken } from "@/features/auth/store/auth.store";
 const C = {
-  green:  "#1a2e14",
-  greenM: "#2d5016",
+  green:  "#01454A",
+  greenM: "#01454A",
   gold:   "#FDA600",
   goldD:  "#E8960A",
   cream:  "#F8F5ED",
@@ -155,8 +155,8 @@ function EmptyState({ icon: Icon, title, body }: { icon: React.ElementType; titl
 // ══════════════════════════════════════════════════════════════════════════════
 
 const NOTIF_TYPE_MAP: Record<string, { Icon: React.ElementType; color: string; bg: string }> = {
-  order_placed:   { Icon: ShoppingCart, color: "#1a2e14", bg: "#E8F5E0" },
-  order_shipped:  { Icon: Package,      color: "#1a2e14", bg: "#E8F5E0" },
+  order_placed:   { Icon: ShoppingCart, color: "#01454A", bg: "#E6F4F5" },
+  order_shipped:  { Icon: Package,      color: "#01454A", bg: "#E6F4F5" },
   payout:         { Icon: Wallet,       color: "#7c4700", bg: "#FFF3D1" },
   review:         { Icon: Star,         color: "#6b46c1", bg: "#EDE9FE" },
   kyc:            { Icon: Shield,       color: "#1d4ed8", bg: "#EFF6FF" },
@@ -941,14 +941,14 @@ export function VendorChatView() {
                             <div className="min-w-0">
                               <span className="text-[9px] font-bold uppercase tracking-widest text-[#FDA600]">Catalog Share</span>
                               <h4 className="text-xs font-bold text-[#1A1208] truncate mt-0.5">{attachedProduct.title}</h4>
-                              <p className="text-xs font-semibold text-[#1a2e14] mt-1">₦{Number(attachedProduct.price).toLocaleString("en-NG")}</p>
+                              <p className="text-xs font-semibold text-[#01454A] mt-1">₦{Number(attachedProduct.price).toLocaleString("en-NG")}</p>
                             </div>
                             <button
                               type="button"
                               onClick={() => {
                                 toast.success(`Opening customization flow for ${attachedProduct.title}`);
                               }}
-                              className="mt-1 w-full rounded-lg bg-[#1a2e14] text-white py-1.5 text-[10px] font-bold hover:bg-[#2d5016] transition cursor-pointer"
+                              className="mt-1 w-full rounded-lg bg-[#01454A] text-white py-1.5 text-[10px] font-bold hover:bg-[#01454A] transition cursor-pointer"
                             >
                               Customize Order
                             </button>
@@ -1066,3 +1066,4 @@ export function VendorChatView() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * VendorAuditLogsView — 2026 Enterprise Edition
@@ -36,8 +36,8 @@ import type { AuditLogEvent } from "@/features/vendor/hooks/use-vendor-audit-log
 
 // ── Brand palette ──────────────────────────────────────────────────────────────
 const C = {
-  green:  "#1a2e14",
-  greenM: "#2d5016",
+  green:  "#01454A",
+  greenM: "#01454A",
   gold:   "#FDA600",
   goldD:  "#E8960A",
   cream:  "#F8F5ED",
@@ -364,3 +364,4 @@ export function VendorAuditLogsView() {
     </div>
   );
 }
+
