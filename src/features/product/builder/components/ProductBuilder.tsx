@@ -99,15 +99,15 @@ function BuilderNavigation() {
           disabled={isSubmitting}
           className={cn(
             "gap-2 px-6 font-semibold",
-            publishIntent === "published"
+            publishIntent === "pending"
               ? "bg-[#FDA600] hover:bg-[#E8960A] text-black shadow-lg shadow-[#FDA600]/30"
               : "bg-[#01454A] hover:bg-[#01454A]/90 text-white shadow-lg shadow-[#01454A]/25",
           )}
         >
           {isSubmitting ? (
             <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
-          ) : publishIntent === "published" ? (
-            <><SendHorizontal className="w-4 h-4" /> Publish Product</>
+          ) : publishIntent === "pending" ? (
+            <><SendHorizontal className="w-4 h-4" /> Submit for Review</>
           ) : (
             <><Save className="w-4 h-4" /> Save as Draft</>
           )}

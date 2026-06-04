@@ -1725,8 +1725,8 @@ export function VendorProductComposerView() {
       await updateMutation.mutateAsync(sharedPayload);
     }
 
-    // publish_intent === "published" triggers a publish API call after create/update
-    if (values.publish_intent === "published" && savedSlug) await publishProduct(savedSlug);
+    // publish_intent === "pending" triggers a publish API call (submit for admin review)
+    if (values.publish_intent === "pending" && savedSlug) await publishProduct(savedSlug);
     void qc.invalidateQueries({ queryKey: productKeys.lists() });
     router.push("/vendor/products/catalog");
   };

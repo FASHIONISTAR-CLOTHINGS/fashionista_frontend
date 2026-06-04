@@ -125,7 +125,7 @@ export function Step8Publish() {
           name="publish_intent"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-zinc-800 font-semibold text-base">
+              <FormLabel className="text-[#1A1208] font-semibold text-base">
                 Publish Setting <span className="text-[#FDA600]">*</span>
               </FormLabel>
               <FormDescription className="text-zinc-500 text-xs mb-4">
@@ -190,7 +190,7 @@ export function Step8Publish() {
 
         {/* ── Visibility Flags ── */}
         <div className="space-y-3">
-          <h4 className="text-zinc-800 font-semibold text-sm">Visibility Flags</h4>
+          <h4 className="text-[#1A1208] font-semibold text-sm">Visibility Flags</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {([
               { name: "featured" as const, label: "Featured", desc: "Shown in homepage hero carousel", icon: Star },
@@ -228,7 +228,7 @@ export function Step8Publish() {
 
         {/* ── SEO Overrides ── */}
         <div className="space-y-5">
-          <h4 className="text-zinc-800 font-semibold flex items-center gap-2 text-sm">
+          <h4 className="text-[#1A1208] font-semibold flex items-center gap-2 text-sm">
             <Search className="w-4 h-4 text-[#01454A]" />
             SEO Overrides <span className="text-zinc-400 font-normal text-xs">(optional)</span>
           </h4>

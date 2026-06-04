@@ -42,7 +42,7 @@ export function Step6Specifications() {
     <div className="space-y-6">
       {/* ── Header ── */}
       <div>
-        <h3 className="text-zinc-800 font-semibold flex items-center gap-2 text-base">
+        <h3 className="text-[#1A1208] font-semibold flex items-center gap-2 text-base">
           <ListChecks className="w-5 h-5 text-violet-500" />
           Product Specifications
         </h3>
@@ -132,7 +132,7 @@ export function Step6Specifications() {
           type="button"
           variant="outline"
           onClick={addSpec}
-          className="w-full border-dashed border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:border-violet-500/50 bg-transparent hover:bg-zinc-50 rounded-xl"
+          className="w-full border-dashed border-zinc-300 text-zinc-600 hover:text-[#1A1208] hover:border-violet-500/50 bg-transparent hover:bg-zinc-50 rounded-xl"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Specification ({fields.length}/20)

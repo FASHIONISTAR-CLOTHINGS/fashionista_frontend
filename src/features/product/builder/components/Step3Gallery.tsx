@@ -253,7 +253,7 @@ export function Step3Gallery() {
               <ImagePlus className="w-8 h-8 text-violet-500" />
             </div>
             <div className="text-center">
-              <p className="text-zinc-800 font-semibold">
+              <p className="text-[#1A1208] font-semibold">
                 Drag & drop or click to upload
               </p>
               <p className="text-zinc-500 text-sm mt-1">
