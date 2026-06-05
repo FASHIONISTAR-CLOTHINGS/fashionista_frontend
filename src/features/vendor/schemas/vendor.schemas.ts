@@ -261,7 +261,7 @@ export const VendorProductCreateSchema = z.object({
   // ── Physical attributes ──────────────────────────────────────────────────
   weight_kg:           z.string().optional().or(z.literal("")),  // e.g. "1.5"
   condition:           z.enum(["new", "used", "refurbished"]).optional().default("new"),
-  // ── Relations — arrays of UUID strings ───────────────────────────────────
+  // Relations — arrays of UUID strings matching PrimaryKeyRelatedField(many=True)
   category_ids:        z.array(z.string().uuid()).min(1, "At least one category is required").max(15),
   sub_category_ids:    z.array(z.string().uuid()).optional(),
   size_ids:            z.array(z.string().uuid()).optional(),

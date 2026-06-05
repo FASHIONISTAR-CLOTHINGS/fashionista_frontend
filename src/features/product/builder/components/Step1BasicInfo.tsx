@@ -302,16 +302,16 @@ export function Step1BasicInfo() {
             <FormLabel className="text-[#1A1208] font-semibold text-sm">
               Condition <span className="text-[#FDA600]">*</span>
             </FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value ?? "new"}>
               <FormControl>
-                <SelectTrigger className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3">
+                <SelectTrigger className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-2 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3 data-[state=open]:ring-2 data-[state=open]:ring-[#01454A]">
                   <SelectValue placeholder="Select condition" />
                 </SelectTrigger>
               </FormControl>
-              <SelectContent className="bg-white dark:bg-white border border-[#D9D9D9] text-[#1A1208] dark:text-[#1A1208] shadow-lg shadow-black/8">
-                <SelectItem value="new" className="hover:bg-zinc-50 focus:bg-zinc-50">New — brand new item</SelectItem>
-                <SelectItem value="used" className="hover:bg-zinc-50 focus:bg-zinc-50">Used — pre-owned item</SelectItem>
-                <SelectItem value="refurbished" className="hover:bg-zinc-50 focus:bg-zinc-50">Refurbished — professionally restored</SelectItem>
+              <SelectContent className="z-50 bg-white dark:bg-white border border-[#D9D9D9] text-[#1A1208] dark:text-[#1A1208] shadow-lg shadow-black/8 rounded-xl">
+                <SelectItem value="new" className="cursor-pointer rounded-lg hover:bg-zinc-50 focus:bg-zinc-50">New — brand new item</SelectItem>
+                <SelectItem value="used" className="cursor-pointer rounded-lg hover:bg-zinc-50 focus:bg-zinc-50">Used — pre-owned item</SelectItem>
+                <SelectItem value="refurbished" className="cursor-pointer rounded-lg hover:bg-zinc-50 focus:bg-zinc-50">Refurbished — professionally restored</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />
