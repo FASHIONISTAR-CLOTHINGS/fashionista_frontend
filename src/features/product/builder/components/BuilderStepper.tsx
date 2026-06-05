@@ -7,12 +7,12 @@
  * Features:
  *  - Horizontal scrollable nav on mobile, full bar on desktop
  *  - Completed steps show checkmark; active step highlighted; future steps muted
- *  - Animated progress bar fills from left to right
+ *  - Dual-tone animated progress bar (forest → gold gradient)
+ *  - Step numbers for quick orientation
  *  - Accessible: role="navigation", aria-current="step"
  */
 
-
-import { CheckCircle2, Circle } from "lucide-react";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BUILDER_STEPS } from "../schemas/builder.schemas";
 import { useBuilderContext } from "./ProductBuilderProvider";
@@ -27,10 +27,13 @@ export function BuilderStepper() {
       className="w-full"
     >
       {/* ── Progress bar ── */}
-      <div className="relative h-1.5 bg-zinc-100 rounded-full overflow-hidden mb-6">
+      <div className="relative h-1.5 bg-[#ECE6D6] rounded-full overflow-hidden mb-6">
         <div
-          className="absolute inset-y-0 left-0 bg-[#01454A] rounded-full transition-all duration-500 ease-out"
-          style={{ width: `${progress}%` }}
+          className="absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out"
+          style={{
+            width: `${progress}%`,
+            background: "linear-gradient(90deg, #01454A 0%, #FDA600 100%)",
+          }}
           role="progressbar"
           aria-valuenow={progress}
           aria-valuemin={0}
@@ -39,40 +42,40 @@ export function BuilderStepper() {
       </div>
 
       {/* ── Step list ── */}
-      <ol className="flex items-start gap-1 overflow-x-auto pb-2 scrollbar-none">
+      <ol className="flex items-start gap-1 overflow-x-auto pb-2 scroll-hide">
         {BUILDER_STEPS.map(({ step, label, description }) => {
           const isCompleted = step < currentStep;
           const isActive = step === currentStep;
 
           return (
-            <li key={step} className="flex-shrink-0 flex-1 min-w-[80px]">
+            <li key={step} className="flex-shrink-0 flex-1 min-w-[72px]">
               <button
                 type="button"
                 title={description}
                 aria-current={isActive ? "step" : undefined}
-                onClick={() => isCompleted && goToStep(step)} // only allow going back
+                onClick={() => isCompleted && goToStep(step)}
                 disabled={!isCompleted && !isActive}
                 className={cn(
-                  "w-full flex flex-col items-center gap-1.5 px-2 py-2 rounded-xl transition-all duration-200",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#01454A]",
-                  isActive && "bg-zinc-100",
-                  isCompleted && "cursor-pointer hover:bg-zinc-50",
-                  !isCompleted && !isActive && "opacity-50 cursor-not-allowed",
+                  "w-full flex flex-col items-center gap-1.5 px-1.5 py-2 rounded-xl transition-all duration-200",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#01454A] focus-visible:ring-offset-1",
+                  isActive && "bg-[#FFF6E3]",
+                  isCompleted && "cursor-pointer hover:bg-[#F8F5ED]",
+                  !isCompleted && !isActive && "opacity-45 cursor-not-allowed",
                 )}
               >
-                {/* Icon */}
+                {/* Step circle */}
                 <span
                   className={cn(
-                    "flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all",
-                    isCompleted && "border-[#01454A] bg-[#01454A]/5 text-[#01454A]",
-                    isActive && "border-[#FDA600] bg-[#FFF6E3] text-[#FDA600]",
-                    !isCompleted && !isActive && "border-zinc-200 text-zinc-400",
+                    "flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all text-xs font-bold",
+                    isCompleted && "border-[#01454A] bg-[#01454A] text-white shadow-sm shadow-[#01454A]/25",
+                    isActive && "border-[#FDA600] bg-[#FDA600] text-black shadow-md shadow-[#FDA600]/30",
+                    !isCompleted && !isActive && "border-[#D9D9D9] bg-white text-[#7A6B44]",
                   )}
                 >
                   {isCompleted ? (
-                    <CheckCircle2 className="w-4 h-4" />
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
                   ) : (
-                    <Circle className="w-4 h-4" />
+                    <span>{step}</span>
                   )}
                 </span>
 
@@ -80,9 +83,9 @@ export function BuilderStepper() {
                 <span
                   className={cn(
                     "text-[10px] font-medium text-center leading-tight",
-                    isActive && "text-zinc-900 font-bold",
-                    isCompleted && "text-[#01454A]",
-                    !isCompleted && !isActive && "text-zinc-400",
+                    isActive && "text-[#1A1208] font-bold",
+                    isCompleted && "text-[#01454A] font-semibold",
+                    !isCompleted && !isActive && "text-[#7A6B44]",
                   )}
                 >
                   {label}

@@ -843,7 +843,7 @@ export function VendorDashboardView() {
           {/* Left: Store identity */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-3">
-              <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-brand-pulse" />
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#FDA600]/80">Vendor Command Centre</p>
             </div>
             <h1 className="font-bon_foyage text-3xl leading-tight text-white md:text-5xl">
@@ -1725,8 +1725,8 @@ export function VendorProductComposerView() {
       await updateMutation.mutateAsync(sharedPayload);
     }
 
-    // publish_intent === "published" triggers a publish API call after create/update
-    if (values.publish_intent === "published" && savedSlug) await publishProduct(savedSlug);
+    // publish_intent === "pending" triggers a publish API call after create/update (admin review queue)
+    if (values.publish_intent === "pending" && savedSlug) await publishProduct(savedSlug);
     void qc.invalidateQueries({ queryKey: productKeys.lists() });
     router.push("/vendor/products/catalog");
   };

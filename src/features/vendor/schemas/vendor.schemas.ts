@@ -258,13 +258,17 @@ export const VendorProductCreateSchema = z.object({
   shipping_amount:     z.string().optional(),
   stock_qty:           z.number().int().min(0),
   max_stock:           z.number().int().nullable().optional(),
-  // Relations — arrays of UUID strings matching PrimaryKeyRelatedField(many=True)
+  // ── Physical attributes ──────────────────────────────────────────────────
+  weight_kg:           z.string().optional().or(z.literal("")),  // e.g. "1.5"
+  condition:           z.enum(["new", "used", "refurbished"]).optional().default("new"),
+  // ── Relations — arrays of UUID strings ───────────────────────────────────
   category_ids:        z.array(z.string().uuid()).min(1, "At least one category is required").max(15),
   sub_category_ids:    z.array(z.string().uuid()).optional(),
   size_ids:            z.array(z.string().uuid()).optional(),
   color_ids:           z.array(z.string().uuid()).optional(),
   tag_ids:             z.array(z.string().uuid()).optional(),
-  // Flags
+  courier_id:          z.string().uuid().nullable().optional(),  // preferred courier
+  // ── Flags ────────────────────────────────────────────────────────────────
   requires_measurement: z.boolean().optional().default(false),
   is_customisable:      z.boolean().optional().default(false),
   hot_deal:             z.boolean().optional().default(false),
@@ -273,6 +277,18 @@ export const VendorProductCreateSchema = z.object({
   commission_rate:      z.string().optional(),
   status:               z.enum(["draft", "pending", "published", "archived", "rejected"]).optional().default("draft"),
   idempotency_key:      z.string().uuid().optional(),
+  // ── SEO overrides ────────────────────────────────────────────────────────
+  meta_title:           z.string().max(160).optional().or(z.literal("")),
+  meta_description:     z.string().max(320).optional().or(z.literal("")),
+  // ── Variants (Step 5 builder output) ────────────────────────────────────
+  variants: z.array(z.object({
+    size_id:        z.string().uuid().nullable().optional(),
+    color_id:       z.string().uuid().nullable().optional(),
+    price_override: z.string().nullable().optional(),
+    stock_qty:      z.number().int().min(0).optional().default(0),
+    sku:            z.string().optional(),
+    is_active:      z.boolean().optional().default(true),
+  })).optional().default([]),
 });
 
 export const VendorProductUpdateSchema = VendorProductCreateSchema.partial();
