@@ -94,7 +94,7 @@ async function fetchTags(): Promise<SelectOption[]> {
 function FieldSkeleton({ label }: { label: string }) {
   return (
     <div className="space-y-2">
-      <div className="text-[#1A1208] font-semibold text-sm">{label}</div>
+      <div className="text-zinc-800 font-semibold text-sm">{label}</div>
       <div className="h-10 w-full rounded-lg bg-zinc-100 animate-pulse" />
     </div>
   );
@@ -223,7 +223,7 @@ export function Step1BasicInfo() {
         name="title"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-[#1A1208] font-semibold text-sm">
+            <FormLabel className="text-zinc-800 font-semibold text-sm">
               Product Title <span className="text-[#FDA600]">*</span>
             </FormLabel>
             <FormControl>
@@ -248,7 +248,7 @@ export function Step1BasicInfo() {
         name="short_description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-[#1A1208] font-semibold text-sm">
+            <FormLabel className="text-zinc-800 font-semibold text-sm">
               Short Description
             </FormLabel>
             <FormControl>
@@ -274,7 +274,7 @@ export function Step1BasicInfo() {
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-[#1A1208] font-semibold text-sm">
+            <FormLabel className="text-zinc-800 font-semibold text-sm">
               Full Description <span className="text-[#FDA600]">*</span>
             </FormLabel>
             <FormControl>
@@ -299,7 +299,7 @@ export function Step1BasicInfo() {
         name="condition"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-[#1A1208] font-semibold text-sm">
+            <FormLabel className="text-zinc-800 font-semibold text-sm">
               Condition <span className="text-[#FDA600]">*</span>
             </FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -325,7 +325,7 @@ export function Step1BasicInfo() {
         name="category_ids"
         render={() => (
           <FormItem className="space-y-3">
-            <FormLabel className="text-[#1A1208] font-semibold text-sm">
+            <FormLabel className="text-zinc-800 font-semibold text-sm">
               Categories <span className="text-[#FDA600]">*</span>
             </FormLabel>
             <FormDescription className="text-zinc-500 text-xs">
@@ -372,7 +372,7 @@ export function Step1BasicInfo() {
         name="sub_category_ids"
         render={() => (
           <FormItem className="space-y-3">
-            <FormLabel className="text-[#1A1208] font-semibold text-sm font-outfit">
+            <FormLabel className="text-zinc-800 font-semibold text-sm font-outfit">
               Sub-Categories
             </FormLabel>
             <FormDescription className="text-zinc-500 text-xs">
@@ -438,7 +438,7 @@ export function Step1BasicInfo() {
         name="tag_ids"
         render={() => (
           <FormItem>
-            <FormLabel className="text-[#1A1208] font-semibold text-sm">Tags</FormLabel>
+            <FormLabel className="text-zinc-800 font-semibold text-sm">Tags</FormLabel>
             <FormDescription className="text-zinc-500 text-xs mb-2">
               Add up to 10 tags to improve searchability
             </FormDescription>

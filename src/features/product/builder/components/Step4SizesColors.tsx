@@ -83,7 +83,7 @@ export function Step4SizesColors() {
         name="size_ids"
         render={() => (
           <FormItem>
-            <FormLabel className="text-[#1A1208] font-semibold text-base">
+            <FormLabel className="text-zinc-800 font-semibold text-base">
               Sizes
             </FormLabel>
             <FormDescription className="text-zinc-500 text-xs mb-4">
@@ -122,7 +122,7 @@ export function Step4SizesColors() {
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500",
                       selected
                         ? "bg-violet-50 border-violet-500 text-violet-700 font-semibold"
-                        : "bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-[#1A1208]",
+                        : "bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-800",
                     )}
                   >
                     {selected && (
@@ -144,7 +144,7 @@ export function Step4SizesColors() {
         name="color_ids"
         render={() => (
           <FormItem>
-            <FormLabel className="text-[#1A1208] font-semibold text-base">
+            <FormLabel className="text-zinc-800 font-semibold text-base">
               Colours
             </FormLabel>
             <FormDescription className="text-zinc-500 text-xs mb-4">

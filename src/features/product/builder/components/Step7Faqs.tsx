@@ -44,7 +44,7 @@ export function Step7Faqs() {
     <div className="space-y-6">
       {/* ── Header ── */}
       <div>
-        <h3 className="text-[#1A1208] font-semibold flex items-center gap-2 text-base">
+        <h3 className="text-zinc-800 font-semibold flex items-center gap-2 text-base">
           <HelpCircle className="w-5 h-5 text-violet-500" />
           Frequently Asked Questions
         </h3>
@@ -89,7 +89,7 @@ export function Step7Faqs() {
                 >
                   <span className={cn(
                     "text-sm font-semibold transition-colors",
-                    question ? "text-[#1A1208]" : "text-zinc-400",
+                    question ? "text-zinc-800" : "text-zinc-400",
                   )}>
                     {question || `Question ${idx + 1}…`}
                   </span>
@@ -164,7 +164,7 @@ export function Step7Faqs() {
           type="button"
           variant="outline"
           onClick={addFaq}
-          className="w-full border-dashed border-zinc-300 text-zinc-600 hover:text-[#1A1208] hover:border-violet-500/50 bg-transparent hover:bg-zinc-50 rounded-xl"
+          className="w-full border-dashed border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:border-violet-500/50 bg-transparent hover:bg-zinc-50 rounded-xl"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add FAQ ({fields.length}/10)
