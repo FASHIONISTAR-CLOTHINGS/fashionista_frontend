@@ -1,8 +1,13 @@
-    /**
+/**
  * @file select.tsx
  * @description Fashionistar Select primitive — Shadcn-compatible API.
- * A controlled native <select> wrapper with our glassmorphism design system.
- * For complex comboboxes, use a dedicated Combobox component.
+ *
+ * A controlled native <select> wrapper with Fashionistar brand design system.
+ * - White background, Charcoal (#1A1208) text
+ * - Forest green (#01454A) focus ring
+ * - Gold (#FDA600) accent border on open
+ *
+ * For Radix-based comboboxes, use the Radix Select imports directly.
  */
 "use client";
 
@@ -21,16 +26,16 @@ export function SelectTrigger({ className, children, disabled, ...props }: Selec
   return (
     <div
       className={cn(
-        "flex h-10 w-full items-center justify-between rounded-xl border border-white/10 bg-white/5",
-        "px-3 py-2 text-sm text-white cursor-pointer",
-        "focus-within:border-[hsl(var(--accent))] focus-within:ring-1 focus-within:ring-[hsl(var(--accent))]/30",
+        "flex h-10 w-full items-center justify-between rounded-xl border border-[#D9D9D9] bg-white",
+        "px-3 py-2 text-sm text-[#1A1208] cursor-pointer",
+        "focus-within:border-[#01454A] focus-within:ring-2 focus-within:ring-[#01454A]/20",
         disabled && "cursor-not-allowed opacity-50",
         className,
       )}
       {...props}
     >
       {children}
-      <ChevronDown className="h-4 w-4 text-white/40 shrink-0" />
+      <ChevronDown className="h-4 w-4 text-[#7A6B44] shrink-0" />
     </div>
   );
 }
@@ -39,10 +44,15 @@ export function SelectTrigger({ className, children, disabled, ...props }: Selec
 
 export interface SelectValueProps {
   placeholder?: string;
+  children?: React.ReactNode;
 }
 
-export function SelectValue({ placeholder }: SelectValueProps) {
-  return <span className="text-white/30 text-sm">{placeholder}</span>;
+export function SelectValue({ placeholder, children }: SelectValueProps) {
+  return (
+    <span className="text-[#1A1208] text-sm truncate">
+      {children ?? <span className="text-zinc-400">{placeholder}</span>}
+    </span>
+  );
 }
 
 // ── SelectContent ──────────────────────────────────────────────────────────────
@@ -51,7 +61,7 @@ export function SelectContent({ className, children, ...props }: React.HTMLAttri
   return (
     <div
       className={cn(
-        "absolute z-50 mt-1 w-full rounded-xl border border-white/10 bg-zinc-900 shadow-xl overflow-hidden",
+        "absolute z-50 mt-1 w-full rounded-xl border border-[#D9D9D9] bg-white shadow-xl overflow-hidden",
         className,
       )}
       {...props}
@@ -71,8 +81,8 @@ export function SelectItem({ className, value: _value, children, ...props }: Sel
   return (
     <div
       className={cn(
-        "px-3 py-2 text-sm text-white/80 cursor-pointer",
-        "hover:bg-white/10 hover:text-white transition-colors",
+        "px-3 py-2 text-sm text-[#1A1208] cursor-pointer",
+        "hover:bg-[#F8F5ED] hover:text-[#01454A] transition-colors",
         className,
       )}
       {...props}
@@ -97,6 +107,11 @@ export interface SelectProps {
  * Select — a native <select> wrapper with Shadcn-compatible `onValueChange` API.
  * Internally delegates to <select> for proper form semantics, keyboard nav,
  * and mobile OS pickers. Visual chrome uses our glassmorphism tokens.
+ *
+ * Uses brand colors:
+ * - bg-white, text-[#1A1208] (Charcoal) — always readable on cream backgrounds
+ * - focus ring: Forest green #01454A
+ * - option hover: Cream #F8F5ED
  */
 export function Select({ value, defaultValue, onValueChange, disabled, children }: SelectProps) {
   // Extract SelectItem values for native rendering
@@ -115,16 +130,16 @@ export function Select({ value, defaultValue, onValueChange, disabled, children 
         onChange={handleChange}
         disabled={disabled}
         className={cn(
-          "w-full appearance-none rounded-xl border border-white/10 bg-white/5 px-3 py-2 pr-8",
-          "text-sm text-white outline-none",
-          "focus:border-[hsl(var(--accent))] focus:ring-1 focus:ring-[hsl(var(--accent))]/30",
+          "w-full appearance-none rounded-xl border border-[#D9D9D9] bg-white px-3 py-2 pr-8",
+          "text-sm text-[#1A1208] outline-none",
+          "focus:border-[#01454A] focus:ring-2 focus:ring-[#01454A]/20",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "transition-colors duration-150",
         )}
       >
         {options}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7A6B44]" />
     </div>
   );
 }
