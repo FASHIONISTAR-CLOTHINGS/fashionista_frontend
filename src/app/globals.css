@@ -700,3 +700,62 @@ progress {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   FASHIONISTAR GLOBAL BUG FIXES
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * FIX: SelectContent / Popover dark background bleed
+ *
+ * Radix UI Portals render outside the component tree, which means the
+ * `@custom-variant dark (&:is(.dark *))` selector applies the dark-mode
+ * CSS variables (--popover: 220 18% 12% — nearly black) to all popovers
+ * when the html element has the `.dark` class, even inside explicitly
+ * light-themed vendor dashboard panels.
+ *
+ * SOLUTION: Override --popover and --popover-foreground for the vendor
+ * dashboard and product builder to always use white. Since portal content
+ * renders inside [data-radix-popper-content-wrapper], we target that directly.
+ */
+[data-radix-popper-content-wrapper] {
+  --popover: 0 0% 100% !important;
+  --popover-foreground: 0 0% 8% !important;
+}
+
+/* Additional direct Radix portal override for SelectContent */
+[role="listbox"],
+[role="option"],
+[cmdk-list] {
+  background-color: white !important;
+  color: #1A1208 !important;
+}
+
+/* Ensure Shadcn SelectItem has readable hover states */
+[role="option"]:hover,
+[role="option"]:focus,
+[role="option"][data-highlighted] {
+  background-color: #F8F5ED !important;
+  color: #1A1208 !important;
+}
+
+/* ── Dashboard brand pulse animation ─────────────────────────────────────── */
+@keyframes brand-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
+  70%       { box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
+}
+
+.animate-brand-pulse {
+  animation: brand-pulse 2s ease-in-out infinite;
+}
+
+/* ── Builder step fade-in entry ──────────────────────────────────────────── */
+@keyframes step-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-step-enter {
+  animation: step-enter 0.3s ease-out forwards;
+}
+

@@ -308,7 +308,7 @@ export function Step1BasicInfo() {
                   <SelectValue placeholder="Select condition" />
                 </SelectTrigger>
               </FormControl>
-              <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208]">
+              <SelectContent className="bg-white dark:bg-white border border-[#D9D9D9] text-[#1A1208] dark:text-[#1A1208] shadow-lg shadow-black/8">
                 <SelectItem value="new" className="hover:bg-zinc-50 focus:bg-zinc-50">New — brand new item</SelectItem>
                 <SelectItem value="used" className="hover:bg-zinc-50 focus:bg-zinc-50">Used — pre-owned item</SelectItem>
                 <SelectItem value="refurbished" className="hover:bg-zinc-50 focus:bg-zinc-50">Refurbished — professionally restored</SelectItem>
@@ -485,7 +485,7 @@ export function Step1BasicInfo() {
                   }
                 />
               </SelectTrigger>
-              <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208] max-h-60 overflow-y-auto">
+              <SelectContent className="bg-white dark:bg-white border border-[#D9D9D9] text-[#1A1208] dark:text-[#1A1208] max-h-60 overflow-y-auto shadow-lg shadow-black/8">
                 {tags
                   .filter((t) => !selectedTagIds.includes(t.id))
                   .map((tag) => (

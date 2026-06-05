@@ -99,15 +99,15 @@ function BuilderNavigation() {
           disabled={isSubmitting}
           className={cn(
             "gap-2 px-6 font-semibold",
-            publishIntent === "published"
+            publishIntent === "pending"
               ? "bg-[#FDA600] hover:bg-[#E8960A] text-black shadow-lg shadow-[#FDA600]/30"
               : "bg-[#01454A] hover:bg-[#01454A]/90 text-white shadow-lg shadow-[#01454A]/25",
           )}
         >
           {isSubmitting ? (
             <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
-          ) : publishIntent === "published" ? (
-            <><SendHorizontal className="w-4 h-4" /> Publish Product</>
+          ) : publishIntent === "pending" ? (
+            <><SendHorizontal className="w-4 h-4" /> Submit for Review</>
           ) : (
             <><Save className="w-4 h-4" /> Save as Draft</>
           )}
@@ -150,15 +150,20 @@ export function ProductBuilder() {
       <BuilderStepper />
 
       {/* ── Step header ── */}
-      <div className="pb-3 border-b border-[#ECE6D6]">
-        <h2 className="text-[#1A1208] font-bold text-xl">
-          {stepMeta.label}
-        </h2>
-        <p className="text-[#7A6B44] text-sm mt-0.5">{stepMeta.description}</p>
+      <div className="pb-4 border-b border-[#ECE6D6] mb-1">
+        <div className="flex items-center gap-3">
+          <div className="w-1 h-8 rounded-full bg-gradient-to-b from-[#FDA600] to-[#FDA600]/40 flex-shrink-0" />
+          <div>
+            <h2 className="text-[#1A1208] font-bold text-xl leading-tight">
+              {stepMeta.label}
+            </h2>
+            <p className="text-[#7A6B44] text-sm mt-0.5">{stepMeta.description}</p>
+          </div>
+        </div>
       </div>
 
       {/* ── Active step content ── */}
-      <div className="min-h-[400px]">
+      <div className="min-h-[400px] animate-step-enter">
         {StepComponent && <StepComponent />}
       </div>
 
