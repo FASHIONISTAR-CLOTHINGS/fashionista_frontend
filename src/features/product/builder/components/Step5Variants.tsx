@@ -134,7 +134,7 @@ export function Step5Variants() {
         <p className="text-sm text-zinc-500">
           {fields.length} variant{fields.length !== 1 ? "s" : ""} generated
         </p>
-        <Badge className="bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-200 text-xs py-1 px-3 rounded-full font-medium">
+        <Badge className="bg-[#E6F4F5] text-[#01454A] border border-[#01454A]/20 text-xs py-1 px-3 rounded-full font-medium">
           Set stock &amp; price per variant
         </Badge>
       </div>
@@ -168,7 +168,7 @@ export function Step5Variants() {
                   {/* Size */}
                   <td className="px-4 py-3">
                     {size ? (
-                      <Badge className="bg-violet-50 text-violet-600 border border-violet-100 rounded-full font-semibold">
+                      <Badge className="bg-[#E6F4F5] text-[#01454A] border border-[#01454A]/15 rounded-full font-semibold">
                         {size.name}
                       </Badge>
                     ) : (
@@ -201,7 +201,7 @@ export function Step5Variants() {
                           <FormControl>
                             <Input
                               {...f}
-                              className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-lg text-xs h-9 w-36 px-2.5"
+                              className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-lg text-xs h-9 w-36 px-2.5"
                               placeholder="Auto"
                             />
                           </FormControl>
@@ -223,7 +223,7 @@ export function Step5Variants() {
                               type="number"
                               step="0.01"
                               min="0"
-                              className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-lg text-xs h-9 w-28 px-2.5"
+                              className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-lg text-xs h-9 w-28 px-2.5"
                               placeholder="Base price"
                             />
                           </FormControl>
@@ -246,7 +246,7 @@ export function Step5Variants() {
                               min="0"
                               step="1"
                               onChange={(e) => f.onChange(parseInt(e.target.value, 10) || 0)}
-                              className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-lg text-xs h-9 w-20 px-2.5"
+                              className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-lg text-xs h-9 w-20 px-2.5"
                               placeholder="0"
                             />
                           </FormControl>
@@ -266,7 +266,7 @@ export function Step5Variants() {
                             <Switch
                               checked={f.value}
                               onCheckedChange={f.onChange}
-                              className="data-[state=checked]:bg-violet-500"
+                              className="data-[state=checked]:bg-[#01454A]"
                             />
                           </FormControl>
                         </FormItem>
