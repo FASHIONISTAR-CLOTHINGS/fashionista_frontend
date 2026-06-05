@@ -45,7 +45,7 @@ export function Step7Faqs() {
       {/* ── Header ── */}
       <div>
         <h3 className="text-[#1A1208] font-semibold flex items-center gap-2 text-base">
-          <HelpCircle className="w-5 h-5 text-violet-500" />
+          <HelpCircle className="w-5 h-5 text-[#FDA600]" />
           Frequently Asked Questions
         </h3>
         <p className="text-zinc-500 text-xs mt-1">
@@ -74,12 +74,12 @@ export function Step7Faqs() {
               key={field.id}
               className={cn(
                 "rounded-xl border transition-all duration-200",
-                isOpen ? "border-violet-500/40 bg-violet-50/50" : "border-zinc-200 bg-white",
+                isOpen ? "border-[#01454A]/30 bg-[#E6F4F5]/30" : "border-[#D9D9D9] bg-white",
               )}
             >
               {/* ── Row header ── */}
               <div className="flex items-center gap-3 px-4 py-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-50 text-violet-600 text-xs flex items-center justify-center font-semibold border border-violet-100">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#FFF6E3] text-[#B37700] text-xs flex items-center justify-center font-semibold border border-[#FDA600]/30">
                   {idx + 1}
                 </span>
                 <button
@@ -126,7 +126,7 @@ export function Step7Faqs() {
                           <Input
                             {...f}
                             placeholder="e.g. What is the return policy?"
-                            className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-xl px-3 py-2 text-xs"
+                            className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-3 py-2 text-xs"
                           />
                         </FormControl>
                         <FormMessage />
@@ -144,7 +144,7 @@ export function Step7Faqs() {
                             {...f}
                             rows={3}
                             placeholder="Provide a clear, helpful answer…"
-                            className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-violet-500 focus:border-violet-500 rounded-xl px-3 py-2 text-xs"
+                            className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-3 py-2 text-xs"
                           />
                         </FormControl>
                         <FormMessage />
@@ -164,7 +164,7 @@ export function Step7Faqs() {
           type="button"
           variant="outline"
           onClick={addFaq}
-          className="w-full border-dashed border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:border-violet-500/50 bg-transparent hover:bg-zinc-50 rounded-xl"
+          className="w-full border-dashed border-[#D9D9D9] text-[#7A6B44] hover:text-[#01454A] hover:border-[#01454A]/40 bg-transparent hover:bg-[#E6F4F5]/30 rounded-xl"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add FAQ ({fields.length}/10)

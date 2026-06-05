@@ -70,7 +70,7 @@ export function Step4SizesColors() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-[#01454A]" />
       </div>
     );
   }
@@ -98,7 +98,7 @@ export function Step4SizesColors() {
                   return (
                     <Badge
                       key={id}
-                      className="bg-violet-50 text-violet-600 border border-violet-200 cursor-pointer hover:bg-red-50 hover:text-red-600 pl-3 pr-2 py-1 gap-1 rounded-full font-medium"
+                      className="bg-[#FFF6E3] text-[#B37700] border border-[#FDA600]/30 cursor-pointer hover:bg-red-50 hover:text-red-600 pl-3 pr-2 py-1 gap-1 rounded-full font-medium"
                       onClick={() => toggleSize(id)}
                     >
                       {s?.name} ×
@@ -119,14 +119,14 @@ export function Step4SizesColors() {
                     onClick={() => toggleSize(size.id)}
                     className={cn(
                       "relative px-4 py-2.5 rounded-xl text-sm font-medium border transition-all duration-150",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#01454A]/50",
                       selected
-                        ? "bg-violet-50 border-violet-500 text-violet-700 font-semibold"
-                        : "bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-800",
+                        ? "bg-[#E6F4F5] border-[#01454A] text-[#01454A] font-semibold"
+                        : "bg-white border-[#D9D9D9] text-[#5A6465] hover:border-[#FDA600]/50 hover:text-[#1A1208]",
                     )}
                   >
                     {selected && (
-                      <Check className="absolute top-1 right-1 w-3 h-3 text-violet-500" />
+                      <Check className="absolute top-1 right-1 w-3 h-3 text-[#01454A]" />
                     )}
                     {size.name}
                   </button>
@@ -185,7 +185,7 @@ export function Step4SizesColors() {
                     onClick={() => toggleColor(color.id)}
                     className={cn(
                       "flex flex-col items-center gap-2 p-2 rounded-xl border transition-all duration-150 w-[72px] bg-white",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#01454A]/50",
                       selected
                         ? "border-[#FDA600] bg-[#FFF6E3] shadow-sm"
                         : "border-zinc-200 hover:border-zinc-300",
@@ -214,7 +214,7 @@ export function Step4SizesColors() {
 
       {/* ── Helper note ── */}
       {(selectedSizes.length > 0 || selectedColors.length > 0) && (
-        <div className="bg-violet-50 border border-violet-100 rounded-xl p-4 text-sm text-violet-700">
+        <div className="bg-[#E6F4F5] border border-[#01454A]/15 rounded-xl p-4 text-sm text-[#01454A]">
           <strong>Next:</strong> Step 5 will generate a variant table with{" "}
           <strong>{Math.max(selectedSizes.length, 1) * Math.max(selectedColors.length, 1)}</strong>{" "}
           combination{selectedSizes.length * selectedColors.length !== 1 ? "s" : ""}.

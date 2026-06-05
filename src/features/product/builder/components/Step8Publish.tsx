@@ -96,9 +96,9 @@ function Flag({ icon, label, color }: { icon: string; label: string; color: stri
   const colorMap: Record<string, string> = {
     amber: "bg-amber-50 text-amber-700 border-amber-200",
     red: "bg-red-50 text-red-700 border-red-200",
-    blue: "bg-blue-50 text-blue-700 border-blue-200",
+    blue: "bg-[#EDF4FF] text-[#1A4B8C] border-blue-200",
     green: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    purple: "bg-violet-50 text-violet-700 border-violet-200",
+    purple: "bg-[#E6F4F5] text-[#01454A] border-[#01454A]/20",
   };
   return (
     <Badge className={cn("text-xs gap-1 border shadow-none font-medium", colorMap[color])}>

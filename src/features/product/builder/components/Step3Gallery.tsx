@@ -244,13 +244,13 @@ export function Step3Gallery() {
           onClick={() => fileInputRef.current?.click()}
           className={cn(
             "relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed cursor-pointer",
-            "border-zinc-200 hover:border-violet-500/50 bg-zinc-50 hover:bg-zinc-100",
+            "border-[#D9D9D9] hover:border-[#FDA600]/50 bg-[#FAFAF8] hover:bg-white",
             "transition-all duration-200 p-10 min-h-[200px]",
           )}
         >
           <div className="flex flex-col items-center gap-3 pointer-events-none">
-            <div className="p-4 rounded-full bg-violet-500/10 border border-violet-500/20">
-              <ImagePlus className="w-8 h-8 text-violet-500" />
+            <div className="p-4 rounded-full bg-[#FDA600]/10 border border-[#FDA600]/20">
+              <ImagePlus className="w-8 h-8 text-[#FDA600]" />
             </div>
             <div className="text-center">
               <p className="text-[#1A1208] font-semibold">
@@ -277,7 +277,7 @@ export function Step3Gallery() {
         <div className="space-y-2">
           {activeUploads.map((u) => (
             <div key={u.tempId} className="flex items-center gap-3">
-              <Loader2 className="w-4 h-4 animate-spin text-violet-400 flex-shrink-0" />
+              <Loader2 className="w-4 h-4 animate-spin text-[#01454A] flex-shrink-0" />
               <Progress value={u.progress} className="flex-1 h-1.5 bg-zinc-100" />
               <span className="text-xs text-zinc-500 w-10 text-right">{u.progress}%</span>
             </div>
@@ -313,8 +313,8 @@ export function Step3Gallery() {
                   className={cn(
                     "relative group rounded-xl overflow-hidden border-2 transition-all duration-200 aspect-square",
                     isCover
-                      ? "border-fuchsia-500 ring-2 ring-fuchsia-500/30"
-                      : "border-zinc-200 hover:border-zinc-300",
+                      ? "border-[#FDA600] ring-2 ring-[#FDA600]/30"
+                      : "border-[#D9D9D9] hover:border-[#D9D9D9]",
                   )}
                 >
                   {/* Thumbnail */}
@@ -345,7 +345,7 @@ export function Step3Gallery() {
                       <button
                         type="button"
                         onClick={() => setCover(item)}
-                        className="p-1.5 rounded-full bg-fuchsia-500/80 hover:bg-fuchsia-500 text-white"
+                        className="p-1.5 rounded-full bg-[#FDA600]/90 hover:bg-[#FDA600] text-black"
                         title="Set as cover image"
                       >
                         <Star className="w-3.5 h-3.5" />
@@ -367,7 +367,7 @@ export function Step3Gallery() {
                   {/* Badges */}
                   <div className="absolute top-2 left-2 flex gap-1">
                     {isCover && (
-                      <Badge className="bg-fuchsia-500 text-white text-[10px] px-1.5 py-0.5 h-auto">
+                      <Badge className="bg-[#FDA600] text-black text-[10px] px-1.5 py-0.5 h-auto">
                         Cover
                       </Badge>
                     )}
