@@ -83,7 +83,7 @@ export function Step4SizesColors() {
         name="size_ids"
         render={() => (
           <FormItem>
-            <FormLabel className="text-zinc-800 font-semibold text-base">
+            <FormLabel className="text-[#1A1208] font-semibold text-base">
               Sizes
             </FormLabel>
             <FormDescription className="text-zinc-500 text-xs mb-4">
@@ -144,7 +144,7 @@ export function Step4SizesColors() {
         name="color_ids"
         render={() => (
           <FormItem>
-            <FormLabel className="text-zinc-800 font-semibold text-base">
+            <FormLabel className="text-[#1A1208] font-semibold text-base">
               Colours
             </FormLabel>
             <FormDescription className="text-zinc-500 text-xs mb-4">

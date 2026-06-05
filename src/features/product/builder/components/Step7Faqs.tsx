@@ -44,7 +44,7 @@ export function Step7Faqs() {
     <div className="space-y-6">
       {/* ── Header ── */}
       <div>
-        <h3 className="text-zinc-800 font-semibold flex items-center gap-2 text-base">
+        <h3 className="text-[#1A1208] font-semibold flex items-center gap-2 text-base">
           <HelpCircle className="w-5 h-5 text-violet-500" />
           Frequently Asked Questions
         </h3>
