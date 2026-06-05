@@ -453,7 +453,7 @@ export function VendorCouponsView() {
                 <button
                   type="submit"
                   disabled={createMutation.isPending}
-                  className="flex-1 rounded-full bg-[#01454A] py-3.5 text-sm font-black text-white transition hover:bg-[#1a2e14] disabled:opacity-50 active:scale-95"
+                  className="flex-1 rounded-full bg-[#01454A] py-3.5 text-sm font-black text-white transition hover:bg-[#01363B] disabled:opacity-50 active:scale-95"
                 >
                   {createMutation.isPending ? "Creating..." : "Save Coupon"}
                 </button>
