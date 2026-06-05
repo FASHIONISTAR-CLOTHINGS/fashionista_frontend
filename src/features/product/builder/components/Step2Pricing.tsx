@@ -96,7 +96,7 @@ export function Step2Pricing() {
           name="currency"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-zinc-800 font-semibold text-sm">Currency</FormLabel>
+              <FormLabel className="text-[#1A1208] font-semibold text-sm">Currency</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-violet-500 focus:border-violet-500 rounded-xl px-4 py-3">
@@ -121,8 +121,7 @@ export function Step2Pricing() {
           name="price"
           render={({ field }) => (
             <FormItem className="sm:col-span-2">
-              <FormLabel className="text-zinc-800 font-semibold text-sm">
-                Selling Price <span className="text-fuchsia-600">*</span>
+              <FormLabel className="text-[#1A1208] font-semibold text-sm">\r\n                Selling Price <span className="text-fuchsia-600">*</span>
               </FormLabel>
               <FormControl>
                 <Input
@@ -147,8 +146,7 @@ export function Step2Pricing() {
         render={({ field }) => (
           <FormItem>
             <div className="flex items-center gap-3">
-              <FormLabel className="text-zinc-800 font-semibold text-sm">
-                Original Price (before discount)
+              <FormLabel className="text-[#1A1208] font-semibold text-sm">\r\n                Original Price (before discount)
               </FormLabel>
               {discountPct !== null && (
                 <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 gap-1 font-semibold">
@@ -182,8 +180,7 @@ export function Step2Pricing() {
           name="stock_qty"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-zinc-800 font-semibold text-sm">
-                Stock Quantity <span className="text-fuchsia-600">*</span>
+              <FormLabel className="text-[#1A1208] font-semibold text-sm">\r\n                Stock Quantity <span className="text-fuchsia-600">*</span>
               </FormLabel>
               <FormControl>
                 <Input
@@ -209,8 +206,7 @@ export function Step2Pricing() {
           name="weight_kg"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-zinc-800 font-semibold text-sm">
-                Weight (kg)
+              <FormLabel className="text-[#1A1208] font-semibold text-sm">\r\n                Weight (kg)
               </FormLabel>
               <FormControl>
                 <Input
@@ -240,14 +236,13 @@ export function Step2Pricing() {
             <FormItem className="flex items-center justify-between rounded-xl bg-white border border-[#D9D9D9] p-4">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <FormLabel className="text-zinc-800 font-semibold text-sm cursor-pointer">
-                    Requires Measurement
+                  <FormLabel className="text-[#1A1208] font-semibold text-sm cursor-pointer">\r\n                    Requires Measurement
                   </FormLabel>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <InfoIcon className="w-3.5 h-3.5 text-zinc-400 cursor-help" />
                     </TooltipTrigger>
-                    <TooltipContent className="bg-zinc-800 text-white text-xs max-w-xs p-2 rounded-lg">
+                    <TooltipContent className="bg-[#1A1208] text-white text-xs max-w-xs p-2 rounded-lg">
                       Enable this for tailored/made-to-measure items. Customers will be asked to provide body measurements during checkout.
                     </TooltipContent>
                   </Tooltip>
@@ -273,8 +268,7 @@ export function Step2Pricing() {
           render={({ field }) => (
             <FormItem className="flex items-center justify-between rounded-xl bg-white border border-[#D9D9D9] p-4">
               <div className="space-y-0.5">
-                <FormLabel className="text-zinc-800 font-semibold text-sm cursor-pointer">
-                  Allow Customisation
+                <FormLabel className="text-[#1A1208] font-semibold text-sm cursor-pointer">\r\n                  Allow Customisation
                 </FormLabel>
                 <FormDescription className="text-zinc-500 text-xs">
                   Customer can add personalisation notes
@@ -299,8 +293,7 @@ export function Step2Pricing() {
           name="shipping_amount"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-zinc-800 font-semibold text-sm">
-                Flat Shipping Fee
+              <FormLabel className="text-[#1A1208] font-semibold text-sm">\r\n                Flat Shipping Fee
               </FormLabel>
               <FormControl>
                 <Input
@@ -322,8 +315,7 @@ export function Step2Pricing() {
           name="courier_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-zinc-800 font-semibold text-sm">
-                Preferred Courier
+              <FormLabel className="text-[#1A1208] font-semibold text-sm">\r\n                Preferred Courier
               </FormLabel>
               <Select onValueChange={field.onChange} value={field.value ?? ""}>
                 <FormControl>
