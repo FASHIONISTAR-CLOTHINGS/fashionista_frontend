@@ -51,6 +51,7 @@ import type {
   CreateBankAccountPayload,
   PayoutRequestPayload,
   PayoutRequestResult,
+  VendorProductListItem,
 } from "@/features/vendor/types/vendor.types";
 
 // ── Helper — unwrap { status, data } envelope ─────────────────────────────────
@@ -59,6 +60,35 @@ function unwrapData<T>(payload: unknown): T {
     return (payload as { data: T }).data;
   }
   return payload as T;
+}
+
+function normalizeVendorProductList(payload: unknown): {
+  status: string;
+  count: number;
+  data: VendorProductListItem[];
+} {
+  const unwrapped = unwrapData<any>(payload);
+  const rows = Array.isArray(unwrapped?.results)
+    ? unwrapped.results
+    : Array.isArray(unwrapped?.data)
+      ? unwrapped.data
+      : Array.isArray(unwrapped)
+        ? unwrapped
+        : [];
+
+  return {
+    status: unwrapped?.status ?? "success",
+    count: Number(unwrapped?.count ?? rows.length),
+    data: rows.map((item: any) => ({
+      pid: String(item.slug ?? item.pid ?? item.id),
+      title: String(item.title ?? ""),
+      price: Number(item.price ?? 0),
+      stock_qty: Number(item.stock_qty ?? 0),
+      status: item.status ?? "draft",
+      category__name: item.category__name ?? item.category_name ?? undefined,
+      date: item.date ?? item.updated_at ?? item.created_at ?? "",
+    })),
+  };
 }
 
 // ── Vendor API Object ─────────────────────────────────────────────────────────
@@ -379,20 +409,25 @@ export const vendorApi = {
     return data;
   },
 
-  // ── Products ───────────────────────────────────────────────────────────────
+  // ── Products — canonical product app contract ─────────────────────────────
   async getProducts() {
-    const { data } = await apiSync.get("v1/vendor/products/");
-    return VendorProductListSchema.parse(data);
+    const { data } = await apiSync.get("v1/products/vendor/");
+    return VendorProductListSchema.parse(normalizeVendorProductList(data));
   },
 
   async filterProducts(params?: { status?: string; ordering?: string }) {
-    const { data } = await apiSync.get("v1/vendor/products/filter/", { params });
-    return VendorProductListSchema.parse(data);
+    const { data } = await apiSync.get("v1/products/vendor/", { params });
+    return VendorProductListSchema.parse(normalizeVendorProductList(data));
   },
 
   async getLowStockProducts() {
-    const { data } = await apiSync.get("v1/vendor/products/low-stock/");
-    return VendorProductListSchema.parse(data);
+    const { data } = await apiSync.get("v1/products/vendor/");
+    const normalized = normalizeVendorProductList(data);
+    return VendorProductListSchema.parse({
+      ...normalized,
+      data: normalized.data.filter((item) => item.stock_qty < 5),
+      count: normalized.data.filter((item) => item.stock_qty < 5).length,
+    });
   },
 
   async getTopSellingProducts() {
@@ -402,18 +437,19 @@ export const vendorApi = {
 
   async createProduct(payload: VendorProductCreatePayload): Promise<{ pid: string; title: string }> {
     VendorProductCreateSchema.parse(payload);
-    const { data } = await apiSync.post("v1/vendor/products/create/", payload);
-    return unwrapData<{ pid: string; title: string }>(data);
+    const { data } = await apiSync.post("v1/products/vendor/", payload);
+    const product = unwrapData<any>(data);
+    return { pid: String(product.slug ?? product.id), title: String(product.title ?? "") };
   },
 
   async updateProduct(pid: string, payload: VendorProductUpdatePayload): Promise<{ message: string }> {
     VendorProductUpdateSchema.parse(payload);
-    const { data } = await apiSync.patch(`v1/vendor/products/${pid}/edit/`, payload);
+    const { data } = await apiSync.patch(`v1/products/vendor/${pid}/`, payload);
     return data as { message: string };
   },
 
   async deleteProduct(pid: string): Promise<{ message: string }> {
-    const { data } = await apiSync.delete(`v1/vendor/products/${pid}/delete/`);
+    const { data } = await apiSync.delete(`v1/products/vendor/${pid}/`);
     return data as { message: string };
   },
 
@@ -544,4 +580,3 @@ export async function fetchVendorAuditLogs(
   const res = await apiAsync.get(`ninja/vendor/audit-logs/?${params.toString()}`);
   return res.json<AuditLogPage>();
 }
-
