@@ -107,12 +107,14 @@ export function Card({ children, className = "", glass = true, hover = false, pa
 // ── Badge ─────────────────────────────────────────────────────────────────────
 
 type BadgeColor = "default" | "primary" | "success" | "warning" | "danger" | "info" | "violet";
+type BadgeSize = "xs" | "sm" | "md";
 
 interface BadgeProps {
   children: ReactNode;
   color?: BadgeColor;
   dot?: boolean;
   className?: string;
+  size?: BadgeSize;
 }
 
 const BADGE_COLORS: Record<BadgeColor, string> = {
@@ -125,10 +127,16 @@ const BADGE_COLORS: Record<BadgeColor, string> = {
   violet: "bg-violet-500/15 text-violet-300 border-violet-500/30",
 };
 
-export function Badge({ children, color = "default", dot = false, className = "" }: BadgeProps) {
+const BADGE_SIZES: Record<BadgeSize, string> = {
+  xs: "text-[10px] px-1.5 py-0 gap-1",
+  sm: "text-xs px-2 py-0.5 gap-1",
+  md: "text-xs px-2.5 py-0.5 gap-1.5",
+};
+
+export function Badge({ children, color = "default", dot = false, className = "", size = "md" }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border text-xs px-2.5 py-0.5 font-medium ${BADGE_COLORS[color]} ${className}`}
+      className={`inline-flex items-center rounded-full border font-medium ${BADGE_COLORS[color]} ${BADGE_SIZES[size]} ${className}`}
     >
       {dot && <span className="w-1.5 h-1.5 rounded-full bg-current" />}
       {children}
