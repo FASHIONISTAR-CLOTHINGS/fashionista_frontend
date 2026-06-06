@@ -1,377 +1,337 @@
 "use client";
+
 /**
- * LoginForm Component — Feature Auth
- *
- * Phase 3: Email / Phone toggle with dynamic country-code selector (Nigeria +234 default)
- * Phase 5: Smart post-auth redirect (vendor → dashboard, client → returnUrl or dashboard)
- * Phase 8: suppressHydrationWarning on all input wrapper divs
- *
- * Uses: React Hook Form + Zod resolver + TanStack Query mutation
+ * features/auth/components/LoginForm.tsx
+ * Premium glassmorphism login form with 2FA support.
+ * Handles: email/password → JWT → optional TOTP step.
  */
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
-import Link from "next/link";
-import { toast } from "sonner";
-import { Eye, EyeOff, Loader2, Mail, Lock } from "lucide-react";
-import { useState } from "react";
 
-import {
-  LoginSchema,
-  type LoginPayload,
-  type LoginResponse,
-} from "@/features/auth/schemas/auth.schemas";
-import { login } from "@/features/auth/services/auth.service";
-import { useAuthStore } from "@/features/auth/store/auth.store";
-import { PhoneInputField } from "@/components/shared/forms/PhoneInputField";
-import { RichErrorMessage, FieldError } from "@/components/shared/feedback/RichErrorMessage";
-import { AuthAlert } from "@/components/shared/feedback/AuthAlert";
-import { GoogleSignInButton } from "@/features/auth/components/GoogleSignInButton";
-import { getPostAuthRedirectPath } from "@/features/auth/lib/auth-routing";
-import { normalizeAuthUser } from "@/features/auth/lib/normalize-auth-user";
-import { shouldMergeAnonymousCommerceForRole } from "@/features/auth/lib/post-auth-commerce";
-import { mergeAnonymousCommerce } from "@/features/cart";
-import { parseApiError } from "@/lib/api/parseApiError";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useUserStore } from "@/entities/user/store/user-store";
+import { Button } from "@/shared/ui";
 
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-type LoginMode = "email" | "phone";
+interface LoginPayload {
+  email: string;
+  password: string;
+}
+
+interface LoginResponse {
+  access?: string;
+  refresh?: string;
+  requires_2fa?: boolean;
+  session_token?: string;
+  user?: Record<string, unknown>;
+  message?: string;
+  code?: string;
+}
+
+// ── API helpers ───────────────────────────────────────────────────────────────
+
+const API = process.env.NEXT_PUBLIC_API_URL ?? "";
+
+async function loginApi(payload: LoginPayload): Promise<LoginResponse> {
+  const res = await fetch(`${API}/api/v1/auth/login/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message ?? data?.detail ?? "Login failed");
+  return data;
+}
+
+async function verify2FAApi(sessionToken: string, totpCode: string): Promise<LoginResponse> {
+  const res = await fetch(`${API}/api/v1/auth/2fa/verify/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_token: sessionToken, totp_code: totpCode }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message ?? "2FA verification failed");
+  return data;
+}
+
+// ── OTPVerification ────────────────────────────────────────────────────────────
+
+interface OTPVerificationProps {
+  email: string;
+  onSuccess: () => void;
+  onBack: () => void;
+}
+
+export function OTPVerification({ email, onSuccess, onBack }: OTPVerificationProps) {
+  const [code, setCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleVerify = async () => {
+    if (code.length !== 6) return;
+    setIsLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`${API}/api/v1/auth/verify-email/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp: code }),
+      });
+      if (!res.ok) throw new Error("Invalid verification code");
+      onSuccess();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Verification failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center">
+        <div className="text-4xl mb-3">📧</div>
+        <h2 className="text-xl font-bold text-white">Verify your email</h2>
+        <p className="text-sm text-slate-400 mt-1">
+          We sent a 6-digit code to <strong className="text-amber-400">{email}</strong>
+        </p>
+      </div>
+
+      {/* 6-digit OTP input */}
+      <div className="flex justify-center gap-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <input
+            key={i}
+            id={`otp-digit-${i}`}
+            type="text"
+            maxLength={1}
+            inputMode="numeric"
+            value={code[i] ?? ""}
+            onChange={(e) => {
+              const digit = e.target.value.replace(/\D/g, "");
+              const newCode = code.split("");
+              newCode[i] = digit;
+              setCode(newCode.join(""));
+              if (digit && i < 5) {
+                document.getElementById(`otp-digit-${i + 1}`)?.focus();
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Backspace" && !code[i] && i > 0) {
+                document.getElementById(`otp-digit-${i - 1}`)?.focus();
+              }
+            }}
+            className="w-12 h-14 text-center text-xl font-bold bg-white/8 border border-white/20 rounded-xl text-white focus:outline-none focus:border-amber-500 focus:bg-white/12 transition-all"
+          />
+        ))}
+      </div>
+
+      {error && (
+        <p className="text-center text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2">
+          {error}
+        </p>
+      )}
+
+      <Button
+        onClick={handleVerify}
+        isLoading={isLoading}
+        disabled={code.length !== 6}
+        className="w-full"
+        id="otp-verify-btn"
+      >
+        Verify Email
+      </Button>
+
+      <button onClick={onBack} className="w-full text-sm text-slate-400 hover:text-white transition-colors text-center">
+        ← Back to login
+      </button>
+    </div>
+  );
+}
+
+// ── TwoFactorStep ─────────────────────────────────────────────────────────────
+
+interface TwoFactorStepProps {
+  sessionToken: string;
+  onSuccess: (tokens: { access: string; refresh: string }) => void;
+  onBack: () => void;
+}
+
+function TwoFactorStep({ sessionToken, onSuccess, onBack }: TwoFactorStepProps) {
+  const [code, setCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleVerify = async () => {
+    if (code.length !== 6) return;
+    setIsLoading(true);
+    setError("");
+    try {
+      const data = await verify2FAApi(sessionToken, code);
+      if (data.access && data.refresh) {
+        onSuccess({ access: data.access, refresh: data.refresh });
+      }
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "2FA failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="text-center">
+        <div className="text-4xl mb-3">🔐</div>
+        <h2 className="text-xl font-bold text-white">Two-Factor Authentication</h2>
+        <p className="text-sm text-slate-400 mt-1">Enter the 6-digit code from your authenticator app</p>
+      </div>
+
+      <input
+        type="text"
+        inputMode="numeric"
+        maxLength={6}
+        value={code}
+        onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+        placeholder="000000"
+        id="totp-code-input"
+        className="w-full h-14 text-center text-2xl font-bold tracking-widest bg-white/8 border border-white/20 rounded-xl text-white focus:outline-none focus:border-amber-500 transition-all"
+      />
+
+      {error && (
+        <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2 text-center">
+          {error}
+        </p>
+      )}
+
+      <Button onClick={handleVerify} isLoading={isLoading} disabled={code.length !== 6} className="w-full" id="2fa-verify-btn">
+        Verify
+      </Button>
+      <button onClick={onBack} className="w-full text-sm text-slate-400 hover:text-white transition-colors text-center">
+        ← Back
+      </button>
+    </div>
+  );
+}
+
+// ── LoginForm ─────────────────────────────────────────────────────────────────
+
+type LoginStep = "credentials" | "two_factor";
 
 export function LoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { setTokens, setUser, setPendingOTP } = useAuthStore();
+  const { setTokens, setUser } = useUserStore();
+
+  const [step, setStep] = useState<LoginStep>("credentials");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [mode, setMode] = useState<LoginMode>("email");
-  const [phoneValue, setPhoneValue] = useState("");
-  const [apiError, setApiError] = useState<ReturnType<typeof parseApiError> | null>(null);
-  const [googleError, setGoogleError] = useState<string | null>(null);
-  const [googleSuccess, setGoogleSuccess] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [sessionToken, setSessionToken] = useState("");
 
-  // returnUrl — where to send the user after successful auth
-  const returnUrl = searchParams.get("returnUrl") ?? "";
-  const createAccountHref =
-    returnUrl && returnUrl.startsWith("/")
-      ? `/auth/choose-role?returnUrl=${encodeURIComponent(returnUrl)}`
-      : "/auth/choose-role";
-
-  async function mergeCommerceBeforeRedirect(role?: string, isStaff?: boolean) {
-    if (!shouldMergeAnonymousCommerceForRole({ role, isStaff })) {
-      return;
-    }
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    setIsLoading(true);
+    setError("");
 
     try {
-      await mergeAnonymousCommerce();
-    } catch (error) {
-      const parsed = parseApiError(
-        error,
-        "We signed you in, but your guest cart and wishlist could not be restored right away.",
-      );
-      toast.warning("Signed in with limited restore", {
-        id: "fashionistar-auth-merge-warning",
-        description: parsed.message,
-        duration: 4500,
-      });
-    }
-  }
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<LoginPayload>({
-    resolver: zodResolver(LoginSchema),
-    defaultValues: { email_or_phone: "", password: "" },
-  });
-
-  // Smart redirect after successful authentication
-  function handlePostAuthRedirect(
-    role?: string,
-    hasVendorProfile?: boolean,
-    isStaff?: boolean,
-  ) {
-    router.push(
-      getPostAuthRedirectPath({
-        role,
-        hasVendorProfile,
-        isStaff,
-        returnUrl,
-      }),
-    );
-  }
-
-
-  // ── Google auth success handler (shared between login + register) ──────────
-  // NOTE: All auth endpoints (Login, VerifyOTP, Google) now return user_id (not id)
-  // for uniform API contract. AuthUser store uses .id — we bridge here.
-  async function handleGoogleSuccess(data: LoginResponse) {
-    setApiError(null);
-    setGoogleError(null);
-    setGoogleSuccess("Google sign-in successful! Redirecting…");
-    setTokens(data.access ?? "", data.refresh ?? "");
-    setUser(normalizeAuthUser(data));
-
-    toast.success("Google Sign-In Successful!", {
-      description: data.message ?? `Welcome, ${data.user?.first_name ?? "User"}! 🎉`,
-      duration: 3000,
-    });
-    await mergeCommerceBeforeRedirect(data.role ?? data.user?.role, data.user?.is_staff);
-    setTimeout(() => {
-      handlePostAuthRedirect(
-        data.role ?? data.user?.role,
-        data.has_vendor_profile,
-        data.user?.is_staff,
-      );
-    }, 600); // Small delay so success alert is visible
-  }
-
-  const { mutate, isPending } = useMutation({
-    mutationFn: login,
-    onSuccess: async (data) => {
-      setApiError(null);
-
-      if (data.requires_otp) {
-        // Backend requires OTP verification step
-        const pendingEmail = data.user?.email ?? data.identifying_info;
-        const identifier = data.identifying_info ?? "";
-        const isPhoneLogin =
-          mode === "phone" || identifier.startsWith("+") || !identifier.includes("@");
-        setPendingOTP(
-          isPhoneLogin
-            ? { phone: data.user?.phone ?? identifier }
-            : { email: pendingEmail },
-        );
-        toast.info("OTP Required", {
-          description:
-            data.message ?? "A verification code has been sent to your email/phone.",
-        });
-        const otpHref = returnUrl
-          ? `/auth/verify-otp?returnUrl=${encodeURIComponent(returnUrl)}`
-          : "/auth/verify-otp";
-        router.push(otpHref);
-        return;
+      const data = await loginApi({ email, password });
+      if (data.requires_2fa && data.session_token) {
+        setSessionToken(data.session_token);
+        setStep("two_factor");
+      } else if (data.access && data.refresh) {
+        setTokens({ access: data.access, refresh: data.refresh });
+        if (data.user) setUser(data.user as Parameters<typeof setUser>[0]);
+        router.push("/dashboard");
       }
-
-      setTokens(data.access ?? "", data.refresh ?? "");
-      setUser(normalizeAuthUser(data));
-
-      const displayName = data.user?.first_name ?? data.identifying_info ?? "User";
-      toast.success("Welcome back! 👋", {
-        description: data.message ?? `Hello, ${displayName}`,
-        duration: 3000,
-      });
-
-      await mergeCommerceBeforeRedirect(data.role ?? data.user?.role, data.user?.is_staff);
-      handlePostAuthRedirect(
-        data.role ?? data.user?.role,
-        data.has_vendor_profile,
-        data.user?.is_staff,
-      );
-
-    },
-    onError: (error) => {
-      setGoogleSuccess(null);
-      setApiError(
-        parseApiError(
-          error,
-          "We could not sign you in right now. Please check your details and try again.",
-        ),
-      );
-    },
-  });
-
-  const toggleMode = (newMode: LoginMode) => {
-    setMode(newMode);
-    setPhoneValue("");
-    setValue("email_or_phone", "");
-    setApiError(null);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Login failed. Try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const onSubmit = (data: LoginPayload) => {
-    setApiError(null);
-    mutate(data);
+  const handle2FASuccess = (tokens: { access: string; refresh: string }) => {
+    setTokens(tokens);
+    router.push("/dashboard");
   };
 
-  // When phone mode: normalise and set form value before submit
-  function handlePhoneChange(e164: string) {
-    setPhoneValue(e164);
-    setValue("email_or_phone", e164, { shouldValidate: false });
+  if (step === "two_factor") {
+    return <TwoFactorStep sessionToken={sessionToken} onSuccess={handle2FASuccess} onBack={() => setStep("credentials")} />;
   }
-
-  // No longer a redirect URL — Google credential is sent directly to backend via POST
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
-
-      {/* ── Mode toggle: Email / Phone ──────────────────────────────── */}
-      <div
-        className="flex rounded-xl border border-border overflow-hidden shadow-sm"
-        role="tablist"
-        aria-label="Sign in method"
-      >
-        <button
-          type="button"
-          role="tab"
-          id="login-tab-email"
-          aria-selected={mode === "email"}
-          onClick={() => toggleMode("email")}
-          className={`flex-1 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
-            mode === "email"
-              ? "bg-primary text-primary-foreground shadow-inner"
-              : "bg-background text-muted-foreground hover:bg-muted/60"
-          }`}
-        >
-          <Mail className="h-4 w-4" />
-          Email
-        </button>
-        <button
-          type="button"
-          role="tab"
-          id="login-tab-phone"
-          aria-selected={mode === "phone"}
-          onClick={() => toggleMode("phone")}
-          className={`flex-1 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
-            mode === "phone"
-              ? "bg-primary text-primary-foreground shadow-inner"
-              : "bg-background text-muted-foreground hover:bg-muted/60"
-          }`}
-        >
-          <span className="text-xs">📱</span>
-          Phone
-        </button>
+    <form onSubmit={handleLogin} className="space-y-5" noValidate>
+      <div className="space-y-1.5">
+        <label htmlFor="login-email" className="text-xs font-medium text-slate-300 uppercase tracking-wide">
+          Email Address
+        </label>
+        <input
+          id="login-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          autoComplete="email"
+          required
+          className="w-full h-11 bg-white/8 border border-white/15 rounded-xl px-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/60 focus:bg-white/10 transition-all"
+        />
       </div>
 
-      {/* ── API-level error ─────────────────────────────────────────── */}
-      {apiError && <RichErrorMessage parsed={apiError} />}
-
-      {/* ── Google auth feedback ─────────────────────────────────────── */}
-      {googleError && (
-        <AuthAlert variant="error" message={googleError} autoDismissMs={6000} onDismiss={() => setGoogleError(null)} />
-      )}
-      {googleSuccess && (
-        <AuthAlert variant="success" message={googleSuccess} autoDismissMs={3000} onDismiss={() => setGoogleSuccess(null)} />
-      )}
-
-      {/* ── Email or Phone ──────────────────────────────────────────── */}
-      {mode === "email" ? (
-        <div className="space-y-1.5">
-          <label htmlFor="login-email" className="text-sm font-medium text-foreground">
-            Email Address
-          </label>
-          <div className="relative" suppressHydrationWarning>
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <input
-              id="login-email"
-              type="email"
-              autoComplete="email"
-              {...register("email_or_phone")}
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all placeholder:text-muted-foreground/60"
-              placeholder="you@fashionistar.com"
-            />
-          </div>
-          <FieldError message={errors.email_or_phone?.message} />
-        </div>
-      ) : (
-        <div className="space-y-1.5">
-          <label htmlFor="login-phone" className="text-sm font-medium text-foreground">
-            Phone Number
-          </label>
-          <PhoneInputField
-            id="login-phone"
-            onChange={handlePhoneChange}
-            value={phoneValue}
-            defaultCountry="NG"
-            placeholder="8012345678"
-            error={errors.email_or_phone?.message}
-          />
-          {/* Hidden field to satisfy React Hook Form */}
-          <input type="hidden" {...register("email_or_phone")} value={phoneValue} />
-        </div>
-      )}
-
-      {/* ── Password ─────────────────────────────────────────────────── */}
       <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <label htmlFor="login-password" className="text-sm font-medium text-foreground">
-            Password
-          </label>
-          <Link href="/auth/forgot-password" className="text-xs text-primary hover:underline">
-            Forgot password?
-          </Link>
-        </div>
-        <div className="relative" suppressHydrationWarning>
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        <label htmlFor="login-password" className="text-xs font-medium text-slate-300 uppercase tracking-wide">
+          Password
+        </label>
+        <div className="relative">
           <input
             id="login-password"
             type={showPassword ? "text" : "password"}
-            autoComplete="current-password"
-            {...register("password")}
-            className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all placeholder:text-muted-foreground/60"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
+            autoComplete="current-password"
+            required
+            className="w-full h-11 bg-white/8 border border-white/15 rounded-xl px-4 pr-12 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/60 focus:bg-white/10 transition-all"
           />
           <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
             aria-label={showPassword ? "Hide password" : "Show password"}
+            id="login-toggle-password"
           >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showPassword ? "👁️" : "👁️‍🗨️"}
           </button>
         </div>
-        <FieldError message={errors.password?.message} />
       </div>
 
-      {/* ── Submit ───────────────────────────────────────────────────── */}
-      <button
-        id="login-submit-btn"
-        type="submit"
-        disabled={isPending}
-        className="
-          w-full py-3 px-4 bg-primary text-primary-foreground rounded-xl
-          font-semibold text-sm hover:bg-primary/90
-          disabled:opacity-60 disabled:cursor-not-allowed
-          transition-all duration-200
-          flex items-center justify-center gap-2
-          shadow-sm hover:shadow-md active:scale-[0.99]
-        "
-      >
-        {isPending ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Signing in…
-          </>
-        ) : (
-          "Sign In"
-        )}
-      </button>
-
-      {/* ── Divider ──────────────────────────────────────────────────── */}
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-muted-foreground">Or continue with</span>
-        </div>
+      <div className="flex justify-end">
+        <a href="/auth/forgot-password" className="text-xs text-amber-400 hover:text-amber-300 transition-colors">
+          Forgot password?
+        </a>
       </div>
 
-      {/* ── Google Sign-In ───────────────────────────────────────────── */}
-      <GoogleSignInButton
-        label="Continue with Google"
-        onSuccess={handleGoogleSuccess}
-        onError={(msg) => {
-          setGoogleSuccess(null);
-          setGoogleError(msg);
-        }}
-      />
+      {error && (
+        <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
+          {error}
+        </div>
+      )}
 
-      {/* ── Footer ───────────────────────────────────────────────────── */}
-      <p className="text-center text-sm text-muted-foreground">
+      <Button type="submit" isLoading={isLoading} className="w-full" size="lg" id="login-submit-btn">
+        Sign In
+      </Button>
+
+      <div className="relative flex items-center">
+        <div className="flex-1 h-px bg-white/10" />
+        <span className="px-3 text-xs text-slate-500">OR</span>
+        <div className="flex-1 h-px bg-white/10" />
+      </div>
+
+      <p className="text-center text-sm text-slate-400">
         Don&apos;t have an account?{" "}
-        <Link href={createAccountHref} className="text-primary font-semibold hover:underline">
-          Create one
-        </Link>
+        <a href="/auth/register" className="text-amber-400 hover:text-amber-300 font-medium transition-colors">
+          Sign up free
+        </a>
       </p>
     </form>
   );
