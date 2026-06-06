@@ -153,6 +153,11 @@ export const ProductVariantSchema = z
     stock_qty: z.number().int().min(0),
     is_active: z.boolean(),
     image_url: NullableUrlSchema.optional(),
+    barcode: z.string().nullable().optional(),
+    is_default: z.boolean().optional(),
+    weight_kg: DecimalStrSchema.nullable().optional(),
+    dimensions_cm: z.record(z.string(), z.unknown()).nullable().optional(),
+    notes: z.string().optional().default(""),
   })
   .passthrough();
 
@@ -306,6 +311,14 @@ export const ProductDetailSchema = z
     faqs: z.array(ProductFaqSchema).default([]),
     variants: z.array(ProductVariantSchema).default([]),
     status: ProductStatusSchema,
+    weight_kg: DecimalStrSchema.nullable().optional(),
+    condition: ProductConditionSchema.default("new"),
+    is_pre_order: z.boolean().default(false),
+    pre_order_date: IsoDateSchema.nullable().optional(),
+    meta_title: z.string().optional().default(""),
+    meta_description: z.string().optional().default(""),
+    age_group: z.string().optional().default(""),
+    gender_target: z.string().optional().default(""),
     category_name: z.string().nullable().optional(),
     category_slug: z.string().nullable().optional(),
     sub_category_name: z.string().nullable().optional(),

@@ -261,6 +261,8 @@ export const VendorProductCreateSchema = z.object({
   // ── Physical attributes ──────────────────────────────────────────────────
   weight_kg:           z.string().optional().or(z.literal("")),  // e.g. "1.5"
   condition:           z.enum(["new", "used", "refurbished"]).optional().default("new"),
+  is_pre_order:        z.boolean().optional().default(false),
+  pre_order_date:      z.string().nullable().optional(),
   // Relations — arrays of UUID strings matching PrimaryKeyRelatedField(many=True)
   category_ids:        z.array(z.string().uuid()).min(1, "At least one category is required").max(15),
   sub_category_ids:    z.array(z.string().uuid()).optional(),
@@ -280,6 +282,8 @@ export const VendorProductCreateSchema = z.object({
   // ── SEO overrides ────────────────────────────────────────────────────────
   meta_title:           z.string().max(160).optional().or(z.literal("")),
   meta_description:     z.string().max(320).optional().or(z.literal("")),
+  age_group:            z.string().optional().or(z.literal("")),
+  gender_target:        z.string().optional().or(z.literal("")),
   // ── Variants (Step 5 builder output) ────────────────────────────────────
   variants: z.array(z.object({
     size_id:        z.string().uuid().nullable().optional(),
@@ -288,6 +292,11 @@ export const VendorProductCreateSchema = z.object({
     stock_qty:      z.number().int().min(0).optional().default(0),
     sku:            z.string().optional(),
     is_active:      z.boolean().optional().default(true),
+    weight_kg:      z.string().nullable().optional(),
+    barcode:        z.string().optional(),
+    is_default:     z.boolean().optional(),
+    dimensions_cm:  z.record(z.string(), z.unknown()).nullable().optional(),
+    notes:          z.string().optional(),
   })).optional().default([]),
 });
 

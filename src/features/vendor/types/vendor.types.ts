@@ -224,6 +224,10 @@ export interface VendorProductCreatePayload {
   stock_qty:             number;
   max_stock?:            number | null;
   // Relations — all sent as arrays of UUID strings (PrimaryKeyRelatedField many=True)
+  weight_kg?:            string | null;
+  condition?:            "new" | "used" | "refurbished";
+  is_pre_order?:         boolean;
+  pre_order_date?:       string | null;
   category_ids:          string[];       // 1–15 category IDs, min 1 required
   sub_category_ids?:     string[];       // optional sub-category IDs
   size_ids?:             string[];       // pre-existing Size object IDs
@@ -237,7 +241,24 @@ export interface VendorProductCreatePayload {
   featured?:             boolean;
   commission_rate?:      string;         // Decimal string
   status?:               ProductStatus;
+  meta_title?:           string;
+  meta_description?:     string;
+  age_group?:            string;
+  gender_target?:        string;
   idempotency_key?:      string;         // UUID v4
+  variants?: Array<{
+    size_id?:        string | null;
+    color_id?:       string | null;
+    price_override?: string | null;
+    stock_qty?:      number;
+    sku?:            string;
+    is_active?:      boolean;
+    weight_kg?:      string | null;
+    barcode?:        string;
+    is_default?:     boolean;
+    dimensions_cm?:  Record<string, unknown> | null;
+    notes?:          string;
+  }>;
 }
 
 export type VendorProductUpdatePayload = Partial<VendorProductCreatePayload>;
@@ -466,4 +487,3 @@ export interface PayoutRequestResult {
   currency:      string;
   message:       string;
 }
-

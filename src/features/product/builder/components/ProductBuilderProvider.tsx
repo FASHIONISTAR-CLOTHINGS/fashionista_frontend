@@ -7,8 +7,8 @@
  * Uses react-hook-form with zodResolver over the composite ProductBuilderFormSchema.
  * All step components consume form state via `useFormContext()` — no prop-drilling.
  *
- * Draft persistence: every field change triggers a debounced save to `localStorage`
- * keyed by `product-draft-{vendorId}`. On mount, the draft is restored.
+ * Draft persistence: field changes are cached locally and synced to the
+ * backend ProductDraftSession. Commit creates the canonical Product exactly once.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * Architecture:
@@ -82,7 +82,7 @@ interface BuilderContextValue {
   isSubmitting: boolean;
   /** Set submitting state from hook. */
   setIsSubmitting: (v: boolean) => void;
-  /** Product UUID populated after first draft-save. */
+  /** Product UUID/slug populated after final commit or edit-mode save. */
   productId: string | null;
   /** Set productId after create-draft response. */
   setProductId: (id: string) => void;
@@ -114,7 +114,7 @@ import type { Path } from "react-hook-form";
 
 const STEP_FIELDS: Record<number, Array<Path<ProductBuilderFormValues>>> = {
   1: ["title", "description", "short_description", "condition", "category_ids", "sub_category_ids", "tag_ids"],
-  2: ["price", "old_price", "currency", "stock_qty", "requires_measurement", "is_customisable", "shipping_amount", "courier_id"],
+  2: ["price", "old_price", "currency", "stock_qty", "weight_kg", "requires_measurement", "is_customisable", "shipping_amount", "courier_id"],
   3: ["cover_image_public_id", "cover_image_url", "gallery"],
   4: ["size_ids", "color_ids"],
   5: ["variants"],
@@ -384,13 +384,13 @@ export function ProductBuilderProvider({
           idempotency_key: store.idempotency_key || undefined,
         });
 
-        // 2. Commit draft session on backend (creates product)
+        // 2. Commit draft session on backend (creates product once).
         const committedProduct = await commitDraftSession(key);
 
         // 3. Clear draft
         clearDraft();
 
-        // 4. Submit to parent with the newly created product slug/id
+        // 4. Notify parent for post-commit navigation/cache refresh only.
         await onSubmit(values, committedProduct.slug || committedProduct.id);
       } else {
         await onSubmit(values, productId);

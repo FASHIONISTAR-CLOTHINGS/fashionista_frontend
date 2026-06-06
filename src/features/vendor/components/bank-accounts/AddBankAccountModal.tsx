@@ -135,16 +135,16 @@ export function AddBankAccountModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fadeIn">
       <div
         className={cn(
-          "max-w-md w-full rounded-2xl border border-slate-700 p-6 relative",
-          "bg-gradient-to-b from-slate-900 to-slate-950",
-          "shadow-2xl shadow-black/50",
+          "max-w-md w-full rounded-2xl border border-[#ECE6D6] p-6 relative",
+          "bg-white text-[#1A1208]",
+          "shadow-2xl shadow-black/15",
         )}
         id="add-bank-account-modal"
       >
         <button
           type="button"
           onClick={() => onOpenChange(false)}
-          className="absolute right-4 top-4 text-slate-400 hover:text-white transition"
+          className="absolute right-4 top-4 text-[#7A6B44] hover:text-[#01454A] transition"
           aria-label="Close"
         >
           <X className="h-4 w-4" />
@@ -152,14 +152,14 @@ export function AddBankAccountModal({
 
         <div className="pb-2">
           <div className="flex items-center gap-3 mb-1">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600/20 to-indigo-600/20 border border-violet-500/20">
-              <Building2 className="h-5 w-5 text-violet-400" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#01454A]/10 border border-[#01454A]/15">
+              <Building2 className="h-5 w-5 text-[#01454A]" />
             </div>
             <div>
-              <h2 className="text-white text-lg font-semibold">
+              <h2 className="text-[#1A1208] text-lg font-semibold">
                 Add Bank Account
               </h2>
-              <p className="text-slate-400 text-xs mt-0.5">
+              <p className="text-[#7A6B44] text-xs mt-0.5">
                 Verify your account details to receive payouts
               </p>
             </div>
@@ -167,10 +167,10 @@ export function AddBankAccountModal({
         </div>
 
         {/* Security notice */}
-        <div className="flex items-start gap-2.5 rounded-xl bg-violet-600/10 border border-violet-500/20 p-3 mb-4">
-          <Lock className="h-4 w-4 text-violet-400 flex-shrink-0 mt-0.5" />
-          <p className="text-[11px] text-violet-300/80 leading-relaxed">
-            Your account number is <strong className="text-violet-300">encrypted</strong> and stored securely.
+        <div className="flex items-start gap-2.5 rounded-xl bg-[#FFF6E3] border border-[#FDA600]/25 p-3 mb-4">
+          <Lock className="h-4 w-4 text-[#01454A] flex-shrink-0 mt-0.5" />
+          <p className="text-[11px] text-[#7A6B44] leading-relaxed">
+            Your account number is <strong className="text-[#01454A]">encrypted</strong> and stored securely.
             Only the last 4 digits are displayed in your dashboard.
           </p>
         </div>
@@ -178,7 +178,7 @@ export function AddBankAccountModal({
         <div className="space-y-4">
           {/* Bank Selection */}
           <div>
-            <Label className="text-xs text-slate-400 mb-1.5 block">Bank Name</Label>
+            <Label className="text-xs text-[#7A6B44] mb-1.5 block">Bank Name</Label>
             <BankSelectField
               value={bankCode}
               onChange={handleBankChange}
@@ -189,7 +189,7 @@ export function AddBankAccountModal({
 
           {/* Account Number */}
           <div>
-            <Label htmlFor="bank-account-number" className="text-xs text-slate-400 mb-1.5 block">
+            <Label htmlFor="bank-account-number" className="text-xs text-[#7A6B44] mb-1.5 block">
               Account Number
             </Label>
             <div className="relative">
@@ -205,9 +205,9 @@ export function AddBankAccountModal({
                 disabled={isSaving}
                 className={cn(
                   "h-10 rounded-xl font-mono tracking-widest text-sm",
-                  "bg-slate-800/60 border-slate-700 text-white",
-                  "placeholder:text-slate-500 placeholder:tracking-normal placeholder:font-sans",
-                  "focus-visible:ring-violet-500/50 focus-visible:border-violet-500/50",
+                  "bg-white border-[#D9D9D9] text-[#1A1208]",
+                  "placeholder:text-[#7A6B44]/45 placeholder:tracking-normal placeholder:font-sans",
+                  "focus-visible:ring-[#FDA600]/40 focus-visible:border-[#FDA600]",
                 )}
               />
               {accountNumber.length === 10 && (
@@ -216,7 +216,7 @@ export function AddBankAccountModal({
                 </div>
               )}
             </div>
-            <p className="text-[11px] text-slate-500 mt-1">
+            <p className="text-[11px] text-[#7A6B44] mt-1">
               {accountNumber.length}/10 digits
             </p>
           </div>
@@ -229,7 +229,7 @@ export function AddBankAccountModal({
               "w-full h-10 rounded-xl text-sm font-medium transition-all",
               isResolved
                 ? "bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 cursor-default"
-                : "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white",
+                : "bg-[#01454A] hover:bg-[#01454A]/90 text-white",
             )}
             id="verify-account-button"
           >
@@ -277,7 +277,7 @@ export function AddBankAccountModal({
               >
                 {/* Account Name (read-only) */}
                 <div>
-                  <Label className="text-xs text-slate-400 mb-1.5 block">
+                  <Label className="text-xs text-[#7A6B44] mb-1.5 block">
                     Account Holder Name
                   </Label>
                   <div
@@ -294,11 +294,11 @@ export function AddBankAccountModal({
                 {/* KYC Name Match indicator — derived from backend response field */}
                 {/* The actual kyc_name_matched comes back from createBankAccount.
                     Here we show a pre-save advisory note. */}
-                <div className="flex items-start gap-2 rounded-lg bg-slate-800/50 p-3 border border-slate-700/50">
-                  <ShieldCheck className="h-4 w-4 text-violet-400 flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2 rounded-lg bg-[#E6F4F5] p-3 border border-[#01454A]/15">
+                  <ShieldCheck className="h-4 w-4 text-[#01454A] flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-[11px] text-slate-300 font-medium">KYC Verification</p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-[11px] text-[#01454A] font-medium">KYC Verification</p>
+                    <p className="text-[11px] text-[#7A6B44] mt-0.5">
                       The account name will be cross-checked against your KYC identity after saving.
                     </p>
                   </div>
@@ -330,7 +330,7 @@ export function AddBankAccountModal({
             variant="ghost"
             onClick={() => onOpenChange(false)}
             disabled={isSaving}
-            className="flex-1 h-10 rounded-xl border border-slate-700/50 text-slate-400 hover:text-white hover:bg-slate-800"
+            className="flex-1 h-10 rounded-xl border border-[#D9D9D9] text-[#7A6B44] hover:text-[#01454A] hover:bg-[#F8F5ED]"
             id="add-bank-account-cancel"
           >
             Cancel
@@ -340,8 +340,8 @@ export function AddBankAccountModal({
             disabled={!canSave}
             className={cn(
               "flex-1 h-10 rounded-xl font-medium",
-              "bg-gradient-to-r from-violet-600 to-indigo-600",
-              "hover:from-violet-500 hover:to-indigo-500 text-white",
+              "bg-[#FDA600]",
+              "hover:bg-[#E8960A] text-black",
               "disabled:opacity-40 disabled:cursor-not-allowed",
             )}
             id="save-bank-account-button"

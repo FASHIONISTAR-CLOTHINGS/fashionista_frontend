@@ -122,6 +122,11 @@ export interface ProductVariant {
   stock_qty: number;
   is_active: boolean;
   image_url: string | null;
+  barcode?: string | null;
+  is_default?: boolean;
+  weight_kg?: string | null;
+  dimensions_cm?: Record<string, unknown> | null;
+  notes?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -259,6 +264,14 @@ export interface ProductDetail {
   faqs: ProductFaq[];
   variants: ProductVariant[];
   status: ProductStatus;
+  weight_kg?: string | null;
+  condition: ProductCondition;
+  is_pre_order: boolean;
+  pre_order_date?: string | null;
+  meta_title?: string;
+  meta_description?: string;
+  age_group?: string;
+  gender_target?: string;
   category_name: string | null;
   category_slug: string | null;
   sub_category_name: string | null;
@@ -334,6 +347,10 @@ export interface CreateProductInput {
   shipping_amount?: string;
   stock_qty: number;
   max_stock?: number | null;
+  weight_kg?: string | null;
+  condition?: ProductCondition;
+  is_pre_order?: boolean;
+  pre_order_date?: string | null;
   category_ids: string[];
   sub_category_ids?: string[];
   size_ids?: string[];
@@ -343,7 +360,27 @@ export interface CreateProductInput {
   is_customisable: boolean;
   hot_deal?: boolean;
   digital?: boolean;
+  featured?: boolean;
   commission_rate?: string;
+  status?: ProductStatus;
+  meta_title?: string;
+  meta_description?: string;
+  age_group?: string;
+  gender_target?: string;
+  courier_id?: string | null;
+  variants?: Array<{
+    size_id?: string | null;
+    color_id?: string | null;
+    price_override?: string | null;
+    stock_qty?: number;
+    sku?: string;
+    is_active?: boolean;
+    weight_kg?: string | null;
+    barcode?: string;
+    is_default?: boolean;
+    dimensions_cm?: Record<string, unknown> | null;
+    notes?: string;
+  }>;
   idempotency_key?: string;        // UUID v4 string
 }
 

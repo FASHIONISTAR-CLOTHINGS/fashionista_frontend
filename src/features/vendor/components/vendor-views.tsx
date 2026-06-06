@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -53,7 +53,6 @@ import {
   ProductBuilder,
   ProductBuilderProvider,
   publishProduct,
-  useCreateProduct,
   useVendorCatalogProducts,
   useUpdateProduct,
   productKeys,
@@ -92,6 +91,7 @@ import {
 import type { KycDocumentType } from "@/features/kyc";
 import { BankAccountsList, PayoutGateGuard } from "./bank-accounts";
 import { uploadFile } from "@/features/uploads/services/upload.service";
+import { AddressReferenceField, type AddressSelection } from "@/shared/reference-data";
 
 // ── Recharts (installed with shadcn) ─────────────────────────────────────────
 
@@ -132,6 +132,25 @@ const BV = {
   muted:    "#7A6B44",
   ink:      "#1A1208",
 } as const;
+
+const emptyAddressSelection = (city = "", state = "", country = "Nigeria"): AddressSelection => ({
+  country_code: country === "Nigeria" || country === "NG" ? "NG" : country,
+  state_code: state,
+  lga_code: "",
+  city_code: city,
+  custom_city: city,
+  street_address: "",
+});
+
+const applyAddressSelection = <T extends { city: string; state: string; country?: string }>(
+  current: T,
+  address: AddressSelection,
+): T => ({
+  ...current,
+  city: address.custom_city || address.city_code || address.lga_code || current.city,
+  state: address.state_code || current.state,
+  country: address.country_code === "NG" ? "Nigeria" : address.country_code || current.country,
+});
 
 // ── Shared primitives ─────────────────────────────────────────────────────────
 function Badge({
@@ -1678,11 +1697,9 @@ export function VendorProductComposerView() {
   const qc       = useQueryClient();
   const vendorId = useAuthStore((s) => s.user?.id ?? "anonymous");
   const productSlugRef    = useRef<string | null>(null);
-  const createMutation    = useCreateProduct();
   const updateMutation    = useUpdateProduct(productSlugRef.current ?? "");
 
   const handleBuilderSubmit = async (values: ProductBuilderFormValues, productId: string | null) => {
-    const idempotencyKey = productId ?? (typeof crypto !== "undefined" ? crypto.randomUUID() : Date.now().toString());
     const sizeIds   = (values.size_ids   ?? []) as string[];
     const colorIds  = (values.color_ids  ?? []) as string[];
     const tagIds    = (values.tag_ids    ?? []) as string[];
@@ -1717,17 +1734,17 @@ export function VendorProductComposerView() {
       })),
     };
 
-    if (!productSlugRef.current) {
-      const created = await createMutation.mutateAsync({ ...sharedPayload, idempotency_key: idempotencyKey });
-      savedSlug = created.slug;
-      productSlugRef.current = savedSlug;
-    } else {
+    if (productSlugRef.current) {
       await updateMutation.mutateAsync(sharedPayload);
+    } else if (productId) {
+      savedSlug = productId;
+      productSlugRef.current = productId;
     }
 
-    // publish_intent === "pending" triggers a publish API call after create/update (admin review queue)
+    // Draft commit owns creation. This parent only handles optional review submission and navigation.
     if (values.publish_intent === "pending" && savedSlug) await publishProduct(savedSlug);
     void qc.invalidateQueries({ queryKey: productKeys.lists() });
+    void qc.invalidateQueries({ queryKey: productKeys.vendorList() });
     router.push("/vendor/products/catalog");
   };
 
