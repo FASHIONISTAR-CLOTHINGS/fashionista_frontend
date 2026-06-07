@@ -38,18 +38,12 @@ let consecutiveFailures = 0;
 const CIRCUIT_THRESHOLD = 5;
 const CIRCUIT_RESET_MS = 30_000; // 30 seconds
 
-// ── Token Refresh Queue ───────────────────────────────────────────────────────
-let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
-
-function subscribeTokenRefresh(cb: (token: string) => void) {
-  refreshSubscribers.push(cb);
-}
-
-function onRefreshed(token: string) {
-  refreshSubscribers.forEach((cb) => cb(token));
-  refreshSubscribers = [];
-}
+import {
+  isRefreshing,
+  setRefreshing,
+  subscribeTokenRefresh,
+  onRefreshed,
+} from "./refresh-state";
 
 // ── Axios Instance ────────────────────────────────────────────────────────────
 export const apiSync: AxiosInstance = axios.create({
@@ -185,7 +179,7 @@ apiSync.interceptors.response.use(
       }
 
       originalRequest._retry = true;
-      isRefreshing = true;
+      setRefreshing(true);
 
       try {
         const refreshToken = readRefreshToken();
@@ -228,7 +222,7 @@ apiSync.interceptors.response.use(
         }
         return Promise.reject(refreshError);
       } finally {
-        isRefreshing = false;
+        setRefreshing(false);
       }
     }
 

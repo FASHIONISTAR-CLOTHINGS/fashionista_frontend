@@ -255,10 +255,12 @@ export function FashionistarImage({
 
   // ── Dev warnings ───────────────────────────────────────────────────────────
   if (process.env.NODE_ENV === "development") {
-    if (alt === undefined || alt === null) {
-      // We provide a fallback below, but it's still best practice to pass an alt.
-      // We'll log it as info instead of warn to reduce noise during mass-refactors.
-      console.info(`[FashionistarImage] No alt prop provided for ${src || publicId}. Using fallback.`);
+    if (alt === undefined || alt === null || (typeof alt === "string" && alt.trim() === "")) {
+      // Production fallback provided below, but we log in dev to maintain high standards.
+      console.info(
+        `[FashionistarImage] Missing alt prop for ${src || publicId} — required for accessibility. ` +
+        "Falling back to branded default."
+      );
     }
     if (!CLOUD_NAME && publicId) {
       console.warn(

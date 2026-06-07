@@ -37,7 +37,12 @@ export function AuthAwareGuestPage({ children }: AuthAwareGuestPageProps) {
       description: "You're already signed in. Redirecting you now…",
       duration: 3000,
     });
-    router.replace(destination);
+
+    const timeoutId = setTimeout(() => {
+      router.replace(destination);
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
   }, [hydrated, isAuthenticated, returnUrl, router, user]);
 
   if (!hydrated || isAuthenticated) {

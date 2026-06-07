@@ -321,7 +321,7 @@ export default function AboutUsPage() {
         >
           <FashionistarImage
             src="/girl.png"
-            alt=""
+            alt="Fashionistar community member showcasing elegant attire"
             fill
             sizes="256px"
             className="object-contain object-bottom"

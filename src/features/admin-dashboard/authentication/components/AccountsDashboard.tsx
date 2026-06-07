@@ -368,10 +368,13 @@ export function AccountsDashboard() {
                     {/* Top Row: Avatar & Badges */}
                     <div className="flex items-start justify-between">
                       {user.avatar ? (
-                        <img
+                        <FashionistarImage
                           src={user.avatar}
-                          alt={user.first_name || ""}
-                          className="w-14 h-14 rounded-2xl object-cover border border-[#ECE6D6] group-hover:scale-105 transition-transform duration-200"
+                          alt={`${user.first_name || ""} ${user.last_name || ""}`.trim() || "User avatar"}
+                          width={56}
+                          height={56}
+                          className="w-14 h-14 rounded-2xl border border-[#ECE6D6] group-hover:scale-105 transition-transform duration-200"
+                          objectFit="cover"
                         />
                       ) : (
                         <div className="w-14 h-14 rounded-2xl bg-[#01454A]/5 border border-[#01454A]/15 text-[#01454A] font-bon_foyage text-lg flex items-center justify-center group-hover:bg-[#01454A]/10 transition-colors">
@@ -491,7 +494,14 @@ export function AccountsDashboard() {
                 {/* Identity Header */}
                 <div className="px-6 py-5 border-b border-[#ECE6D6]/80 flex items-center gap-4">
                   {selectedUser.avatar ? (
-                    <img src={selectedUser.avatar} alt={selectedUser.first_name || ""} className="w-16 h-16 rounded-2xl object-cover border border-[#ECE6D6]" />
+                    <FashionistarImage
+                      src={selectedUser.avatar}
+                      alt={`${selectedUser.first_name || ""} ${selectedUser.last_name || ""}`.trim() || "User avatar"}
+                      width={64}
+                      height={64}
+                      className="w-16 h-16 rounded-2xl border border-[#ECE6D6]"
+                      objectFit="cover"
+                    />
                   ) : (
                     <div className="w-16 h-16 rounded-2xl bg-[#01454A]/5 border border-[#01454A]/15 text-[#01454A] font-bon_foyage text-2xl flex items-center justify-center">
                       {`${selectedUser.first_name?.[0] || ""}${selectedUser.last_name?.[0] || ""}`.toUpperCase() || "U"}

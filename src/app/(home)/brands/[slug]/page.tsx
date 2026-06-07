@@ -91,6 +91,26 @@ export async function generateMetadata({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Static Params
+// ─────────────────────────────────────────────────────────────────────────────
+
+const VALIDATION_SLUG = "__brand_validation__";
+
+export async function generateStaticParams() {
+  try {
+    const brands = await getCatalogBrands();
+    const params = brands
+      .slice(0, 48)
+      .filter((b) => Boolean(b.slug))
+      .map((b) => ({ slug: b.slug }));
+
+    return params.length > 0 ? params : [{ slug: VALIDATION_SLUG }];
+  } catch {
+    return [{ slug: VALIDATION_SLUG }];
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Page
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -98,6 +118,8 @@ export default async function BrandDetailPage({
   params,
 }: BrandDetailPageProps) {
   const { slug } = await params;
+
+  if (slug === VALIDATION_SLUG) notFound();
 
   // Parallel fetch: brand detail + all brands for the "More Brands" rail
   const [brand, allBrands] = await Promise.all([

@@ -14,9 +14,24 @@
  */
 import ky, { type KyInstance, HTTPError } from "ky";
 import { toast } from "sonner";
-import { readAccessToken } from "@/features/auth/lib/auth-session.client";
-import { getAsyncApiBaseUrl } from "@/core/config/api-roots";
+import {
+  readAccessToken,
+  readRefreshToken,
+  patchStoredAuthState,
+  syncMirrorCookies,
+  buildAuthSessionMirror,
+  clearStoredAuthState,
+  clearMirrorCookies,
+} from "@/features/auth/lib/auth-session.client";
+import { getAsyncApiBaseUrl, getClientBackendRootUrl } from "@/core/config/api-roots";
 import { buildAuditHeadersSync } from "@/lib/audit-headers";
+import {
+  isRefreshing,
+  setRefreshing,
+  subscribeTokenRefresh,
+  onRefreshed,
+} from "./refresh-state";
+import axios from "axios";
 
 // ── Async Client Instance ─────────────────────────────────────────────────────
 export const apiAsync: KyInstance = ky.create({
@@ -74,10 +89,67 @@ export const apiAsync: KyInstance = ky.create({
 
     // ── After Response: normalize errors + dedup toast ────────────────────
     afterResponse: [
-      async (_request, _options, response) => {
+      async (request, options, response) => {
+        const isAuthEndpoint = (
+          request.url.includes("/auth/login") ||
+          request.url.includes("/auth/register") ||
+          request.url.includes("/auth/google") ||
+          request.url.includes("/auth/verify-otp") ||
+          request.url.includes("/auth/resend-otp") ||
+          request.url.includes("/password/reset") ||
+          request.url.includes("/auth/token/refresh")
+        );
+
+        if (response.status === 401 && !isAuthEndpoint) {
+          if (isRefreshing) {
+            return new Promise((resolve) => {
+              subscribeTokenRefresh((token: string) => {
+                request.headers.set("Authorization", `Bearer ${token}`);
+                resolve(ky(request, options));
+              });
+            });
+          }
+
+          setRefreshing(true);
+
+          try {
+            const refreshToken = readRefreshToken();
+            if (!refreshToken) throw new Error("No refresh token");
+
+            const { data } = await axios.post(
+              `${getClientBackendRootUrl()}/api/v1/auth/token/refresh/`,
+              { refresh: refreshToken },
+              {
+                withCredentials: true,
+                headers: { "ngrok-skip-browser-warning": "true" },
+              },
+            );
+
+            const newToken: string = data.access || data.data?.access;
+            patchStoredAuthState({
+              accessToken: newToken,
+              isAuthenticated: true,
+            });
+            syncMirrorCookies(buildAuthSessionMirror());
+
+            onRefreshed(newToken);
+            request.headers.set("Authorization", `Bearer ${newToken}`);
+            return ky(request, options);
+          } catch (error) {
+            if (typeof window !== "undefined") {
+              clearStoredAuthState();
+              clearMirrorCookies();
+              window.location.href = "/auth/sign-in";
+            }
+            throw error;
+          } finally {
+            setRefreshing(false);
+          }
+        }
+
         if (!response.ok) {
-          // Log server errors in development
-          if (process.env.NODE_ENV === "development") {
+          // ── Dev logging: silence 401 (expected during refresh/logout) ───
+          if (process.env.NODE_ENV === "development" && response.status !== 401) {
             const body = await response.clone().text();
             console.error(
               `[apiAsync] ${response.status} ${response.url}\n${body}`,
@@ -87,7 +159,7 @@ export const apiAsync: KyInstance = ky.create({
           // ── Dedup toast (mirrors client.sync.ts logic) ──────────────────
           if (typeof window !== "undefined") {
             const status = response.status;
-            // Only show for non-401 (401 handled by apiSync refresh flow)
+            // Only show for non-401 (handled by refresh logic above)
             if (status !== 401) {
               let richMessage = "An unexpected error occurred. Please try again.";
               try {

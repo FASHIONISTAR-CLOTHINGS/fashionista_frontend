@@ -2,7 +2,7 @@
 
 import BarChart from "@/components/ui/composites/Charts";
 import { ChartOptions, ChartData } from "chart.js";
-import Image from "next/image";
+import { FashionistarImage } from "@/components/media";
 import { Suspense } from "react";
 import { TableRowSkeleton } from "@/shared/components/skeletons";
 import { useAdminDashboardKPI } from "../../catalog/hooks"; // imported from catalog hooks where it resides
@@ -99,19 +99,24 @@ export function AdminHomeDashboard() {
       address: "Onitsha, Anambra State",
     },
     {
-      name: "Chidera Igwe",
+      name: "Bolanle Adeyemi",
       image: "/woman3.svg",
-      address: "Onitsha, Anambra State",
+      address: "Lekki, Lagos State",
     },
     {
-      name: "Chidera Igwe",
+      name: "Kelechi Okafor",
       image: "/woman4.svg",
-      address: "Onitsha, Anambra State",
+      address: "Enugu, Enugu State",
     },
     {
-      name: "Chidera Igwe",
+      name: "Zainab Musa",
+      image: "/woman.svg",
+      address: "Kano, Kano State",
+    },
+    {
+      name: "Tunde Ednut",
       image: "/man4_asset.svg",
-      address: "Onitsha, Anambra State",
+      address: "Surulere, Lagos State",
     },
   ];
 
@@ -119,10 +124,10 @@ export function AdminHomeDashboard() {
     return (
       <div key={index} className="flex justify-between items-center w-full">
         <div className="flex items-center gap-2">
-          <div className="w-[45px] h-[45px] rounded-full">
-            <Image
+          <div className="w-[45px] h-[45px] rounded-full overflow-hidden">
+            <FashionistarImage
               src={member.image}
-              alt={member.name}
+              alt={member.name || "Member avatar"}
               width={100}
               height={100}
               className="w-full h-full rounded-full object-cover"

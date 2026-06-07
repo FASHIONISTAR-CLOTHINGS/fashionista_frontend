@@ -266,7 +266,7 @@ const AdminTopBanner = ({
 }: AdminTopBannerProps) => {
   const searchId = useId();
   const user = useAuthStore((state) => state.user);
-  const displayName = title || user?.first_name || user?.username || "Admin";
+  const displayName = title || user?.first_name || user?.email || "Admin";
 
   return (
     <div
@@ -280,7 +280,7 @@ const AdminTopBanner = ({
       <div className="flex items-center gap-3">
         <FashionistarImage
           src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0D8ABC&color=fff`}
-          alt={`${displayName}'s avatar`}
+          alt={displayName ? `${displayName}'s avatar` : "Admin avatar"}
           height={50}
           width={50}
           className="rounded-full h-[45px] w-[45px] object-cover border border-border"

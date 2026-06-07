@@ -135,6 +135,26 @@ function SubCategoryCard({ child }: { child: SubCategoryChild }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Static Params
+// ─────────────────────────────────────────────────────────────────────────────
+
+const VALIDATION_SLUG = "__category_validation__";
+
+export async function generateStaticParams() {
+  try {
+    const categories = await getCatalogCategories();
+    const params = categories
+      .slice(0, 48)
+      .filter((c) => Boolean(c.slug))
+      .map((c) => ({ slug: c.slug }));
+
+    return params.length > 0 ? params : [{ slug: VALIDATION_SLUG }];
+  } catch {
+    return [{ slug: VALIDATION_SLUG }];
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Page
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -142,6 +162,8 @@ export default async function CategorySlugPage({
   params,
 }: CategorySlugPageProps) {
   const { slug } = await params;
+
+  if (slug === VALIDATION_SLUG) notFound();
 
   // Parallel fetch: detail (with children) + brands for filter chips
   const [category, brands] = await Promise.all([

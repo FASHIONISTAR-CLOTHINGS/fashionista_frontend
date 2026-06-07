@@ -53,7 +53,11 @@ export function AuthAwareSignInPage() {
 
       // Use replace() so the browser back button doesn't return to the sign-in
       // page after the redirect — otherwise UX would be confusing.
-      router.replace(destination);
+      const timeoutId = setTimeout(() => {
+        router.replace(destination);
+      }, 0);
+
+      return () => clearTimeout(timeoutId);
     }
   }, [hydrated, isAuthenticated, user, router, returnUrl]);
 

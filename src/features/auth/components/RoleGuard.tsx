@@ -48,17 +48,24 @@ export function RoleGuard({
     }
 
     if (!isAuthenticated || !accessToken) {
-      router.replace(`/auth/sign-in?returnUrl=${encodeURIComponent(returnUrl)}`);
-      return;
+      const timer = setTimeout(() => {
+        router.replace(`/auth/sign-in?returnUrl=${encodeURIComponent(returnUrl)}`);
+      }, 0);
+      return () => clearTimeout(timer);
     }
 
     if (!isRoleAllowed(requiredRole, role)) {
-      router.replace(getCanonicalDashboardPath(user?.role, user?.is_staff === true));
-      return;
+      const timer = setTimeout(() => {
+        router.replace(getCanonicalDashboardPath(user?.role, user?.is_staff === true));
+      }, 0);
+      return () => clearTimeout(timer);
     }
 
     if (profileGateFailed) {
-      router.replace(role === "vendor" ? "/vendor/setup" : "/client/dashboard");
+      const timer = setTimeout(() => {
+        router.replace(role === "vendor" ? "/vendor/setup" : "/client/dashboard");
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [
     accessToken,
