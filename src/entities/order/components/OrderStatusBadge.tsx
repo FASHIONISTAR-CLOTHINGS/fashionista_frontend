@@ -7,7 +7,7 @@
  * Vertical stepper timeline for order lifecycle.
  */
 
-import React from "react";
+
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "../types";
 import type { OrderStatus, OrderTimelineEntry } from "../types";
 

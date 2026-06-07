@@ -6,7 +6,7 @@
  * Used in catalog grid, featured sliders, and search results.
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ProductListItem } from "../types";

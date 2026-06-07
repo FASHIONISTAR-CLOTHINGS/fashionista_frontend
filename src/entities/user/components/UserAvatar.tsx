@@ -6,7 +6,6 @@
  * Glassmorphism ring for premium feel.
  */
 
-import React from "react";
 import Image from "next/image";
 import type { User } from "../types";
 

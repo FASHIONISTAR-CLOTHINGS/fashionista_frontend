@@ -10,6 +10,7 @@
  */
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { Button, Card, Badge } from "@/shared/ui";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -294,8 +295,8 @@ export function OrderConfirmation({ orderNumber, onViewOrder }: ConfirmationStep
       </div>
       <div className="flex flex-col gap-3 max-w-sm mx-auto">
         <Button onClick={onViewOrder} className="w-full" id="view-order-btn">View Order Status</Button>
-        <Button variant="ghost" as="a" href="/catalog" className="w-full" id="continue-shopping-btn">
-          Continue Shopping
+        <Button variant="ghost" asChild className="w-full" id="continue-shopping-btn">
+          <Link href="/catalog">Continue Shopping</Link>
         </Button>
       </div>
     </div>

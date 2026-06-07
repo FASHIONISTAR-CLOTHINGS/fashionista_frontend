@@ -3,7 +3,7 @@
  * Global setup — runs ONCE before all Playwright tests.
  * Seeds test users and captures auth state for fixtures.
  */
-import { test as setup, expect } from "@playwright/test";
+import { test as setup } from "@playwright/test";
 import path from "path";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -24,7 +24,6 @@ setup("seed: client auth", async ({ request }) => {
   });
 
   if (loginRes.ok()) {
-    const { access, refresh } = await loginRes.json();
     await request.storageState({ path: CLIENT_AUTH_FILE });
     // Store tokens in localStorage via a page context
     console.log("✅ Client auth seeded");

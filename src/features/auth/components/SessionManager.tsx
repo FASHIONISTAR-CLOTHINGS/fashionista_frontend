@@ -9,7 +9,7 @@
  * Backend: apps/authentication/services/session_service.py → SessionService
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ky from "ky";
 import { Card, Badge, Button, LoadingSpinner, EmptyState } from "@/shared/ui";

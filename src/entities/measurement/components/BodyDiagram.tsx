@@ -7,7 +7,7 @@
  * pulsing indicator when missing — used in MeasurementCapture flow.
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 
 export interface MeasurementPoint {
   id: string;

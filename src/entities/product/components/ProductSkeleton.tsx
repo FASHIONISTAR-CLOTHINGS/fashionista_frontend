@@ -6,7 +6,7 @@
  * Mirrors the exact dimensions and layout of ProductCard for zero layout shift.
  */
 
-import React from "react";
+
 
 interface ProductSkeletonProps {
   variant?: "card" | "list" | "compact";

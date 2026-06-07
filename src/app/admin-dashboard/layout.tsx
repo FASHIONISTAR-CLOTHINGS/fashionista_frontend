@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import AdminTopBanner from "@/components/shared/utilities/AdminTopBanner";
 import { RoleGuard } from "@/features/auth/components/RoleGuard";
 import { ErrorBoundary } from "@/shared";
+import { FashionistarImage } from "@/components/media";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);

@@ -14,6 +14,7 @@ import {
   useAdminUserLoginEvents,
   useAdminUserSessions,
 } from "../hooks";
+import { FashionistarImage } from "@/components/media";
 import { ADMIN_ROLE_OPTIONS } from "../types";
 import type { AdminUser } from "../types";
 import {

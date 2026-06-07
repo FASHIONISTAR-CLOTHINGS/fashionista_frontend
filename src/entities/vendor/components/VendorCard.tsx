@@ -5,9 +5,9 @@
  * Glassmorphism vendor profile card for marketplace listings.
  */
 
-import React from "react";
+
 import type { VendorCard as TVendorCard, VendorTier } from "../types";
-import { Badge } from "@/shared/ui";
+
 
 const TIER_CONFIG: Record<VendorTier, { label: string; color: string; icon: string }> = {
   standard: { label: "Standard", color: "text-slate-400", icon: "🧵" },

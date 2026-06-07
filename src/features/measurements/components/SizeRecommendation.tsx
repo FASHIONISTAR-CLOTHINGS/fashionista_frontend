@@ -7,7 +7,7 @@
  * API: POST /api/v1/ninja/measurements/size-recommendation/ → { size, confidence, notes }
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import ky from "ky";
 import { Card, LoadingSpinner, Badge } from "@/shared/ui";
@@ -36,7 +36,7 @@ export function SizeRecommendation({
 }: SizeRecommendationProps) {
   const [result, setResult] = useState<SizeRecommendationResult | null>(null);
 
-  const { mutate, isPending, isError, error } = useMutation({
+  const { mutate, isPending, isError } = useMutation({
     mutationFn: async () => {
       return ky.post("/api/v1/ninja/measurements/size-recommendation/", {
         json: {

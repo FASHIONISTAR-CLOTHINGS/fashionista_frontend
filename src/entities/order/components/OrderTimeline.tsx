@@ -7,7 +7,7 @@
  *   → tailoring → shipped → delivered / cancelled / refunded
  */
 
-import React from "react";
+
 
 type OrderStatus =
   | "pending_payment" | "confirmed" | "processing"

@@ -25,6 +25,7 @@ interface OrderListParams {
   page?: number;
   pageSize?: number;
   status?: string;
+  [key: string]: unknown;
 }
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────

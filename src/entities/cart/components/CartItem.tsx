@@ -7,7 +7,7 @@
  * Integrates with CartContext or parent state via callbacks.
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { SizeBadge } from "@/entities/product/components/SizeBadge";
 

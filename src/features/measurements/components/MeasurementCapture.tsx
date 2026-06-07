@@ -7,7 +7,7 @@
  * Integrates: POST /api/v1/ninja/measurements/ → MeasurementProfile
  */
 
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import ky from "ky";
 import { Button, Card } from "@/shared/ui";

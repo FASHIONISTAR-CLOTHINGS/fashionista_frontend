@@ -14,7 +14,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { LoadingSpinner, Button, EmptyState } from "@/shared/ui";
+import { LoadingSpinner, Button } from "@/shared/ui";
 import { useMeasurements } from "@/entities/measurement/hooks/use-measurements";
 
 interface CartItemLike {

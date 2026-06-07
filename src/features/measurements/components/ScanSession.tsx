@@ -9,7 +9,7 @@
  * Steps: Intro → Device Selection → QR/Link → Processing → Results
  */
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import ky from "ky";
 import { Button, Card, LoadingSpinner } from "@/shared/ui";
 
@@ -31,7 +31,7 @@ interface ScanSessionProps {
   onFallbackToManual?: () => void;
 }
 
-export function ScanSession({ onComplete, onSkip, onFallbackToManual }: ScanSessionProps) {
+export function ScanSession({ onComplete, onFallbackToManual }: ScanSessionProps) {
   const [step, setStep] = useState<ScanStep>("intro");
   const [deviceType, setDeviceType] = useState<DeviceType>("mobile");
   const [session, setSession] = useState<ScanSessionData | null>(null);

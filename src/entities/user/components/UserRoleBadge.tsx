@@ -6,7 +6,6 @@
  * branded visual labels with icons and color variants.
  */
 
-import React from "react";
 import { Badge } from "@/shared/ui";
 
 // Matches UnifiedUser.role choices in Django

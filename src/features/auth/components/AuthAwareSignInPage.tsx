@@ -59,6 +59,7 @@ export function AuthAwareSignInPage() {
 
       return () => clearTimeout(timeoutId);
     }
+    return undefined;
   }, [hydrated, isAuthenticated, user, router, returnUrl]);
 
   // While Zustand is rehydrating OR if the user is already authenticated,

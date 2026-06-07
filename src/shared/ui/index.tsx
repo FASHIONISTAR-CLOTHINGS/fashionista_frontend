@@ -7,6 +7,7 @@
  */
 
 import React, { ReactNode, ButtonHTMLAttributes, forwardRef, useEffect, useRef } from "react";
+import { Slot } from "@radix-ui/react-slot";
 
 // ── Button ───────────────────────────────────────────────────────────────────
 
@@ -20,6 +21,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
   children: ReactNode;
+  asChild?: boolean;
 }
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
@@ -43,11 +45,12 @@ const BUTTON_SIZES: Record<ButtonSize, string> = {
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
-    { variant = "primary", size = "md", isLoading, leftIcon, rightIcon, children, className = "", disabled, ...rest },
+    { variant = "primary", size = "md", isLoading, leftIcon, rightIcon, children, className = "", disabled, asChild = false, ...rest },
     ref
   ) => {
+    const Comp = asChild ? Slot : "button";
     return (
-      <button
+      <Comp
         ref={ref}
         disabled={disabled || isLoading}
         className={`
@@ -70,7 +73,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ) : null}
         {children}
         {!isLoading && rightIcon && <span className="flex-shrink-0">{rightIcon}</span>}
-      </button>
+      </Comp>
     );
   }
 );
@@ -84,13 +87,15 @@ interface CardProps {
   glass?: boolean;
   hover?: boolean;
   padding?: "none" | "sm" | "md" | "lg";
+  id?: string;
 }
 
 const CARD_PADDING = { none: "", sm: "p-4", md: "p-5", lg: "p-8" };
 
-export function Card({ children, className = "", glass = true, hover = false, padding = "md" }: CardProps) {
+export function Card({ children, className = "", glass = true, hover = false, padding = "md", id }: CardProps) {
   return (
     <div
+      id={id}
       className={`
         rounded-2xl border
         ${glass ? "bg-white/5 backdrop-blur-sm border-white/10" : "bg-slate-900 border-slate-800"}

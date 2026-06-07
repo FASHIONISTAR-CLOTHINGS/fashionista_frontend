@@ -6,7 +6,7 @@
  * Used in ProductCard, cart drawer, and order confirmation.
  */
 
-import React from "react";
+
 
 type SizeAvailability = "in_stock" | "low_stock" | "out_of_stock" | "made_to_order";
 

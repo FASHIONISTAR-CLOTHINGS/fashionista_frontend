@@ -8,8 +8,8 @@
  * Backend model: apps/measurements/models/scan.py → MeasurementShareToken
  */
 
-import React, { useState, useCallback } from "react";
-import { Modal, Button, LoadingSpinner } from "@/shared/ui";
+import { useState, useCallback } from "react";
+import { Modal, Button } from "@/shared/ui";
 import ky from "ky";
 
 interface ShareToken {

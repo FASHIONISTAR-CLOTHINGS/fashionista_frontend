@@ -7,7 +7,7 @@
  * estimated delivery, and CTAs to track/continue shopping.
  */
 
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { Button, Badge } from "@/shared/ui";
 import confetti from "canvas-confetti";

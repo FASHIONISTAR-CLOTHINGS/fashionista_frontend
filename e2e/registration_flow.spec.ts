@@ -12,7 +12,7 @@
  *   6. Land on dashboard
  */
 
-import { test, expect, Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
 const TEST_EMAIL = `e2e_reg_${Date.now()}@fashionistar-test.ng`;
@@ -21,9 +21,7 @@ const TEST_NAME = "Playwright TestUser";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-async function fillInput(page: Page, selector: string, value: string) {
-  await page.locator(selector).fill(value);
-}
+
 
 // ── Test Suite ────────────────────────────────────────────────────────────────
 

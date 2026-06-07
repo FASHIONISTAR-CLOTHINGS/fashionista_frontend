@@ -5,7 +5,7 @@
  * Glassmorphism cart summary panel — totals, discount, delivery estimate.
  */
 
-import React from "react";
+
 import type { Cart } from "../types";
 import { Badge, Button } from "@/shared/ui";
 

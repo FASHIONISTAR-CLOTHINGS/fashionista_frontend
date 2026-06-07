@@ -8,7 +8,7 @@
  * SVG body outline with measurement hotspots.
  */
 
-import React from "react";
+
 import type { MeasurementProfile, MeasurementCompletionStatus } from "../types";
 import { MEASUREMENT_FIELDS } from "../types";
 

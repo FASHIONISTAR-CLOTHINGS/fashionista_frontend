@@ -91,7 +91,7 @@ import {
 import type { KycDocumentType } from "@/features/kyc";
 import { BankAccountsList, PayoutGateGuard } from "./bank-accounts";
 import { uploadFile } from "@/features/uploads/services/upload.service";
-import { AddressReferenceField, type AddressSelection } from "@/shared/reference-data";
+import { type AddressSelection } from "@/shared/reference-data";
 
 // ── Recharts (installed with shadcn) ─────────────────────────────────────────
 
@@ -133,24 +133,9 @@ const BV = {
   ink:      "#1A1208",
 } as const;
 
-const emptyAddressSelection = (city = "", state = "", country = "Nigeria"): AddressSelection => ({
-  country_code: country === "Nigeria" || country === "NG" ? "NG" : country,
-  state_code: state,
-  lga_code: "",
-  city_code: city,
-  custom_city: city,
-  street_address: "",
-});
 
-const applyAddressSelection = <T extends { city: string; state: string; country?: string }>(
-  current: T,
-  address: AddressSelection,
-): T => ({
-  ...current,
-  city: address.custom_city || address.city_code || address.lga_code || current.city,
-  state: address.state_code || current.state,
-  country: address.country_code === "NG" ? "Nigeria" : address.country_code || current.country,
-});
+
+
 
 // ── Shared primitives ─────────────────────────────────────────────────────────
 function Badge({

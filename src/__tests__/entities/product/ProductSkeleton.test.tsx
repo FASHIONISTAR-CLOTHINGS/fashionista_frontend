@@ -3,7 +3,7 @@
  * Vitest + RTL unit tests for ProductSkeleton variants.
  */
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { ProductSkeleton } from "@/entities/product/components/ProductSkeleton";
 
 describe("ProductSkeleton", () => {

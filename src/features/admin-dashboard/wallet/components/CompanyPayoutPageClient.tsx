@@ -1,4 +1,4 @@
-"use client";
+import"use client";
 
 /**
  * features/admin-dashboard/wallet/components/CompanyPayoutPageClient.tsx

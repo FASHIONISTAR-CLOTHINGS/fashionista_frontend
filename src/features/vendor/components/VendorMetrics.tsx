@@ -7,10 +7,10 @@
  * API: GET /api/v1/ninja/vendor/metrics/?period=7d|30d|90d
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ky from "ky";
-import { Card, LoadingSpinner } from "@/shared/ui";
+import { Card } from "@/shared/ui";
 
 type Period = "7d" | "30d" | "90d";
 

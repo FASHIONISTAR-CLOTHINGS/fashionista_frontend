@@ -67,6 +67,7 @@ export function RoleGuard({
       }, 0);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [
     accessToken,
     hydrated,

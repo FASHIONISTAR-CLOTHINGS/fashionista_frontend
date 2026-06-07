@@ -7,7 +7,7 @@
  * Integrates: POST /api/v1/ninja/orders/{id}/initiate-payment/
  */
 
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import ky from "ky";
 import { Button, Card } from "@/shared/ui";

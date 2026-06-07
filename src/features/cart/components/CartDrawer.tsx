@@ -7,6 +7,7 @@
  */
 
 import React, { useCallback } from "react";
+import Link from "next/link";
 import { Button, Badge, LoadingSpinner } from "@/shared/ui";
 import type { Cart, CartItem, UpdateCartItemPayload } from "@/entities/cart/types";
 import { CartSummary } from "@/entities/cart/components/CartSummary";
@@ -182,8 +183,8 @@ export function CartDrawer({
               <span className="text-5xl">🛍️</span>
               <p className="text-white font-semibold">Your cart is empty</p>
               <p className="text-sm text-slate-400">Discover styles crafted just for you</p>
-              <Button variant="secondary" as="a" href="/catalog" onClick={onClose} id="cart-drawer-shop-btn">
-                Browse Catalog
+              <Button variant="secondary" asChild onClick={onClose} id="cart-drawer-shop-btn">
+                <Link href="/catalog">Browse Catalog</Link>
               </Button>
             </div>
           ) : (

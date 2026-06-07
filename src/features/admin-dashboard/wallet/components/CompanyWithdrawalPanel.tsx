@@ -78,7 +78,7 @@ export function CompanyWithdrawalPanel({
     handleSubmit,
     watch,
     reset,
-    formState: { errors, isValid },
+    formState: { errors },
   } = useForm<CompanyWithdrawalFormData>({
     mode: "onChange",
   });
