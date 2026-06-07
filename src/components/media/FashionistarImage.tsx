@@ -255,8 +255,10 @@ export function FashionistarImage({
 
   // ── Dev warnings ───────────────────────────────────────────────────────────
   if (process.env.NODE_ENV === "development") {
-    if (!alt) {
-      console.warn("[FashionistarImage] Missing `alt` prop — required for accessibility.");
+    if (alt === undefined || alt === null) {
+      // We provide a fallback below, but it's still best practice to pass an alt.
+      // We'll log it as info instead of warn to reduce noise during mass-refactors.
+      console.info(`[FashionistarImage] No alt prop provided for ${src || publicId}. Using fallback.`);
     }
     if (!CLOUD_NAME && publicId) {
       console.warn(
@@ -424,12 +426,14 @@ export function FashionistarImage({
           src={resolvedSrc}
           srcSet={resolvedSrcSet}
           sizes={sizesAttr}
-          alt={alt}
+          alt={alt || "Fashionistar Image"}
           width={fill ? undefined : width}
           height={fill ? undefined : height}
           loading={priority ? "eager" : "lazy"}
           decoding="async"
           fetchPriority={priority ? "high" : "auto"}
+          // @ts-ignore - fetchpriority is the native attribute name
+          fetchpriority={priority ? "high" : "auto"}
           data-product-id={dataProductId}
           draggable={draggable}
           onDragStart={onDragStart}

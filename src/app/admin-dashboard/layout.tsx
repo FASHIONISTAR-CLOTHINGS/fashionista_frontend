@@ -187,13 +187,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               <Image src="/menu.svg" alt="" width={24} height={24} />
             </button>
             <div className="flex items-center">
-              <Image
+              <FashionistarImage
                 src="/logo.svg"
                 width={78}
                 height={76}
-                alt="logo"
+                alt="Fashionistar Logo"
                 className="w-[39px] h-auto"
-                style={{ height: "auto" }}
+                priority
               />
               <h2 className="font-bon_foyage px-3 text-[25px] leading-[25px] text-black">
                 Fashionistar
@@ -215,13 +215,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         >
           {/* Logo Section */}
           <div className="flex items-center md:justify-center px-10 py-5 md:py-[30px] border-b-[1.2px] border-b-[#282828] shrink-0">
-            <Image
+            <FashionistarImage
               src="/logo.svg"
               width={78}
               height={76}
-              alt="logo"
+              alt="Fashionistar Logo"
               className="w-[55px] h-auto"
-              style={{ height: "auto" }}
+              priority
             />
             <h2 className="font-bon_foyage px-3 text-4xl leading-9 text-white">
               Fashionistar

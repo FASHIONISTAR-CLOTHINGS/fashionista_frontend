@@ -6,32 +6,44 @@ import { toast } from "sonner";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { vendorService } from "@/features/vendor/services/vendor.service";
 import type { VendorSetupPayload } from "@/features/vendor/types/vendor.types";
+import { useIsHydrated } from "@/lib/react/useIsHydrated";
 
 const VENDOR_PROFILE_QUERY_KEY = ["vendor", "profile"] as const;
 const VENDOR_SETUP_QUERY_KEY = ["vendor", "setup"] as const;
 const VENDOR_DASHBOARD_QUERY_KEY = ["vendor", "dashboard"] as const;
 
 export function useVendorProfile(options?: { enabled?: boolean }) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hydrated = useIsHydrated();
+
   return useQuery({
     queryKey: VENDOR_PROFILE_QUERY_KEY,
     queryFn: vendorService.getProfile,
-    enabled: options?.enabled ?? true,
+    enabled: (options?.enabled ?? true) && hydrated && isAuthenticated,
     staleTime: 30_000,
   });
 }
 
 export function useVendorSetupState() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hydrated = useIsHydrated();
+
   return useQuery({
     queryKey: VENDOR_SETUP_QUERY_KEY,
     queryFn: vendorService.getSetupState,
+    enabled: hydrated && isAuthenticated,
     staleTime: 15_000,
   });
 }
 
 export function useVendorDashboard() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hydrated = useIsHydrated();
+
   return useQuery({
     queryKey: VENDOR_DASHBOARD_QUERY_KEY,
     queryFn: vendorService.getDashboard,
+    enabled: hydrated && isAuthenticated,
     staleTime: 30_000,
   });
 }

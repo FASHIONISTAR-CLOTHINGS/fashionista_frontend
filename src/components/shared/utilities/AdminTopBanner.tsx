@@ -28,6 +28,8 @@ import {
   markNotificationRead,
 } from "@/features/notification/api/notification.api";
 import type { Notification } from "@/features/notification/types/notification.types";
+import { useAuthStore } from "@/features/auth/store/auth.store";
+import { useIsHydrated } from "@/lib/react/useIsHydrated";
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
 
@@ -48,10 +50,13 @@ function NotificationPopover({
   onClose: () => void;
 }) {
   const qc = useQueryClient();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hydrated = useIsHydrated();
 
   const { data: recent = [] } = useQuery({
     queryKey: ["notifications", "recent"],
     queryFn: () => fetchNotifications(1),
+    enabled: hydrated && isAuthenticated,
     staleTime: 30_000,
     select: (list) => list.slice(0, 6),
   });
@@ -168,11 +173,14 @@ function NotificationPopover({
 function NotificationBell() {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hydrated = useIsHydrated();
 
   /** Poll unread count every 30 s — lightweight Ninja async endpoint (<50 ms) */
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ["notifications", "unread-count"],
     queryFn: fetchUnreadBadgeCount,
+    enabled: hydrated && isAuthenticated,
     staleTime: 25_000,
     refetchInterval: 30_000,
     refetchIntervalInBackground: false,
@@ -257,6 +265,8 @@ const AdminTopBanner = ({
   walletBalance,
 }: AdminTopBannerProps) => {
   const searchId = useId();
+  const user = useAuthStore((state) => state.user);
+  const displayName = title || user?.first_name || user?.username || "Admin";
 
   return (
     <div
@@ -269,19 +279,19 @@ const AdminTopBanner = ({
       {/* ── Welcome row ─────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
         <FashionistarImage
-          src="/woman3.png"
-          alt=""
-          aria-hidden="true"
+          src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0D8ABC&color=fff`}
+          alt={`${displayName}'s avatar`}
           height={50}
           width={50}
-          className="rounded-full h-[45px] w-[45px] object-cover"
+          className="rounded-full h-[45px] w-[45px] object-cover border border-border"
+          priority
         />
         <div>
           <h2 className="font-satoshi font-medium text-2xl text-foreground">
             Welcome Back!
           </h2>
-          {title && (
-            <span className="text-xl text-muted-foreground">{title}</span>
+          {displayName && (
+            <span className="text-xl text-muted-foreground">{displayName}</span>
           )}
         </div>
       </div>

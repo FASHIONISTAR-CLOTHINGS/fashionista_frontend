@@ -5,13 +5,17 @@ import { useRouter } from "next/navigation";
 
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { getPostAuthRedirectPath } from "@/features/auth/lib/auth-routing";
+import { useIsHydrated } from "@/lib/react/useIsHydrated";
 
 export default function VendorIndexPage() {
   const router = useRouter();
+  const hydrated = useIsHydrated();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
+    if (!hydrated) return;
+
     if (!isAuthenticated) {
       router.replace("/auth/sign-in?returnUrl=%2Fvendor");
       return;
@@ -26,6 +30,7 @@ export default function VendorIndexPage() {
       }),
     );
   }, [
+    hydrated,
     isAuthenticated,
     router,
     user?.has_vendor_profile,

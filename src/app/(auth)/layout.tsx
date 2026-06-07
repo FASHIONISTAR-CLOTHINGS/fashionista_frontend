@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { FashionistarImage } from "@/components/media";
 import React from "react";
 
 const layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
@@ -6,13 +6,13 @@ const layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
     <div className=" bg-[#F4F3EC] pb-10">
       <div className="w-full px-10 z-30 h-[100px] bg-white shadow-md flex items-center fixed top-0 left-0">
         <div className=" flex items-center">
-          <Image
+          <FashionistarImage
             src="/logo.svg"
             width={78}
             height={76}
-            alt="logo"
-            className=""
-            style={{ width: "auto", height: "auto" }}
+            alt="Fashionistar Logo"
+            className="w-auto h-auto"
+            priority
           />
           <h2 className="font-bon_foyage px-3 text-4xl text-black">
             Fashionistar
