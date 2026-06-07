@@ -76,6 +76,8 @@ function normalizeVendorProductList(payload: unknown): {
         ? unwrapped
         : [];
 
+  const validStatuses = new Set(["draft", "pending", "published", "archived", "rejected"]);
+
   return {
     status: unwrapped?.status ?? "success",
     count: Number(unwrapped?.count ?? rows.length),
@@ -84,7 +86,7 @@ function normalizeVendorProductList(payload: unknown): {
       title: String(item.title ?? ""),
       price: Number(item.price ?? 0),
       stock_qty: Number(item.stock_qty ?? 0),
-      status: item.status ?? "draft",
+      status: validStatuses.has(item.status) ? item.status : "draft",
       category__name: item.category__name ?? item.category_name ?? undefined,
       date: item.date ?? item.updated_at ?? item.created_at ?? "",
     })),
