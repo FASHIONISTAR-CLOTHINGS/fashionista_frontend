@@ -434,8 +434,6 @@ export function FashionistarImage({
           loading={priority ? "eager" : "lazy"}
           decoding="async"
           fetchPriority={priority ? "high" : "auto"}
-          // @ts-ignore - fetchpriority is the native attribute name
-          fetchpriority={priority ? "high" : "auto"}
           data-product-id={dataProductId}
           draggable={draggable}
           onDragStart={onDragStart}

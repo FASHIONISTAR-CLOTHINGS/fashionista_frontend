@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Button } from "@/shared/ui";
 import { FashionistarImage } from "@/components/media";
 import { useCatalogCategories } from "@/features/catalog/hooks/use-catalog";
 import { useAdminProducts, useDeleteAdminProduct } from "../hooks";
@@ -149,13 +150,15 @@ export function ProductsDashboard() {
             <span className="text-xs text-[#5A6465] font-satoshi font-medium">
               Displaying {totalCount} garments
             </span>
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={clearFilters}
-              className="text-xs font-bold text-[#EA1705] hover:underline flex items-center gap-1.5"
+              className="text-[#EA1705] hover:text-[#EA1705]/80 font-bold flex items-center gap-1.5 p-0 hover:bg-transparent"
             >
               <FilterX className="w-3.5 h-3.5" />
               Reset filters
-            </button>
+            </Button>
           </div>
         )}
 
@@ -178,12 +181,13 @@ export function ProductsDashboard() {
                 Unable to fetch catalog items. Make sure your Django backend is actively running on Port 8001.
               </p>
             </div>
-            <button
+            <Button
+              variant="primary"
               onClick={() => refetchProducts()}
-              className="bg-[#01454A] text-white px-5 py-2.5 text-xs font-bold rounded-xl transition"
+              className="bg-[#01454A] hover:bg-[#01454A]/90 text-white"
             >
               Retry Load
-            </button>
+            </Button>
           </div>
         )}
 
@@ -199,12 +203,13 @@ export function ProductsDashboard() {
                 Adjust your filters or query parameter above. No styles currently match this combination.
               </p>
             </div>
-            <button
+            <Button
+              variant="primary"
               onClick={clearFilters}
-              className="bg-[#FDA600] text-white px-5 py-2.5 text-xs font-bold rounded-xl transition-all hover:bg-black"
+              className="bg-[#FDA600] hover:bg-black text-white"
             >
               Clear Filters
-            </button>
+            </Button>
           </div>
         )}
 
@@ -296,13 +301,15 @@ export function ProductsDashboard() {
                       <Edit3 className="w-3.5 h-3.5 text-[#01454A]" />
                       Edit Garment
                     </Link>
-                    <button
+                    <Button
+                      variant="danger"
+                      size="sm"
                       onClick={() => handleDelete(product.id)}
-                      className="bg-[#EA1705]/10 hover:bg-[#EA1705] text-[#EA1705] hover:text-white p-2.5 rounded-xl transition-all duration-150"
+                      className="p-2.5 h-9 w-9 rounded-xl"
                       title="Delete Product"
                     >
                       <Trash2 className="w-4 h-4" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -315,12 +322,15 @@ export function ProductsDashboard() {
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
           <div className="bg-white border border-[#ECE6D6] rounded-3xl w-full max-w-md p-6 md:p-8 space-y-6 shadow-2xl relative">
-            <button 
+            <Button 
+              variant="ghost"
+              size="sm"
               onClick={() => setDeleteId(null)}
-              className="absolute top-4 right-4 text-[#8A9596] hover:text-black transition"
+              className="absolute top-4 right-4 text-[#8A9596] hover:text-black transition p-1.5 h-8 w-8 min-w-0 min-h-0 rounded-full"
+              aria-label="Close modal"
             >
               <X className="w-5 h-5" />
-            </button>
+            </Button>
 
             <div className="flex items-center gap-4 text-[#EA1705]">
               <div className="bg-[#EA1705]/10 p-3 rounded-2xl">
@@ -337,26 +347,21 @@ export function ProductsDashboard() {
             </p>
 
             <div className="flex gap-3">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setDeleteId(null)}
-                className="flex-1 bg-white border border-[#ECE6D6] text-black h-11 rounded-xl text-xs font-bold transition hover:bg-[#F8F5ED]"
+                className="flex-1 border-[#ECE6D6] text-black bg-white hover:bg-[#F8F5ED]"
               >
                 Keep Garment
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
                 onClick={confirmDelete}
-                disabled={isDeleting}
-                className="flex-1 bg-[#EA1705] hover:bg-[#EA1705]/90 text-white h-11 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"
+                isLoading={isDeleting}
+                className="flex-1 bg-[#EA1705] hover:bg-[#EA1705]/90 text-white text-xs font-bold h-11 rounded-xl"
               >
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  "Confirm Deletion"
-                )}
-              </button>
+                Confirm Deletion
+              </Button>
             </div>
           </div>
         </div>

@@ -6,7 +6,7 @@
  * Glassmorphism ring for premium feel.
  */
 
-import Image from "next/image";
+import { AvatarImage } from "@/components/media";
 import type { User } from "../types";
 
 interface UserAvatarProps {
@@ -58,16 +58,13 @@ export function UserAvatar({ user, size = "md", showRing = true, className = "" 
 
   if (user.avatar) {
     return (
-      <div className={`${container} relative rounded-full overflow-hidden ${ringClass} ${className}`}>
-        <Image
-          src={user.avatar}
-          alt={user.fullName}
-          fill
-          className="object-cover"
-          sizes="80px"
-          priority={false}
-        />
-      </div>
+      <AvatarImage
+        src={user.avatar}
+        alt={user.fullName}
+        fill
+        className={`${container} ${ringClass} ${className}`}
+        sizes="80px"
+      />
     );
   }
 

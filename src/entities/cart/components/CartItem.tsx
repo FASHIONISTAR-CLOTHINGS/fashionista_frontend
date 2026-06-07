@@ -8,7 +8,8 @@
  */
 
 import { useState } from "react";
-import Image from "next/image";
+import { FashionistarImage } from "@/components/media";
+import { Button } from "@/shared/ui";
 import { SizeBadge } from "@/entities/product/components/SizeBadge";
 
 interface CartItemData {
@@ -79,11 +80,10 @@ export function CartItem({
       {/* Product image */}
       <div className="w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-white/6 relative">
         {item.product_image ? (
-          <Image
+          <FashionistarImage
             src={item.product_image}
             alt={item.product_name}
             fill
-            className="object-cover"
             sizes="80px"
           />
         ) : (
@@ -159,40 +159,42 @@ export function CartItem({
 
         {/* Quantity controls */}
         <div className="flex items-center gap-1 mt-2">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => handleQtyChange(item.quantity - 1)}
             disabled={item.quantity <= 1 || isUpdating}
-            className="w-7 h-7 rounded-lg bg-white/8 border border-white/15 text-white text-sm
-              hover:bg-white/15 disabled:opacity-30 disabled:cursor-not-allowed transition-colors
-              flex items-center justify-center"
+            className="w-7 h-7 p-0 rounded-lg text-sm"
             aria-label="Decrease quantity"
           >
             −
-          </button>
+          </Button>
           <span className="w-7 text-center text-sm font-semibold text-white tabular-nums">
             {isUpdating ? "…" : item.quantity}
           </span>
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => handleQtyChange(item.quantity + 1)}
             disabled={item.quantity >= (item.max_quantity ?? 99) || isUpdating}
-            className="w-7 h-7 rounded-lg bg-white/8 border border-white/15 text-white text-sm
-              hover:bg-white/15 disabled:opacity-30 disabled:cursor-not-allowed transition-colors
-              flex items-center justify-center"
+            className="w-7 h-7 p-0 rounded-lg text-sm"
             aria-label="Increase quantity"
           >
             +
-          </button>
+          </Button>
         </div>
 
         {/* Remove */}
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={handleRemove}
           disabled={isRemoving}
-          className="mt-2 text-[10px] text-slate-500 hover:text-red-400 transition-colors"
+          className="mt-2 text-[10px] text-slate-500 hover:text-red-400 p-0 h-auto font-medium hover:bg-transparent"
           aria-label={`Remove ${item.product_name}`}
         >
           {isRemoving ? "Removing…" : "Remove"}
-        </button>
+        </Button>
       </div>
     </div>
   );

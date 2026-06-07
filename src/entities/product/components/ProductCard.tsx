@@ -6,8 +6,7 @@
  * Used in catalog grid, featured sliders, and search results.
  */
 
-import { useState } from "react";
-import Image from "next/image";
+import { FashionistarImage } from "@/components/media";
 import Link from "next/link";
 import type { ProductListItem } from "../types";
 
@@ -41,7 +40,6 @@ const STOCK_LABEL: Record<string, string> = {
 };
 
 export function ProductCard({ product, onWishlistToggle, isWishlisted = false, priority = false }: ProductCardProps) {
-  const [imgError, setImgError] = useState(false);
   const discount = product.compareAtPriceNgn
     ? Math.round(
         ((parseFloat(product.compareAtPriceNgn) - parseFloat(product.basePriceNgn)) /
@@ -59,23 +57,14 @@ export function ProductCard({ product, onWishlistToggle, isWishlisted = false, p
     >
       {/* Image container */}
       <div className="relative aspect-[4/5] overflow-hidden bg-slate-900/50">
-        {product.primaryImageUrl && !imgError ? (
-          <Image
-            src={product.primaryImageUrl}
-            alt={product.title}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            onError={() => setImgError(true)}
-            priority={priority}
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
-            <svg className="w-16 h-16 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-        )}
+        <FashionistarImage
+          src={product.primaryImageUrl}
+          alt={product.title}
+          fill
+          imgClassName="transition-transform duration-500 group-hover:scale-105"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          priority={priority}
+        />
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">

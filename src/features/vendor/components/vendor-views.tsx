@@ -118,6 +118,8 @@ import {
   useVendorTopSellingProducts,
 } from "@/features/vendor/hooks/use-vendor-dashboard";
 import { useDraftStore } from "@/features/product/builder/store";
+import { Button } from "@/shared/ui";
+
 
 
 // ── Brand Palette (local) ────────────────────────────────────────────────────
@@ -434,20 +436,24 @@ function CloudinaryFileUploader({
             />
             <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
               <div className="flex gap-2">
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="sm"
                   onClick={(e) => { e.stopPropagation(); triggerSelect(); }}
-                  className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-black shadow-sm transition hover:bg-[#FDA600]"
+                  className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-black shadow-sm transition hover:bg-[#FDA600] h-auto min-h-0 cursor-pointer"
                 >
                   Replace
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="danger"
+                  size="sm"
                   onClick={removeFile}
-                  className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700"
+                  className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700 h-auto min-h-0 cursor-pointer border-none"
                 >
                   Remove
-                </button>
+                </Button>
               </div>
             </div>
           </>
@@ -1582,13 +1588,15 @@ export function VendorOrderDetailView({ orderOid }: { orderOid: string }) {
                   {selectedMeasurementItem?.product_title_snapshot || "Order Item"}
                 </p>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => setIsMeasurementModalOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-xl text-white/40 hover:bg-[#F8F5ED] hover:text-[#7A6B44] transition-all cursor-pointer"
+                className="flex h-8 w-8 items-center justify-center rounded-xl text-[#7A6B44]/60 hover:bg-[#F8F5ED] hover:text-[#7A6B44] transition-all cursor-pointer p-0 min-w-0 min-h-0 border-none"
               >
                 <X className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
 
             <div className="space-y-3.5 max-h-[60vh] overflow-y-auto">
@@ -1616,13 +1624,14 @@ export function VendorOrderDetailView({ orderOid }: { orderOid: string }) {
             </div>
 
             <div className="mt-6 flex justify-end">
-              <button
+              <Button
                 type="button"
+                variant="primary"
                 onClick={() => setIsMeasurementModalOpen(false)}
-                className="rounded-xl bg-[#FDA600] px-5 py-2.5 text-xs font-bold text-black hover:bg-[#E8960A] transition cursor-pointer"
+                className="rounded-xl bg-[#FDA600] text-black hover:bg-[#E8960A] px-5 py-2.5 text-xs font-bold transition cursor-pointer border-none"
               >
                 Close details
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1660,13 +1669,14 @@ function ResumeDraftBanner() {
         </div>
       </div>
       <div className="flex gap-2 flex-shrink-0">
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={() => { resetStore(); }}
-          className="rounded-xl border border-[#01454A]/30 px-4 py-2 text-xs font-semibold text-[#01454A] hover:bg-[#01454A]/10 transition"
+          className="rounded-xl border border-[#01454A]/30 px-4 py-2 text-xs font-semibold text-[#01454A] hover:bg-[#01454A]/10 transition h-auto min-h-0"
         >
           Discard draft
-        </button>
+        </Button>
         <Link
           href="/vendor/products"
           className="rounded-xl bg-[#01454A] px-4 py-2 text-xs font-bold text-white hover:bg-[#01454A]/90 transition"

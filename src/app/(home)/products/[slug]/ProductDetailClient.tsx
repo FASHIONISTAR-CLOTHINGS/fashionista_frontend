@@ -61,14 +61,15 @@ function AccordionItem({
   const [open, setOpen] = useState(false);
   return (
     <div className="border-b border-border">
-      <button
+      <Button
+        variant="ghost"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between py-4 text-left text-sm font-semibold text-foreground hover:text-[hsl(var(--primary))] transition-colors"
+        className="flex w-full items-center justify-between py-4 text-left text-sm font-semibold text-foreground hover:text-[hsl(var(--primary))] transition-colors px-0 hover:bg-transparent h-auto"
         aria-expanded={open}
       >
         {title}
-        {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-      </button>
+        {open ? <ChevronUp size={16} className="shrink-0" /> : <ChevronDown size={16} className="shrink-0" />}
+      </Button>
       {open && (
         <div className="pb-4 text-sm leading-7 text-muted-foreground">
           {children}
@@ -229,23 +230,26 @@ export function ProductDetailClient({
               className="absolute bottom-4 left-4 z-10"
             />
             {/* Wishlist float */}
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => toggleWishlist(product.slug)}
               aria-label="Toggle wishlist"
-              className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md text-[hsl(var(--primary))] transition hover:scale-110"
+              className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md text-[hsl(var(--primary))] transition hover:scale-110 p-0 min-w-0 min-h-0"
             >
               <Heart size={18} strokeWidth={2} />
-            </button>
+            </Button>
           </div>
 
           {/* Thumbnails */}
           {images.length > 1 && (
             <div className="mt-3 grid grid-cols-5 gap-2">
               {images.map((src, idx) => (
-                <button
+                <Button
                   key={idx}
+                  variant="ghost"
                   onClick={() => setActiveImg(idx)}
-                  className={`relative h-20 overflow-hidden rounded-xl border-2 transition ${
+                  className={`relative h-20 overflow-hidden rounded-xl border-2 transition p-0 min-w-0 min-h-0 w-full block ${
                     activeImg === idx
                       ? "border-[hsl(var(--accent))]"
                       : "border-transparent hover:border-border"
@@ -259,7 +263,7 @@ export function ProductDetailClient({
                     className="h-full w-full"
                     imgClassName="object-cover"
                   />
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -336,11 +340,12 @@ export function ProductDetailClient({
               </p>
               <div className="flex flex-wrap gap-2">
                 {product.variants.map((v) => (
-                  <button
+                  <Button
                     key={v.id}
+                    variant={selectedVariantId === v.id ? "default" : "outline"}
                     onClick={() => setSelectedVariantId(v.id)}
                     disabled={!v.is_active || v.stock_qty === 0}
-                    className={`rounded-lg border px-4 py-2 text-sm font-semibold transition ${
+                    className={`rounded-lg border px-4 py-2 text-sm font-semibold transition h-auto min-h-0 ${
                       selectedVariantId === v.id
                         ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]"
                         : v.stock_qty === 0 || !v.is_active
@@ -349,7 +354,7 @@ export function ProductDetailClient({
                     }`}
                   >
                     {v.size?.name ?? v.color?.name ?? v.sku}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -361,21 +366,25 @@ export function ProductDetailClient({
               Qty
             </p>
             <div className="flex items-center rounded-xl border border-border bg-background px-2 py-1">
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="flex h-8 w-8 items-center justify-center rounded-lg transition hover:bg-muted"
+                className="flex h-8 w-8 items-center justify-center rounded-lg transition hover:bg-muted p-0 min-w-0 min-h-0"
               >
                 <Minus size={14} />
-              </button>
+              </Button>
               <span className="w-10 text-center text-sm font-bold tabular-nums">
                 {quantity}
               </span>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setQuantity((q) => q + 1)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg transition hover:bg-muted"
+                className="flex h-8 w-8 items-center justify-center rounded-lg transition hover:bg-muted p-0 min-w-0 min-h-0"
               >
                 <Plus size={14} />
-              </button>
+              </Button>
             </div>
             {!inStock && (
               <span className="text-xs font-semibold text-destructive">Out of stock</span>

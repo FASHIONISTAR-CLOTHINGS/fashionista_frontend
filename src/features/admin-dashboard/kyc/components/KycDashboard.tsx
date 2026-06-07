@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FashionistarImage } from "@/components/media";
+import { Button } from "@/shared/ui";
 import {
   useAdminKycSubmissions,
   useApproveKyc as useQuickApproveKyc,
@@ -108,12 +109,13 @@ export function KycDashboard() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
+          <Button
+            variant="secondary"
             onClick={() => refetch()}
             className="border border-[#ECE6D6] bg-white hover:bg-[#F4F3EC] text-black font-satoshi font-bold transition-all duration-200 px-5 py-3 rounded-xl shadow-sm text-sm"
           >
             Refetch Queue
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -141,17 +143,15 @@ export function KycDashboard() {
 
             <div className="flex gap-2">
               {["all", "pending", "approved", "rejected"].map((status) => (
-                <button
+                <Button
                   key={status}
+                  variant={statusFilter === status ? "primary" : "secondary"}
+                  size="sm"
                   onClick={() => setStatusFilter(status)}
-                  className={`flex-1 py-1.5 rounded-lg border text-[10px] font-bold uppercase tracking-wider transition font-satoshi ${
-                    statusFilter === status
-                      ? "bg-[#01454A] text-white border-[#01454A]"
-                      : "bg-white text-black border-[#ECE6D6] hover:bg-[#F4F3EC]"
-                  }`}
+                  className="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider transition font-satoshi"
                 >
                   {status}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -302,13 +302,15 @@ export function KycDashboard() {
                     Identity Verification
                   </span>
                   {selectedSubmission.status === "pending" && (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleMarkInReview(selectedSubmission.id)}
                       disabled={markInReviewMutation.isPending}
                       className="bg-[#01454A]/10 hover:bg-[#01454A]/20 text-[#01454A] font-bold text-xs px-4 py-2.5 rounded-xl transition"
                     >
                       {markInReviewMutation.isPending ? "Updating status..." : "Mark In Review"}
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -340,10 +342,11 @@ export function KycDashboard() {
                       </label>
                     </div>
                     
-                    <button
+                    <Button
+                      variant="success"
                       onClick={() => handleApprove(selectedSubmission.id)}
                       disabled={approveMutation.isPending || rejectMutation.isPending}
-                      className="w-full h-10 mt-5 bg-[#01454A] hover:bg-[#01454A]/90 text-[#F8F5ED] hover:text-[#FDA600] font-satoshi font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition duration-200 disabled:opacity-50"
+                      className="w-full h-10 mt-5 bg-[#01454A] hover:bg-[#01454A]/90 text-white hover:text-[#FDA600] font-satoshi font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition duration-200"
                     >
                       {approveMutation.isPending ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -353,7 +356,7 @@ export function KycDashboard() {
                           Approve Identity
                         </>
                       )}
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -389,10 +392,11 @@ export function KycDashboard() {
                         </span>
                       </label>
 
-                      <button
+                      <Button
+                        variant="danger"
                         onClick={() => handleReject(selectedSubmission.id)}
                         disabled={approveMutation.isPending || rejectMutation.isPending}
-                        className="bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-satoshi font-bold text-xs py-2.5 px-6 rounded-xl transition duration-200 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                        className="font-satoshi font-bold text-xs py-2.5 px-6 rounded-xl flex items-center justify-center gap-1.5"
                       >
                         {rejectMutation.isPending ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -402,7 +406,7 @@ export function KycDashboard() {
                             Reject Submission
                           </>
                         )}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>

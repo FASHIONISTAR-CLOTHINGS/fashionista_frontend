@@ -16,6 +16,7 @@ import {
   User,
 } from "lucide-react";
 import { FashionistarImage } from "@/components/media";
+import { Button } from "@/shared/ui";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -107,13 +108,13 @@ export function KycStatusView({
             <Input label="NIN" value={nin} onChange={setNin} placeholder="11-digit NIN" />
             <Input label="BVN" value={bvn} onChange={setBvn} placeholder="11-digit BVN" />
           </div>
-          <button
+          <Button
             type="submit"
             disabled={initiate.isPending}
-            className="mt-5 h-12 w-full rounded-[8px] bg-[#FDA600] text-sm font-bold text-white disabled:opacity-60"
+            className="mt-5 h-12 w-full text-sm font-bold text-white"
           >
             {initiate.isPending ? "Submitting..." : "Submit KYC"}
-          </button>
+          </Button>
         </form>
 
         <form onSubmit={uploadDocument} className="rounded-[8px] border border-[#E5E7EB] bg-white p-6 shadow-card_shadow">
@@ -141,13 +142,14 @@ export function KycStatusView({
             <Input label="Cloudinary Secure URL" value={secureUrl} onChange={setSecureUrl} placeholder="https://res.cloudinary.com/..." />
             <Input label="Cloudinary Public ID" value={publicId} onChange={setPublicId} placeholder="fashionistar/kyc/..." />
           </div>
-          <button
+          <Button
             type="submit"
+            variant="secondary"
             disabled={recordDocument.isPending}
-            className="mt-5 h-12 w-full rounded-[8px] bg-black text-sm font-bold text-white disabled:opacity-60"
+            className="mt-5 h-12 w-full bg-slate-900 border border-slate-800 text-sm font-bold text-white"
           >
             {recordDocument.isPending ? "Recording..." : "Record Document"}
-          </button>
+          </Button>
         </form>
       </section>
     </div>
@@ -293,12 +295,13 @@ function AdminKycTerminal() {
             <p className="text-lg font-bold text-red-800">Operational Gateway Error</p>
             <p className="mt-1 text-sm text-red-600">Failed to connect to `/api/v1/kyc/admin/submissions/` endpoint.</p>
           </div>
-          <button
+          <Button
+            variant="danger"
             onClick={() => refetch()}
-            className="rounded-lg bg-red-800 px-4 py-2 text-sm font-bold text-white hover:bg-red-900 transition-colors"
+            className="px-4 py-2 text-sm font-bold"
           >
             Retry Connection
-          </button>
+          </Button>
         </div>
       ) : filteredSubmissions.length === 0 ? (
         <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-[#ECE6D6] bg-[#F8F5ED]/50 p-8 text-center">
@@ -367,17 +370,19 @@ function AdminKycTerminal() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => {
                             setSelectedSubmission(sub);
                             setReviewNotes(sub.review_notes || "");
                             setAllowResubmit(sub.can_resubmit ?? true);
                           }}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-[#ECE6D6] bg-white px-3 py-1.5 text-xs font-bold text-[#01454A] hover:bg-[#01454A] hover:text-white transition-all shadow-sm"
+                          className="inline-flex items-center gap-1.5 border border-[#ECE6D6] bg-white px-3 py-1.5 text-xs font-bold text-[#01454A] hover:bg-[#01454A] hover:text-white shadow-sm"
                         >
                           <Eye className="h-3.5 w-3.5" />
                           Review Documents
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   );
@@ -398,12 +403,14 @@ function AdminKycTerminal() {
                 <h3 className="text-xl font-bold text-black font-bon_foyage">KYC Document Verification</h3>
                 <p className="text-xs text-[#5A6465] mt-1">Review applicant uploads and log compliance action.</p>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setSelectedSubmission(null)}
-                className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 min-h-0 min-w-0"
               >
                 <X className="h-5 w-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Modal Content */}
@@ -532,34 +539,37 @@ function AdminKycTerminal() {
 
             {/* Footer Buttons */}
             <div className="flex items-center justify-between border-t border-[#ECE6D6] bg-[#F8F5ED]/50 px-6 py-4">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => setSelectedSubmission(null)}
-                className="rounded-lg border border-[#ECE6D6] bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                className="border border-[#ECE6D6] bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50"
               >
                 Cancel
-              </button>
+              </Button>
 
               <div className="flex items-center gap-3">
-                <button
+                <Button
                   type="button"
+                  variant="danger"
                   disabled={rejectMutation.isPending || approveMutation.isPending}
                   onClick={() => handleReject(selectedSubmission.id)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold text-red-700 hover:bg-red-100 disabled:opacity-55 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold"
                 >
                   <X className="h-4 w-4" />
                   {rejectMutation.isPending ? "Rejecting..." : "Reject Submission"}
-                </button>
+                </Button>
 
-                <button
+                <Button
                   type="button"
+                  variant="success"
                   disabled={rejectMutation.isPending || approveMutation.isPending}
                   onClick={() => handleApprove(selectedSubmission.id)}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#01454A] px-4 py-2 text-sm font-bold text-white hover:bg-[#003438] disabled:opacity-55 transition-colors"
+                  className="inline-flex items-center gap-1.5 bg-[#01454A] px-4 py-2 text-sm font-bold text-white hover:bg-[#003438]"
                 >
                   <Check className="h-4 w-4" />
                   {approveMutation.isPending ? "Approving..." : "Approve & Verify"}
-                </button>
+                </Button>
               </div>
             </div>
           </div>

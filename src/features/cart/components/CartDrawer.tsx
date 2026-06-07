@@ -60,34 +60,40 @@ function CartItemRow({ item, onUpdateQty, onRemove, isUpdating }: CartItemRowPro
       <div className="flex flex-col items-end justify-between gap-2 flex-shrink-0">
         <p className="text-sm font-bold text-amber-400">{fmt(item.lineTotal)}</p>
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => onUpdateQty({ itemId: item.id, quantity: Math.max(1, item.quantity - 1) })}
             disabled={isUpdating || item.quantity <= 1}
-            className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-white text-sm hover:bg-white/20 disabled:opacity-30 transition-all"
+            className="w-6 h-6 p-0 min-h-0 min-w-0"
             aria-label="Decrease quantity"
             id={`cart-item-dec-${item.id}`}
           >
             −
-          </button>
+          </Button>
           <span className="text-sm font-semibold text-white w-6 text-center">{item.quantity}</span>
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => onUpdateQty({ itemId: item.id, quantity: item.quantity + 1 })}
             disabled={isUpdating}
-            className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-white text-sm hover:bg-white/20 disabled:opacity-30 transition-all"
+            className="w-6 h-6 p-0 min-h-0 min-w-0"
             aria-label="Increase quantity"
             id={`cart-item-inc-${item.id}`}
           >
             +
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => onRemove(item.id)}
             disabled={isUpdating}
-            className="w-6 h-6 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 flex items-center justify-center text-xs transition-all ml-1"
+            className="w-6 h-6 p-0 text-slate-500 hover:text-red-400 hover:bg-red-500/10 min-h-0 min-w-0 ml-1"
             aria-label="Remove item"
             id={`cart-item-remove-${item.id}`}
           >
             ✕
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -161,14 +167,16 @@ export function CartDrawer({
               )}
             </h2>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-white p-0 min-h-0 min-w-0"
             aria-label="Close cart"
             id="cart-drawer-close"
           >
             ✕
-          </button>
+          </Button>
         </div>
 
         {/* Content */}
