@@ -252,7 +252,7 @@ export function ProductDetailClient({
                 >
                   <FashionistarImage
                     src={src}
-                    alt=""
+                    alt={`${product.title} gallery thumbnail ${idx + 1}`}
                     fill
                     sizes="80px"
                     className="h-full w-full"

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { Suspense } from "react";
 import {
   getProductDetailForMetadata,
@@ -80,9 +81,19 @@ export default async function ProductDetailPage({
   params,
 }: ProductDetailPageProps) {
   const { slug } = await params;
+  
+  // Handle the validation slug for Next.js build-time "EmptyGenerateStaticParamsError" resolution.
+  // Instead of notFound(), we return a valid but minimal shell to warm the cache.
   if (slug === PRODUCT_VALIDATION_SLUG) {
-    notFound();
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8">
+        <h1 className="text-2xl font-bold">Product Validation Shell</h1>
+        <p className="text-muted-foreground mt-2">This page is used for static generation validation.</p>
+        <Link href="/" className="mt-4 text-[hsl(var(--primary))] underline">Return Home</Link>
+      </div>
+    );
   }
+
   const initialProduct: ProductDetail | null = await getProductDetailForMetadata(slug);
 
   return (
