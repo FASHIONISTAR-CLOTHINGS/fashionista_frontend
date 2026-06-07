@@ -116,7 +116,7 @@ export function AccountsDashboard() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>("overview");
 
-  // ── List Query ────────────────────────────────────────────────────────────
+  // ── Query: Fetch Live Registered Users (Admin Only) ────────────────────────
   const { data: usersData, isLoading, isError, refetch } = useAdminUsers({
     role: roleFilter,
     is_active: statusFilter === "active" ? true : statusFilter === "blocked" ? false : undefined,
@@ -141,7 +141,7 @@ export function AccountsDashboard() {
     inspectorTab === "activity" ? selectedUserId : null
   );
 
-  // ── Mutations ─────────────────────────────────────────────────────────────
+  // ── Mutation hooks ────────────────────────────────────────────────────────
   const suspendMutation = useSuspendUser();
   const reactivateMutation = useReactivateUser();
   const verifyMutation = useVerifyUser();
@@ -298,7 +298,9 @@ export function AccountsDashboard() {
             <Sparkles className="w-4 h-4 text-[#FDA600]" />
             <span>Showing {rawUsers.length} users</span>
           </div>
+
           <div className="flex items-center gap-3">
+            {/* Sorting */}
             <button
               onClick={() => setSortOrder(prev => prev === "newest" ? "oldest" : "newest")}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#ECE6D6] bg-white text-xs text-black hover:bg-[#F4F3EC] font-satoshi font-semibold transition"
@@ -306,6 +308,8 @@ export function AccountsDashboard() {
               <ArrowUpDown className="w-3.5 h-3.5" />
               <span>Joined: {sortOrder === "newest" ? "Newest First" : "Oldest First"}</span>
             </button>
+
+            {/* Clear Filter */}
             {(search || roleFilter !== "all" || statusFilter !== "all") && (
               <button
                 onClick={clearFilters}
@@ -318,7 +322,7 @@ export function AccountsDashboard() {
           </div>
         </div>
 
-        {/* States */}
+        {/* Loading / Error States */}
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-20 space-y-4">
             <Loader2 className="w-10 h-10 text-[#01454A] animate-spin" />
@@ -334,12 +338,13 @@ export function AccountsDashboard() {
             <div>
               <p className="font-bon_foyage text-xl text-black">Data Fetch Failure</p>
               <p className="font-satoshi text-sm text-[#5A6465] mt-1">
-                Unable to query users list. Please ensure your token is valid and you are logged in as admin.
+                Unable to query users list from the backend admin endpoint. Please make sure your token is valid and you are logged in as admin.
               </p>
             </div>
           </div>
         )}
 
+        {/* Directory Grid */}
         {!isLoading && !isError && rawUsers.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 text-center max-w-md mx-auto space-y-3 bg-white border border-dashed border-[#ECE6D6] rounded-[24px]">
             <p className="font-bon_foyage text-2xl text-black">No Profiles Match</p>
@@ -378,6 +383,8 @@ export function AccountsDashboard() {
                         <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${getRoleBadgeClass(user.role)}`}>
                           {user.role.replace("_", " ")}
                         </span>
+
+                        {/* Status Check */}
                         <div className="flex items-center gap-1">
                           {user.is_verified ? (
                             <span className="flex items-center gap-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold px-1.5 py-0.5 rounded border border-emerald-200">
@@ -407,12 +414,12 @@ export function AccountsDashboard() {
                       <p className="font-satoshi text-xs text-[#8A9596] mt-0.5">{user.member_id || "-N/A-"}</p>
                     </div>
 
-                    {/* Bio */}
+                    {/* Bio Snippet */}
                     {user.bio && (
                       <p className="font-satoshi text-xs text-[#5A6465] line-clamp-2">{user.bio}</p>
                     )}
 
-                    {/* Contact */}
+                    {/* Contact Links & Location */}
                     <div className="space-y-1.5 pt-3 border-t border-[#ECE6D6]/50 text-xs font-satoshi text-[#5A6465]">
                       <div className="flex items-center gap-2">
                         <Mail className="w-3.5 h-3.5 text-[#8A9596]" />
@@ -433,11 +440,11 @@ export function AccountsDashboard() {
                     </div>
                   </div>
 
-                  {/* Footer */}
+                  {/* Foot Timestamps & Status Controls */}
                   <div className="flex items-center justify-between pt-3 mt-2 border-t border-[#ECE6D6]/50 text-[10px] font-satoshi text-[#8A9596]">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {formatDate(user.date_joined)}
+                      Joined: {formatDate(user.date_joined)}
                     </span>
                     <div className="flex items-center gap-2">
                       {riskPct != null && riskPct > 30 && <RiskBadge score={user.risk_score} />}
