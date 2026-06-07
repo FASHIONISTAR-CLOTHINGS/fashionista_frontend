@@ -15,7 +15,7 @@
  *   - Dot pagination indicators show count up to 4 dots.
  */
 
-import Image from "next/image";
+import { AvatarImage } from "@/components/media";
 import type { HomepageReviewCard } from "@/features/catalog/types/catalog.types";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -105,11 +105,11 @@ function ReviewCard({
     >
       {/* Avatar */}
       <div className="relative w-[80px] h-[80px] rounded-full overflow-hidden shrink-0 ring-2 ring-[#FDA600]/30 group-hover:ring-[#FDA600] transition-all">
-        <Image
+        <AvatarImage
           src={avatarSrc}
           alt={review.reviewer_name}
           fill
-          className="object-cover"
+          imgClassName="object-cover"
           sizes="80px"
         />
       </div>

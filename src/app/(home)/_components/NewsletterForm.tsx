@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { publicEngagementApi } from "@/features/public-engagement";
+import { Button } from "@/components/ui/button";
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (typeof error === "object" && error !== null) {
@@ -50,14 +51,14 @@ export function NewsletterForm() {
         required
         className="flex-1 min-w-[220px] px-4 py-3 rounded-[100px] bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:border-[#FDA600] transition"
       />
-      <button
+      <Button
         data-testid="newsletter-submit"
         type="submit"
         disabled={loading}
-        className="px-6 py-3 rounded-[100px] bg-[#FDA600] text-black font-bold font-raleway hover:bg-[#FDA600]/90 transition-all shrink-0 disabled:opacity-60"
+        className="px-6 py-3 rounded-[100px] bg-[#FDA600] text-black font-bold font-raleway hover:bg-[#FDA600]/90 transition-all shrink-0 disabled:opacity-60 cursor-pointer"
       >
         {loading ? "Subscribing..." : "Subscribe"}
-      </button>
+      </Button>
     </form>
   );
 }

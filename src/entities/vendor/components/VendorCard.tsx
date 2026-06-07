@@ -6,6 +6,7 @@
  */
 
 
+import { FashionistarImage } from "@/components/media";
 import type { VendorCard as TVendorCard, VendorTier } from "../types";
 
 
@@ -52,8 +53,7 @@ export function VendorCard({ vendor, onClick, className = "" }: VendorCardProps)
       <div className="px-4 -mt-8 mb-3 relative z-10">
         <div className="w-14 h-14 rounded-2xl border-2 border-white/20 bg-slate-800 shadow-xl flex items-center justify-center overflow-hidden">
           {vendor.logo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={vendor.logo} alt={vendor.shopName} className="w-full h-full object-cover" />
+            <FashionistarImage src={vendor.logo} alt={vendor.shopName} width={56} height={56} imgClassName="object-cover" />
           ) : (
             <span className="text-2xl">🧵</span>
           )}

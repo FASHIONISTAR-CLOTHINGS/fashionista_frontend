@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 
 const page = () => {
   const reviews = [
@@ -72,9 +73,9 @@ const page = () => {
           {review.date}
         </td>
         <td className="font-satoshi font-medium text-black py-5 ">
-          <button className="bg-[#fda600] px-5 py-2.5 font-medium text-black">
+          <Button className="bg-[#fda600] px-5 py-2.5 font-medium text-black cursor-pointer">
             Details
-          </button>
+          </Button>
         </td>
         <td className="font-satoshi font-medium text-black py-6">
           <svg

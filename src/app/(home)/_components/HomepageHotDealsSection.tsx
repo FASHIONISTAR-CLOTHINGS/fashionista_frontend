@@ -14,7 +14,7 @@
  */
 
 import Link from "next/link";
-import Image from "next/image";
+import { FashionistarImage } from "@/components/media";
 import type { HomepageProductCard } from "@/features/catalog/types/catalog.types";
 
 interface Props {
@@ -46,18 +46,18 @@ function DealCard({ product }: { product: HomepageProductCard }) {
       className="flex flex-col w-[45%] md:w-[32%] max-w-[300px] group"
     >
       {/* Product Image */}
-      <div className="relative overflow-hidden rounded-[8px]">
-        <Image
+      <div className="relative overflow-hidden rounded-[8px] h-[220px] md:h-[350px]">
+        <FashionistarImage
           src={image}
-          className="w-full h-[220px] md:h-[350px] object-contain group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full"
+          imgClassName="object-contain group-hover:scale-105 transition-transform duration-500"
           alt={product.title}
-          width={480}
-          height={480}
+          fill
           sizes="(max-width: 768px) 45vw, 30vw"
         />
         {/* Hot Deal Badge */}
         {product.hot_deal && (
-          <div className="absolute top-7 left-2 md:top-10 flex flex-col gap-1">
+          <div className="absolute top-7 left-2 md:top-10 flex flex-col gap-1 z-10">
             <p className="w-[83px] h-7 rounded-[5px] flex items-center justify-center uppercase bg-[#fda600] text-white font-semibold font-raleway text-xs">
               sale
             </p>

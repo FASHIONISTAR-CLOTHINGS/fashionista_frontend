@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FashionistarImage } from "@/components/media";
 import {
   useAdminKycSubmissions,
   useApproveKyc as useQuickApproveKyc,
@@ -421,10 +422,13 @@ export function KycDashboard() {
           className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 cursor-pointer"
         >
           <div className="relative max-w-4xl max-h-[90vh] bg-white rounded-3xl overflow-hidden p-3 border border-[#ECE6D6] shadow-2xl flex items-center justify-center animate-in zoom-in-95 duration-200">
-            <img
+            <FashionistarImage
               src={zoomUrl}
               alt="Zoomed identification document"
-              className="max-w-full max-h-[85vh] object-contain rounded-2xl"
+              width={1200}
+              height={900}
+              objectFit="contain"
+              imgClassName="max-w-full max-h-[85vh] object-contain rounded-2xl"
             />
             <div className="absolute top-4 right-4 bg-black/60 text-white font-satoshi text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
               Click Anywhere To Close

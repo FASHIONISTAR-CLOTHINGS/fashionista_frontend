@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { FashionistarImage } from "@/components/media";
 import { useCatalogCategories } from "@/features/catalog/hooks/use-catalog";
 import { useAdminProducts, useDeleteAdminProduct } from "../hooks";
 import { 
@@ -218,13 +219,12 @@ export function ProductsDashboard() {
                 {/* Image panel & Status badges overlay */}
                 <div className="relative h-64 bg-[#1A1208]/10 overflow-hidden">
                   {product.image_url ? (
-                    <img
+                    <FashionistarImage
                       src={product.image_url}
                       alt={product.title}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?auto=format&fit=crop&w=400&h=400&q=80";
-                      }}
+                      fill={true}
+                      objectFit="cover"
+                      imgClassName="transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (
                     <div className="w-full h-full bg-[#1A1208]/5 flex items-center justify-center">

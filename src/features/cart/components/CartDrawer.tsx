@@ -9,6 +9,7 @@
 import React, { useCallback } from "react";
 import Link from "next/link";
 import { Button, Badge, LoadingSpinner } from "@/shared/ui";
+import { FashionistarImage } from "@/components/media";
 import type { Cart, CartItem, UpdateCartItemPayload } from "@/entities/cart/types";
 import { CartSummary } from "@/entities/cart/components/CartSummary";
 
@@ -32,11 +33,9 @@ function CartItemRow({ item, onUpdateQty, onRemove, isUpdating }: CartItemRowPro
       } bg-white/3`}
       id={`cart-item-${item.id}`}
     >
-      {/* Image */}
       <div className="w-16 h-16 rounded-xl bg-slate-800 flex-shrink-0 overflow-hidden">
         {item.productImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.productImage} alt={item.productTitle} className="w-full h-full object-cover" />
+          <FashionistarImage src={item.productImage} alt={item.productTitle} width={64} height={64} imgClassName="object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-2xl">👗</div>
         )}

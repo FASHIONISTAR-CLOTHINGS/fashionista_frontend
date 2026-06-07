@@ -1,6 +1,5 @@
 "use client";
 import { Suspense } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Heart, ShoppingCart, Trash2, AlertCircle } from "lucide-react";
 import { CommerceRouteGuard } from "@/features/auth/components/CommerceRouteGuard";
@@ -8,6 +7,8 @@ import { useWishlist, useToggleWishlist } from "@/features/product";
 import type { WishlistItem } from "@/features/product";
 import { ProductGridSkeleton } from "@/features/product";
 import { useAddCartItem } from "@/features/cart";
+import { FashionistarImage } from "@/components/media";
+import { Button } from "@/components/ui/button";
 
 // ── Wishlist Item Card ───────────────────────────────────────────────────────
 function WishlistCard({ item }: { item: WishlistItem }) {
@@ -29,12 +30,12 @@ function WishlistCard({ item }: { item: WishlistItem }) {
         href={`/products/${product.slug}`}
         className="relative h-52 block bg-[#F8F9FC]"
       >
-        <Image
+        <FashionistarImage
           src={imageSrc}
           alt={product.title}
           fill
           sizes="(max-width: 768px) 50vw, 25vw"
-          className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+          imgClassName="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
         />
       </Link>
 
@@ -52,7 +53,7 @@ function WishlistCard({ item }: { item: WishlistItem }) {
 
         {/* Actions */}
         <div className="flex gap-2 mt-auto">
-          <button
+          <Button
             type="button"
             onClick={() =>
               addToCart.mutate({ product_id: product.id, quantity: 1 })
@@ -62,8 +63,8 @@ function WishlistCard({ item }: { item: WishlistItem }) {
           >
             <ShoppingCart size={16} />
             {addToCart.isPending ? "Adding…" : "Add to Cart"}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={() => toggleWishlist.mutate(product.slug)}
             disabled={toggleWishlist.isPending}
@@ -71,7 +72,7 @@ function WishlistCard({ item }: { item: WishlistItem }) {
             className="p-2.5 rounded-full border border-[#F56630] text-[#F56630] hover:bg-[#F56630] hover:text-white transition-colors disabled:opacity-60"
           >
             <Trash2 size={16} />
-          </button>
+          </Button>
         </div>
       </div>
     </div>

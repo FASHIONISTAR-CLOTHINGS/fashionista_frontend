@@ -5,10 +5,11 @@
  * optimized Next.js Image, and accessible action buttons.
  */
 "use client";
-import Image from "next/image";
 import { Trash2, ShoppingCart, Loader2 } from "lucide-react";
 import { useToggleWishlist } from "../hooks/use-product";
 import type { WishlistItem } from "../types/product.types";
+import { FashionistarImage } from "@/components/media";
+import { Button } from "@/components/ui/button";
 
 interface WishlistTableCellProps {
   item: WishlistItem;
@@ -35,19 +36,13 @@ const WishlistTableCell = ({ item, onAddToCart }: WishlistTableCellProps) => {
       {/* Product image + title */}
       <td className="flex items-center gap-3 py-4 md:px-4">
         <div className="relative w-14 h-14 md:w-16 md:h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
-          {product.image_url ? (
-            <Image
-              src={product.image_url}
-              alt={product.title}
-              fill
-              sizes="(max-width: 768px) 56px, 64px"
-              className="object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
-              No image
-            </div>
-          )}
+          <FashionistarImage
+            src={product.image_url}
+            alt={product.title}
+            fill
+            sizes="(max-width: 768px) 56px, 64px"
+            imgClassName="object-cover"
+          />
         </div>
         <span className="text-[#475367] font-medium text-sm md:text-base font-raleway line-clamp-2">
           {product.title}
@@ -80,7 +75,7 @@ const WishlistTableCell = ({ item, onAddToCart }: WishlistTableCellProps) => {
 
       {/* Add to cart */}
       <td className="px-2">
-        <button
+        <Button
           onClick={handleAddToCart}
           disabled={!isInStock}
           className="flex items-center gap-1.5 px-3 py-2 max-w-[6rem] w-full
@@ -92,12 +87,12 @@ const WishlistTableCell = ({ item, onAddToCart }: WishlistTableCellProps) => {
         >
           <ShoppingCart size={14} />
           Add to cart
-        </button>
+        </Button>
       </td>
 
       {/* Remove from wishlist */}
       <td className="text-center px-3">
-        <button
+        <Button
           onClick={handleRemove}
           disabled={isPending}
           aria-label={`Remove ${product.title} from wishlist`}
@@ -110,7 +105,7 @@ const WishlistTableCell = ({ item, onAddToCart }: WishlistTableCellProps) => {
           ) : (
             <Trash2 size={18} />
           )}
-        </button>
+        </Button>
       </td>
     </tr>
   );

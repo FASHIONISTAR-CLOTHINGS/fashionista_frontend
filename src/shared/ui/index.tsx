@@ -6,7 +6,7 @@
  * Button, Card, Modal, Badge, Avatar, Skeleton, Tooltip, Toast, Pagination.
  */
 
-import React, { ReactNode, ButtonHTMLAttributes, forwardRef, useEffect, useRef } from "react";
+import { ReactNode, ButtonHTMLAttributes, forwardRef, useEffect, useRef } from "react";
 import { Slot } from "@radix-ui/react-slot";
 
 // ── Button ───────────────────────────────────────────────────────────────────

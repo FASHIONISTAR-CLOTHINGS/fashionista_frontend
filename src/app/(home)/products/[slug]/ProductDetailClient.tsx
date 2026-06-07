@@ -43,6 +43,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { SocialProofBadge } from "@/features/product/components/SocialProofBadge";
 import { useRecentlyViewed } from "@/features/catalog/hooks/use-recently-viewed";
 import { FashionistarImage } from "@/components/media";
+import { Button } from "@/components/ui/button";
 
 
 interface ProductDetailClientProps {
@@ -383,10 +384,10 @@ export function ProductDetailClient({
 
           {/* CTA buttons */}
           <div className="flex gap-3">
-            <button
+            <Button
               onClick={handleAddToCart}
               disabled={!inStock || cartLoading}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[hsl(var(--accent))] py-4 text-sm font-bold text-[hsl(var(--accent-foreground))] shadow-md transition hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[hsl(var(--accent))] py-4 text-sm font-bold text-[hsl(var(--accent-foreground))] shadow-md transition hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
             >
               {cartLoading ? (
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-black/20 border-t-black" />
@@ -396,15 +397,15 @@ export function ProductDetailClient({
                   Add to Cart
                 </>
               )}
-            </button>
+            </Button>
 
-            <button
+            <Button
               onClick={() => toggleWishlist(product.slug)}
               aria-label="Toggle wishlist"
-              className="flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-card text-[hsl(var(--primary))] transition hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))/5]"
+              className="flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-card text-[hsl(var(--primary))] transition hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))/5] cursor-pointer"
             >
               <Heart size={20} />
-            </button>
+            </Button>
           </div>
 
           {/* Accordion: Description / Specs / FAQs */}

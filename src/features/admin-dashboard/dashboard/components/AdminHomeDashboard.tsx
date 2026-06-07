@@ -3,6 +3,7 @@
 import BarChart from "@/components/ui/composites/Charts";
 import { ChartOptions, ChartData } from "chart.js";
 import { FashionistarImage } from "@/components/media";
+import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
 import { TableRowSkeleton } from "@/shared/components/skeletons";
 import { useAdminDashboardKPI } from "../../catalog/hooks"; // imported from catalog hooks where it resides
@@ -143,9 +144,13 @@ export function AdminHomeDashboard() {
           </div>
         </div>
         <div>
-          <button className="py-1.5 px-5 bg-[#fda600] font-satoshi font-medium text-[10px] leading-[14px] text-white rounded">
+          <Button
+            size="sm"
+            variant="default"
+            className="py-1.5 px-5 font-satoshi font-medium text-[10px] leading-[14px] text-white rounded-md"
+          >
             Add
-          </button>
+          </Button>
         </div>
       </div>
     );

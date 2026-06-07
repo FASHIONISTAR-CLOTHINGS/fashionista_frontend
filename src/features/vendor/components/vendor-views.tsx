@@ -1,6 +1,6 @@
  "use client";
 
-import Image from "next/image";
+import { FashionistarImage } from "@/components/media";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -91,7 +91,6 @@ import {
 import type { KycDocumentType } from "@/features/kyc";
 import { BankAccountsList, PayoutGateGuard } from "./bank-accounts";
 import { uploadFile } from "@/features/uploads/services/upload.service";
-import { type AddressSelection } from "@/shared/reference-data";
 
 // ── Recharts (installed with shadcn) ─────────────────────────────────────────
 
@@ -426,10 +425,12 @@ function CloudinaryFileUploader({
       >
         {value ? (
           <>
-            <img
+            <FashionistarImage
               src={value}
               alt="Uploaded preview"
-              className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
+              fill={true}
+              objectFit="cover"
+              imgClassName="transition duration-300 group-hover:scale-105"
             />
             <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
               <div className="flex gap-2">
@@ -1769,7 +1770,7 @@ function CatalogProductCard({ product }: { product: ProductListItem }) {
     <div className="group rounded-2xl bg-white border border-[#ECE6D6] p-5 shadow-sm transition-all hover:shadow-md hover:border-[#FDA600]/30 flex gap-4 items-center">
       {product.image_url ? (
         <div className="relative h-20 w-20 overflow-hidden rounded-xl bg-[#F8F5ED] border border-[#ECE6D6] flex-shrink-0">
-          <Image src={product.image_url} alt={product.title} fill className="object-cover transition-transform group-hover:scale-105 animate-fadeIn" />
+          <FashionistarImage src={product.image_url} alt={product.title} fill={true} objectFit="cover" imgClassName="transition-transform group-hover:scale-105 animate-fadeIn" />
         </div>
       ) : (
         <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-xl bg-[#F8F5ED] border border-[#ECE6D6] text-[#FDA600]">
@@ -3206,7 +3207,7 @@ function VendorSettingsContainer() {
               </div>
               <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-5 flex flex-col items-center justify-center min-h-[140px]">
                 {form.logo_url ? (
-                  <img src={form.logo_url} alt="Boutique Logo Preview" className="h-20 w-20 rounded-full object-cover border border-[#ECE6D6] shadow-inner" />
+                  <FashionistarImage src={form.logo_url} alt="Boutique Logo Preview" width={80} height={80} imgClassName="h-20 w-20 rounded-full object-cover border border-[#ECE6D6] shadow-inner" />
                 ) : (
                   <div className="text-center text-xs text-[#7A6B44]">
                     <Store className="mx-auto h-8 w-8 text-[#ECE6D6] mb-2" />
@@ -3229,7 +3230,7 @@ function VendorSettingsContainer() {
               </div>
               <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-5 flex flex-col items-center justify-center min-h-[140px]">
                 {form.cover_url ? (
-                  <img src={form.cover_url} alt="Cover Banner Preview" className="h-20 w-full rounded-lg object-cover border border-[#ECE6D6]" />
+                  <FashionistarImage src={form.cover_url} alt="Cover Banner Preview" width={800} height={80} imgClassName="h-20 w-full rounded-lg object-cover border border-[#ECE6D6]" />
                 ) : (
                   <div className="text-center text-xs text-[#7A6B44]">
                     <Globe className="mx-auto h-8 w-8 text-[#ECE6D6] mb-2" />

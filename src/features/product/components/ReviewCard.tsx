@@ -11,7 +11,7 @@
  *  vendor_reply   → reply
  *  is_verified_purchase → removed (not in backend schema)
  */
-import Image from "next/image";
+import { AvatarImage } from "@/components/media";
 import type { ProductReview } from "../types/product.types";
 
 interface ReviewCardProps {
@@ -40,12 +40,12 @@ const ReviewCard = ({ review, showReply = false }: ReviewCardProps) => {
       {/* Reviewer info + rating */}
       <div className="flex items-center gap-3 md:gap-4">
         {review.reviewer_avatar_url ? (
-          <Image
+          <AvatarImage
             src={review.reviewer_avatar_url}
             alt={`${review.reviewer_display}'s avatar`}
             width={49}
             height={49}
-            className="w-9 h-9 md:w-[49px] md:h-[49px] rounded-full object-cover flex-shrink-0"
+            className="w-9 h-9 md:w-[49px] md:h-[49px] flex-shrink-0"
           />
         ) : (
           <div className="w-9 h-9 md:w-[49px] md:h-[49px] rounded-full bg-[#01454A]/10 flex items-center justify-center flex-shrink-0">

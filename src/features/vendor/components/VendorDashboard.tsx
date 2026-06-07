@@ -6,7 +6,7 @@
  * Uses TanStack Query for server state + Zustand for UI preferences.
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import type { VendorMetrics, VendorProfile } from "@/entities/vendor/types";
 import { Card, Badge, LoadingSpinner } from "@/shared/ui";
 

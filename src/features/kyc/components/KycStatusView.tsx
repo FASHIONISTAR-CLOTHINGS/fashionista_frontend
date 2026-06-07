@@ -15,6 +15,7 @@ import {
   AlertCircle,
   User,
 } from "lucide-react";
+import { FashionistarImage } from "@/components/media";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -338,7 +339,7 @@ function AdminKycTerminal() {
                         <div className="flex items-center gap-3">
                           <div className="flex size-10 items-center justify-center rounded-full bg-[#01454A]/10 text-[#01454A] overflow-hidden">
                             {sub.user?.avatar ? (
-                              <img src={sub.user.avatar} alt={name} className="h-full w-full object-cover" />
+                              <FashionistarImage src={sub.user.avatar} alt={name} width={40} height={40} imgClassName="object-cover" />
                             ) : (
                               <User className="h-5 w-5" />
                             )}
@@ -470,18 +471,17 @@ function AdminKycTerminal() {
                             </span>
                           </div>
 
-                          {/* Image preview */}
-                          {doc.secure_url ? (
-                            <div className="relative mt-2 h-32 w-full overflow-hidden rounded-lg bg-gray-100 border border-[#ECE6D6]">
-                              {isImage ? (
-                                <img src={doc.secure_url} alt={doc.document_type} className="h-full w-full object-cover" />
-                              ) : (
-                                <div className="flex h-full w-full items-center justify-center bg-gray-50 text-xs font-medium text-gray-500">
-                                  Preview unavailable (Non-image type)
-                                </div>
-                              )}
-                            </div>
-                          ) : null}
+                           {doc.secure_url ? (
+                             <div className="relative mt-2 h-32 w-full overflow-hidden rounded-lg bg-gray-100 border border-[#ECE6D6]">
+                               {isImage ? (
+                                 <FashionistarImage src={doc.secure_url} alt={doc.document_type} fill imgClassName="object-cover" />
+                               ) : (
+                                 <div className="flex h-full w-full items-center justify-center bg-gray-50 text-xs font-medium text-gray-500">
+                                   Preview unavailable (Non-image type)
+                                 </div>
+                               )}
+                             </div>
+                           ) : null}
 
                           {doc.secure_url && (
                             <a

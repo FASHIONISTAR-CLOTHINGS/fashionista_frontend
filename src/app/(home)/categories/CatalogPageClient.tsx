@@ -11,6 +11,7 @@ import { useCallback } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import ProductGrid from "@/features/product/components/ProductGrid";
 import { useCatalogBrands, useCatalogCategories } from "@/features/catalog";
+import { Button } from "@/components/ui/button";
 
 const ORDERINGS = [
   { value: "-created_at", label: "Newest" },
@@ -111,7 +112,7 @@ export default function CatalogPageClient({
             : categories.slice(0, 14).map((item) => {
                 const selected = item.id === category || item.slug === category;
                 return (
-                  <button
+                  <Button
                     key={item.id}
                     type="button"
                     onClick={() => updateParam("category", selected ? null : item.id)}
@@ -122,7 +123,7 @@ export default function CatalogPageClient({
                     }`}
                   >
                     {item.title || item.name}
-                  </button>
+                  </Button>
                 );
               })}
         </div>
@@ -132,7 +133,7 @@ export default function CatalogPageClient({
             {brands.slice(0, 12).map((item) => {
               const selected = item.id === brand || item.slug === brand;
               return (
-                <button
+                <Button
                   key={item.id}
                   type="button"
                   onClick={() => updateParam("brand", selected ? null : item.id)}
@@ -143,7 +144,7 @@ export default function CatalogPageClient({
                   }`}
                 >
                   {item.title || item.name}
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -155,34 +156,34 @@ export default function CatalogPageClient({
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-muted-foreground">Filtering by:</span>
           {category && (
-            <button
+            <Button
               type="button"
               onClick={() => updateParam("category", null)}
               className="flex items-center gap-1.5 rounded-full bg-[hsl(var(--accent))] px-3 py-1 text-xs font-bold text-[hsl(var(--accent-foreground))] transition hover:brightness-110"
             >
               {activeCategory?.title || activeCategory?.name || category}
               <X size={12} />
-            </button>
+            </Button>
           )}
           {brand && (
-            <button
+            <Button
               type="button"
               onClick={() => updateParam("brand", null)}
               className="flex items-center gap-1.5 rounded-full bg-[hsl(var(--primary))] px-3 py-1 text-xs font-bold text-primary-foreground transition hover:brightness-110"
             >
               {activeBrand?.title || activeBrand?.name || brand}
               <X size={12} />
-            </button>
+            </Button>
           )}
           {search && (
-            <button
+            <Button
               type="button"
               onClick={() => updateParam("q", null)}
               className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-bold text-foreground transition hover:border-[hsl(var(--accent))]"
             >
               {search}
               <X size={12} />
-            </button>
+            </Button>
           )}
         </div>
       )}

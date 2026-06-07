@@ -12,6 +12,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { publicEngagementApi } from "@/features/public-engagement";
+import { Button } from "@/components/ui/button";
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (typeof error === "object" && error !== null) {
@@ -63,14 +64,14 @@ export function WaitlistMobileForm() {
           required
           disabled={submitting}
         />
-        <button
+        <Button
           data-testid="waitlist-submit"
           type="submit"
           disabled={submitting}
           className="w-1/3 h-full rounded-r-[100px] bg-[#01454a] text-white shrink-0 text-sm font-bold font-raleway min-h-[44px] hover:bg-[#01454a]/90 transition-colors disabled:opacity-70"
         >
           {submitting ? "Joining…" : "Join Waitlist"}
-        </button>
+        </Button>
       </div>
     </form>
   );

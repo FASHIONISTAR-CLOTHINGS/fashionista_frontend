@@ -7,7 +7,7 @@
  * API: GET /api/v1/ninja/measurements/shared/{token}/
  */
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import ky from "ky";
 import { Card, Badge, LoadingSpinner, EmptyState } from "@/shared/ui";
 
