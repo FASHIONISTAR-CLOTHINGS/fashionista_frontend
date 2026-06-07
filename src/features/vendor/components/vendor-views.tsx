@@ -119,6 +119,10 @@ import {
 } from "@/features/vendor/hooks/use-vendor-dashboard";
 import { useDraftStore } from "@/features/product/builder/store";
 import { Button } from "@/shared/ui";
+import {
+  AddressReferenceField,
+  type AddressSelection,
+} from "@/shared/reference-data";
 
 
 
@@ -133,6 +137,31 @@ const BV = {
   muted:    "#7A6B44",
   ink:      "#1A1208",
 } as const;
+
+const emptyAddressSelection = (
+  city = "",
+  state = "",
+  country = "Nigeria",
+): AddressSelection => ({
+  country_code: country === "Nigeria" || country === "NG" ? "NG" : country,
+  state_code: state,
+  lga_code: "",
+  city_code: city,
+  custom_city: city,
+  street_address: "",
+});
+
+const applyAddressSelection = <
+  T extends { city: string; state: string; country?: string },
+>(
+  current: T,
+  address: AddressSelection,
+): T => ({
+  ...current,
+  city: address.custom_city || address.city_code || address.lga_code || current.city,
+  state: address.state_code || current.state,
+  country: address.country_code === "NG" ? "Nigeria" : address.country_code || current.country,
+});
 
 
 
@@ -257,7 +286,7 @@ function PageHeader({
   );
 }
 
-function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
+function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.ReactNode }) {
   return (
     <label htmlFor={htmlFor} className="block text-sm font-semibold text-[#1A1208]">
       {children}
@@ -522,9 +551,11 @@ export function VendorSetupView() {
     collection_ids: [], instagram_url: "", tiktok_url: "",
     twitter_url: "", website_url: "",
   });
+  const [address, setAddress] = useState<AddressSelection>(() => emptyAddressSelection());
 
   useEffect(() => {
     if (!profile) return;
+    setAddress(emptyAddressSelection(profile.city, profile.state, profile.country || "Nigeria"));
     setPayload((cur) => ({
       ...cur,
       store_name:     profile.store_name    || cur.store_name,
@@ -543,6 +574,11 @@ export function VendorSetupView() {
       website_url:    profile.website_url   || cur.website_url,
     }));
   }, [profile]);
+
+  const handleAddressChange = (next: AddressSelection) => {
+    setAddress(next);
+    setPayload((cur) => applyAddressSelection(cur, next));
+  };
 
   const completion        = setupState?.completion_percentage ?? 0;
   const requiresCollections = collections.length > 0;
@@ -649,25 +685,15 @@ export function VendorSetupView() {
               placeholder="Tell customers what makes your store special..." />
           </div>
 
-          <div className="space-y-2">
-            <FieldLabel htmlFor="city">City *</FieldLabel>
-            <TextInput id="city" value={payload.city} required
-              onChange={(e) => setPayload((c) => ({ ...c, city: e.target.value }))}
-              placeholder="Lagos" />
-          </div>
-
-          <div className="space-y-2">
-            <FieldLabel htmlFor="state">State *</FieldLabel>
-            <TextInput id="state" value={payload.state} required
-              onChange={(e) => setPayload((c) => ({ ...c, state: e.target.value }))}
-              placeholder="Lagos State" />
-          </div>
-
-          <div className="space-y-2">
-            <FieldLabel htmlFor="country">Country</FieldLabel>
-            <TextInput id="country" value={payload.country ?? ""}
-              onChange={(e) => setPayload((c) => ({ ...c, country: e.target.value }))}
-              placeholder="Nigeria" />
+          <div className="space-y-3 md:col-span-2">
+            <FieldLabel>Store location *</FieldLabel>
+            <AddressReferenceField
+              value={address}
+              onChange={handleAddressChange}
+            />
+            <p className="text-xs font-medium text-[#7A6B44]">
+              Choose the closest registered location. You can still use a custom city where the reference list is not exact.
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -3014,6 +3040,7 @@ function VendorSettingsContainer() {
     logo_url: "",
     cover_url: "",
   });
+  const [settingsAddress, setSettingsAddress] = useState<AddressSelection>(() => emptyAddressSelection());
 
   const [notifPreferences, setNotifPreferences] = useState({
     orders: true,
@@ -3025,6 +3052,7 @@ function VendorSettingsContainer() {
 
   useEffect(() => {
     if (profile) {
+      setSettingsAddress(emptyAddressSelection(profile.city, profile.state, profile.country || "Nigeria"));
       setForm({
         store_name: profile.store_name || "",
         tagline: profile.tagline || "",
@@ -3041,6 +3069,11 @@ function VendorSettingsContainer() {
       });
     }
   }, [profile]);
+
+  const handleSettingsAddressChange = (next: AddressSelection) => {
+    setSettingsAddress(next);
+    setForm((cur) => applyAddressSelection(cur, next));
+  };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -3127,24 +3160,15 @@ function VendorSettingsContainer() {
               />
             </div>
 
-            <div className="space-y-1.5">
-              <FieldLabel htmlFor="set-city">City *</FieldLabel>
-              <TextInput
-                id="set-city"
-                required
-                value={form.city}
-                onChange={(e) => setForm((c) => ({ ...c, city: e.target.value }))}
+            <div className="space-y-3 md:col-span-2">
+              <FieldLabel>Store location *</FieldLabel>
+              <AddressReferenceField
+                value={settingsAddress}
+                onChange={handleSettingsAddressChange}
               />
-            </div>
-
-            <div className="space-y-1.5">
-              <FieldLabel htmlFor="set-state">State *</FieldLabel>
-              <TextInput
-                id="set-state"
-                required
-                value={form.state}
-                onChange={(e) => setForm((c) => ({ ...c, state: e.target.value }))}
-              />
+              <p className="text-xs font-medium text-[#7A6B44]">
+                This keeps your marketplace location, delivery region, and vendor profile aligned.
+              </p>
             </div>
 
             <div className="space-y-1.5">
