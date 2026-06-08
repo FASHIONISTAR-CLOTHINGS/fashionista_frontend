@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import AdminTopBanner from "@/components/shared/utilities/AdminTopBanner";
+import AdminTopBanner from "@/features/admin-dashboard/utilities/AdminTopBanner";
 import { RoleGuard } from "@/features/auth/components/RoleGuard";
 import { ErrorBoundary } from "@/shared";
 import { FashionistarImage } from "@/components/media";

@@ -13,7 +13,12 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { useUserStore, selectUser } from "@/entities/user/store/user-store";
+
+import {
+  selectUser,
+  selectToken,
+  useAuthStore,
+} from "@/features/auth/store/auth.store";
 import { Button, LoadingSpinner } from "@/shared/ui";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -284,8 +289,8 @@ const STATUS_INDICATOR: Record<ConnectionStatus, { color: string; label: string 
 };
 
 export function ChatRoom({ roomId, vendorName, onClose, className = "" }: ChatRoomProps) {
-  const user = useUserStore(selectUser);
-  const token = useUserStore((s) => s.tokens?.access ?? null);
+  const user = useAuthStore(selectUser);
+  const token = useAuthStore(selectToken);
 
   const { messages, status, typingUsers, sendMessage, sendTyping } = useWebSocketChat(
     roomId,

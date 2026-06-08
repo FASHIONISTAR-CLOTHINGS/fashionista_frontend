@@ -7,8 +7,8 @@ import {
 
 export const checkUserRole = async () => {
   const cookieStore = await cookies();
-  const role = cookieStore.get("role")?.value;
-  return role;
+  console.log("Fashionista: ", cookieStore.get("role")?.value);
+  return cookieStore.get("role")?.value;
 };
 
 export const getCanonicalRoleFromCookie = async () => {

@@ -23,4 +23,5 @@ export * from './support';
 export * from './transactions';
 export * from './vendor';
 export * from './wallet';
+export * from './utilities';
 

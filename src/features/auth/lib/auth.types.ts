@@ -1,3 +1,12 @@
+/**
+ * @module auth.types
+ * Shared type definitions for authentication flow.
+ *
+ * NOTE: These are “light” structural types used for internal consistency
+ * across auth-related modules. They are **not** exported from “shared” barrel
+ * to avoid leaking implementation details or encouraging deep imports.
+ */
+
 export type CanonicalRole = "client" | "vendor" | "admin";
 
 export interface AuthSessionMirror {

@@ -60,7 +60,6 @@ export * from "./shared/overlays";
 // Shared Preloader Components
 export * from "./shared/preloader/index";
 // Shared Utilities Components
-export * from "./shared/utilities";
 
 
 
@@ -85,3 +84,4 @@ export * from "./media";
 export * from "./settings";
 
 
+export {UserAvatar,UserRoleBadge} from "./UserAvatar";

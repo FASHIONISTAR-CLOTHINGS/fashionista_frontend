@@ -1,5 +1,5 @@
 /**
- * components/shared/utilities/index.ts
+ * features/admin-dashboard/utilities/index.ts
  *
  * Exports utility UI components shared across all role shells
  * (admin, vendor, client).
