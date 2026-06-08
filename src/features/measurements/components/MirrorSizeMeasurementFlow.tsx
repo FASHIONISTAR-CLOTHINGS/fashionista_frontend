@@ -6,6 +6,8 @@ import {
   useCreateMirrorSizeSession,
   useImportMirrorSizeMeasurement,
 } from "../hooks/use-measurements";
+import { Button } from "@/components/ui/button";
+import { FashionistarImage } from "@/components/media";
 
 export function MirrorSizeMeasurementFlow() {
   const createSession = useCreateMirrorSizeSession();
@@ -60,14 +62,14 @@ export function MirrorSizeMeasurementFlow() {
           <Field label="Access Code" value={accessCode} onChange={setAccessCode} placeholder="Auto-filled after start" />
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={createSession.isPending}
-          className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-[8px] bg-[#FDA600] px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-6 w-full h-12 bg-[#FDA600] flex h-12 w-full items-center justify-center gap-2 rounded-[8px] px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
         >
           {createSession.isPending ? <Loader2 className="animate-spin" size={17} /> : <QrCode size={17} />}
           Start MirrorSize Session
-        </button>
+        </Button>
       </form>
 
       <section className="rounded-[8px] border border-[#E5E7EB] bg-white p-6 shadow-card_shadow">
@@ -81,7 +83,7 @@ export function MirrorSizeMeasurementFlow() {
 
         <div className="mt-5 flex min-h-48 items-center justify-center rounded-[8px] bg-[#F8F9FC] p-4">
           {qrSrc ? (
-            <img src={qrSrc} alt="MirrorSize measurement QR code" className="max-h-44 max-w-full" />
+            <FashionistarImage src={qrSrc} alt="MirrorSize measurement QR code" width={176} height={176} imgClassName="max-h-44 max-w-full" />
           ) : (
             <div className="text-center text-sm text-[#858585]">
               <QrCode className="mx-auto mb-3" size={42} />
@@ -102,15 +104,15 @@ export function MirrorSizeMeasurementFlow() {
           </a>
         )}
 
-        <button
+        <Button
           type="button"
           onClick={handleImport}
           disabled={!activeAccessCode || importMeasurement.isPending}
-          className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-[8px] bg-black px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-3 w-full h-12 bg-black flex h-12 w-full items-center justify-center gap-2 rounded-[8px] px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
         >
           {importMeasurement.isPending && <Loader2 className="animate-spin" size={17} />}
           Import Completed Measurements
-        </button>
+        </Button>
       </section>
     </div>
   );

@@ -24,6 +24,8 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { useCatalogSearch } from "@/features/catalog";
+import { FashionistarImage } from "@/components/media";
+import { Button } from "@/components/ui/button";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -89,7 +91,7 @@ function SearchHitRow({
         `}
       >
         {hit.image_url ? (
-          <Image
+          <FashionistarImage
             src={hit.image_url}
             alt={hit.name}
             fill
@@ -247,11 +249,13 @@ export function CatalogSearchModal() {
   return (
     <>
       {/* Search trigger button */}
-      <button
+      {/* Search trigger button */}
+      <Button
         type="button"
         id="catalog-search-trigger"
         aria-label="Search catalog (Cmd+K)"
         onClick={() => setIsOpen(true)}
+        variant="outline"
         className="
           inline-flex items-center gap-2
           h-9 px-3 md:px-4 rounded-xl
@@ -260,6 +264,7 @@ export function CatalogSearchModal() {
           hover:border-[#01454A]/50 hover:text-foreground
           transition-all duration-200
           focus-visible:outline-2 focus-visible:outline-[#01454A] focus-visible:outline-offset-2
+          h-auto
         "
       >
         <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
@@ -269,7 +274,7 @@ export function CatalogSearchModal() {
         <kbd className="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted text-muted-foreground border border-border">
           <span>⌘</span>K
         </kbd>
-      </button>
+      </Button>
 
       {/* Modal overlay */}
       {isOpen && (
@@ -332,16 +337,18 @@ export function CatalogSearchModal() {
                 <div className="h-4 w-4 rounded-full border-2 border-[#01454A] border-t-transparent animate-spin shrink-0" aria-label="Searching..." />
               )}
               {query && !isFetching && (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => { setQuery(""); setActiveIndex(-1); inputRef.current?.focus(); }}
-                  className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                  className="h-auto w-auto p-1 text-muted-foreground hover:text-foreground transition-colors shrink-0"
                   aria-label="Clear search"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                </button>
+                </Button>
               )}
               <kbd className="text-[10px] font-mono text-muted-foreground px-1.5 py-0.5 rounded border border-border bg-muted shrink-0">
                 ESC

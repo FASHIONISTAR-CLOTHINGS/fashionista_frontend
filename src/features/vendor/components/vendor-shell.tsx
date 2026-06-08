@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { FashionistarImage } from "@/components/media";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -206,7 +206,7 @@ function VendorSidebar({
             <div className="relative flex-shrink-0">
               {logoUrl ? (
                 <div className="relative h-9 w-9 overflow-hidden rounded-xl ring-2 ring-[#FDA600]/50 shadow-lg shadow-[#FDA600]/20">
-                  <Image src={logoUrl} alt={storeName} fill className="object-cover" />
+                  <FashionistarImage src={logoUrl} alt={storeName} fill className="object-cover" transformation="avatar" />
                 </div>
               ) : (
                 <div
@@ -462,7 +462,7 @@ function ProfileDropdown({ initials, storeName, userEmail, logoUrl }: ProfileDro
         title={storeName}
       >
         {logoUrl ? (
-          <Image src={logoUrl} alt={storeName} width={36} height={36} className="h-full w-full object-cover" />
+          <FashionistarImage src={logoUrl} alt={storeName} width={36} height={36} className="h-full w-full object-cover" transformation="avatar" />
         ) : (
           <div
             className="flex h-full w-full items-center justify-center"

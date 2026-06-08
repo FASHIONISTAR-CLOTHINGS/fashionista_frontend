@@ -39,6 +39,7 @@ import {
   useRecordKycDocument,
 } from "../hooks/use-kyc";
 import { FashionistarImage } from "@/components/media";
+import { Button } from "@/components/ui/button";
 import type { KycDocumentType } from "../types/kyc.types";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -165,14 +166,14 @@ export function KycDocumentUploadPanel({
 
           {/* Initiate / Resubmit CTA */}
           {canInitiate && (
-            <button
+            <Button
               onClick={() => initiateKyc.mutate({})}
               disabled={initiateKyc.isPending}
               className="flex items-center gap-2 rounded-[16px] bg-[#FDA600] px-5 py-3 text-sm font-bold text-white hover:bg-[#e59500] disabled:opacity-60"
             >
               {initiateKyc.isPending ? "Initiating..." : "Start Verification"}
               <ChevronRight size={16} />
-            </button>
+            </Button>
           )}
         </div>
 
@@ -263,12 +264,13 @@ export function KycDocumentUploadPanel({
           <AlertCircle size={18} />
           <div className="flex flex-col gap-1">
             <span>KYC backend is unreachable. Check your connection.</span>
-            <button
+            <Button
+              variant="link"
               onClick={() => void refetch()}
-              className="text-left text-xs underline"
+              className="text-left text-xs underline p-0 h-auto inline-block text-red-700"
             >
               Retry
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -398,14 +400,14 @@ function DocumentUploadSection({
           />
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={recordDoc.isPending || !secureUrl || !publicId}
           className="flex w-full items-center justify-center gap-2 rounded-[14px] bg-[#FDA600] py-3.5 text-sm font-bold text-white hover:bg-[#e59500] disabled:opacity-60"
         >
           <Upload size={16} />
           {recordDoc.isPending ? "Recording..." : "Record Document Upload"}
-        </button>
+        </Button>
       </form>
     </section>
   );

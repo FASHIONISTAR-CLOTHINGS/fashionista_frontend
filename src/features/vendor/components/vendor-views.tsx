@@ -322,15 +322,17 @@ function PrimaryButton({
   onClick?:  () => void;
 }) {
   return (
-    <button
-      type={type}
-      disabled={disabled ?? loading}
-      onClick={onClick}
-      className="inline-flex items-center gap-2 rounded-xl bg-[#FDA600] px-6 py-3 text-sm font-bold text-black shadow-sm transition-all hover:bg-[#f28705] hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-    >
-      {loading ? <RefreshCw className="h-4 w-4 animate-spin" /> : null}
-      {children}
-    </button>
+    <Button asChild>
+      <button
+        type={type}
+        disabled={disabled ?? loading}
+        onClick={onClick}
+        className="inline-flex items-center gap-2 rounded-xl bg-[#FDA600] px-6 py-3 text-sm font-bold text-black shadow-sm transition-all hover:bg-[#f28705] hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 h-auto"
+      >
+        {loading ? <RefreshCw className="h-4 w-4 animate-spin" /> : null}
+        {children}
+      </button>
+    </Button>
   );
 }
 
@@ -769,21 +771,23 @@ export function VendorSetupView() {
                   {collections.map((col) => {
                     const selected = payload.collection_ids.includes(col.id);
                     return (
-                      <button key={col.id} type="button" onClick={() => toggleCollection(col.id)}
-                        className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${
-                          selected ? "border-[#FDA600] bg-[#FFF6E3] shadow-sm" : "border-[#D9D9D9] bg-white hover:border-[#FDA600]/50"
-                        }`}
-                      >
-                        <span className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all ${
-                          selected ? "border-[#FDA600] bg-[#FDA600]" : "border-[#D9D9D9]"
-                        }`}>
-                          {selected && <Check className="h-3 w-3 text-black" />}
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-[#1A1208] truncate">{col.title}</p>
-                          <p className="text-xs text-[#7A6B44] truncate">{col.slug}</p>
-                        </div>
-                      </button>
+                      <Button key={col.id} asChild>
+                        <button type="button" onClick={() => toggleCollection(col.id)}
+                          className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all h-auto ${
+                            selected ? "border-[#FDA600] bg-[#FFF6E3] shadow-sm" : "border-[#D9D9D9] bg-white hover:border-[#FDA600]/50"
+                          }`}
+                        >
+                          <span className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all ${
+                            selected ? "border-[#FDA600] bg-[#FDA600]" : "border-[#D9D9D9]"
+                          }`}>
+                            {selected && <Check className="h-3 w-3 text-black" />}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-[#1A1208] truncate">{col.title}</p>
+                            <p className="text-xs text-[#7A6B44] truncate">{col.slug}</p>
+                          </div>
+                        </button>
+                      </Button>
                     );
                   })}
                 </div>
@@ -1351,12 +1355,14 @@ export function VendorOrdersView() {
       {/* Status tabs */}
       <div className="flex gap-1.5 flex-wrap">
         {ORDER_STATUS_TABS.map(({ key, label }) => (
-          <button key={key} type="button" id={`order-tab-${key}`} onClick={() => setActiveTab(key)}
-            className={["rounded-xl px-4 py-1.5 text-xs font-semibold transition-all",
-              activeTab === key ? "bg-[#FDA600] text-black shadow-sm" : "border border-[#ECE6D6] bg-white text-[#7A6B44] hover:bg-[#F8F5ED]",
-            ].join(" ")}>
-            {label}
-          </button>
+          <Button key={key} asChild>
+            <button type="button" id={`order-tab-${key}`} onClick={() => setActiveTab(key)}
+              className={["rounded-xl px-4 py-1.5 text-xs font-semibold transition-all h-auto",
+                activeTab === key ? "bg-[#FDA600] text-black shadow-sm" : "border border-[#ECE6D6] bg-white text-[#7A6B44] hover:bg-[#F8F5ED]",
+              ].join(" ")}>
+              {label}
+            </button>
+          </Button>
         ))}
       </div>
 
@@ -1560,16 +1566,18 @@ export function VendorOrderDetailView({ orderOid }: { orderOid: string }) {
 
                       {/* Custom sizing overlay button */}
                       {hasMeasurements && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedMeasurementItem(item);
-                            setIsMeasurementModalOpen(true);
-                          }}
-                          className="rounded-xl border border-[#FDA600] bg-[#FFF6E3] px-3.5 py-1.5 text-xs font-bold text-black transition hover:bg-[#FDA600] cursor-pointer"
-                        >
-                          View Sizing
-                        </button>
+                        <Button asChild>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedMeasurementItem(item);
+                              setIsMeasurementModalOpen(true);
+                            }}
+                            className="rounded-xl border border-[#FDA600] bg-[#FFF6E3] px-3.5 py-1.5 text-xs font-bold text-black transition hover:bg-[#FDA600] cursor-pointer h-auto"
+                          >
+                            View Sizing
+                          </button>
+                        </Button>
                       )}
                     </div>
                   </div>
@@ -1584,18 +1592,20 @@ export function VendorOrderDetailView({ orderOid }: { orderOid: string }) {
               <h2 className="text-base font-bold text-[#1A1208] mb-4">Update Order Status</h2>
               <div className="flex flex-wrap gap-2">
                 {(["Pending", "Processing", "Shipped", "Fulfilled", "Cancelled"] as VendorOrderStatus[]).map((s) => (
-                  <button key={s} id={`status-btn-${s}`} type="button"
-                    disabled={currentStatus === s || updateStatus.isPending}
-                    onClick={() => updateStatus.mutate({ orderId, order_status: s })}
-                    className={["inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all border cursor-pointer",
-                      currentStatus === s
-                        ? "bg-[#FDA600] border-[#FDA600] text-black cursor-default font-bold"
-                        : "border-[#ECE6D6] bg-white text-[#5A6465] hover:border-[#FDA600]/50 hover:bg-[#FFF6E3] disabled:opacity-40",
-                    ].join(" ")}>
-                    {updateStatus.isPending && updateStatus.variables?.order_status === s
-                      ? <RefreshCw className="h-3 w-3 animate-spin" /> : null}
-                    {s}
-                  </button>
+                  <Button key={s} asChild>
+                    <button id={`status-btn-${s}`} type="button"
+                      disabled={currentStatus === s || updateStatus.isPending}
+                      onClick={() => updateStatus.mutate({ orderId, order_status: s })}
+                      className={["inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all border cursor-pointer h-auto",
+                        currentStatus === s
+                          ? "bg-[#FDA600] border-[#FDA600] text-black cursor-default font-bold"
+                          : "border-[#ECE6D6] bg-white text-[#5A6465] hover:border-[#FDA600]/50 hover:bg-[#FFF6E3] disabled:opacity-40",
+                      ].join(" ")}>
+                      {updateStatus.isPending && updateStatus.variables?.order_status === s
+                        ? <RefreshCw className="h-3 w-3 animate-spin" /> : null}
+                      {s}
+                    </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -1881,17 +1891,18 @@ export function VendorProductCatalogView() {
         {categories.length > 1 && (
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
             {categories.map((cat: string) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`rounded-xl px-4 py-2 text-xs font-bold transition-all border whitespace-nowrap ${
-                  selectedCategory === cat
-                    ? "bg-[#FDA600] border-[#FDA600] text-black shadow-sm"
-                    : "bg-white border-[#ECE6D6] text-[#7A6B44] hover:bg-[#F8F5ED]"
-                }`}
-              >
-                {cat}
-              </button>
+              <Button key={cat} asChild>
+                <button
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`rounded-xl px-4 py-2 text-xs font-bold transition-all border whitespace-nowrap h-auto ${
+                    selectedCategory === cat
+                      ? "bg-[#FDA600] border-[#FDA600] text-black shadow-sm"
+                      : "bg-white border-[#ECE6D6] text-[#7A6B44] hover:bg-[#F8F5ED]"
+                  }`}
+                >
+                  {cat}
+                </button>
+              </Button>
             ))}
           </div>
         )}
@@ -1951,17 +1962,18 @@ export function VendorAnalyticsView() {
         action={
           <div className="flex gap-1 rounded-xl bg-[#FAFAF8] border border-[#ECE6D6] p-1 shadow-sm">
             {(["7d", "30d", "90d", "1y"] as const).map((r) => (
-              <button
-                key={r}
-                onClick={() => setRange(r)}
-                className={`rounded-lg px-3 py-1 text-xs font-bold transition-all ${
-                  range === r
-                    ? "bg-[#FDA600] text-black shadow-sm"
-                    : "text-[#7A6B44] hover:bg-[#F8F5ED] hover:text-[#1A1208]"
-                }`}
-              >
-                {r === "7d" ? "7d" : r === "30d" ? "30d" : r === "90d" ? "90d" : "1y"}
-              </button>
+              <Button key={r} asChild>
+                <button
+                  onClick={() => setRange(r)}
+                  className={`rounded-lg px-3 py-1 text-xs font-bold transition-all h-auto ${
+                    range === r
+                      ? "bg-[#FDA600] text-black shadow-sm"
+                      : "text-[#7A6B44] hover:bg-[#F8F5ED] hover:text-[#1A1208]"
+                  }`}
+                >
+                  {r === "7d" ? "7d" : r === "30d" ? "30d" : r === "90d" ? "90d" : "1y"}
+                </button>
+              </Button>
             ))}
           </div>
         }
@@ -2457,20 +2469,21 @@ export function VendorPayoutsView() {
           { id: "accounts", label: "Bank Accounts", icon: Landmark },
           { id: "pin", label: "Wallet PIN", icon: Key },
         ] as const).map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            type="button"
-            className={[
-              "flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors cursor-pointer",
-              activeTab === id
-                ? "border-[#FDA600] text-[#1A1208]"
-                : "border-transparent text-[#7A6B44] hover:text-[#1A1208]",
-            ].join(" ")}
-            onClick={() => setActiveTab(id)}
-          >
-            <Icon className="h-4 w-4" />
-            {label}
-          </button>
+          <Button key={id} asChild>
+            <button
+              type="button"
+              className={[
+                "flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors cursor-pointer h-auto",
+                activeTab === id
+                  ? "border-[#FDA600] text-[#1A1208]"
+                  : "border-transparent text-[#7A6B44] hover:text-[#1A1208]",
+              ].join(" ")}
+              onClick={() => setActiveTab(id)}
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </button>
+          </Button>
         ))}
       </div>
 
@@ -2674,14 +2687,16 @@ export function VendorKycView() {
               </p>
             </div>
           </div>
-          <button
-            onClick={handleStartKyc}
-            disabled={initiateKyc.isPending}
-            className="flex-shrink-0 inline-flex items-center gap-2 rounded-xl bg-[#FDA600] px-5 py-3 text-sm font-bold text-black shadow-sm transition hover:bg-[#f28705] hover:shadow-md disabled:opacity-60 cursor-pointer"
-          >
-            {initiateKyc.isPending ? "Starting..." : "Begin Compliance Check"}
-            <ArrowRight className="h-4 w-4" />
-          </button>
+          <Button asChild>
+            <button
+              onClick={handleStartKyc}
+              disabled={initiateKyc.isPending}
+              className="flex-shrink-0 inline-flex items-center gap-2 rounded-xl bg-[#FDA600] px-5 py-3 text-sm font-bold text-black shadow-sm transition hover:bg-[#f28705] hover:shadow-md disabled:opacity-60 cursor-pointer h-auto"
+            >
+              {initiateKyc.isPending ? "Starting..." : "Begin Compliance Check"}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </Button>
         </div>
       )}
 
@@ -3105,17 +3120,18 @@ function VendorSettingsContainer() {
         ].map((t) => {
           const TabIcon = t.icon;
           return (
-            <button
-              key={t.key}
-              type="button"
-              className={["flex items-center gap-1.5 px-5 py-3 text-sm font-semibold border-b-2 -mb-px transition-colors",
-                activeTab === t.key ? "border-[#FDA600] text-[#1A1208]" : "border-transparent text-[#7A6B44] hover:text-[#1A1208]",
-              ].join(" ")}
-              onClick={() => setActiveTab(t.key as typeof activeTab)}
-            >
-              <TabIcon className="h-4 w-4" />
-              {t.label}
-            </button>
+            <Button key={t.key} asChild>
+              <button
+                type="button"
+                className={["flex items-center gap-1.5 px-5 py-3 text-sm font-semibold border-b-2 -mb-px transition-colors h-auto",
+                  activeTab === t.key ? "border-[#FDA600] text-[#1A1208]" : "border-transparent text-[#7A6B44] hover:text-[#1A1208]",
+                ].join(" ")}
+                onClick={() => setActiveTab(t.key as typeof activeTab)}
+              >
+                <TabIcon className="h-4 w-4" />
+                {t.label}
+              </button>
+            </Button>
           );
         })}
       </div>
@@ -3332,19 +3348,21 @@ function VendorSettingsContainer() {
                   <h4 className="text-sm font-bold text-[#1A1208]">{p.label}</h4>
                   <p className="text-xs text-[#7A6B44] mt-0.5 leading-relaxed">{p.desc}</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setNotifPreferences((c) => ({ ...c, [p.key]: !c[p.key as keyof typeof notifPreferences] }))}
-                  className={["relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
-                    notifPreferences[p.key as keyof typeof notifPreferences] ? "bg-[#FDA600]" : "bg-gray-200",
-                  ].join(" ")}
-                >
-                  <span
-                    className={["pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-                      notifPreferences[p.key as keyof typeof notifPreferences] ? "translate-x-5" : "translate-x-0",
+                <Button asChild>
+                  <button
+                    type="button"
+                    onClick={() => setNotifPreferences((c) => ({ ...c, [p.key]: !c[p.key as keyof typeof notifPreferences] }))}
+                    className={["relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none h-auto",
+                      notifPreferences[p.key as keyof typeof notifPreferences] ? "bg-[#FDA600]" : "bg-gray-200",
                     ].join(" ")}
-                  />
-                </button>
+                  >
+                    <span
+                      className={["pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                        notifPreferences[p.key as keyof typeof notifPreferences] ? "translate-x-5" : "translate-x-0",
+                      ].join(" ")}
+                    />
+                  </button>
+                </Button>
               </div>
             ))}
           </div>

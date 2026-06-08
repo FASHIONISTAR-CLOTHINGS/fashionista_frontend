@@ -24,10 +24,11 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
+import { FashionistarImage } from "@/components/media";
+import { Button } from "@/components/ui/button";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -132,12 +133,12 @@ function SlideOne() {
               placeholder="Enter Email Address"
               aria-label="Email address for waitlist"
             />
-            <button
+            <Button
               type="submit"
-              className="w-1/3 lg:min-h-[66px] h-full rounded-r-[100px] bg-[#01454a] text-white shrink-0 text-sm lg:text-xl font-bold font-raleway hover:bg-[#01454a]/90 transition-colors"
+              className="w-1/3 lg:min-h-[66px] h-full rounded-r-[100px] bg-[#01454a] text-white shrink-0 text-sm lg:text-xl font-bold font-raleway hover:bg-[#01454a]/90 transition-colors h-auto border-0"
             >
               Join Waitlist
-            </button>
+            </Button>
           </div>
         </form>
 
@@ -151,7 +152,7 @@ function SlideOne() {
 
       {/* Hero model image */}
       <div className="absolute -right-3 -bottom-5 lg:right-0 lg:bottom-0">
-        <Image
+        <FashionistarImage
           src="/heroimg.png"
           alt="Fashionistar model showcasing latest styles"
           priority
@@ -406,7 +407,7 @@ function SlideThree() {
           <div className="absolute inset-4 bg-[#01454A]/5 rounded-3xl" />
           {/* Main image */}
           <div className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl">
-            <Image
+            <FashionistarImage
               src="/adunni.png"
               alt="New Fashion Collection 2026"
               fill
@@ -518,26 +519,26 @@ function HeroSection() {
         </div>
 
         {/* ── Prev/Next arrow buttons (desktop) ──────────────── */}
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           onClick={prevSlide}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 hidden md:flex h-10 w-10 items-center justify-center rounded-full bg-black/20 text-white backdrop-blur-sm hover:bg-black/40 transition"
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 hidden md:flex h-10 w-10 items-center justify-center rounded-full bg-black/20 text-white backdrop-blur-sm hover:bg-black/40 transition h-auto border-0 p-0"
           aria-label="Previous slide"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <polyline points="15 18 9 12 15 6" />
           </svg>
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="ghost"
           onClick={nextSlide}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 hidden md:flex h-10 w-10 items-center justify-center rounded-full bg-black/20 text-white backdrop-blur-sm hover:bg-black/40 transition"
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 hidden md:flex h-10 w-10 items-center justify-center rounded-full bg-black/20 text-white backdrop-blur-sm hover:bg-black/40 transition h-auto border-0 p-0"
           aria-label="Next slide"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <polyline points="9 18 15 12 9 6" />
           </svg>
-        </button>
+        </Button>
 
         {/* ── Progress bar ─────────────────────────────────────── */}
         <div className="absolute bottom-0 left-0 right-0 z-20 flex gap-1 px-4 pb-3 md:hidden">
@@ -560,15 +561,14 @@ function HeroSection() {
         aria-label="Hero carousel navigation"
       >
         {SLIDES.map((slide, idx) => (
-          <button
+          <Button
             key={slide.id}
-            type="button"
             role="tab"
             aria-selected={activeSlide === idx}
             aria-label={`Go to slide ${idx + 1}: ${slide.label}`}
             onClick={() => goToSlide(idx)}
             className={cn(
-              "rounded-full border-2 shadow cursor-pointer transition-all duration-300",
+              "rounded-full border-2 shadow cursor-pointer transition-all duration-300 h-auto min-h-0 p-0",
               activeSlide === idx
                 ? "w-4 h-4 md:w-7 md:h-7 bg-[#01454A] border-[#01454A] md:scale-110"
                 : "w-2.5 h-2.5 md:w-6 md:h-6 bg-transparent border-[#d9d9d9] hover:border-[#FDA600]"

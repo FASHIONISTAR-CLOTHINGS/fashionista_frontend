@@ -12,6 +12,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import ky from "ky";
 import { Button, Card, LoadingSpinner } from "@/shared/ui";
+import { FashionistarImage } from "@/components/media";
 
 type ScanStep = "intro" | "device" | "scanning" | "processing" | "complete" | "error";
 type DeviceType = "mobile" | "desktop";
@@ -138,9 +139,14 @@ export function ScanSession({ onComplete, onFallbackToManual }: ScanSessionProps
           <Button onClick={() => setStep("device")} size="lg" className="w-full" id="scan-start-btn">
             Start AI Scan
           </Button>
-          <button onClick={onFallbackToManual} className="text-sm text-slate-400 hover:text-white transition-colors">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onFallbackToManual}
+            className="text-sm text-slate-400 hover:text-white transition-colors h-auto w-auto"
+          >
             Enter measurements manually instead
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -201,10 +207,12 @@ export function ScanSession({ onComplete, onFallbackToManual }: ScanSessionProps
         {deviceType === "desktop" && session.qr_code_base64 && (
           <div className="flex justify-center">
             <div className="p-4 bg-white rounded-2xl">
-              <img
+              <FashionistarImage
                 src={`data:image/png;base64,${session.qr_code_base64}`}
                 alt="Scan QR Code"
-                className="w-48 h-48"
+                width={192}
+                height={192}
+                imgClassName="w-48 h-48"
               />
             </div>
           </div>
@@ -236,9 +244,14 @@ export function ScanSession({ onComplete, onFallbackToManual }: ScanSessionProps
           <span>Waiting for you to complete the scan…</span>
         </div>
 
-        <button onClick={onFallbackToManual} className="text-xs text-slate-500 hover:text-slate-400">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onFallbackToManual}
+          className="text-xs text-slate-500 hover:text-slate-400 h-auto w-auto"
+        >
           Switch to manual entry
-        </button>
+        </Button>
       </div>
     );
   }

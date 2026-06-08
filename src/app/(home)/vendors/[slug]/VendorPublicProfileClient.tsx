@@ -36,6 +36,7 @@ import {
 import { useProducts } from "@/features/product";
 import { ProductCard, ProductCardSkeleton } from "@/features/product";
 import type { ProductListItem } from "@/features/product";
+import { Button } from "@/components/ui/button";
 
 // ── Brand palette ─────────────────────────────────────────────────────────────
 const P = {
@@ -307,8 +308,9 @@ export default function VendorPublicProfileClient({
               <Share2 className="h-4 w-4" /> Share storefront
             </span>
             <div className="flex items-center gap-2.5">
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={handleShareCopy}
                 className="flex h-10 px-4 items-center gap-2 rounded-full border border-[#ECE6D6] bg-white text-xs font-bold text-[#475367] transition-all hover:bg-[#F8F5ED] hover:text-[#01454A]"
               >
@@ -321,23 +323,27 @@ export default function VendorPublicProfileClient({
                     <Link2 className="h-4 w-4" /> Copy storefront link
                   </>
                 )}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
+                size="icon"
                 onClick={handleWhatsappShare}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#ECE6D6] bg-white text-[#475367] transition-all hover:bg-emerald-50 hover:text-emerald-600"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#ECE6D6] bg-white text-[#475367] transition-all hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200"
                 title="Share to WhatsApp"
               >
                 <MessageCircle className="h-4.5 w-4.5" />
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
+                size="icon"
                 onClick={handleTwitterShare}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#ECE6D6] bg-white text-[#475367] transition-all hover:bg-sky-50 hover:text-sky-500"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#ECE6D6] bg-white text-[#475367] transition-all hover:bg-sky-50 hover:text-sky-500 hover:border-sky-200"
                 title="Share to Twitter / X"
               >
                 <Twitter className="h-4.5 w-4.5" />
-              </button>
+              </Button>
             </div>
           </div>
         </section>

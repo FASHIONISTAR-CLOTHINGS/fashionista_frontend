@@ -21,10 +21,12 @@ import { useProductFilters } from "@/features/product/hooks/use-product-filters"
 import { useToggleWishlist } from "@/features/product/hooks/use-product";
 import { useWishlistItemIds } from "@/features/client/hooks/use-client-wishlist";
 import ProductFilterPanel from "@/features/product/components/ProductFilterPanel";
-import { SlidersHorizontal, X, PackageSearch, Loader2, ChevronLeft, ChevronRight, Heart } from "lucide-react";
+import { SlidersHorizontal, X, PackageSearch, Loader2, Heart } from "lucide-react";
 import { useCatalogProducts } from "@/features/catalog/hooks/use-catalog-products";
 import Link from "next/link";
-import Image from "next/image";
+import { FashionistarImage } from "@/components/media";
+import { FashionistarPagination } from "@/components/ui/FashionistarPagination";
+import { Button } from "@/components/ui/button";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Product Card
@@ -54,12 +56,12 @@ function ProductCard({ product }: { product: CatalogProduct }) {
       {/* Image */}
       <div className="relative aspect-[4/5] overflow-hidden bg-muted/20">
         {product.image_url ? (
-          <Image
+          <FashionistarImage
             src={product.image_url}
             alt={product.title}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            imgClassName="transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full items-center justify-center">
@@ -260,43 +262,7 @@ function ProductGrid({
 // Pagination Controls
 // ─────────────────────────────────────────────────────────────────────────────
 
-function Pagination({
-  page,
-  totalPages,
-  onNext,
-  onPrev,
-}: {
-  page: number;
-  totalPages: number;
-  onNext: () => void;
-  onPrev: () => void;
-}) {
-  if (totalPages <= 1) return null;
-  return (
-    <div className="mt-8 flex items-center justify-center gap-4">
-      <button
-        onClick={onPrev}
-        disabled={page <= 1}
-        className="flex items-center gap-1.5 rounded-xl border border-border/40 px-4 py-2 text-sm font-medium transition-all hover:border-primary/40 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        <ChevronLeft size={15} />
-        Previous
-      </button>
-      <span className="text-sm text-muted-foreground">
-        Page <strong className="text-foreground">{page}</strong> of{" "}
-        <strong className="text-foreground">{totalPages}</strong>
-      </span>
-      <button
-        onClick={onNext}
-        disabled={page >= totalPages}
-        className="flex items-center gap-1.5 rounded-xl border border-border/40 px-4 py-2 text-sm font-medium transition-all hover:border-primary/40 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        Next
-        <ChevronRight size={15} />
-      </button>
-    </div>
-  );
-}
+// Unused Pagination component replaced by global FashionistarPagination
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Page
@@ -395,9 +361,11 @@ function CatalogPage() {
             <div className="flex-1 min-w-0">
               {/* Mobile filter button */}
               <div className="mb-4 flex items-center justify-between lg:hidden">
-                <button
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => setMobileFiltersOpen(true)}
-                  className="flex items-center gap-2 rounded-xl border border-border/40 px-4 py-2 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-muted/30"
+                  className="flex items-center gap-2 rounded-xl border border-border/40 px-4 py-2 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-muted/30 h-auto"
                   aria-expanded={mobileFiltersOpen}
                   aria-controls="mobile-filter-drawer"
                 >
@@ -408,7 +376,7 @@ function CatalogPage() {
                       •
                     </span>
                   )}
-                </button>
+                </Button>
                 <p className="text-xs text-muted-foreground">
                   {totalCount.toLocaleString()} results
                 </p>
@@ -420,11 +388,11 @@ function CatalogPage() {
                 isFetching={isFetching}
               />
 
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                onNext={handleNext}
-                onPrev={handlePrev}
+              <FashionistarPagination
+                currentPage={page}
+                totalCount={totalCount}
+                pageSize={24}
+                baseHref="/products"
               />
             </div>
           </div>
@@ -449,12 +417,15 @@ function CatalogPage() {
           <div className="absolute bottom-0 left-0 right-0 max-h-[85vh] overflow-y-auto rounded-t-2xl border-t border-border/40 bg-card shadow-2xl">
             <div className="sticky top-0 flex items-center justify-between border-b border-border/40 bg-card px-4 py-3">
               <span className="font-semibold text-foreground">Filters</span>
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setMobileFiltersOpen(false)}
-                className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground h-auto w-auto"
               >
                 <X size={18} />
-              </button>
+              </Button>
             </div>
             <ProductFilterPanel
               compact
