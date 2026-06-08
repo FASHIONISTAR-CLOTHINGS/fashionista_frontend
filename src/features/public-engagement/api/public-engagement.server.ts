@@ -16,6 +16,7 @@ const DEFAULT_PLATFORM_SETTINGS: PublicPlatformSettings = {
 };
 
 export async function getPublicPlatformSettings(): Promise<PublicPlatformSettings> {
+  console.log("Fashionista: ", getServerBackendRootUrl());
   try {
     const response = await fetch(
       `${getServerBackendRootUrl()}/api/v1/platform/settings/public/`,

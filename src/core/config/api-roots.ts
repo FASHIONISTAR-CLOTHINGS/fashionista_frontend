@@ -26,6 +26,7 @@ export function getClientBackendRootUrl(): string {
 }
 
 export function getServerBackendRootUrl(): string {
+  console.log("Fashionista: ", process.env.BACKEND_INTERNAL_URL);
   return stripTrailingSlash(
     process.env.BACKEND_INTERNAL_URL ??
       process.env.NEXT_PUBLIC_BACKEND_URL ??
