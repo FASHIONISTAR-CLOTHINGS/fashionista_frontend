@@ -37,17 +37,20 @@ import { cn } from "@/lib/utils";
 /** Root card container. Forwards ref and all div props. */
 const Card = React.forwardRef<
   React.ComponentRef<"div">,
-  React.ComponentPropsWithoutRef<"div">
->(({ className, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<"div"> & { glass?: boolean }
+>((({ className, glass, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "rounded-2xl bg-[hsl(var(--background))] shadow-sm border border-[hsl(var(--border))] overflow-hidden transition-shadow duration-200 hover:shadow-md",
+      "rounded-2xl border overflow-hidden transition-all duration-300",
+      glass
+        ? "bg-white/5 backdrop-blur-sm border-white/10 text-white shadow-lg shadow-black/10"
+        : "bg-[hsl(var(--background))] border-[hsl(var(--border))] shadow-sm hover:shadow-md",
       className,
     )}
     {...props}
   />
-));
+)));
 Card.displayName = "Card";
 
 /** Header slot — vertically stacked with comfortable padding. */

@@ -1,3 +1,3 @@
 export { Button } from "../button";
-export { default as Modal } from "./Modal";
+export { Modal } from "../common";
 export { default as VerifyInput } from "./VerifyInput";

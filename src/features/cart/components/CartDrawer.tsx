@@ -86,8 +86,8 @@ function CartItemRow({ item, onUpdateQty, onRemove, isUpdating }: CartItemRowPro
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-white truncate">{item.product.title}</p>
         <div className="flex items-center gap-1.5 mt-1">
-          {item.sizeSnapshot && <Badge color="default" size="xs">{item.sizeSnapshot}</Badge>}
-          {item.colorSnapshot && <Badge color="default" size="xs">{item.colorSnapshot}</Badge>}
+          {item.size_label && <Badge color="default" size="xs">Size: {item.size_label}</Badge>}
+          {item.color_label && <Badge color="default" size="xs">{item.color_label}</Badge>}
           {item.product.requires_measurement && (
             <Badge color="warning" size="xs">📐 Needs measurements</Badge>
           )}
@@ -199,9 +199,9 @@ export function CartDrawer({
             <span className="text-xl">🛒</span>
             <h2 className="font-semibold text-white">
               Cart
-              {cart && cart.itemCount > 0 && (
+              {cart && cart.item_count > 0 && (
                 <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-500 text-[10px] font-bold text-white">
-                  {cart.itemCount}
+                  {cart.item_count}
                 </span>
               )}
             </h2>

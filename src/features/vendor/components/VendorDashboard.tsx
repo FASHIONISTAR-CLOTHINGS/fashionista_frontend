@@ -155,12 +155,14 @@ export function VendorDashboard({ profile, metrics, isLoading }: VendorDashboard
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">{profile.shopName}</h1>
+          <h1 className="text-2xl font-bold text-white">{profile.store_name}</h1>
           <div className="flex items-center gap-2 mt-1">
-            <Badge color={profile.isVerified ? "success" : "warning"}>
-              {profile.isVerified ? "✓ Verified" : "Pending Verification"}
+            <Badge color={profile.is_verified ? "success" : "warning"}>
+              {profile.is_verified ? "✓ Verified" : "Pending Verification"}
             </Badge>
-            <Badge color="primary">{profile.tier.toUpperCase()}</Badge>
+            {profile.subscription_tier && (
+              <Badge color="primary">{profile.subscription_tier.toUpperCase()}</Badge>
+            )}
           </div>
         </div>
         <OrderStatusPills pending={metrics.pendingOrders} />
@@ -215,9 +217,9 @@ export function VendorDashboard({ profile, metrics, isLoading }: VendorDashboard
 
       {activeTab === "analytics" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <MetricCard icon="📊" label="Fulfillment Avg" value={`${profile.avgFulfillmentDays?.toFixed(1) ?? "—"} days`} color="violet" />
-          <MetricCard icon="↩️" label="Return Rate" value={`${(profile.returnRate * 100).toFixed(1)}%`} color={profile.returnRate > 0.05 ? "rose" : "emerald"} />
-          <MetricCard icon="⚖️" label="Dispute Rate" value={`${(profile.disputeRate * 100).toFixed(1)}%`} color={profile.disputeRate > 0.02 ? "rose" : "emerald"} />
+          <MetricCard icon="📊" label="Fulfillment Avg" value={`${profile.avg_fulfillment_days?.toFixed(1) ?? "—"} days`} color="violet" />
+          <MetricCard icon="↩️" label="Return Rate" value={`${profile.return_rate !== undefined ? (profile.return_rate * 100).toFixed(1) : "0.0"}%`} color={profile.return_rate && profile.return_rate > 0.05 ? "rose" : "emerald"} />
+          <MetricCard icon="⚖️" label="Dispute Rate" value={`${profile.dispute_rate !== undefined ? (profile.dispute_rate * 100).toFixed(1) : "0.0"}%`} color={profile.dispute_rate && profile.dispute_rate > 0.02 ? "rose" : "emerald"} />
         </div>
       )}
 

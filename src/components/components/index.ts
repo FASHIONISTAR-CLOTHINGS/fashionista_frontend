@@ -20,4 +20,6 @@ export {
   StatSkeleton,
   ProfileSkeleton,
   FormSkeleton,
+  PageSkeleton,
+  ProductDetailSkeleton,
 } from "./skeletons";

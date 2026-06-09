@@ -10,7 +10,7 @@ export type { UseOptimisticMutationOptions } from "./use-optimistic-mutation";
 export { useInfiniteScroll } from "./use-infinite-scroll";
 export type { UseInfiniteScrollOptions } from "./use-infinite-scroll";
 
-export { useToast } from "./use-toast";
+export { useToast, toast } from "./use-toast";
 export type { ToastOptions } from "./use-toast";
 
 // ── New hooks (Wave G frontend finalization) ────────────────────────────────
