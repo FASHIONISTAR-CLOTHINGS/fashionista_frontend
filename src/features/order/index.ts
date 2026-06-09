@@ -79,3 +79,10 @@ export {
 export { OrderTable, ClientOrderList, OrderDetailView, OrderPaymentView, OrderConfirmationView } from "./components";
 
 // Admin exports have been moved to the centralized admin-dashboard feature slice.
+
+
+// src/entities/order/index.ts
+export * from "./types";
+export { OrderStatusBadge } from "./components/OrderStatusBadge";
+export { OrderTimeline } from "./components/OrderTimeline";
+export { useOrders, useOrder, useCancelOrder } from "./hooks/use-orders";

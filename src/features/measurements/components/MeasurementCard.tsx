@@ -1,16 +1,16 @@
 "use client";
 
 /**
- * entities/measurement/components/MeasurementCard.tsx
+ * features/measurement/components/MeasurementCard.tsx
  * Dashboard card showing user's measurement profile completion + values.
  *
- * entities/measurement/components/BodyDiagram.tsx
+ * features/measurement/components/BodyDiagram.tsx
  * SVG body outline with measurement hotspots.
  */
 
 
-import type { MeasurementProfile, MeasurementCompletionStatus } from "../types";
-import { MEASUREMENT_FIELDS } from "../types";
+import type { MeasurementProfile, MeasurementCompletionStatus } from "../../../entities/measurement/types";
+import { MEASUREMENT_FIELDS } from "../../../entities/measurement/types";
 
 // ── MeasurementCard ──────────────────────────────────────────────────────────
 

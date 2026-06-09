@@ -17,6 +17,7 @@ export interface OrderTimelineEntry {
   id: string;
   status: OrderStatus;
   note: string;
+  actorId: string | null;
   actorName: string | null;
   createdAt: string;
 }
@@ -106,3 +107,109 @@ export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
   refunded: "bg-orange-500/20 text-orange-300 border-orange-500/30",
   disputed: "bg-rose-500/20 text-rose-300 border-rose-500/30",
 };
+
+export interface OrderDetail {
+  id: string;
+  orderNumber: string;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  deliveryMethod: DeliveryMethod;
+  // 2026+ tracking fields
+  trackingNumber: string | null;
+  courierService: string | null;
+  estimatedDeliveryAt: string | null;
+  isGift: boolean;
+  giftMessage: string | null;
+  carbonOffsetPurchased: boolean;
+  // Financials
+  subtotalNgn: string;
+  discountNgn: string;
+  shippingNgn: string;
+  taxNgn: string;
+  totalNgn: string;
+  currency: string;
+  // Addresses
+  shippingAddress: string;
+  billingAddress: string;
+  // Relations
+  vendorStoreName: string;
+  items: OrderItem[];
+  timeline: OrderTimelineEntry[];
+  // Timestamps
+  createdAt: string;
+  updatedAt: string;
+  confirmedAt: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+}
+
+
+export interface OrderList {
+  id: string;
+  orderNumber: string;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  deliveryMethod: DeliveryMethod;
+  // 2026+ tracking fields
+  trackingNumber: string | null;
+  courierService: string | null;
+  estimatedDeliveryAt: string | null;
+  isGift: boolean;
+  giftMessage: string | null;
+  carbonOffsetPurchased: boolean;
+  // Financials
+  subtotalNgn: string;
+  discountNgn: string;
+  shippingNgn: string;
+  taxNgn: string;
+  totalNgn: string;
+  currency: string;
+  // Addresses
+  shippingAddress: string;
+  billingAddress: string;
+  // Relations
+  vendorStoreName: string;
+  items: OrderItem[];
+  timeline: OrderTimelineEntry[];
+  // Timestamps
+  createdAt: string;
+  updatedAt: string;
+  confirmedAt: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+}
+
+export interface OrderListItem {
+  id: string;
+  orderNumber: string;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  deliveryMethod: DeliveryMethod;
+  // 2026+ tracking fields
+  trackingNumber: string | null;
+  courierService: string | null;
+  estimatedDeliveryAt: string | null;
+  isGift: boolean;
+  giftMessage: string | null;
+  carbonOffsetPurchased: boolean;
+  // Financials
+  subtotalNgn: string;
+  discountNgn: string;
+  shippingNgn: string;
+  taxNgn: string;
+  totalNgn: string;
+  currency: string;
+  // Addresses
+  shippingAddress: string;
+  billingAddress: string;
+  // Relations
+  vendorStoreName: string;
+  items: OrderItem[];
+  timeline: OrderTimelineEntry[];
+  // Timestamps
+  createdAt: string;
+  updatedAt: string;
+  confirmedAt: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+}

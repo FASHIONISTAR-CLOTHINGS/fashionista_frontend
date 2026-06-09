@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * entities/measurement/components/BodyDiagram.tsx
+ * features/measurement/components/BodyDiagram.tsx
  * SVG body silhouette with interactive measurement hotspots.
  * Each hotspot shows the measurement value when complete, or a
  * pulsing indicator when missing — used in MeasurementCapture flow.
@@ -10,20 +10,30 @@
 import { useState } from "react";
 
 export interface MeasurementPoint {
+  /** Unique identifier for the measurement */
   id: string;
+  /** Display label for the measurement */
   label: string;
   /** SVG coordinate (viewBox 0 0 200 400) */
   cx: number;
+  /** SVG coordinate (viewBox 0 0 200 400) */
   cy: number;
+  /** Value of the measurement */
   value?: number | null;
+  /** Unit of the measurement */
   unit?: string;
+  /** Whether the measurement is required */
   required?: boolean;
 }
 
 interface BodyDiagramProps {
+  /** Array of measurement points to render */
   points: MeasurementPoint[];
+  /** Currently active measurement point */
   activePoint?: string | null;
+  /** Callback fired when a point is clicked */
   onPointClick?: (pointId: string) => void;
+  /** Additional CSS classes for the container */
   className?: string;
 }
 

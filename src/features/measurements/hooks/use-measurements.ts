@@ -34,6 +34,11 @@ import type {
   UpdateMeasurementProfileInput,
 } from "../types/measurements.types";
 
+
+import ky from "ky";
+
+const MEAS_BASE = "/api/v1/ninja/measurements/";
+
 // ─── Query Key Factory ────────────────────────────────────────────────────────
 
 export const measurementKeys = {
@@ -41,6 +46,22 @@ export const measurementKeys = {
   profiles: () => [...measurementKeys.all, "profiles"] as const,
   default: () => [...measurementKeys.all, "default"] as const,
   detail: (id: string | number) => [...measurementKeys.all, "detail", id] as const,
+  mirrorsize: () => [...measurementKeys.all, "mirrorsize"] as const,
+  list: () => [...measurementKeys.all, "list"] as const,
+  lists: () => [...measurementKeys.all, "list"] as const,
+  details: () => [...measurementKeys.all, "detail"] as const,
+} as const;
+
+
+
+
+
+
+export const measurementListKeys = { 
+  lists: () => [...measurementKeys.all, "list"] as const,
+  list: (params?: Record<string, unknown>) => [...measurementKeys.lists(), params ?? {}] as const,
+  details: () => [...measurementKeys.all, "detail"] as const,
+  detail: (id: string) => [...measurementKeys.details(), id] as const,
   mirrorsize: () => [...measurementKeys.all, "mirrorsize"] as const,
 } as const;
 
@@ -168,6 +189,53 @@ export function useImportMirrorSizeMeasurement() {
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Measurement is not available yet.";
       toast.error(msg);
+    },
+  });
+}
+
+
+
+
+/**
+ * All measurement profiles for the current user.
+ */
+export function useMeasurements() {
+  return useQuery({
+    queryKey: measurementKeys.lists(),
+    queryFn: async () => {
+      const res = await ky.get(MEAS_BASE).json<{ results: unknown[]; count: number }>();
+      return res;
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+/**
+ * Single measurement profile by ID.
+ */
+export function useMeasurement(id: string | null) {
+  return useQuery({
+    queryKey: measurementKeys.detail(id ?? ""),
+    queryFn: async () => {
+      const res = await ky.get(`${MEAS_BASE}${id}/`).json();
+      return res;
+    },
+    enabled: Boolean(id),
+    staleTime: 5 * 60_000,
+  });
+}
+
+/**
+ * Delete a measurement profile.
+ */
+export function useDeleteMeasurement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await ky.delete(`${MEAS_BASE}${id}/`);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: measurementKeys.lists() });
     },
   });
 }

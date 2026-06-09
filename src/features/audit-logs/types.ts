@@ -1,5 +1,5 @@
 /**
- * entities/audit/model/types.ts
+ * src/features/audit-logs/types.ts
  *
  * TypeScript type schemas synced with the Fashionistar backend audit domain.
  * These types mirror:
@@ -8,8 +8,6 @@
  *
  * IMPORTANT: Keep in sync with backend EventType and EventCategory choices.
  * Last synced: 2026-05-10 (Wave G finalization)
- *
- * @module audit/model/types
  */
 
 // ─── Severity ─────────────────────────────────────────────────────────────────

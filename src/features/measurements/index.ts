@@ -58,5 +58,21 @@ export {
 export { MeasurementProfilePanel } from "./components/MeasurementProfilePanel";
 export { MirrorSizeMeasurementFlow } from "./components/MirrorSizeMeasurementFlow";
 
+
+
+
+
+
+
+
+
+
+export { MeasurementCard } from "@/features/measurement/components/MeasurementCard";
+export { BodyDiagram } from "@/features/measurement/components/BodyDiagram";
+export { useMeasurements, useMeasurement } from "@/features/measurement/hooks/use-measurements";
+
+
+
+
 // ── Admin Dashboard ────────────────────────────────────────────────────────────
 
