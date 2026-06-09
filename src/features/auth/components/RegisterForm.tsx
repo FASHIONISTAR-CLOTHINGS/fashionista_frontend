@@ -46,7 +46,7 @@ interface RegisterFormProps {
 export function RegisterForm({ role = "client" }: RegisterFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setPendingOTP, setTokens, setUser } = useAuthStore();
+  const { setPendingOTP, setTokens, setUser, setLoginTimestamp } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<RegistrationMode>("email");
   const [apiError, setApiError] = useState<ReturnType<typeof parseApiError> | null>(null);
@@ -126,9 +126,11 @@ export function RegisterForm({ role = "client" }: RegisterFormProps) {
     setGoogleError(null);
     setTokens(data.access ?? "", data.refresh ?? "");
     setUser(normalizeAuthUser(data));
+    setLoginTimestamp();
 
     const displayName = data.user?.first_name ?? data.identifying_info ?? "User";
     toast.success("Account created successfully! 🎉", {
+      id: "fashionistar-login-success",
       description: data.message ?? `Welcome, ${displayName}!`,
       duration: 3000,
     });

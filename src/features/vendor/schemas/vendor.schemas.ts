@@ -132,6 +132,19 @@ export const VendorDashboardActivitySchema = z.object({
   date:  z.string().optional(),
 }).passthrough();
 
+export const VendorTopProductSchema = z.object({
+  id:        z.string(),
+  title:     z.string(),
+  price:     z.coerce.number().default(0),
+  stock_qty: z.coerce.number().int().default(0),
+  total_qty: z.coerce.number().nullable().optional(),
+});
+
+export const VendorRevenueTrendSchema = z.object({
+  month:         z.coerce.number().int().min(1).max(12),
+  total_revenue: z.coerce.number().default(0),
+});
+
 /**
  * Full vendor dashboard payload.
  * Aligned with: VendorDashboardOut in apps/vendor/types/vendor_schemas.py
@@ -174,6 +187,7 @@ export const VendorDashboardSchema = z.object({
   payout_profile:  VendorDashboardPayoutProfileSchema.nullable().default(null),
   recent_orders:   z.array(VendorDashboardOrderSchema).default([]),
   products:        z.array(VendorDashboardProductSchema).default([]),
+  top_products:    z.array(VendorTopProductSchema).default([]),
   reviews:         z.array(VendorDashboardReviewSchema).default([]),
   coupons:         VendorDashboardCouponStatsSchema.default({ active: 0, inactive: 0 }),
   wallet:          VendorDashboardWalletSchema.nullable().default(null),
@@ -182,6 +196,7 @@ export const VendorDashboardSchema = z.object({
     title:     z.string(),
     stock_qty: z.coerce.number(),
   })).default([]),
+  revenue_trends:  z.array(VendorRevenueTrendSchema).default([]),
 });
 
 // ── Setup Form ────────────────────────────────────────────────────────────────
@@ -422,3 +437,5 @@ export type VendorAnalyticsSummaryInput     = z.infer<typeof VendorAnalyticsSumm
 export type VendorEarningTrackerInput       = z.infer<typeof VendorEarningTrackerSchema>;
 export type VendorReviewItemInput           = z.infer<typeof VendorReviewItemSchema>;
 export type VendorCouponInput               = z.infer<typeof VendorCouponSchema>;
+export type VendorTopProductInput           = z.infer<typeof VendorTopProductSchema>;
+export type VendorRevenueTrendInput         = z.infer<typeof VendorRevenueTrendSchema>;

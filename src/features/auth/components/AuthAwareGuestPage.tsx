@@ -18,6 +18,7 @@ export function AuthAwareGuestPage({ children }: AuthAwareGuestPageProps) {
   const hydrated = useIsHydrated();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
+  const lastLoginAt = useAuthStore((state) => state.lastLoginAt);
   const returnUrl = searchParams.get("returnUrl") ?? searchParams.get("next") ?? "";
 
   useEffect(() => {
@@ -31,19 +32,23 @@ export function AuthAwareGuestPage({ children }: AuthAwareGuestPageProps) {
       hasVendorProfile: user.has_vendor_profile ?? false,
       returnUrl: returnUrl || null,
     });
-    const displayName = user.first_name || user.email || "there";
 
-    toast.info(`Welcome back, ${displayName}! 👋`, {
-      description: "You're already signed in. Redirecting you now…",
-      duration: 3000,
-    });
+    const isFreshLogin = lastLoginAt && (Date.now() - lastLoginAt) < 5000;
+    if (!isFreshLogin) {
+      const displayName = user.first_name || user.email || "there";
+      toast.info(`Welcome back, ${displayName}! 👋`, {
+        id: "fashionistar-already-authed",
+        description: "You're already signed in. Redirecting you now…",
+        duration: 3000,
+      });
+    }
 
     const timeoutId = setTimeout(() => {
       router.replace(destination);
     }, 0);
 
     return () => clearTimeout(timeoutId);
-  }, [hydrated, isAuthenticated, returnUrl, router, user]);
+  }, [hydrated, isAuthenticated, returnUrl, router, user, lastLoginAt]);
 
   if (!hydrated || isAuthenticated) {
     return (

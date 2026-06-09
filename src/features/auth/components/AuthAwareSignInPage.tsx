@@ -27,6 +27,7 @@ export function AuthAwareSignInPage() {
   const hydrated = useIsHydrated();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
+  const lastLoginAt = useAuthStore((state) => state.lastLoginAt);
   const returnUrl = searchParams.get("returnUrl") ?? "";
 
   useEffect(() => {
@@ -44,12 +45,17 @@ export function AuthAwareSignInPage() {
         returnUrl: returnUrl || null,
       });
 
-      // Show a friendly informational toast before redirecting.
-      const displayName = user.first_name || user.email || "there";
-      toast.info(`Welcome back, ${displayName}! 👋`, {
-        description: "You're already signed in. Redirecting you now…",
-        duration: 3000,
-      });
+      // Show a friendly informational toast before redirecting,
+      // ONLY if this is not a fresh login (less than 5 seconds ago).
+      const isFreshLogin = lastLoginAt && (Date.now() - lastLoginAt) < 5000;
+      if (!isFreshLogin) {
+        const displayName = user.first_name || user.email || "there";
+        toast.info(`Welcome back, ${displayName}! 👋`, {
+          id: "fashionistar-already-authed",
+          description: "You're already signed in. Redirecting you now…",
+          duration: 3000,
+        });
+      }
 
       // Use replace() so the browser back button doesn't return to the sign-in
       // page after the redirect — otherwise UX would be confusing.
@@ -60,7 +66,7 @@ export function AuthAwareSignInPage() {
       return () => clearTimeout(timeoutId);
     }
     return undefined;
-  }, [hydrated, isAuthenticated, user, router, returnUrl]);
+  }, [hydrated, isAuthenticated, user, router, returnUrl, lastLoginAt]);
 
   // While Zustand is rehydrating OR if the user is already authenticated,
   // show a neutral loading spinner instead of the login form.

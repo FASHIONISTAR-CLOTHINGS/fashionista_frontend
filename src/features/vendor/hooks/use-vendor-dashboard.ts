@@ -2,65 +2,68 @@
 /**
  * TanStack Query hooks for the vendor Ninja async dashboard endpoints.
  *
- * These hooks consume the new VendorProfile DB-layer classmethods via
- * the Django-Ninja async API (/api/v1/ninja/vendor/*).
+ * All dashboard widgets are refactored to read from the unified cached
+ * vendorApi.getDashboard() snapshot query using TanStack Query selectors.
  *
  * State hierarchy:
- *   useVendorDashboardSnapshot → full snapshot (profile + setup_state + payout)
- *   useVendorOrderStats        → aggregate order stats (total + pending + active)
- *   useVendorRecentOrders      → N most recent orders list
- *   useVendorProductSummary    → N most recent products list
- *   useVendorWalletData        → balance + recent transactions
- *   useVendorTopSellingProducts → top N by qty sold
- *   useVendorCouponStats       → active / inactive coupon counts
+ *   useVendorDashboardSnapshot  → full snapshot (profile + setup_state + payout)
+ *   useVendorOrderStats         → aggregate order stats (total + pending + active)
+ *   useVendorRecentOrders       → N most recent orders list
+ *   useVendorProductSummary     → N most recent products list
+ *   useVendorWalletData         → balance + recent transactions
+ *   useVendorTopSellingProducts  → top N by qty sold
+ *   useVendorCouponStats        → active / inactive coupon counts
  */
 import { useQuery } from "@tanstack/react-query";
 import { vendorApi } from "@/features/vendor/api/vendor.api";
+import { useAuthStore } from "@/features/auth/store/auth.store";
+import { useIsHydrated } from "@/lib/react/useIsHydrated";
 
 // ── Query Key Factory ─────────────────────────────────────────────────────────
 export const vendorDashboardKeys = {
   all:              ["vendor", "dashboard"] as const,
   snapshot:         ["vendor", "dashboard", "snapshot"] as const,
-  orderStats:       ["vendor", "dashboard", "order-stats"] as const,
-  recentOrders:     (limit: number) =>
-                      ["vendor", "dashboard", "recent-orders", limit] as const,
-  productSummary:   (limit: number) =>
-                      ["vendor", "dashboard", "products", limit] as const,
-  walletData:       ["vendor", "dashboard", "wallet"] as const,
-  topProducts:      (limit: number) =>
-                      ["vendor", "dashboard", "top-products", limit] as const,
-  couponStats:      ["vendor", "dashboard", "coupon-stats"] as const,
 };
 
 // ── Full Vendor Dashboard Snapshot ────────────────────────────────────────────
 /**
  * Full vendor dashboard snapshot from Ninja endpoint.
  *
- * Backed by VendorProfile.aget_full_dashboard_snapshot() at the DB layer.
- * Returns store info, setup state, payout status in a single DB call.
- *
  * @param options - Optional staleTime override
  */
 export function useVendorDashboardSnapshot(options?: { staleTime?: number }) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasVendorProfile = useAuthStore((state) => state.user?.has_vendor_profile === true);
+  const hydrated = useIsHydrated();
+
   return useQuery({
     queryKey:  vendorDashboardKeys.snapshot,
     queryFn:   () => vendorApi.getDashboard(),
+    enabled:   hydrated && isAuthenticated && hasVendorProfile,
     staleTime: options?.staleTime ?? 60_000,
   });
 }
 
 // ── Vendor Order Stats ────────────────────────────────────────────────────────
 /**
- * Aggregate order stats from the Ninja async endpoint.
- *
- * Backed by VendorProfile.aget_order_stats_from_db().
- * Returns total_orders, total_revenue, pending_count, active_count.
+ * Aggregate order stats from the unified dashboard cache.
  */
 export function useVendorOrderStats() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasVendorProfile = useAuthStore((state) => state.user?.has_vendor_profile === true);
+  const hydrated = useIsHydrated();
+
   return useQuery({
-    queryKey: vendorDashboardKeys.orderStats,
-    queryFn:  () => vendorApi.getNinjaOrderStats(),
-    staleTime: 30_000,
+    queryKey:  vendorDashboardKeys.snapshot,
+    queryFn:   () => vendorApi.getDashboard(),
+    enabled:   hydrated && isAuthenticated && hasVendorProfile,
+    staleTime: 60_000,
+    select: (dashboard) => ({
+      total_orders:  dashboard.analytics.total_sales,
+      total_revenue: dashboard.analytics.total_revenue,
+      pending_count: dashboard.recent_orders.filter((o) => o.order_status === "Pending").length,
+      active_count:  dashboard.recent_orders.filter((o) => o.order_status === "Processing").length,
+    }),
   });
 }
 
@@ -68,15 +71,19 @@ export function useVendorOrderStats() {
 /**
  * Most recent N orders for the vendor dashboard feed.
  *
- * Backed by VendorProfile.aget_recent_orders_from_db().
- *
  * @param limit - Max rows to fetch (default 10)
  */
 export function useVendorRecentOrders(limit: number = 10) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasVendorProfile = useAuthStore((state) => state.user?.has_vendor_profile === true);
+  const hydrated = useIsHydrated();
+
   return useQuery({
-    queryKey:  vendorDashboardKeys.recentOrders(limit),
-    queryFn:   () => vendorApi.getNinjaRecentOrders(limit),
-    staleTime: 30_000,
+    queryKey:  vendorDashboardKeys.snapshot,
+    queryFn:   () => vendorApi.getDashboard(),
+    enabled:   hydrated && isAuthenticated && hasVendorProfile,
+    staleTime: 60_000,
+    select: (dashboard) => dashboard.recent_orders.slice(0, limit),
   });
 }
 
@@ -84,29 +91,37 @@ export function useVendorRecentOrders(limit: number = 10) {
 /**
  * Top N products by creation date for the vendor dashboard.
  *
- * Backed by VendorProfile.aget_product_summary_from_db().
- *
  * @param limit - Max rows to fetch (default 10)
  */
 export function useVendorProductSummary(limit: number = 10) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasVendorProfile = useAuthStore((state) => state.user?.has_vendor_profile === true);
+  const hydrated = useIsHydrated();
+
   return useQuery({
-    queryKey:  vendorDashboardKeys.productSummary(limit),
-    queryFn:   () => vendorApi.getNinjaProductSummary(limit),
+    queryKey:  vendorDashboardKeys.snapshot,
+    queryFn:   () => vendorApi.getDashboard(),
+    enabled:   hydrated && isAuthenticated && hasVendorProfile,
     staleTime: 60_000,
+    select: (dashboard) => dashboard.products.slice(0, limit),
   });
 }
 
 // ── Vendor Wallet Data ────────────────────────────────────────────────────────
 /**
  * Vendor wallet balance and 10 most recent transactions.
- *
- * Backed by VendorProfile.aget_wallet_balance_from_db() + vendor_wallet_transactions.
  */
 export function useVendorWalletData() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasVendorProfile = useAuthStore((state) => state.user?.has_vendor_profile === true);
+  const hydrated = useIsHydrated();
+
   return useQuery({
-    queryKey:  vendorDashboardKeys.walletData,
-    queryFn:   () => vendorApi.getNinjaWalletData(),
-    staleTime: 30_000,
+    queryKey:  vendorDashboardKeys.snapshot,
+    queryFn:   () => vendorApi.getDashboard(),
+    enabled:   hydrated && isAuthenticated && hasVendorProfile,
+    staleTime: 60_000,
+    select: (dashboard) => dashboard.wallet ?? { balance: 0, recent_transactions: [] },
   });
 }
 
@@ -114,28 +129,36 @@ export function useVendorWalletData() {
 /**
  * Top N products by total quantity sold.
  *
- * Backed by VendorProfile.aget_top_selling_products_from_db().
- *
  * @param limit - Max rows to fetch (default 5)
  */
 export function useVendorTopSellingProducts(limit: number = 5) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasVendorProfile = useAuthStore((state) => state.user?.has_vendor_profile === true);
+  const hydrated = useIsHydrated();
+
   return useQuery({
-    queryKey:  vendorDashboardKeys.topProducts(limit),
-    queryFn:   () => vendorApi.getNinjaTopSellingProducts(limit),
-    staleTime: 120_000,
+    queryKey:  vendorDashboardKeys.snapshot,
+    queryFn:   () => vendorApi.getDashboard(),
+    enabled:   hydrated && isAuthenticated && hasVendorProfile,
+    staleTime: 60_000,
+    select: (dashboard) => dashboard.top_products.slice(0, limit),
   });
 }
 
 // ── Vendor Coupon Stats ───────────────────────────────────────────────────────
 /**
  * Active and inactive coupon counts.
- *
- * Backed by VendorProfile.aget_coupon_stats_from_db().
  */
 export function useVendorCouponStats() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasVendorProfile = useAuthStore((state) => state.user?.has_vendor_profile === true);
+  const hydrated = useIsHydrated();
+
   return useQuery({
-    queryKey:  vendorDashboardKeys.couponStats,
-    queryFn:   () => vendorApi.getNinjaCouponStats(),
+    queryKey:  vendorDashboardKeys.snapshot,
+    queryFn:   () => vendorApi.getDashboard(),
+    enabled:   hydrated && isAuthenticated && hasVendorProfile,
     staleTime: 60_000,
+    select: (dashboard) => dashboard.coupons,
   });
 }

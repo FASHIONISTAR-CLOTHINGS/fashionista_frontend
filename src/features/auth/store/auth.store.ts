@@ -63,6 +63,7 @@ interface AuthState {
   isLoading: boolean;
   pendingOTPEmail?: string;
   pendingOTPPhone?: string;
+  lastLoginAt: number | null;
 
   // ── Actions ────────────────────────────────────────────────────────────
   setToken: (token: string) => void;
@@ -70,6 +71,7 @@ interface AuthState {
   setUser: (user: AuthUser) => void;
   setPendingOTP: (opts: { email?: string; phone?: string }) => void;
   setLoading: (loading: boolean) => void;
+  setLoginTimestamp: () => void;
   logout: () => void;
   /** Alias for logout — clears all auth state from store + sessionStorage */
   clearAuth: () => void;
@@ -86,6 +88,7 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       pendingOTPEmail: undefined,
       pendingOTPPhone: undefined,
+      lastLoginAt: null,
 
       setToken: (token) =>
         set((state) => {
@@ -118,6 +121,8 @@ export const useAuthStore = create<AuthState>()(
 
       setLoading: (loading) => set({ isLoading: loading }),
 
+      setLoginTimestamp: () => set({ lastLoginAt: Date.now() }),
+
       logout: () =>
         set(() => {
           clearMirrorCookies();
@@ -128,6 +133,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: false,
             pendingOTPEmail: undefined,
             pendingOTPPhone: undefined,
+            lastLoginAt: null,
           };
         }),
 
@@ -142,6 +148,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: false,
             pendingOTPEmail: undefined,
             pendingOTPPhone: undefined,
+            lastLoginAt: null,
           };
         }),
     }),

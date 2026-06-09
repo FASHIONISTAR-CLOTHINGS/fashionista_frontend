@@ -14,12 +14,13 @@ const VENDOR_DASHBOARD_QUERY_KEY = ["vendor", "dashboard"] as const;
 
 export function useVendorProfile(options?: { enabled?: boolean }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasVendorProfile = useAuthStore((state) => state.user?.has_vendor_profile === true);
   const hydrated = useIsHydrated();
 
   return useQuery({
     queryKey: VENDOR_PROFILE_QUERY_KEY,
     queryFn: vendorService.getProfile,
-    enabled: (options?.enabled ?? true) && hydrated && isAuthenticated,
+    enabled: (options?.enabled ?? true) && hydrated && isAuthenticated && hasVendorProfile,
     staleTime: 30_000,
   });
 }
@@ -38,12 +39,13 @@ export function useVendorSetupState() {
 
 export function useVendorDashboard() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasVendorProfile = useAuthStore((state) => state.user?.has_vendor_profile === true);
   const hydrated = useIsHydrated();
 
   return useQuery({
     queryKey: VENDOR_DASHBOARD_QUERY_KEY,
     queryFn: vendorService.getDashboard,
-    enabled: hydrated && isAuthenticated,
+    enabled: hydrated && isAuthenticated && hasVendorProfile,
     staleTime: 30_000,
   });
 }

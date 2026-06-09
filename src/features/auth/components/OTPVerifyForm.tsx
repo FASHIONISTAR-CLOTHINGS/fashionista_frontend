@@ -26,13 +26,15 @@ import { mergeAnonymousCommerce } from "@/features/cart";
 import { RichErrorMessage } from "@/components/shared/feedback/RichErrorMessage";
 import { parseApiError } from "@/lib/api/parseApiError";
 
+import { parseApiError } from "@/lib/api/parseApiError";
+
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;
 
 export function OTPVerifyForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setTokens, setUser, pendingOTPEmail, pendingOTPPhone } = useAuthStore();
+  const { setTokens, setUser, pendingOTPEmail, pendingOTPPhone, setLoginTimestamp } = useAuthStore();
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [countdown, setCountdown] = useState(RESEND_COOLDOWN_SECONDS);
@@ -61,9 +63,11 @@ export function OTPVerifyForm() {
       setVerifyError(null);
       setTokens(data.access ?? "", data.refresh ?? "");
       setUser(normalizeAuthUser(data));
+      setLoginTimestamp();
 
       const displayName = data.user?.first_name ?? data.identifying_info ?? "User";
       toast.success("✅ Verification successful!", {
+        id: "fashionistar-login-success",
         // T4.4: Surface the backend's own message (e.g. "Email verified successfully.")
         // so the toast copy matches exactly what the platform administrator configured.
         description:

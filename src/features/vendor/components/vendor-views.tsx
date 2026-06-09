@@ -547,6 +547,17 @@ export function VendorSetupView() {
   const { data: profile }    = useVendorProfile({ enabled: hasVendorProfile });
   const { data: collections = [], isLoading: isCollectionsLoading } = useCatalogCollections();
   const submitSetup  = useSubmitVendorSetup();
+
+  useEffect(() => {
+    if (!hasVendorProfile) {
+      toast.info("Welcome to FASHIONISTAR! 🌟", {
+        id: "fashionistar-vendor-setup-encourage",
+        description: "Please complete your store profile to activate your seller dashboard and start listing products.",
+        duration: 8000,
+      });
+    }
+  }, [hasVendorProfile]);
+
   const [payload, setPayload] = useState<VendorSetupPayload>({
     store_name: "", description: "", tagline: "", logo_url: "",
     cover_url: "", city: "", state: "", country: "Nigeria",

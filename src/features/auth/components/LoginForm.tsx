@@ -40,7 +40,7 @@ type LoginMode = "email" | "phone";
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setTokens, setUser, setPendingOTP } = useAuthStore();
+  const { setTokens, setUser, setPendingOTP, setLoginTimestamp } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<LoginMode>("email");
   const [phoneValue, setPhoneValue] = useState("");
@@ -111,8 +111,10 @@ export function LoginForm() {
     setGoogleSuccess("Google sign-in successful! Redirecting…");
     setTokens(data.access ?? "", data.refresh ?? "");
     setUser(normalizeAuthUser(data));
+    setLoginTimestamp();
 
     toast.success("Google Sign-In Successful!", {
+      id: "fashionistar-login-success",
       description: data.message ?? `Welcome, ${data.user?.first_name ?? "User"}! 🎉`,
       duration: 3000,
     });
@@ -143,6 +145,7 @@ export function LoginForm() {
             : { email: pendingEmail },
         );
         toast.info("OTP Required", {
+          id: "fashionistar-otp-required",
           description:
             data.message ?? "A verification code has been sent to your email/phone.",
         });
@@ -155,9 +158,11 @@ export function LoginForm() {
 
       setTokens(data.access ?? "", data.refresh ?? "");
       setUser(normalizeAuthUser(data));
+      setLoginTimestamp();
 
       const displayName = data.user?.first_name ?? data.identifying_info ?? "User";
       toast.success("Welcome back! 👋", {
+        id: "fashionistar-login-success",
         description: data.message ?? `Hello, ${displayName}`,
         duration: 3000,
       });

@@ -111,6 +111,19 @@ export interface VendorWallet {
   recent_transactions: VendorWalletTransaction[];
 }
 
+export interface VendorTopProduct {
+  id:        string;
+  title:     string;
+  price:     number;
+  stock_qty: number;
+  total_qty: number | null;
+}
+
+export interface VendorRevenueTrend {
+  month:         number;
+  total_revenue: number;
+}
+
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 /**
  * Full vendor dashboard payload from GET /api/v1/ninja/vendor/dashboard/
@@ -169,6 +182,7 @@ export interface VendorDashboard {
     date?:          string;
     total_qty?:     number | null;
   }>;
+  top_products:    VendorTopProduct[];
   reviews: VendorReviewItem[];
   /**
    * Note: This is coupon STATS (active/inactive count), not the full coupon list.
@@ -187,6 +201,7 @@ export interface VendorDashboard {
     title:     string;
     stock_qty: number;
   }>;
+  revenue_trends:  VendorRevenueTrend[];
 }
 
 // ── Products ──────────────────────────────────────────────────────────────────

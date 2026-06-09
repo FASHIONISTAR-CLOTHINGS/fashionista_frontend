@@ -129,6 +129,10 @@ vi.mock("@/features/order/hooks/use-order", () => ({
     mutate: vi.fn(),
     isPending: false,
   })),
+  useVerifyPickup: vi.fn(() => ({
+    mutate: vi.fn(),
+    isPending: false,
+  })),
 }));
 
 vi.mock("@/features/payment", () => ({
