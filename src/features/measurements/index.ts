@@ -67,9 +67,9 @@ export { MirrorSizeMeasurementFlow } from "./components/MirrorSizeMeasurementFlo
 
 
 
-export { MeasurementCard } from "@/features/measurement/components/MeasurementCard";
-export { BodyDiagram } from "@/features/measurement/components/BodyDiagram";
-export { useMeasurements, useMeasurement } from "@/features/measurement/hooks/use-measurements";
+export { MeasurementCard } from "@/features/measurements/components/MeasurementCard";
+export { BodyDiagram } from "@/features/measurements/components/BodyDiagram";
+export { useMeasurements, useMeasurement } from "@/features/measurements/hooks/use-measurements";
 
 
 
