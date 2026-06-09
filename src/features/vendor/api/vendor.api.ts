@@ -273,63 +273,58 @@ export const vendorApi = {
 
   // ── Analytics ─────────────────────────────────────────────────────────────
   async getAnalyticsSummary() {
-    const { data } = await apiSync.get("v1/vendor/analytics/");
+    const data = await apiAsync.get("vendor/analytics/").json();
     return VendorAnalyticsSummarySchema.parse(unwrapData(data));
   },
 
   async getRevenueChart() {
-    const { data } = await apiSync.get("v1/vendor/analytics/revenue/");
+    const data = await apiAsync.get("vendor/analytics/revenue/").json();
     return VendorChartResponseSchema.parse(data);
   },
 
   async getOrderChart() {
-    const { data } = await apiSync.get("v1/vendor/analytics/orders/");
+    const data = await apiAsync.get("vendor/analytics/orders/").json();
     return VendorChartResponseSchema.parse(data);
   },
 
   async getProductChart() {
-    const { data } = await apiSync.get("v1/vendor/analytics/products/");
+    const data = await apiAsync.get("vendor/analytics/products/").json();
     return VendorChartResponseSchema.parse(data);
   },
 
   async getTopCategories() {
-    const { data } = await apiSync.get("v1/vendor/analytics/categories/");
+    const data = await apiAsync.get("vendor/analytics/categories/").json();
     return data;
   },
 
   async getPaymentDistribution() {
-    const { data } = await apiSync.get("v1/vendor/analytics/distribution/");
+    const data = await apiAsync.get("vendor/analytics/distribution/").json();
     return data;
   },
 
   async getCustomerBehavior() {
-    const { data } = await apiSync.get("v1/vendor/analytics/customers/");
+    const data = await apiAsync.get("vendor/analytics/customers/").json();
     return data;
   },
 
   // ── Products — canonical product app contract ─────────────────────────────
   async getProducts() {
-    const { data } = await apiSync.get("v1/products/vendor/");
+    const data = await apiAsync.get("vendor/products/").json();
     return VendorProductListSchema.parse(normalizeVendorProductList(data));
   },
 
   async filterProducts(params?: { status?: string; ordering?: string }) {
-    const { data } = await apiSync.get("v1/products/vendor/", { params });
+    const data = await apiAsync.get("vendor/products/", { searchParams: params }).json();
     return VendorProductListSchema.parse(normalizeVendorProductList(data));
   },
 
   async getLowStockProducts() {
-    const { data } = await apiSync.get("v1/products/vendor/");
-    const normalized = normalizeVendorProductList(data);
-    return VendorProductListSchema.parse({
-      ...normalized,
-      data: normalized.data.filter((item) => item.stock_qty < 5),
-      count: normalized.data.filter((item) => item.stock_qty < 5).length,
-    });
+    const data = await apiAsync.get("vendor/products/low-stock/").json();
+    return VendorProductListSchema.parse(normalizeVendorProductList(data));
   },
 
   async getTopSellingProducts() {
-    const { data } = await apiSync.get("v1/vendor/products/top/");
+    const data = await apiAsync.get("vendor/products/top/").json();
     return VendorProductListSchema.parse(data);
   },
 
@@ -353,17 +348,17 @@ export const vendorApi = {
 
   // ── Orders ─────────────────────────────────────────────────────────────────
   async getOrders() {
-    const { data } = await apiSync.get("v1/vendor/orders/");
+    const data = await apiAsync.get("vendor/orders/").json();
     return VendorOrderListSchema.parse(data);
   },
 
   async getOrder(orderId: number) {
-    const { data } = await apiSync.get(`v1/vendor/orders/${orderId}/`);
+    const data = await apiAsync.get(`vendor/orders/${orderId}/`).json();
     return VendorOrderSchema.parse(unwrapData(data));
   },
 
   async getOrderStatusCounts() {
-    const { data } = await apiSync.get("v1/vendor/orders/status-counts/");
+    const data = await apiAsync.get("vendor/orders/status-counts/").json();
     return data;
   },
 
@@ -374,25 +369,25 @@ export const vendorApi = {
 
   // ── Earnings ───────────────────────────────────────────────────────────────
   async getEarnings() {
-    const { data } = await apiSync.get("v1/vendor/earnings/");
+    const data = await apiAsync.get("vendor/earnings/").json();
     return VendorEarningTrackerSchema.parse(unwrapData(data));
   },
 
   // ── Reviews ────────────────────────────────────────────────────────────────
   async getReviews() {
-    const { data } = await apiSync.get("v1/vendor/reviews/");
+    const data = await apiAsync.get("vendor/reviews/").json();
     return VendorReviewListSchema.parse(data);
   },
 
   async getReview(reviewId: number) {
-    const { data } = await apiSync.get(`v1/vendor/reviews/${reviewId}/`);
+    const data = await apiAsync.get(`vendor/reviews/${reviewId}/`).json();
     return VendorReviewItemSchema.parse(unwrapData(data));
   },
 
 
   // ── Coupons ────────────────────────────────────────────────────────────────
   async getCoupons() {
-    const { data } = await apiSync.get("v1/vendor/coupons/");
+    const data = await apiAsync.get("vendor/coupons/").json();
     return VendorCouponListSchema.parse(data);
   },
 
@@ -475,6 +470,6 @@ export async function fetchVendorAuditLogs(
     ...(category ? { category } : {}),
     ...(severity ? { severity } : {}),
   });
-  const res = await apiAsync.get(`ninja/vendor/audit-logs/?${params.toString()}`);
+  const res = await apiAsync.get(`vendor/audit-logs/?${params.toString()}`);
   return res.json<AuditLogPage>();
 }
