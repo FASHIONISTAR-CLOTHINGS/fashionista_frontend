@@ -6,6 +6,12 @@
 import { ReactNode } from "react";
 import { CheckCircle2, ChevronDown, Eye, EyeOff } from "lucide-react";
 import { useRef, useState } from "react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button"
+import { Select } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea";
+
 
 /* ── SettingSection ──────────────────────────────────────────────────────────── */
 interface SettingSectionProps {
@@ -68,12 +74,12 @@ export function DashInput({
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label
+        <Label
           htmlFor={id}
           className="text-sm font-semibold text-[hsl(var(--foreground))]"
         >
           {label}
-        </label>
+        </Label>
       )}
       <div className="relative flex items-center">
         {prefix && (
@@ -81,14 +87,14 @@ export function DashInput({
             {prefix}
           </span>
         )}
-        <input
+        <Input
           {...props}
           id={id}
           type={inputType}
           className={`dash-input ${prefix ? "pl-14" : ""} ${isPassword || suffix ? "pr-12" : ""} ${error ? "border-[hsl(var(--destructive))]" : ""}`}
         />
         {isPassword && (
-          <button
+          <Button
             type="button"
             onClick={() => setShowPwd((v) => !v)}
             className="absolute right-4 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
@@ -98,7 +104,7 @@ export function DashInput({
             ) : (
               <Eye className="h-4 w-4" />
             )}
-          </button>
+          </Button>
         )}
         {!isPassword && suffix && (
           <span className="absolute right-4">{suffix}</span>
@@ -131,14 +137,14 @@ export function DashTextarea({
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label
+        <Label
           htmlFor={id}
           className="text-sm font-semibold text-[hsl(var(--foreground))]"
         >
           {label}
-        </label>
+        </Label>
       )}
-      <textarea
+      <Textarea
         {...props}
         id={id}
         className={`dash-textarea ${error ? "border-[hsl(var(--destructive))]" : ""}`}
@@ -175,12 +181,12 @@ export function DashSelect({
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label className="text-sm font-semibold text-[hsl(var(--foreground))]">
+        <Label className="text-sm font-semibold text-[hsl(var(--foreground))]">
           {label}
-        </label>
+        </Label>
       )}
       <div className="relative">
-        <select
+        <Select
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className="dash-input cursor-pointer appearance-none pr-10"
@@ -190,7 +196,7 @@ export function DashSelect({
               {opt.label}
             </option>
           ))}
-        </select>
+        </Select>
         <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[hsl(var(--muted-foreground))]" />
       </div>
       {hint && (
@@ -216,7 +222,7 @@ export function ToggleSwitch({
   id,
 }: ToggleSwitchProps) {
   return (
-    <label
+    <Label
       htmlFor={id}
       className="flex cursor-pointer items-start justify-between gap-4 rounded-[1rem] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 transition-colors hover:border-[hsl(var(--accent)/0.4)]"
     >
@@ -231,7 +237,7 @@ export function ToggleSwitch({
         )}
       </div>
       <div className="fash-toggle shrink-0">
-        <input
+        <Input
           type="checkbox"
           id={id}
           checked={checked}
@@ -239,7 +245,7 @@ export function ToggleSwitch({
         />
         <div className="fash-toggle-track" />
       </div>
-    </label>
+    </Label>
   );
 }
 
@@ -262,7 +268,7 @@ export function RadioCard({
 }: RadioCardProps) {
   const isSelected = selected === value;
   return (
-    <button
+    <Button
       type="button"
       onClick={() => onSelect(value)}
       className={`flex w-full items-start gap-4 rounded-[1rem] border p-4 text-left transition-all ${
@@ -303,7 +309,7 @@ export function RadioCard({
       >
         {isSelected && <div className="h-2 w-2 rounded-full bg-black" />}
       </div>
-    </button>
+    </Button>
   );
 }
 
@@ -362,13 +368,13 @@ export function PinInput({
   return (
     <div className="flex flex-col gap-2">
       {label && (
-        <label className="text-sm font-semibold text-[hsl(var(--foreground))]">
+        <Label className="text-sm font-semibold text-[hsl(var(--foreground))]">
           {label}
-        </label>
+        </Label>
       )}
       <div className="flex gap-3">
         {Array.from({ length }).map((_, i) => (
-          <input
+          <Input
             key={i}
             ref={(el) => {
               refs.current[i] = el;
@@ -404,15 +410,15 @@ export function SaveBar({ onSave, onCancel, loading, label }: SaveBarProps) {
   return (
     <div className="flex justify-end gap-3 pt-4">
       {onCancel && (
-        <button
+        <Button
           type="button"
           onClick={onCancel}
           className="rounded-full border border-[hsl(var(--border))] px-6 py-2.5 text-sm font-semibold text-[hsl(var(--foreground))] transition hover:bg-[hsl(var(--muted))]"
         >
           Cancel
-        </button>
+        </Button>
       )}
-      <button
+      <Button
         type="button"
         onClick={onSave}
         disabled={loading}
@@ -426,7 +432,7 @@ export function SaveBar({ onSave, onCancel, loading, label }: SaveBarProps) {
         ) : (
           label ?? "Save changes"
         )}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -475,13 +481,13 @@ export function SessionCard({
         </div>
       </div>
       {!isCurrent && onRevoke && (
-        <button
+        <Button
           type="button"
           onClick={onRevoke}
           className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[hsl(var(--destructive))] transition hover:bg-[hsl(var(--destructive)/0.08)]"
         >
           Revoke
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -508,13 +514,13 @@ export function DangerZone({
       <p className="mt-1 text-xs leading-relaxed text-[hsl(var(--destructive)/0.8)]">
         {description}
       </p>
-      <button
+      <Button
         type="button"
         onClick={onAction}
         className="mt-3 rounded-full bg-[hsl(var(--destructive))] px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90"
       >
         {label}
-      </button>
+      </Button>
     </div>
   );
 }

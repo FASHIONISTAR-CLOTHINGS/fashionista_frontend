@@ -99,7 +99,9 @@ export interface SelectProps {
   value?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
+  onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   disabled?: boolean;
+  className?: string;
   children: React.ReactNode;
 }
 
@@ -113,18 +115,19 @@ export interface SelectProps {
  * - focus ring: Forest green #01454A
  * - option hover: Cream #F8F5ED
  */
-export function Select({ value, defaultValue, onValueChange, disabled, children }: SelectProps) {
+export function Select({ value, defaultValue, onValueChange, onChange, disabled, className, children }: SelectProps) {
   // Extract SelectItem values for native rendering
   // We render as native <select> to ensure accessibility and mobile support.
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onValueChange?.(e.target.value);
+    onChange?.(e);
   };
 
   // We extract SelectItem children and render native <option> elements.
   const options = extractOptions(children);
 
   return (
-    <div className="relative w-full">
+    <div className={cn("relative w-full", className)}>
       <select
         value={value ?? defaultValue ?? ""}
         onChange={handleChange}
@@ -151,6 +154,10 @@ export function Select({ value, defaultValue, onValueChange, disabled, children 
 function extractOptions(children: React.ReactNode): React.ReactNode {
   return React.Children.map(children, (child) => {
     if (!React.isValidElement(child)) return null;
+    // If this is already a native option element, keep it
+    if (child.type === "option") {
+      return child;
+    }
     // If this is a SelectContent wrapper, recurse into its children
     if (
       child.type === SelectContent ||
