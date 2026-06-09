@@ -48,6 +48,12 @@ export interface ClientProfile {
   sms_notifications_enabled: boolean;
   last_active_at?: string | null;
   phone_verified: boolean;
+  loyalty_tier: string;
+  loyalty_points: number;
+  referral_code: string | null;
+  referral_count: number;
+  body_type: string;
+  occasion_preferences: string[];
   addresses: ClientAddress[];
 }
 
@@ -99,6 +105,20 @@ export interface ClientDashboard {
     is_profile_complete: boolean;
     last_active_at?: string | null;
     phone_verified: boolean;
+    user_id?: string;
+    user_email?: string;
+    total_orders?: number;
+    total_spent_ngn?: number;
+    email_notifications_enabled?: boolean;
+    sms_notifications_enabled?: boolean;
+    default_shipping_address?: string;
+    addresses?: ClientAddress[];
+    loyalty_tier?: string;
+    loyalty_points?: number;
+    referral_code?: string | null;
+    referral_count?: number;
+    body_type?: string;
+    occasion_preferences?: string[];
   };
   analytics: ClientDashboardAnalytics;
   measurement_snapshot: MeasurementSnapshot;

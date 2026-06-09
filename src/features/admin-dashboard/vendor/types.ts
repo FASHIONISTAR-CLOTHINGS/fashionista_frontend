@@ -4,7 +4,7 @@
 
 export interface AdminVendor {
   id: string;
-  business_name: string;
+  store_name: string;
   slug: string;
   is_approved: boolean;
   commission_rate: string | number;

@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -185,7 +184,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               onClick={openMenu}
               className="w-[34px] h-[34px] flex justify-center items-center bg-[#F4F3EC] border-[0.8px] border-black rounded-full"
             >
-              <Image src="/menu.svg" alt="" width={24} height={24} />
+              <FashionistarImage src="/menu.svg" alt="" width={24} height={24} />
             </button>
             <div className="flex items-center">
               <FashionistarImage

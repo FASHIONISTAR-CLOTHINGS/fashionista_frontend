@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /**
  * vendor-extra-views.tsx — Phase 7-9 Rewire (2026-Enterprise)
@@ -17,7 +17,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import Image from "next/image";
+import { FashionistarImage } from "@/components/media";
 import { toast } from "sonner";
 import { useVendorCatalogProducts } from "@/features/product";
 import {
@@ -930,11 +930,11 @@ export function VendorChatView() {
                           <div className="flex flex-col gap-2 rounded-xl bg-white border border-[#ECE6D6] p-3 max-w-[280px]">
                             {attachedProduct.image_url && (
                               <div className="relative h-32 w-full overflow-hidden rounded-lg bg-[#F8F5ED]">
-                                <Image
+                                <FashionistarImage
                                   src={attachedProduct.image_url}
                                   alt={attachedProduct.title}
-                                  fill
-                                  className="object-cover"
+                                  fill={true}
+                                  objectFit="cover"
                                 />
                               </div>
                             )}
@@ -1036,11 +1036,11 @@ export function VendorChatView() {
                           >
                             {prod.image_url ? (
                               <div className="relative h-10 w-10 overflow-hidden rounded-lg bg-[#F8F5ED] flex-shrink-0">
-                                <Image
+                                <FashionistarImage
                                   src={prod.image_url}
                                   alt={prod.title}
-                                  fill
-                                  className="object-cover"
+                                  fill={true}
+                                  objectFit="cover"
                                 />
                               </div>
                             ) : (
