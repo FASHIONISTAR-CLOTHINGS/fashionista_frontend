@@ -50,6 +50,8 @@ export const VendorProfileSchema = z.object({
   is_verified:    z.boolean(),
   is_active:      z.boolean(),
   is_featured:    z.boolean(),
+  last_active_at: z.string().nullable().optional(),
+  support_rating: z.coerce.number().default(5.0),
   setup_state:    VendorSetupStateSchema.optional(),
 });
 
@@ -175,6 +177,8 @@ export const VendorDashboardSchema = z.object({
     is_verified:   z.boolean(),
     is_active:     z.boolean(),
     is_featured:   z.boolean(),
+    last_active_at: z.string().nullable().optional(),
+    support_rating: z.coerce.number().default(5.0),
   }),
   analytics: z.object({
     total_products: z.coerce.number(),

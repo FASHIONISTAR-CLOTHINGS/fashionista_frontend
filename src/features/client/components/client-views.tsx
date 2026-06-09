@@ -309,6 +309,18 @@ export function ClientDashboardView() {
             <p className="mt-3 max-w-lg text-sm leading-6 text-white/60">
               Your personal fashion command centre. Track orders, manage custom designs, and explore new styles.
             </p>
+            <div className="flex items-center gap-3 mt-3 flex-wrap">
+              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                dashboard?.profile.phone_verified
+                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                  : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+              }`}>
+                {dashboard?.profile.phone_verified ? "✓ Phone Verified" : "Phone Unverified"}
+              </span>
+              <span className="text-xs text-white/40">
+                Last Active: {dashboard?.profile.last_active_at ? new Date(dashboard.profile.last_active_at).toLocaleDateString("en-NG", { dateStyle: "medium" }) : "Active Now"}
+              </span>
+            </div>
             {!dashboard?.profile.is_profile_complete && (
               <div className="mt-4 flex items-center gap-2 rounded-xl bg-[#FDA600]/15 px-4 py-2.5">
                 <AlertCircle className="h-4 w-4 shrink-0 text-[#FDA600]" />

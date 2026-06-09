@@ -140,47 +140,63 @@ export function ClientDashboard() {
                   <th className="font-satoshi font-medium text-sm text-[#858585] pb-3">Email</th>
                   <th className="font-satoshi font-medium text-sm text-[#858585] pb-3">Full Name</th>
                   <th className="font-satoshi font-medium text-sm text-[#858585] pb-3">Phone</th>
+                  <th className="font-satoshi font-medium text-sm text-[#858585] pb-3">Verified</th>
+                  <th className="font-satoshi font-medium text-sm text-[#858585] pb-3">Last Active</th>
                   <th className="font-satoshi font-medium text-sm text-[#858585] pb-3">Status</th>
                   <th className="font-satoshi font-medium text-sm text-[#858585] pb-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f4f4f4]">
                 {clients && clients.length > 0 ? (
-                  clients.map((client) => (
-                    <tr key={client.id} className="hover:bg-[#fcfcfa] transition-colors">
-                      <td className="py-4 font-satoshi font-medium text-black">{client.user_email}</td>
-                      <td className="py-4 font-satoshi text-sm text-black">
-                        {client.first_name || client.last_name
-                          ? `${client.first_name || ""} ${client.last_name || ""}`.trim()
-                          : "—"}
-                      </td>
-                      <td className="py-4 font-mono text-xs text-gray-500">{client.phone_number || "—"}</td>
-                      <td className="py-4">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-bold font-satoshi ${
-                            client.is_active
-                              ? "bg-[#C5FECB] text-[#20AB2C]"
-                              : "bg-[#FEF3D3] text-[#ECB219]"
-                          }`}
-                        >
-                          {client.is_active ? "Active" : "Suspended"}
-                        </span>
-                      </td>
-                      <td className="py-4 text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOpenEdit(client)}
-                          className="font-satoshi font-medium cursor-pointer"
-                        >
-                          Moderate
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
+                   clients.map((client) => (
+                     <tr key={client.id} className="hover:bg-[#fcfcfa] transition-colors">
+                       <td className="py-4 font-satoshi font-medium text-black">{client.user_email}</td>
+                       <td className="py-4 font-satoshi text-sm text-black">
+                         {client.first_name || client.last_name
+                           ? `${client.first_name || ""} ${client.last_name || ""}`.trim()
+                           : "—"}
+                       </td>
+                       <td className="py-4 font-mono text-xs text-gray-500">{client.phone_number || "—"}</td>
+                       <td className="py-4">
+                         <span
+                           className={`px-2 py-0.5 rounded text-[10px] font-bold font-satoshi ${
+                             client.phone_verified
+                               ? "bg-emerald-100 text-emerald-700"
+                               : "bg-red-100 text-red-700"
+                           }`}
+                         >
+                           {client.phone_verified ? "Yes" : "No"}
+                         </span>
+                       </td>
+                       <td className="py-4 font-satoshi text-xs text-gray-500">
+                         {client.last_active_at ? new Date(client.last_active_at).toLocaleDateString() : "Never"}
+                       </td>
+                       <td className="py-4">
+                         <span
+                           className={`px-2 py-1 rounded text-xs font-bold font-satoshi ${
+                             client.is_active
+                               ? "bg-[#C5FECB] text-[#20AB2C]"
+                               : "bg-[#FEF3D3] text-[#ECB219]"
+                           }`}
+                         >
+                           {client.is_active ? "Active" : "Suspended"}
+                         </span>
+                       </td>
+                       <td className="py-4 text-right">
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           onClick={() => handleOpenEdit(client)}
+                           className="font-satoshi font-medium cursor-pointer"
+                         >
+                           Moderate
+                         </Button>
+                       </td>
+                     </tr>
+                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-sm text-gray-500 font-satoshi">
+                    <td colSpan={7} className="py-8 text-center text-sm text-gray-500 font-satoshi">
                       No clients found.
                     </td>
                   </tr>

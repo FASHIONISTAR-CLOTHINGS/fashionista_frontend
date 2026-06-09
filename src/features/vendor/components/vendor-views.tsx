@@ -1073,7 +1073,7 @@ export function VendorDashboardView() {
             </div>
             <h2 className="text-lg font-bold text-[#1A1208]">Store snapshot</h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-xl border border-[#ECE6D6] bg-[#FAFAF8] p-4">
               <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-2">Location</p>
               <p className="flex items-center gap-2 text-sm font-semibold text-[#1A1208]">
@@ -1101,6 +1101,23 @@ export function VendorDashboardView() {
               {dashboard?.profile.is_active
                 ? <Badge color="green">Active</Badge>
                 : <Badge color="gray">Inactive</Badge>}
+            </div>
+            <div className="rounded-xl border border-[#ECE6D6] bg-[#FAFAF8] p-4">
+              <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-2">Last Active</p>
+              <p className="text-sm font-semibold text-[#1A1208]">
+                {dashboard?.profile.last_active_at
+                  ? new Date(dashboard.profile.last_active_at).toLocaleDateString("en-NG", { dateStyle: "medium" })
+                  : "Active Now"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-[#ECE6D6] bg-[#FAFAF8] p-4">
+              <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-2">Support Rating</p>
+              <div className="flex items-center gap-1">
+                <span className="text-sm font-semibold text-[#1A1208]">
+                  {dashboard?.profile.support_rating ? Number(dashboard.profile.support_rating).toFixed(1) : "5.0"}
+                </span>
+                <span className="text-xs text-amber-400">★</span>
+              </div>
             </div>
           </div>
 

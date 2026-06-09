@@ -52,6 +52,8 @@ export const ClientProfileSchema = z.object({
   is_profile_complete: z.boolean().default(false),
   email_notifications_enabled: z.boolean().default(true),
   sms_notifications_enabled: z.boolean().default(true),
+  last_active_at: z.string().nullable().optional(),
+  phone_verified: z.boolean().default(false),
   addresses: z.array(ClientAddressSchema).default([]),
 });
 
@@ -106,6 +108,8 @@ export const ClientDashboardSchema = z.object({
     country: z.string().default(""),
     state: z.string().default(""),
     is_profile_complete: z.boolean().default(false),
+    last_active_at: z.string().nullable().optional(),
+    phone_verified: z.boolean().default(false),
     user_id: z.string().optional(),
     user_email: z.string().optional(),
     total_orders: coerceNumber.optional(),

@@ -46,6 +46,8 @@ export interface ClientProfile {
   is_profile_complete: boolean;
   email_notifications_enabled: boolean;
   sms_notifications_enabled: boolean;
+  last_active_at: string | null;
+  phone_verified: boolean;
   addresses: ClientAddress[];
 }
 
@@ -95,6 +97,8 @@ export interface ClientDashboard {
     country: string;
     state: string;
     is_profile_complete: boolean;
+    last_active_at: string | null;
+    phone_verified: boolean;
   };
   analytics: ClientDashboardAnalytics;
   measurement_snapshot: MeasurementSnapshot;

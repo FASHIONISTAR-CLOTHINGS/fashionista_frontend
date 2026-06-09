@@ -11,6 +11,8 @@ export interface AdminClient {
   last_name?: string;
   phone_number?: string;
   is_active: boolean;
+  last_active_at?: string | null;
+  phone_verified?: boolean;
   created_at: string;
 }
 
