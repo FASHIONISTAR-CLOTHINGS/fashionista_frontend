@@ -56,7 +56,7 @@ export const ClientProfileSchema = z.object({
   phone_verified: z.boolean().default(false),
   loyalty_tier: z.string().default("standard"),
   loyalty_points: coerceNumber.default(0),
-  referral_code: z.string().nullable(),
+  referral_code: z.string().nullable().optional(),
   referral_count: coerceNumber.default(0),
   body_type: z.string().default(""),
   occasion_preferences: z.array(z.string()).default([]),

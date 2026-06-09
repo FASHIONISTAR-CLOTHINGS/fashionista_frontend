@@ -119,6 +119,7 @@ import {
 } from "@/features/vendor/hooks/use-vendor-dashboard";
 import { useDraftStore } from "@/features/product/builder/store";
 import { Button } from "@/shared/ui";
+import { Tooltip as UiTooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   AddressReferenceField,
   type AddressSelection,
@@ -1104,20 +1105,30 @@ export function VendorDashboardView() {
             </div>
             <div className="rounded-xl border border-[#ECE6D6] bg-[#FAFAF8] p-4">
               <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-2">Last Active</p>
-              <p className="text-sm font-semibold text-[#1A1208]">
-                {dashboard?.profile.last_active_at
-                  ? new Date(dashboard.profile.last_active_at).toLocaleDateString("en-NG", { dateStyle: "medium" })
-                  : "Active Now"}
-              </p>
+              <UiTooltip>
+                <TooltipTrigger className="text-sm font-semibold text-[#1A1208] text-left hover:text-[#FDA600] transition-colors">
+                  {dashboard?.profile.last_active_at
+                    ? new Date(dashboard.profile.last_active_at).toLocaleDateString("en-NG", { dateStyle: "medium" })
+                    : "Active Now"}
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  Vendor's last logged operational activity timestamp
+                </TooltipContent>
+              </UiTooltip>
             </div>
             <div className="rounded-xl border border-[#ECE6D6] bg-[#FAFAF8] p-4">
               <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-2">Support Rating</p>
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-semibold text-[#1A1208]">
-                  {dashboard?.profile.support_rating ? Number(dashboard.profile.support_rating).toFixed(1) : "5.0"}
-                </span>
-                <span className="text-xs text-amber-400">★</span>
-              </div>
+              <UiTooltip>
+                <TooltipTrigger className="flex items-center gap-1 text-sm font-semibold text-[#1A1208] hover:text-[#FDA600] transition-colors">
+                  <span>
+                    {dashboard?.profile.support_rating ? Number(dashboard.profile.support_rating).toFixed(1) : "5.0"}
+                  </span>
+                  <span className="text-xs text-amber-400">★</span>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  Overall customer support score based on reviews (scale 1-5)
+                </TooltipContent>
+              </UiTooltip>
             </div>
           </div>
 
