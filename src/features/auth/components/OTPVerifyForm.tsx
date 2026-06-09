@@ -26,8 +26,6 @@ import { mergeAnonymousCommerce } from "@/features/cart";
 import { RichErrorMessage } from "@/components/shared/feedback/RichErrorMessage";
 import { parseApiError } from "@/lib/api/parseApiError";
 
-import { parseApiError } from "@/lib/api/parseApiError";
-
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;
 

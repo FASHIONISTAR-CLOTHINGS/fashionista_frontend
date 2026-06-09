@@ -16,7 +16,7 @@
  *   → useCatalogProducts (TanStack Query) → ProductGrid
  */
 
-import { Suspense, useState, useCallback } from "react";
+import { Suspense, useState } from "react";
 import { useProductFilters } from "@/features/product/hooks/use-product-filters";
 import { useToggleWishlist } from "@/features/product/hooks/use-product";
 import { useWishlistItemIds } from "@/features/client/hooks/use-client-wishlist";
@@ -277,7 +277,6 @@ function CatalogPage() {
     maxPrice,
     sortBy,
     page,
-    setPage,
     hasActiveFilters,
   } = useProductFilters();
 
@@ -296,10 +295,6 @@ function CatalogPage() {
 
   const products: CatalogProduct[] = data?.results ?? [];
   const totalCount: number = data?.count ?? 0;
-  const totalPages = Math.ceil(totalCount / 24);
-
-  const handleNext = useCallback(() => void setPage(page + 1), [page, setPage]);
-  const handlePrev = useCallback(() => void setPage(Math.max(1, page - 1)), [page, setPage]);
 
   return (
     <>

@@ -22,7 +22,6 @@ import {
   KeyboardEvent,
 } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useCatalogSearch } from "@/features/catalog";
 import { FashionistarImage } from "@/components/media";
 import { Button } from "@/components/ui/button";
