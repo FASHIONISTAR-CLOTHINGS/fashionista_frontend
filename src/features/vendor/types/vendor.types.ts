@@ -69,7 +69,7 @@ export interface VendorProfile {
   is_verified:    boolean;
   is_active:      boolean;
   is_featured:    boolean;
-  last_active_at: string | null;
+  last_active_at?: string | null;
   support_rating: number;
   setup_state?:   VendorSetupState;
 }

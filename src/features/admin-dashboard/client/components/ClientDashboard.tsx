@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { TableRowSkeleton } from "@/shared/components/skeletons";
+import { UserAvatar } from "@/components/UserAvatar/UserAvatar";
 
 export function ClientDashboard() {
   const { data: clients, isLoading } = useAdminClients();
@@ -149,8 +150,23 @@ export function ClientDashboard() {
               <tbody className="divide-y divide-[#f4f4f4]">
                 {clients && clients.length > 0 ? (
                    clients.map((client) => (
-                     <tr key={client.id} className="hover:bg-[#fcfcfa] transition-colors">
-                       <td className="py-4 font-satoshi font-medium text-black">{client.user_email}</td>
+                      <tr key={client.id} className="hover:bg-[#fcfcfa] transition-colors">
+                        <td className="py-4 font-satoshi font-medium text-black">
+                          <div className="flex items-center gap-3">
+                            <UserAvatar
+                              user={{
+                                firstName: client.first_name,
+                                lastName: client.last_name,
+                                email: client.user_email,
+                                avatar: client.avatar || undefined,
+                                role: "CLIENT",
+                              }}
+                              size="sm"
+                              showRing={false}
+                            />
+                            <span>{client.user_email}</span>
+                          </div>
+                        </td>
                        <td className="py-4 font-satoshi text-sm text-black">
                          {client.first_name || client.last_name
                            ? `${client.first_name || ""} ${client.last_name || ""}`.trim()

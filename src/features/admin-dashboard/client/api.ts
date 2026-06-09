@@ -9,6 +9,7 @@ export interface AdminClient {
   user_email?: string;
   first_name?: string;
   last_name?: string;
+  avatar?: string;
   phone_number?: string;
   is_active: boolean;
   last_active_at?: string | null;

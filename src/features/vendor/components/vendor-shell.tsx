@@ -1,6 +1,5 @@
 "use client";
 
-import { FashionistarImage } from "@/components/media";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -36,6 +35,7 @@ import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useVendorDashboard } from "@/features/vendor/hooks/use-vendor-setup";
 import { useUnreadBadgeCount } from "@/features/notification/hooks/use-notification";
 import { useConversations } from "@/features/chat/hooks/use-chat";
+import { UserAvatar } from "@/components/UserAvatar/UserAvatar";
 
 // ── Brand Palette ─────────────────────────────────────────────────────────────
 const C = {
@@ -203,28 +203,17 @@ function VendorSidebar({
             className="flex items-center gap-3 group min-w-0 flex-1"
             aria-label="Go to dashboard"
           >
-            <div className="relative flex-shrink-0">
-              {logoUrl ? (
-                <div className="relative h-9 w-9 overflow-hidden rounded-xl ring-2 ring-[#FDA600]/50 shadow-lg shadow-[#FDA600]/20">
-                  <FashionistarImage src={logoUrl} alt={storeName} fill className="object-cover" transformation="avatar" />
-                </div>
-              ) : (
-                <div
-                  className="flex h-9 w-9 items-center justify-center rounded-xl shadow-lg flex-shrink-0"
-                  style={{
-                    background: `linear-gradient(135deg, ${C.gold} 0%, ${C.goldDark} 100%)`,
-                    boxShadow: `0 4px 16px ${C.gold}45`,
-                  }}
-                >
-                  <ShoppingBag className="h-4 w-4 text-black" />
-                </div>
-              )}
-              {/* Live dot */}
-              <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-[#01272C]" />
-              </span>
-            </div>
+            <UserAvatar
+              user={{
+                fullName: storeName,
+                avatar: logoUrl || undefined,
+                role: "VENDOR",
+                email: user?.email,
+              }}
+              size="sm"
+              status="online"
+              showRing={true}
+            />
 
             {!collapsed && (
               <div className="min-w-0 flex-1 overflow-hidden">
@@ -420,13 +409,12 @@ function VendorSidebar({
 
 // ── Profile Dropdown ──────────────────────────────────────────────────────────
 interface ProfileDropdownProps {
-  initials:   string;
   storeName:  string;
   userEmail?: string;
   logoUrl?:   string;
 }
 
-function ProfileDropdown({ initials, storeName, userEmail, logoUrl }: ProfileDropdownProps) {
+function ProfileDropdown({ storeName, userEmail, logoUrl }: ProfileDropdownProps) {
   const router  = useRouter();
   const logout  = useAuthStore((s) => s.logout);
   const [open, setOpen] = useState(false);
@@ -461,21 +449,17 @@ function ProfileDropdown({ initials, storeName, userEmail, logoUrl }: ProfileDro
         aria-label="Profile menu"
         title={storeName}
       >
-        {logoUrl ? (
-          <FashionistarImage src={logoUrl} alt={storeName} width={36} height={36} className="h-full w-full object-cover" transformation="avatar" />
-        ) : (
-          <div
-            className="flex h-full w-full items-center justify-center"
-            style={{ background: `linear-gradient(135deg, ${C.gold} 0%, ${C.goldDark} 100%)` }}
-          >
-            {initials}
-          </div>
-        )}
-        {/* Online ring pulse */}
-        <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />
-          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-white" />
-        </span>
+        <UserAvatar
+          user={{
+            fullName: storeName,
+            avatar: logoUrl || undefined,
+            role: "VENDOR",
+            email: userEmail,
+          }}
+          size="sm"
+          status="online"
+          showRing={true}
+        />
       </button>
 
       {open && (
@@ -562,10 +546,7 @@ function VendorTopbar({
   const storeSlug  = dashboard?.profile.store_slug ?? "";
   const logoUrl    = dashboard?.profile.logo_url ?? "";
 
-  const userFullName = user ? `${user.first_name} ${user.last_name}`.trim() : "";
   const userEmail    = user?.email ?? "";
-  const initials     = (userFullName || "V")
-    .split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase();
 
   const unreadMessagesCount = (conversations ?? []).reduce(
     (acc: number, c: any) => acc + (c.unread_count ?? 0), 0
@@ -670,7 +651,6 @@ function VendorTopbar({
 
         {/* Profile */}
         <ProfileDropdown
-          initials={initials}
           storeName={storeName}
           userEmail={userEmail}
           logoUrl={logoUrl}

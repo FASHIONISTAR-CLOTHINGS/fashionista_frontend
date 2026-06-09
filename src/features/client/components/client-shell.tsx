@@ -34,6 +34,7 @@ import {
   useNotifications,
   useUnreadBadgeCount,
 } from "@/features/notification/hooks/use-notification";
+import { UserAvatar } from "@/components/UserAvatar/UserAvatar";
 
 // ── Nav Item Config ──────────────────────────────────────────────────────────
 
@@ -95,19 +96,19 @@ const isActivePath = (pathname: string, href: string) =>
   pathname === href || (href !== "/client/dashboard" && pathname.startsWith(`${href}/`));
 
 // ── Avatar Component ──────────────────────────────────────────────────────────
-function Avatar({ email, size = "md" }: { email: string; size?: "sm" | "md" | "lg" }) {
-  const initials = email ? email.slice(0, 2).toUpperCase() : "CL";
-  const sizeClasses = {
-    sm: "h-7 w-7 text-xs",
-    md: "h-9 w-9 text-sm",
-    lg: "h-11 w-11 text-base",
-  };
+function Avatar({ user, size = "md" }: { user: any; size?: "sm" | "md" | "lg" }) {
   return (
-    <div
-      className={`${sizeClasses[size]} flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FDA600] to-[#f28705] font-bold text-black shadow-sm`}
-    >
-      {initials}
-    </div>
+    <UserAvatar
+      user={{
+        email: user?.email,
+        firstName: user?.first_name || user?.firstName,
+        lastName: user?.last_name || user?.lastName,
+        avatar: user?.avatar,
+        role: "CLIENT",
+      }}
+      size={size === "sm" ? "sm" : size === "md" ? "md" : "lg"}
+      showRing={false}
+    />
   );
 }
 
@@ -222,10 +223,10 @@ function NotificationBell() {
 
 // ── Profile Dropdown ──────────────────────────────────────────────────────────
 function ProfileDropdown({
-  email,
+  user,
   onLogout,
 }: {
-  email: string;
+  user: any;
   onLogout: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -239,6 +240,8 @@ function ProfileDropdown({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const email = user?.email ?? "";
+
   return (
     <div ref={ref} className="relative">
       <button
@@ -248,9 +251,9 @@ function ProfileDropdown({
         className="flex items-center gap-2 rounded-full border border-[#ECE6D6] bg-white py-1.5 pl-1.5 pr-3 transition hover:bg-[#F8F5ED]"
         aria-label="Profile menu"
       >
-        <Avatar email={email} size="sm" />
+        <Avatar user={user} size="sm" />
         <span className="hidden max-w-[120px] truncate text-xs font-semibold text-black sm:block">
-          {email.split("@")[0]}
+          {email ? email.split("@")[0] : ""}
         </span>
         <ChevronDown className="h-3.5 w-3.5 text-[#5A6465]" />
       </button>
@@ -375,6 +378,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const logout = useAuthStore((state) => state.logout);
+  const user = useAuthStore((state) => state.user);
   const { data: profile } = useClientProfile();
   const [isOpen, setIsOpen] = useState(false);
   const pageTitle = usePageTitle(pathname);
@@ -386,7 +390,14 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
 
   const closeMenu = () => setIsOpen(false);
 
-  const userEmail = profile?.user_email ?? "";
+  const userEmail = profile?.user_email ?? user?.email ?? "";
+  const avatarUrl = user?.avatar || undefined;
+  const avatarUser = {
+    email: userEmail,
+    first_name: user?.first_name,
+    last_name: user?.last_name,
+    avatar: avatarUrl,
+  };
   const completionPct = profile?.is_profile_complete ? 100 : 40;
 
   return (
@@ -442,7 +453,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
           {userEmail && (
             <div className="mx-4 my-4 rounded-xl bg-white/5 px-4 py-3">
               <div className="flex items-center gap-3">
-                <Avatar email={userEmail} size="md" />
+                <Avatar user={avatarUser} size="md" />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-white">
                     {userEmail.split("@")[0]}
@@ -528,7 +539,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
 
               <NotificationBell />
 
-              <ProfileDropdown email={userEmail} onLogout={handleLogout} />
+              <ProfileDropdown user={avatarUser} onLogout={handleLogout} />
             </div>
           </header>
 

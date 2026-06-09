@@ -54,6 +54,12 @@ export const ClientProfileSchema = z.object({
   sms_notifications_enabled: z.boolean().default(true),
   last_active_at: z.string().nullable().optional(),
   phone_verified: z.boolean().default(false),
+  loyalty_tier: z.string().default("standard"),
+  loyalty_points: coerceNumber.default(0),
+  referral_code: z.string().nullable().optional(),
+  referral_count: coerceNumber.default(0),
+  body_type: z.string().default(""),
+  occasion_preferences: z.array(z.string()).default([]),
   addresses: z.array(ClientAddressSchema).default([]),
 });
 
@@ -68,6 +74,8 @@ export const ClientProfileUpdateSchema = z.object({
   favourite_colours: z.array(z.string()).optional(),
   email_notifications_enabled: z.boolean().optional(),
   sms_notifications_enabled: z.boolean().optional(),
+  body_type: z.string().optional(),
+  occasion_preferences: z.array(z.string()).optional(),
 });
 
 // ── Measurement Snapshot ──────────────────────────────────────────────────────
@@ -118,6 +126,12 @@ export const ClientDashboardSchema = z.object({
     sms_notifications_enabled: z.boolean().optional(),
     default_shipping_address: z.string().optional(),
     addresses: z.array(ClientAddressSchema).default([]),
+    loyalty_tier: z.string().default("standard"),
+    loyalty_points: coerceNumber.default(0),
+    referral_code: z.string().nullable().optional(),
+    referral_count: coerceNumber.default(0),
+    body_type: z.string().default(""),
+    occasion_preferences: z.array(z.string()).default([]),
   }),
   analytics: ClientDashboardAnalyticsSchema,
   measurement_snapshot: MeasurementSnapshotSchema,

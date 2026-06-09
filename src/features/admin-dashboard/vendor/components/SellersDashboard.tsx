@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { UserRoleBadge } from "@/components/UserAvatar/UserRoleBadge";
 import {
   useAdminVendors,
   useAdminVendorDetail,
@@ -382,7 +383,8 @@ export function SellersDashboard() {
               </div>
 
               {/* Status Pills */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
+                <UserRoleBadge role={selectedVendor.is_featured ? "SUPER_VENDOR" : "VENDOR"} size="xs" />
                 {selectedVendor.is_featured && (
                   <span className="flex items-center gap-1 bg-[#FDA600] text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xs">
                     <Sparkles className="w-3.5 h-3.5 fill-white" />
