@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { UserRoleBadge } from "@/components/UserAvatar/UserRoleBadge";
+import { Tooltip as UiTooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   useAdminVendors,
   useAdminVendorDetail,
@@ -59,7 +60,14 @@ export function SellersDashboard() {
   const toggleFeaturedMutation = useToggleVendorFeatured();
   const updateCommissionMutation = useUpdateVendorCommission();
 
-  const sellers = (data?.results as any[]) || [];
+  const sellers = ((data?.results as any[]) || []).filter((vendor) => {
+    if (!cityFilter.trim()) return true;
+    const searchVal = cityFilter.trim().toLowerCase();
+    return (
+      vendor.city?.toLowerCase().includes(searchVal) ||
+      vendor.state?.toLowerCase().includes(searchVal)
+    );
+  });
 
   const clearFilters = () => {
     setSearch("");
@@ -412,13 +420,20 @@ export function SellersDashboard() {
                 
                 <div className="grid grid-cols-2 gap-4 text-sm font-satoshi">
                   <div className="bg-[#F8F5ED]/50 p-3 rounded-xl border border-[#ECE6D6]/40">
-                    <span className="text-xs text-[#8A9596] block">Boutique Rating</span>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <span className="font-bold text-black">{Number(selectedVendor.average_rating || 0).toFixed(1)}</span>
-                      <div className="flex items-center">
-                        {renderStars(selectedVendor.average_rating || 0)}
-                      </div>
-                    </div>
+                    <UiTooltip>
+                      <TooltipTrigger className="text-left w-full">
+                        <span className="text-xs text-[#8A9596] block">Boutique Rating</span>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span className="font-bold text-black">{Number(selectedVendor.average_rating || 0).toFixed(1)}</span>
+                          <div className="flex items-center">
+                            {renderStars(selectedVendor.average_rating || 0)}
+                          </div>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        Designer's overall customer rating
+                      </TooltipContent>
+                    </UiTooltip>
                   </div>
 
                   <div className="bg-[#F8F5ED]/50 p-3 rounded-xl border border-[#ECE6D6]/40">
@@ -443,18 +458,32 @@ export function SellersDashboard() {
                   </div>
 
                   <div className="bg-[#F8F5ED]/50 p-3 rounded-xl border border-[#ECE6D6]/40">
-                    <span className="text-xs text-[#8A9596] block">Support Rating</span>
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className="font-bold text-black">{Number(selectedVendor.support_rating ?? 5.0).toFixed(1)}</span>
-                      <span className="text-xs text-amber-400">★</span>
-                    </div>
+                    <UiTooltip>
+                      <TooltipTrigger className="text-left w-full">
+                        <span className="text-xs text-[#8A9596] block">Support Rating</span>
+                        <div className="flex items-center gap-1 mt-1">
+                          <span className="font-bold text-black">{Number(selectedVendor.support_rating ?? 5.0).toFixed(1)}</span>
+                          <span className="text-xs text-amber-400">★</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        Customer support ticket response quality rating
+                      </TooltipContent>
+                    </UiTooltip>
                   </div>
 
                   <div className="bg-[#F8F5ED]/50 p-3 rounded-xl border border-[#ECE6D6]/40">
-                    <span className="text-xs text-[#8A9596] block">Last Active</span>
-                    <span className="font-bold text-black block mt-1">
-                      {selectedVendor.last_active_at ? new Date(selectedVendor.last_active_at).toLocaleDateString() : "Never"}
-                    </span>
+                    <UiTooltip>
+                      <TooltipTrigger className="text-left w-full">
+                        <span className="text-xs text-[#8A9596] block">Last Active</span>
+                        <span className="font-bold text-black block mt-1">
+                          {selectedVendor.last_active_at ? new Date(selectedVendor.last_active_at).toLocaleDateString() : "Never"}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        Tailor's last verified backend presence
+                      </TooltipContent>
+                    </UiTooltip>
                   </div>
                 </div>
               </div>

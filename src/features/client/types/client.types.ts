@@ -321,6 +321,7 @@ export interface CustomOrder {
   vendor_store_name: string;
   created_at: string;
   updated_at: string;
+  reference_images?: string[];
   milestones: CustomOrderMilestone[];
 }
 

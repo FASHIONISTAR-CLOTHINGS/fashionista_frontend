@@ -20,6 +20,9 @@ import {
 } from "lucide-react";
 
 import { clientApi } from "@/features/client/api/client.api";
+import { FashionistarImage } from "@/components/media";
+import { toast } from "sonner";
+import { uploadFile } from "@/features/uploads/services/upload.service";
 import type {
   CustomOrder,
   CustomOrderCreatePayload,
@@ -104,6 +107,80 @@ function MilestoneProgress({ milestones, agreedAmount }: {
   );
 }
 
+function ReferenceImageUploader({
+  images,
+  onChange,
+}: {
+  images: string[];
+  onChange: (urls: string[]) => void;
+}) {
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    setError(null);
+
+    const uploadedUrls: string[] = [];
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (!file.type.startsWith("image/")) continue;
+        const result = await uploadFile(file, "custom_order_refs", "image");
+        uploadedUrls.push(result.secure_url);
+      }
+      onChange([...images, ...uploadedUrls]);
+      toast.success("Images uploaded successfully!");
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message || "Failed to upload reference images.");
+      toast.error(err?.message || "Failed to upload reference images.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeImage = (indexToRemove: number) => {
+    onChange(images.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  return (
+    <div className="space-y-3">
+      <label className="text-sm font-semibold text-black block">Reference Images (Max 5)</label>
+      <div className="grid grid-cols-5 gap-2">
+        {images.map((url, idx) => (
+          <div key={idx} className="relative aspect-square overflow-hidden rounded-xl border border-[#ECE6D6]">
+            <FashionistarImage src={url} alt="Reference" fill={true} objectFit="cover" />
+            <button
+              type="button"
+              onClick={() => removeImage(idx)}
+              className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white hover:bg-red-700 shadow-sm transition"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ))}
+        {images.length < 5 && (
+          <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#D9D9D9] hover:border-[#FDA600] transition bg-[#FAFAF8] hover:bg-white">
+            <input type="file" multiple accept="image/*" onChange={handleUpload} className="hidden" disabled={isUploading} />
+            {isUploading ? (
+              <Loader2 className="h-5 w-5 animate-spin text-[#FDA600]" />
+            ) : (
+              <Plus className="h-5 w-5 text-[#7A6B44]" />
+            )}
+            <span className="text-[10px] text-[#7A6B44] mt-1">{isUploading ? "Uploading" : "Add Image"}</span>
+          </label>
+        )}
+      </div>
+      {error && <p className="text-xs text-red-500 font-semibold">{error}</p>}
+    </div>
+  );
+}
+
+
 // ── Custom Order Card ─────────────────────────────────────────────────────────
 function CustomOrderCard({
   order,
@@ -137,6 +214,25 @@ function CustomOrderCard({
           </div>
           <p className="mt-2 text-sm font-semibold text-black">Vendor: {order.vendor_store_name}</p>
           <p className="mt-1 line-clamp-2 text-sm leading-6 text-[#5A6465]">{order.design_brief}</p>
+          {order.reference_images && order.reference_images.length > 0 && (
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+              {order.reference_images.slice(0, 3).map((imgUrl, idx) => (
+                <div key={idx} className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg border border-[#ECE6D6]">
+                  <FashionistarImage
+                    src={imgUrl}
+                    alt={`Reference ${idx + 1}`}
+                    fill={true}
+                    objectFit="cover"
+                  />
+                </div>
+              ))}
+              {order.reference_images.length > 3 && (
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[#F8F5ED] border border-[#ECE6D6] text-xs font-bold text-[#7A6B44]">
+                  +{order.reference_images.length - 3}
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <div className="shrink-0 text-right">
           <p className="text-xs text-[#7A6B44]">Budget</p>
@@ -207,9 +303,13 @@ function CreateCustomOrderModal({ onClose }: { onClose: () => void }) {
   const createMutation = useMutation({
     mutationFn: (payload: CustomOrderCreatePayload) => clientApi.createCustomOrder(payload),
     onSuccess: (newOrder) => {
+      toast.success("Custom order submitted successfully!");
       void queryClient.invalidateQueries({ queryKey: ["client-custom-orders"] });
       onClose();
       router.push(`/client/dashboard/custom-orders/${newOrder.id}`);
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to submit custom order. Please verify vendor and parameters.");
     },
   });
 
@@ -314,6 +414,10 @@ function CreateCustomOrderModal({ onClose }: { onClose: () => void }) {
                   ))}
                 </div>
               </div>
+              <ReferenceImageUploader
+                images={form.reference_images || []}
+                onChange={(urls) => setForm((f) => ({ ...f, reference_images: urls }))}
+              />
             </div>
           )}
 
@@ -353,6 +457,18 @@ function CreateCustomOrderModal({ onClose }: { onClose: () => void }) {
                     <span className="text-right text-sm text-black">{val}</span>
                   </div>
                 ))}
+                {form.reference_images && form.reference_images.length > 0 && (
+                  <div className="py-2.5">
+                    <p className="text-xs font-semibold text-[#7A6B44] mb-2">Reference Images</p>
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {form.reference_images.map((img, idx) => (
+                        <div key={idx} className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-[#ECE6D6]">
+                          <FashionistarImage src={img} alt="Ref review" fill={true} objectFit="cover" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="pt-3">
                   <p className="text-xs font-semibold text-[#7A6B44]">Design Brief</p>
                   <p className="mt-1 text-sm leading-6 text-black">{form.design_brief || "—"}</p>
@@ -398,6 +514,7 @@ function CreateCustomOrderModal({ onClose }: { onClose: () => void }) {
                     budget_ngn: form.budget_ngn,
                     product_snapshot_id: form.product_snapshot_id || undefined,
                     order_snapshot_id: form.order_snapshot_id || undefined,
+                    reference_images: form.reference_images || [],
                   });
                 }
               }}
@@ -429,8 +546,13 @@ export function ClientCustomOrderView({ defaultShowCreate = false }: { defaultSh
   });
 
   const handlePayMilestone = async (orderId: string, pct: MilestonePct) => {
-    await clientApi.payMilestone(orderId, { milestone_pct: pct, payment_method: "wallet" });
-    await queryClient.invalidateQueries({ queryKey: ["client-custom-orders"] });
+    try {
+      await clientApi.payMilestone(orderId, { milestone_pct: pct, payment_method: "wallet" });
+      await queryClient.invalidateQueries({ queryKey: ["client-custom-orders"] });
+      toast.success(`Milestone payment for ${pct}% processed successfully!`);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to process milestone payment. Please try again.");
+    }
   };
 
   const STATUS_FILTERS = [
@@ -551,8 +673,12 @@ export function ClientCustomOrderDetailView({ orderId }: { orderId: string }) {
   const payMutation = useMutation({
     mutationFn: (pct: MilestonePct) =>
       clientApi.payMilestone(orderId, { milestone_pct: pct, payment_method: "wallet" }),
-    onSuccess: () => {
+    onSuccess: (_, pct) => {
+      toast.success(`Milestone payment for ${pct}% processed successfully!`);
       void queryClient.invalidateQueries({ queryKey: ["client-custom-orders"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to pay milestone.");
     },
   });
 
@@ -606,6 +732,23 @@ export function ClientCustomOrderDetailView({ orderId }: { orderId: string }) {
             <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#7A6B44]">Design Brief</p>
             <p className="mt-3 text-sm leading-7 text-[#5A6465]">{order.design_brief}</p>
           </div>
+          {order.reference_images && order.reference_images.length > 0 && (
+            <div className="rounded-[28px] bg-white p-6 shadow-sm">
+              <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#7A6B44] mb-4">Reference Images</p>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                {order.reference_images.map((imgUrl, idx) => (
+                  <div key={idx} className="relative aspect-square overflow-hidden rounded-[20px] border border-[#ECE6D6]">
+                    <FashionistarImage
+                      src={imgUrl}
+                      alt={`Reference ${idx + 1}`}
+                      fill={true}
+                      objectFit="cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {order.vendor_approval_note && (
             <div className="rounded-[28px] border border-[#ECE6D6] bg-[#FFFDF5] p-6">
               <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#FDA600]">Vendor Response</p>

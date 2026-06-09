@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
@@ -785,18 +786,33 @@ export function ClientAddressView() {
   const addresses: ClientAddress[] = (profile?.addresses ?? []) as ClientAddress[];
 
   const handleAddAddress = async (payload: ClientAddressCreatePayload) => {
-    await clientApi.addAddress(payload);
-    await queryClient.invalidateQueries({ queryKey: ["client", "profile"] });
+    try {
+      await clientApi.addAddress(payload);
+      await queryClient.invalidateQueries({ queryKey: ["client", "profile"] });
+      toast.success("Address added successfully!");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to add address. Please try again.");
+    }
   };
 
   const handleDelete = async (id: string) => {
-    await clientApi.deleteAddress(id);
-    await queryClient.invalidateQueries({ queryKey: ["client", "profile"] });
+    try {
+      await clientApi.deleteAddress(id);
+      await queryClient.invalidateQueries({ queryKey: ["client", "profile"] });
+      toast.success("Address removed successfully!");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to remove address. Please try again.");
+    }
   };
 
   const handleSetDefault = async (id: string) => {
-    await clientApi.setDefaultAddress(id);
-    await queryClient.invalidateQueries({ queryKey: ["client", "profile"] });
+    try {
+      await clientApi.setDefaultAddress(id);
+      await queryClient.invalidateQueries({ queryKey: ["client", "profile"] });
+      toast.success("Default address updated successfully!");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update default address. Please try again.");
+    }
   };
 
   return (
@@ -881,7 +897,12 @@ export function ClientAccountDetailsView() {
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    await updateProfile.mutateAsync(form);
+    try {
+      await updateProfile.mutateAsync(form);
+      toast.success("Profile updated successfully!");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to save profile changes. Please try again.");
+    }
   };
 
   const SIZE_OPTS = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
@@ -1048,9 +1069,9 @@ export function ClientAccountDetailsView() {
 export function ClientWalletView() {
   const { data: walletData, isLoading: walletLoading } = useClientWalletBalance();
 
-  const totalAmount  = walletData?.total_amount_ngn ?? 0;
-  const balance      = walletData?.balance_ngn ?? 0;
-  const txCount      = walletData?.transaction_count ?? 0;
+  const totalAmount  = Number(walletData?.total_amount_ngn ?? 0);
+  const balance      = Number(walletData?.balance_ngn ?? 0);
+  const txCount      = Number(walletData?.transaction_count ?? 0);
   const transactions = walletData?.transactions ?? [];
 
   return (
@@ -1155,7 +1176,11 @@ function WalletTopUpPanel() {
     mutationFn: (amountNgn: number) =>
       clientApi.initiateTopUp({ amount: amountNgn, payment_method: "card" }),
     onSuccess: (res) => {
+      toast.success("Redirecting to payment gateway...");
       if (res.payment_url) window.location.href = res.payment_url;
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Wallet top-up initiation failed. Please try again.");
     },
   });
 
@@ -1437,8 +1462,12 @@ function CreateTicketModal({ onClose }: { onClose: () => void }) {
   const mutation = useMutation({
     mutationFn: (payload: SupportTicketCreatePayload) => clientApi.createSupportTicket(payload),
     onSuccess: () => {
+      toast.success("Support ticket created successfully!");
       void queryClient.invalidateQueries({ queryKey: ["client-support-tickets"] });
       onClose();
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to create support ticket. Please try again.");
     },
   });
 

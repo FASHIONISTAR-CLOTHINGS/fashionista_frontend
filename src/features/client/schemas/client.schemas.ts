@@ -56,7 +56,7 @@ export const ClientProfileSchema = z.object({
   phone_verified: z.boolean().default(false),
   loyalty_tier: z.string().default("standard"),
   loyalty_points: coerceNumber.default(0),
-  referral_code: z.string().nullable().optional(),
+  referral_code: z.string().nullable().default(null),
   referral_count: coerceNumber.default(0),
   body_type: z.string().default(""),
   occasion_preferences: z.array(z.string()).default([]),
@@ -162,6 +162,7 @@ export const CustomOrderSchema = z.object({
   vendor_store_name: z.string(),
   created_at: z.string(),
   updated_at: z.string(),
+  reference_images: z.array(z.string()).default([]),
   milestones: z.array(CustomOrderMilestoneSchema).default([]),
 });
 
