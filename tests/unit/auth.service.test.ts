@@ -29,8 +29,8 @@ vi.mock('@/features/auth/store/auth.store', () => ({
   },
 }))
 
-// Force the backend URL to localhost so MSW intercepts all requests correctly
-process.env.NEXT_PUBLIC_BACKEND_URL = 'http://localhost:8001'
+// Force the backend URL to 127.0.0.1 so MSW intercepts all requests correctly
+process.env.NEXT_PUBLIC_BACKEND_URL = 'http://127.0.0.1:8001'
 
 // Import service AFTER mocking store
 const {
@@ -45,7 +45,7 @@ const {
 // MSW SERVER SETUP
 // ─────────────────────────────────────────────────────────────────────────────
 
-const BASE = 'http://localhost:8001'
+const BASE = 'http://127.0.0.1:8001'
 
 const handlers = [
   // POST /api/v1/auth/login/

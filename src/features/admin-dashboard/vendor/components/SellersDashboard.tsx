@@ -439,6 +439,21 @@ export function SellersDashboard() {
                       {selectedVendor.total_sales || 0} transactions
                     </span>
                   </div>
+
+                  <div className="bg-[#F8F5ED]/50 p-3 rounded-xl border border-[#ECE6D6]/40">
+                    <span className="text-xs text-[#8A9596] block">Support Rating</span>
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="font-bold text-black">{Number(selectedVendor.support_rating ?? 5.0).toFixed(1)}</span>
+                      <span className="text-xs text-amber-400">★</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#F8F5ED]/50 p-3 rounded-xl border border-[#ECE6D6]/40">
+                    <span className="text-xs text-[#8A9596] block">Last Active</span>
+                    <span className="font-bold text-black block mt-1">
+                      {selectedVendor.last_active_at ? new Date(selectedVendor.last_active_at).toLocaleDateString() : "Never"}
+                    </span>
+                  </div>
                 </div>
               </div>
 
