@@ -7,8 +7,8 @@
  */
 
 import { useState } from "react";
-import type { VendorMetrics, VendorProfile } from "@/entities/vendor/types";
-import { Card, Badge, LoadingSpinner } from "@/shared/ui";
+import type { VendorMetrics, VendorProfile } from "../types/vendor.types";
+import { Card, Badge, LoadingSpinner } from "@/components";
 
 // ── Metric Card ───────────────────────────────────────────────────────────────
 

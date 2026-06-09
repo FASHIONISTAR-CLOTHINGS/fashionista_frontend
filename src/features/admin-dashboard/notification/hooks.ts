@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchAdminAnnouncements, sendAdminAnnouncement } from "./api";
-import { useToast } from "@/shared/hooks/use-toast";
+import { useToast } from "@/components";
 import type { SendAnnouncementInput } from "./types";
 
 export const adminNotificationKeys = {

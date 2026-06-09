@@ -2,7 +2,7 @@
  * @module shared/hooks barrel
  *
  * Public API for all reusable hooks.
- * Feature code MUST import from "@/shared" — never from deep paths.
+ * Feature code MUST import from "@/components" — never from deep paths.
  */
 export { useOptimisticMutation } from "./use-optimistic-mutation";
 export type { UseOptimisticMutationOptions } from "./use-optimistic-mutation";

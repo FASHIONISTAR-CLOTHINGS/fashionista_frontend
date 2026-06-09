@@ -8,7 +8,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AccountsDashboard } from "@/features/admin-dashboard/authentication";
-import { TableRowSkeleton } from "@/shared/components/skeletons";
+import { TableRowSkeleton } from "@/components";
 
 export const metadata: Metadata = {
   title: "Accounts — Fashionistar Admin",

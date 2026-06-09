@@ -9,7 +9,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { Button, Badge } from "@/shared/ui";
+import { Button, Badge } from "@/components";
 import confetti from "canvas-confetti";
 
 interface OrderDetails {

@@ -1,6 +1,6 @@
 "use client";
 
-import { ErrorBoundary } from "@/shared";
+import { ErrorBoundary } from "@/components";
 import { ClientShell } from "@/features/client";
 
 export default function ClientLayout({

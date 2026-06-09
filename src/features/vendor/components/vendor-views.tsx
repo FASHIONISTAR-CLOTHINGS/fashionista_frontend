@@ -118,12 +118,12 @@ import {
   useVendorTopSellingProducts,
 } from "@/features/vendor/hooks/use-vendor-dashboard";
 import { useDraftStore } from "@/features/product/builder/store";
-import { Button } from "@/shared/ui";
+import { Button } from "@/components";
 import { Tooltip as UiTooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   AddressReferenceField,
   type AddressSelection,
-} from "@/shared/reference-data";
+} from "@/components/reference-data";
 
 
 

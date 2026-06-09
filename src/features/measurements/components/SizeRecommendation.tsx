@@ -10,7 +10,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import ky from "ky";
-import { Card, LoadingSpinner, Badge } from "@/shared/ui";
+import { Card, LoadingSpinner, Badge } from "@/components";
 
 interface SizeRecommendationResult {
   recommended_size: string;

@@ -518,3 +518,28 @@ export interface PayoutRequestResult {
   currency:      string;
   message:       string;
 }
+
+export interface VendorMetrics {
+  totalOrders: number;
+  pendingOrders: number;
+  revenue: number;
+  avgRating: number;
+  lowStockProducts: number;
+  monthlyRevenue: { month: string; revenue: number }[];
+  topProducts: { id: string; title: string; sales: number; revenue: number }[];
+}
+
+export interface VendorCard {
+  id: string;
+  shopName: string;
+  slug: string;
+  logo: string | null;
+  city: string;
+  state: string;
+  rating: number;
+  reviewCount: number;
+  tier: string;
+  isVerified: boolean;
+  specialties: string[];
+}
+

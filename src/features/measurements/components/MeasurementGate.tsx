@@ -14,8 +14,8 @@
 
 import React from "react";
 import Link from "next/link";
-import { LoadingSpinner, Button } from "@/shared/ui";
-import { useMeasurements } from "@/entities/measurement/hooks/use-measurements";
+import { LoadingSpinner, Button } from "@/components";
+import { useMeasurementProfiles as useMeasurements } from "../hooks/use-measurements";
 
 interface CartItemLike {
   id: string;

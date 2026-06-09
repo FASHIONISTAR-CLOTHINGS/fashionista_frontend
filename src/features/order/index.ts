@@ -85,4 +85,4 @@ export { OrderTable, ClientOrderList, OrderDetailView, OrderPaymentView, OrderCo
 export * from "./types";
 export { OrderStatusBadge } from "./components/OrderStatusBadge";
 export { OrderTimeline } from "./components/OrderTimeline";
-export { useOrders, useOrder, useCancelOrder } from "./hooks/use-orders";
+export { useOrders, useOrder } from "./hooks/use-orders";

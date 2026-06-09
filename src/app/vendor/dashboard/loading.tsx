@@ -1,12 +1,12 @@
 /**
  * @file loading.tsx (Vendor Dashboard)
  * @description Page-specific loading skeleton matching the vendor dashboard layout.
- * Uses shared skeleton primitives from @/shared/components/skeletons.
+ * Uses shared skeleton primitives from @/components.
  */
 import {
   StatSkeleton,
   TableRowSkeleton,
-} from "@/shared/components/skeletons";
+} from "@/components";
 
 export default function VendorDashboardLoading() {
   return (

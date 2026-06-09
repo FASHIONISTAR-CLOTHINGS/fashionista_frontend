@@ -7,7 +7,7 @@ import {
   ProfileSkeleton,
   StatSkeleton,
   TableRowSkeleton,
-} from "@/shared/components/skeletons";
+} from "@/components";
 
 export default function ClientDashboardLoading() {
   return (

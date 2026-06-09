@@ -1,7 +1,7 @@
 /**
  * @file loading.tsx (Admin KYC)
  */
-import { TableRowSkeleton, StatSkeleton } from "@/shared/components/skeletons";
+import { TableRowSkeleton, StatSkeleton } from "@/components";
 
 export default function AdminKycLoading() {
   return (

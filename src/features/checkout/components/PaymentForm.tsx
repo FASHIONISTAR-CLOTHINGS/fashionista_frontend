@@ -10,7 +10,7 @@
 import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import ky from "ky";
-import { Button, Card } from "@/shared/ui";
+import { Button, Card } from "@/components";
 
 type PaymentMethod = "card" | "bank_transfer" | "ussd" | "wallet";
 

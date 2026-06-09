@@ -1,7 +1,7 @@
 /**
  * @file loading.tsx (Client Support)
  */
-import { TableRowSkeleton } from "@/shared/components/skeletons";
+import { TableRowSkeleton } from "@/components";
 
 export default function ClientSupportLoading() {
   return (

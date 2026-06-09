@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useCallback } from "react";
-import { Button } from "@/shared/ui";
+import { Button } from "@/components";
 
 interface PromoCodeInputProps {
   appliedCode?: string | null;

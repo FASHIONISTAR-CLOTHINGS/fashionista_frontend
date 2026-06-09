@@ -2,7 +2,7 @@
  * @file loading.tsx (Vendor Transactions)
  * @description Vendor transactions page skeleton.
  */
-import { StatSkeleton, TableRowSkeleton } from "@/shared/components/skeletons";
+import { StatSkeleton, TableRowSkeleton } from "@/components";
 
 export default function VendorTransactionsLoading() {
   return (

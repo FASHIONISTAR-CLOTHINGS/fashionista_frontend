@@ -2,7 +2,7 @@
  * @file loading.tsx (Vendor Wallet)
  * @description Vendor wallet page skeleton: balance card + transaction history.
  */
-import { StatSkeleton, TableRowSkeleton } from "@/shared/components/skeletons";
+import { StatSkeleton, TableRowSkeleton } from "@/components";
 
 export default function VendorWalletLoading() {
   return (

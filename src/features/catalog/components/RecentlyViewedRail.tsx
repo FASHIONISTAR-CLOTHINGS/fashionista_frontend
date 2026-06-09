@@ -15,7 +15,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Clock } from "lucide-react";
 import { useRecentlyViewed, type RecentlyViewedItem } from "../hooks/use-recently-viewed";
-import { CardSkeleton } from "@/shared/components/skeletons";
+import { CardSkeleton } from "@/components";
 import { cn } from "@/lib/utils";
 import { FashionistarImage } from "@/components/media";
 

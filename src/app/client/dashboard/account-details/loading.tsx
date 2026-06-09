@@ -1,4 +1,4 @@
-import { FormSkeleton, ProfileSkeleton } from "@/shared/components/skeletons";
+import { FormSkeleton, ProfileSkeleton } from "@/components";
 
 export default function ClientAccountDetailsLoading() {
   return (

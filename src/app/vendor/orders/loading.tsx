@@ -2,7 +2,7 @@
  * @file loading.tsx (Vendor Orders)
  * @description Page-specific skeleton matching the vendor orders table.
  */
-import { TableRowSkeleton } from "@/shared/components/skeletons";
+import { TableRowSkeleton } from "@/components";
 
 export default function VendorOrdersLoading() {
   return (

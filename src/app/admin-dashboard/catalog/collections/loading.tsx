@@ -1,7 +1,7 @@
 /**
  * @file loading.tsx (Admin Collections)
  */
-import { CardGridSkeleton } from "@/shared/components/skeletons";
+import { CardGridSkeleton } from "@/components";
 
 export default function AdminCollectionsLoading() {
   return (

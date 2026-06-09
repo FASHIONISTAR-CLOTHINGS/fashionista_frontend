@@ -1,4 +1,4 @@
-import { FormSkeleton } from "@/shared/components/skeletons";
+import { FormSkeleton } from "@/components";
 
 export default function NewCollectionLoading() {
   return (

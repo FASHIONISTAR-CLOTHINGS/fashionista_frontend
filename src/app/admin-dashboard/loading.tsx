@@ -2,7 +2,7 @@
  * @file loading.tsx (Admin Dashboard)
  * @description Admin dashboard page-specific skeleton.
  */
-import { StatSkeleton, TableRowSkeleton } from "@/shared/components/skeletons";
+import { StatSkeleton, TableRowSkeleton } from "@/components";
 
 export default function AdminDashboardLoading() {
   return (

@@ -2,7 +2,7 @@
  * @file loading.tsx (Client Dashboard Orders)
  * @description Client order history page skeleton.
  */
-import { TableRowSkeleton } from "@/shared/components/skeletons";
+import { TableRowSkeleton } from "@/components";
 
 export default function ClientOrdersLoading() {
   return (

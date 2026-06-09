@@ -8,7 +8,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { ChatDashboard } from "@/features/admin-dashboard";
-import { TableRowSkeleton } from "@/shared/components/skeletons";
+import { TableRowSkeleton } from "@/components";
 
 export const metadata: Metadata = {
   title: "Chat Support Console — Fashionistar Admin",

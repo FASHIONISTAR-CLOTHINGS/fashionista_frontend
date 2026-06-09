@@ -5,7 +5,7 @@ import { ChartOptions, ChartData } from "chart.js";
 import { FashionistarImage } from "@/components/media";
 import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
-import { TableRowSkeleton } from "@/shared/components/skeletons";
+import { TableRowSkeleton } from "@/components";
 import { useAdminDashboardKPI } from "../../catalog/hooks"; // imported from catalog hooks where it resides
 import { AdminOrderList } from "../../order"; // resolved from order admin exports
 

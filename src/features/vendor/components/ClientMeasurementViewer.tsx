@@ -9,7 +9,7 @@
 
 import { useEffect, useState } from "react";
 import ky from "ky";
-import { Card, Badge, LoadingSpinner, EmptyState } from "@/shared/ui";
+import { Card, Badge, LoadingSpinner, EmptyState } from "@/components";
 
 interface SharedMeasurement {
   token: string;

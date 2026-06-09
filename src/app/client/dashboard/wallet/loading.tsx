@@ -1,7 +1,7 @@
 /**
  * @file loading.tsx (Client Wallet)
  */
-import { StatSkeleton, TableRowSkeleton } from "@/shared/components/skeletons";
+import { StatSkeleton, TableRowSkeleton } from "@/components";
 
 export default function ClientWalletLoading() {
   return (

@@ -1,3 +1,12 @@
+/**
+ * @file index.tsx
+ * @description Public API for the `components/ui` canonical FSD slice.
+ */
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Export Button (primary shared component)
+// ─────────────────────────────────────────────────────────────────────────────
+
 export * from "./badge";
 export * from "./button";
 export * from "./chart";
@@ -12,5 +21,7 @@ export * from "./skeleton";
 export * from "./switch";
 export * from "./textarea";
 export * from "./tooltip";
+export { LoadingSpinner, EmptyState, DataTable } from "./common";
+
 
 

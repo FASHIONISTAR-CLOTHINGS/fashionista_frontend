@@ -1,7 +1,7 @@
 /**
  * @file loading.tsx (Client Wishlist)
  */
-import { CardGridSkeleton } from "@/shared/components/skeletons";
+import { CardGridSkeleton } from "@/components";
 
 export default function WishlistDashboardLoading() {
   return (

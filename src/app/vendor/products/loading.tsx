@@ -2,7 +2,7 @@
  * @file loading.tsx (Vendor Products)
  * @description Page-specific skeleton matching the vendor products catalog grid.
  */
-import { CardGridSkeleton } from "@/shared/components/skeletons";
+import { CardGridSkeleton } from "@/components";
 
 export default function VendorProductsLoading() {
   return (

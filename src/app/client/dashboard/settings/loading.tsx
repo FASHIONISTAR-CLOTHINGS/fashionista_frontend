@@ -1,7 +1,7 @@
 /**
  * @file loading.tsx (Client Settings)
  */
-import { FormSkeleton, ProfileSkeleton } from "@/shared/components/skeletons";
+import { FormSkeleton, ProfileSkeleton } from "@/components";
 
 export default function ClientSettingsLoading() {
   return (

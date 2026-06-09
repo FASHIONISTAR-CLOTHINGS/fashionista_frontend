@@ -1,7 +1,7 @@
 /**
  * @file loading.tsx (Client Transactions)
  */
-import { StatSkeleton, TableRowSkeleton } from "@/shared/components/skeletons";
+import { StatSkeleton, TableRowSkeleton } from "@/components";
 
 export default function ClientTransactionsLoading() {
   return (

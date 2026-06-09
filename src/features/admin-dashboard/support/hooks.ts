@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchAdminTickets, assignTicket, fetchAdminSlaMetrics } from "./api";
-import { useToast } from "@/shared/hooks/use-toast";
+import { useToast } from "@/components";
 
 export const adminSupportKeys = {
   all: ["admin-tickets"] as const,

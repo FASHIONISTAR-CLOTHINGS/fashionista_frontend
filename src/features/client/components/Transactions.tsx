@@ -40,7 +40,7 @@ import {
   Check,
   AlertTriangle,
 } from "lucide-react";
-import { BankSelectField, getBankOption } from "@/shared/reference-data";
+import { BankSelectField, getBankOption } from "@/components/reference-data";
 import { vendorApi } from "@/features/vendor";
 
 // ── Transaction Types ─────────────────────────────────────────────────────────

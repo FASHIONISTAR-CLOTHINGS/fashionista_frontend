@@ -20,7 +20,7 @@ import {
   toggleWalletFreeze,
 } from "./api/admin-wallet.api";
 import type { CompanyPayoutRequest } from "./api/admin-wallet.api";
-import { useToast } from "@/shared/hooks/use-toast";
+import { useToast } from "@/components";
 
 // ── Query Keys ────────────────────────────────────────────────────────────────
 

@@ -2,7 +2,7 @@
  * @file loading.tsx (Vendor Setup / Onboarding)
  * @description Multi-step onboarding wizard skeleton.
  */
-import { FormSkeleton } from "@/shared/components/skeletons";
+import { FormSkeleton } from "@/components";
 
 export default function VendorSetupLoading() {
   return (

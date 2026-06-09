@@ -19,7 +19,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { useAuthStore } from "@/features/auth/store/auth.store";
-import { useNetworkStatus } from "@/shared";
+import { useNetworkStatus } from "@/components";
 
 const WS_BASE =
   process.env.NEXT_PUBLIC_WS_URL?.replace(/^http/, "ws") ??

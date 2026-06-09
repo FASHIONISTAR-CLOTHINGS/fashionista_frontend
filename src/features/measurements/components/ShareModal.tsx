@@ -9,7 +9,7 @@
  */
 
 import { useState, useCallback } from "react";
-import { Modal, Button } from "@/shared/ui";
+import { Modal, Button } from "@/components";
 import ky from "ky";
 
 interface ShareToken {

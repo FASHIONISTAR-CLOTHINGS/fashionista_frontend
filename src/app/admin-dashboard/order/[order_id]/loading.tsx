@@ -1,4 +1,4 @@
-import { ProductDetailSkeleton } from "@/shared/components/skeletons";
+import { ProductDetailSkeleton } from "@/components";
 
 export default function AdminOrderDetailLoading() {
   return (

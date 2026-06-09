@@ -2,7 +2,7 @@
  * @file loading.tsx (Vendor Payouts)
  * @description Vendor payouts page skeleton: summary + history table.
  */
-import { StatSkeleton, TableRowSkeleton } from "@/shared/components/skeletons";
+import { StatSkeleton, TableRowSkeleton } from "@/components";
 
 export default function VendorPayoutsLoading() {
   return (

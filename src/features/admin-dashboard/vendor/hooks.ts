@@ -15,7 +15,7 @@ import {
   updateVendorCommission,
   toggleVendorFeatured,
 } from "./api";
-import { toast } from "@/shared/hooks/use-toast";
+import { toast } from "@/components";
 
 export function useAdminVendors(filters?: {
   is_verified?: boolean;

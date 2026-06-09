@@ -432,7 +432,7 @@ export function LoginForm() {
 // } from "lucide-react";
 
 // // ── Shared Primitives & Components ──────────────────────────────────────────
-// import { Button } from "@/shared/ui/button";
+// import { Button } from "@/components/button";
 // import { LoginSchema, type LoginPayload, type LoginResponse } from "@/features/auth/schemas/auth.schemas";
 // import { login, verify2FAApi, verifyEmailOTPApi } from "@/features/auth/services/auth.service";
 // import { useAuthStore } from "@/features/auth/store/auth.store";

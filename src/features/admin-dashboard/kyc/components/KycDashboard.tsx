@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { FashionistarImage } from "@/components/media";
-import { Button } from "@/shared/ui";
+import { Button } from "@/components";
 import {
   useAdminKycSubmissions,
   useApproveKyc as useQuickApproveKyc,
   useRejectKyc as useQuickRejectKyc,
   useMarkKycInReview as useMarkKycInReviewSync,
 } from "../hooks";
-import { toast } from "@/shared/hooks/use-toast";
+import { toast } from "@/components";
 import {
   CheckCircle2,
   XCircle,

@@ -19,7 +19,7 @@ import {
   selectToken,
   useAuthStore,
 } from "@/features/auth/store/auth.store";
-import { Button, LoadingSpinner } from "@/shared/ui";
+import { Button, LoadingSpinner } from "@/components";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

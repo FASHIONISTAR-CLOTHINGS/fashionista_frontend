@@ -1,7 +1,7 @@
 /**
  * @file loading.tsx (Blog listing)
  */
-import { CardGridSkeleton } from "@/shared/components/skeletons";
+import { CardGridSkeleton } from "@/components";
 
 export default function BlogLoading() {
   return (

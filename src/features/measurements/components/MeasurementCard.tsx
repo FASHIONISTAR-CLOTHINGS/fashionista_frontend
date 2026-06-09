@@ -9,8 +9,8 @@
  */
 
 
-import type { MeasurementProfile, MeasurementCompletionStatus } from "../../../entities/measurement/types";
-import { MEASUREMENT_FIELDS } from "../../../entities/measurement/types";
+import type { MeasurementProfile, MeasurementCompletionStatus } from "../types/measurements.types";
+import { MEASUREMENT_FIELDS } from "../types/measurements.types";
 
 // ── MeasurementCard ──────────────────────────────────────────────────────────
 

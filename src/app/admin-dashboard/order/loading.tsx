@@ -1,7 +1,7 @@
 /**
  * @file loading.tsx (Admin Orders)
  */
-import { StatSkeleton, TableRowSkeleton } from "@/shared/components/skeletons";
+import { StatSkeleton, TableRowSkeleton } from "@/components";
 
 export default function AdminOrdersLoading() {
   return (

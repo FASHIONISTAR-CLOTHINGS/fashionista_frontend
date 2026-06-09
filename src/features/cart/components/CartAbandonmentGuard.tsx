@@ -11,7 +11,7 @@
 
 import { useCallback } from "react";
 import { useCartAbandonment } from "../hooks/use-cart-abandonment";
-import { useToast } from "@/shared/hooks/use-toast";
+import { useToast } from "@/components";
 
 export interface CartAbandonmentGuardProps {
   cartItemCount: number;

@@ -8,10 +8,51 @@
 
 import React, { useCallback } from "react";
 import Link from "next/link";
-import { Button, Badge, LoadingSpinner } from "@/shared/ui";
+import { Button, Badge, LoadingSpinner } from "@/components";
 import { FashionistarImage } from "@/components/media";
-import type { Cart, CartItem, UpdateCartItemPayload } from "@/entities/cart/types";
-import { CartSummary } from "@/entities/cart/components/CartSummary";
+import type { Cart, CartItem } from "@/features/cart";
+
+interface UpdateCartItemPayload {
+  itemId: string;
+  quantity: number;
+}
+
+// ── CartSummary Component ──────────────────────────────────────────────────────
+
+interface CartSummaryProps {
+  cart: Cart;
+  onCheckout: () => void;
+}
+
+export function CartSummary({ cart, onCheckout }: CartSummaryProps) {
+  const fmt = (v: number) =>
+    new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 0 }).format(v);
+  
+  const subtotal = parseFloat(cart.subtotal ?? "0");
+  const hasMeasurementItem = cart.items.some((i) => i.product.requires_measurement);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center text-sm font-medium text-slate-300">
+        <span>Subtotal</span>
+        <span className="text-white font-bold">{fmt(subtotal)}</span>
+      </div>
+      {hasMeasurementItem && (
+        <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-2.5 text-xs text-amber-300 flex items-start gap-2">
+          <span>📐</span>
+          <span>One or more items require measurement.</span>
+        </div>
+      )}
+      <Button
+        onClick={onCheckout}
+        disabled={hasMeasurementItem}
+        className="w-full bg-[#FDA600] hover:bg-[#FDA600]/90 text-slate-950 font-bold"
+      >
+        {hasMeasurementItem ? "Measurement required" : "Proceed to Checkout"}
+      </Button>
+    </div>
+  );
+}
 
 // ── CartItem Row ──────────────────────────────────────────────────────────────
 
@@ -34,8 +75,8 @@ function CartItemRow({ item, onUpdateQty, onRemove, isUpdating }: CartItemRowPro
       id={`cart-item-${item.id}`}
     >
       <div className="w-16 h-16 rounded-xl bg-slate-800 flex-shrink-0 overflow-hidden">
-        {item.productImage ? (
-          <FashionistarImage src={item.productImage} alt={item.productTitle} width={64} height={64} imgClassName="object-cover" />
+        {item.product.cover_image_url ? (
+          <FashionistarImage src={item.product.cover_image_url} alt={item.product.title} width={64} height={64} imgClassName="object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-2xl">👗</div>
         )}
@@ -43,14 +84,11 @@ function CartItemRow({ item, onUpdateQty, onRemove, isUpdating }: CartItemRowPro
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-white truncate">{item.productTitle}</p>
-        {item.variantDescription && (
-          <p className="text-xs text-slate-400 mt-0.5">{item.variantDescription}</p>
-        )}
+        <p className="text-sm font-medium text-white truncate">{item.product.title}</p>
         <div className="flex items-center gap-1.5 mt-1">
           {item.sizeSnapshot && <Badge color="default" size="xs">{item.sizeSnapshot}</Badge>}
           {item.colorSnapshot && <Badge color="default" size="xs">{item.colorSnapshot}</Badge>}
-          {item.requiresMeasurement && !item.measurementProfileId && (
+          {item.product.requires_measurement && (
             <Badge color="warning" size="xs">📐 Needs measurements</Badge>
           )}
         </div>
@@ -58,7 +96,7 @@ function CartItemRow({ item, onUpdateQty, onRemove, isUpdating }: CartItemRowPro
 
       {/* Qty + Price */}
       <div className="flex flex-col items-end justify-between gap-2 flex-shrink-0">
-        <p className="text-sm font-bold text-amber-400">{fmt(item.lineTotal)}</p>
+        <p className="text-sm font-bold text-amber-400">{fmt(parseFloat(item.line_total))}</p>
         <div className="flex items-center gap-1">
           <Button
             variant="secondary"
@@ -99,6 +137,7 @@ function CartItemRow({ item, onUpdateQty, onRemove, isUpdating }: CartItemRowPro
     </div>
   );
 }
+
 
 // ── CartDrawer ────────────────────────────────────────────────────────────────
 

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 import AdminTopBanner from "@/features/admin-dashboard/utilities/AdminTopBanner";
 import { RoleGuard } from "@/features/auth/components/RoleGuard";
-import { ErrorBoundary } from "@/shared";
+import { ErrorBoundary } from "@/components";
 import { FashionistarImage } from "@/components/media";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {

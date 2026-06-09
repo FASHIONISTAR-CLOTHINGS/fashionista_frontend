@@ -1,6 +1,6 @@
 "use client";
 
-import { ErrorBoundary } from "@/shared";
+import { ErrorBoundary } from "@/components";
 
 export default function ClientDashboardLayout({
   children,

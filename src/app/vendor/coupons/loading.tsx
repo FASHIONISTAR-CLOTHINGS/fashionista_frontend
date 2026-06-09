@@ -1,7 +1,7 @@
 /**
  * @file loading.tsx (Vendor Coupons)
  */
-import { TableRowSkeleton } from "@/shared/components/skeletons";
+import { TableRowSkeleton } from "@/components";
 
 export default function VendorCouponsLoading() {
   return (

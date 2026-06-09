@@ -1,6 +1,6 @@
 "use client";
 
-import { ErrorBoundary } from "@/shared";
+import { ErrorBoundary } from "@/components";
 import { VendorShell } from "@/features/vendor";
 
 export default function VendorLayout({

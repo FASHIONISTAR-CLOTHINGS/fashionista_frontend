@@ -11,7 +11,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import ky from "ky";
-import { Button, Card, LoadingSpinner } from "@/shared/ui";
+import { Button, Card, LoadingSpinner } from "@/components";
 import { FashionistarImage } from "@/components/media";
 
 type ScanStep = "intro" | "device" | "scanning" | "processing" | "complete" | "error";

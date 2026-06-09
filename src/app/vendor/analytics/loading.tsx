@@ -2,7 +2,7 @@
  * @file loading.tsx (Vendor Analytics)
  * @description Page-specific skeleton matching the analytics charts layout.
  */
-import { StatSkeleton } from "@/shared/components/skeletons";
+import { StatSkeleton } from "@/components";
 
 export default function VendorAnalyticsLoading() {
   return (

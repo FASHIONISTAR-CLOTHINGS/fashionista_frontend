@@ -1,7 +1,7 @@
 /**
  * @file loading.tsx (Admin Audit Logs)
  */
-import { TableRowSkeleton } from "@/shared/components/skeletons";
+import { TableRowSkeleton } from "@/components";
 
 export default function AdminAuditLoading() {
   return (

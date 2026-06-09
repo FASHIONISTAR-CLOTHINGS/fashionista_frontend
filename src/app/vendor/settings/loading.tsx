@@ -2,7 +2,7 @@
  * @file loading.tsx (Vendor Settings)
  * @description Vendor settings page skeleton matching the settings section layout.
  */
-import { FormSkeleton, ProfileSkeleton } from "@/shared/components/skeletons";
+import { FormSkeleton, ProfileSkeleton } from "@/components";
 
 export default function VendorSettingsLoading() {
   return (

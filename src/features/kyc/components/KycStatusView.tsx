@@ -16,7 +16,7 @@ import {
   User,
 } from "lucide-react";
 import { FashionistarImage } from "@/components/media";
-import { Button } from "@/shared/ui";
+import { Button } from "@/components";
 import { useState } from "react";
 import { toast } from "sonner";
 import {

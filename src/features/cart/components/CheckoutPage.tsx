@@ -38,7 +38,7 @@ import {
   AddressReferenceField,
   useReferenceLocation,
   type AddressSelection,
-} from "@/shared/reference-data";
+} from "@/components/reference-data";
 import { CheckoutPageSkeleton } from "./CheckoutPageSkeleton";
 
 // ── Types ─────────────────────────────────────────────────────────────────────

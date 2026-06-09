@@ -13,7 +13,7 @@
  *  - expand={false} keeps the stack compact
  *
  * Usage in layout.tsx:
- *   import { GlobalToastProvider } from "@/shared";
+ *   import { GlobalToastProvider } from "@/components";
  *   export default function RootLayout({ children }) {
  *     return (
  *       <html>

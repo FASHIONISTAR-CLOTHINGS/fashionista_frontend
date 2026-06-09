@@ -2,7 +2,7 @@
  * @file loading.tsx (Checkout)
  * @description Checkout page skeleton matching the 2-col layout: form + order summary.
  */
-import { FormSkeleton } from "@/shared/components/skeletons";
+import { FormSkeleton } from "@/components";
 
 export default function CheckoutLoading() {
   return (

@@ -11,7 +11,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Button, Card, Badge } from "@/shared/ui";
+import { Button, Card, Badge } from "@/components";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

@@ -1,7 +1,7 @@
 /**
  * @file loading.tsx (Vendor Product Catalog)
  */
-import { CardGridSkeleton } from "@/shared/components/skeletons";
+import { CardGridSkeleton } from "@/components";
 
 export default function VendorProductCatalogLoading() {
   return (

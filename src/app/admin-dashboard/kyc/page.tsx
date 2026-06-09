@@ -8,7 +8,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { KycDashboard } from "@/features/admin-dashboard/kyc";
-import { TableRowSkeleton } from "@/shared/components/skeletons";
+import { TableRowSkeleton } from "@/components";
 
 export const metadata: Metadata = {
   title: "KYC Verification — Fashionistar Admin",

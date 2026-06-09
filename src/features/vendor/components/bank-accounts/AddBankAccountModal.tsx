@@ -29,8 +29,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { BankSelectField } from "@/shared/reference-data/components/BankSelectField";
-import { getBankOption } from "@/shared/reference-data/generated/banks.generated";
+import { BankSelectField } from "@/components/reference-data/components/BankSelectField";
+import { getBankOption } from "@/components/reference-data/generated/banks.generated";
 import { cn } from "@/lib/utils";
 import {
   useCreateBankAccount,

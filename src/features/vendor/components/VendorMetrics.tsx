@@ -10,7 +10,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ky from "ky";
-import { Card } from "@/shared/ui";
+import { Card } from "@/components";
 
 type Period = "7d" | "30d" | "90d";
 

@@ -2,7 +2,7 @@
  * @file loading.tsx (Admin Support)
  * @description Admin support ticket queue skeleton.
  */
-import { TableRowSkeleton, StatSkeleton } from "@/shared/components/skeletons";
+import { TableRowSkeleton, StatSkeleton } from "@/components";
 
 export default function AdminSupportLoading() {
   return (

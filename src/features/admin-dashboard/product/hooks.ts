@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchAdminProducts, deleteAdminProduct } from "./api";
-import { useToast } from "@/shared/hooks/use-toast";
+import { useToast } from "@/components";
 import { triggerServerRevalidate } from "@/core/cache/revalidate";
 
 export const adminProductKeys = {
