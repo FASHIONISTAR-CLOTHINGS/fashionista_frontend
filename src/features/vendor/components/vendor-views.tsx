@@ -2023,26 +2023,143 @@ export function VendorAnalyticsView() {
         </div>
       )}
 
-      {/* KPI Strip */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <KpiCard title="Revenue" icon={TrendingUp}
-          value={isLoading ? "—" : `₦${(summary?.total_revenue ?? analytics?.total_revenue ?? 0).toLocaleString()}`}
-          hint="Gross revenue tracked" trend={summary?.revenue_trend} />
-        <KpiCard title="Orders" icon={ShoppingCart}
-          value={isLoading ? "—" : String(summary?.total_orders ?? analytics?.total_sales ?? 0)}
-          hint="Total completed + in-progress" />
-        <KpiCard title="Avg. Order Value" icon={CreditCard}
-          value={isLoading ? "—" : `₦${(summary?.avg_order_value ?? 0).toLocaleString()}`}
-          hint="Per transaction average" />
-        <KpiCard title="Products" icon={Package}
-          value={isLoading ? "—" : String(summary?.total_products ?? analytics?.total_products ?? 0)}
-          hint="Items in your catalog" />
-        <KpiCard title="Rating" icon={Star}
-          value={isLoading ? "—" : (analytics?.average_rating ?? 0).toFixed(1)}
-          hint={`${analytics?.review_count ?? 0} reviews`} />
-        <KpiCard title="Conversion" icon={Zap}
-          value={isLoading ? "—" : `${(summary?.conversion_rate ?? 0).toFixed(1)}%`}
-          hint="Visit-to-sale rate" />
+      {/* Group 1: Sales & Revenue Performance */}
+      <div className="space-y-4">
+        <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#7A6B44] flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-[#FDA600]" />
+          Sales & Revenue Performance
+        </h2>
+        <div className="grid gap-4 md:grid-cols-4">
+          <KpiCard
+            title="Total Revenue"
+            icon={TrendingUp}
+            value={isLoading ? "—" : `₦${(summary?.total_revenue ?? analytics?.total_revenue ?? 0).toLocaleString()}`}
+            hint="Gross revenue tracked"
+            trend={summary?.revenue_trend}
+            accent="gold"
+          />
+          <KpiCard
+            title="Today's Sales"
+            icon={Clock}
+            value={isLoading ? "—" : `₦${(summary?.todays_sales ?? 0).toLocaleString()}`}
+            hint="Sales recorded today"
+            accent="green"
+          />
+          <KpiCard
+            title="This Month"
+            icon={ShoppingBag}
+            value={isLoading ? "—" : `₦${(summary?.this_month_sales ?? 0).toLocaleString()}`}
+            hint="Sales recorded this month"
+            accent="blue"
+          />
+          <KpiCard
+            title="Year to Date"
+            icon={Store}
+            value={isLoading ? "—" : `₦${(summary?.year_to_date_sales ?? 0).toLocaleString()}`}
+            hint="Sales recorded this year"
+            accent="gold"
+          />
+        </div>
+      </div>
+
+      {/* Group 2: Operations & Customers */}
+      <div className="space-y-4">
+        <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#7A6B44] flex items-center gap-2">
+          <ShoppingCart className="h-4 w-4 text-[#01454A]" />
+          Operations & Customers
+        </h2>
+        <div className="grid gap-4 md:grid-cols-4">
+          <KpiCard
+            title="Total Orders"
+            icon={ShoppingCart}
+            value={isLoading ? "—" : String(summary?.total_orders ?? analytics?.total_sales ?? 0)}
+            hint="All-time transactions"
+            accent="blue"
+          />
+          <KpiCard
+            title="Avg. Order Value"
+            icon={CreditCard}
+            value={isLoading ? "—" : `₦${(summary?.avg_order_value ?? 0).toLocaleString()}`}
+            hint="Per transaction average"
+            accent="gold"
+          />
+          <KpiCard
+            title="Total Customers"
+            icon={Users}
+            value={isLoading ? "—" : String(summary?.total_customers ?? 0)}
+            hint="Unique buying customers"
+            accent="green"
+          />
+          <KpiCard
+            title="Conversion Rate"
+            icon={Zap}
+            value={isLoading ? "—" : `${(summary?.conversion_rate ?? 0).toFixed(1)}%`}
+            hint="Visit-to-sale rate"
+            accent="red"
+          />
+        </div>
+      </div>
+
+      {/* Group 3: Catalog & Shop Status */}
+      <div className="space-y-4">
+        <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#7A6B44] flex items-center gap-2">
+          <Package className="h-4 w-4 text-[#1A4B8C]" />
+          Catalog & Shop Status
+        </h2>
+        <div className="grid gap-4 md:grid-cols-4">
+          <KpiCard
+            title="Total Products"
+            icon={Package}
+            value={isLoading ? "—" : String(summary?.total_products ?? analytics?.total_products ?? 0)}
+            hint="Active catalog items"
+            accent="gold"
+          />
+          <KpiCard
+            title="Low Stock Alerts"
+            icon={AlertTriangle}
+            value={isLoading ? "—" : String(summary?.low_stock_count ?? 0)}
+            hint="Stock quantity below 5"
+            accent="red"
+          />
+          <KpiCard
+            title="Wallet Balance"
+            icon={Wallet}
+            value={isLoading ? "—" : `₦${(summary?.wallet_balance ?? 0).toLocaleString()}`}
+            hint="Available payout balance"
+            accent="green"
+          />
+          <KpiCard
+            title="Store Rating"
+            icon={Star}
+            value={isLoading ? "—" : (summary?.average_rating ?? analytics?.average_rating ?? 0.0).toFixed(1)}
+            hint={`${summary?.review_count ?? analytics?.review_count ?? 0} reviews total`}
+            accent="blue"
+          />
+        </div>
+      </div>
+
+      {/* Group 4: Promotional & Marketing Engagement */}
+      <div className="space-y-4">
+        <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#7A6B44] flex items-center gap-2">
+          <Tag className="h-4 w-4 text-[#DC2626]" />
+          Marketing & Promotions
+        </h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          <KpiCard
+            title="Active Coupons"
+            icon={Tag}
+            value={isLoading ? "—" : String(summary?.active_coupons ?? 0)}
+            hint="Currently active coupons"
+            accent="green"
+          />
+          <KpiCard
+            title="Inactive Coupons"
+            icon={Tag}
+            value={isLoading ? "—" : String(summary?.inactive_coupons ?? 0)}
+            hint="Expired or paused coupons"
+            accent="red"
+          />
+        </div>
       </div>
 
       {/* Revenue + Orders charts side-by-side */}

@@ -319,12 +319,24 @@ export interface VendorEarningTracker {
 
 // ── Analytics ─────────────────────────────────────────────────────────────────
 export interface VendorAnalyticsSummary {
-  total_revenue:   number;
-  total_orders:    number;
-  total_products:  number;
-  avg_order_value: number;
-  revenue_trend:   number;   // % change vs last period
-  conversion_rate: number;
+  todays_sales:        number;
+  this_month_sales:    number;
+  year_to_date_sales:  number;
+  average_order_value: number;
+  total_customers:     number;
+  review_count:        number;
+  average_rating:      number;
+  active_coupons:      number;
+  inactive_coupons:    number;
+  low_stock_count:     number;
+  total_products:      number;
+  total_sales:         number;
+  total_revenue:       number;
+  wallet_balance:      number;
+  total_orders:        number;
+  avg_order_value:     number;
+  revenue_trend:       number;
+  conversion_rate:     number;
 }
 
 export interface VendorChartDataPoint {

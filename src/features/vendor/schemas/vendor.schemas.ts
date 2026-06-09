@@ -351,12 +351,24 @@ export const VendorOrderListSchema = z.object({
 
 // ── Analytics ─────────────────────────────────────────────────────────────────
 export const VendorAnalyticsSummarySchema = z.object({
-  total_revenue:   z.coerce.number(),
-  total_orders:    z.coerce.number(),
-  total_products:  z.coerce.number(),
-  avg_order_value: z.coerce.number(),
-  revenue_trend:   z.coerce.number(),
-  conversion_rate: z.coerce.number(),
+  todays_sales:        z.coerce.number(),
+  this_month_sales:    z.coerce.number(),
+  year_to_date_sales:  z.coerce.number(),
+  average_order_value: z.coerce.number(),
+  total_customers:     z.coerce.number(),
+  review_count:        z.coerce.number(),
+  average_rating:      z.coerce.number(),
+  active_coupons:      z.coerce.number(),
+  inactive_coupons:    z.coerce.number(),
+  low_stock_count:     z.coerce.number(),
+  total_products:      z.coerce.number(),
+  total_sales:         z.coerce.number(),
+  total_revenue:       z.coerce.number(),
+  wallet_balance:      z.coerce.number(),
+  total_orders:        z.coerce.number(),
+  avg_order_value:     z.coerce.number(),
+  revenue_trend:       z.coerce.number(),
+  conversion_rate:     z.coerce.number(),
 });
 
 export const VendorChartPointSchema = z.object({
