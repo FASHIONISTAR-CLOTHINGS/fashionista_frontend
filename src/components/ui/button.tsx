@@ -1,14 +1,14 @@
 "use client";
 
 /**
- * @file button.tsx
+ * @file Button.tsx
  * @description Production-grade, CVA-powered Button component.
  *
  * Variants:   default | ghost | outline | secondary | destructive | link
  * Sizes:      sm | md (default) | lg | icon
  *
  * Compatible with all React button props + className overrides.
- * Replaces the legacy primitives/Button.tsx (which only accepted a title string).
+ * Replaces the legacy Button.tsx (which only accepted a title string).
  */
 
 
@@ -30,6 +30,7 @@ const base =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 " +
   "disabled:pointer-events-none disabled:opacity-50 select-none active:scale-[0.98]";
 
+  
 const variants: Record<string, string> = {
   default:
     "bg-[#FDA600] text-white shadow hover:bg-[#e09500] focus-visible:ring-[#FDA600]",
