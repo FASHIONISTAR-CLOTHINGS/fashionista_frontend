@@ -29,7 +29,7 @@ import type {
 export const vendorOrderKeys = {
   all:    ["vendor", "orders"] as const,
   list:   (filter?: string) => ["vendor", "orders", "list", filter ?? ""] as const,
-  detail: (id: number) => ["vendor", "orders", id] as const,
+  detail: (id: string | number) => ["vendor", "orders", id] as const,
   counts: ["vendor", "orders", "status-counts"] as const,
 };
 
@@ -51,7 +51,7 @@ export function useVendorOrders(filterStatus?: string) {
         : ((raw as { results?: unknown[] })?.results ?? ([] as unknown[]));
 
       type OrderRow = {
-        id: number;
+        id: string | number;
         oid?: string;
         buyer_email: string;
         buyer_full_name?: string;
@@ -72,11 +72,11 @@ export function useVendorOrders(filterStatus?: string) {
 }
 
 // ── Single Order Detail ────────────────────────────────────────────────────────
-export function useVendorOrder(orderId: number | null) {
+export function useVendorOrder(orderId: string | number | null) {
   return useQuery({
-    queryKey:  vendorOrderKeys.detail(orderId ?? 0),
+    queryKey:  vendorOrderKeys.detail(orderId ?? ""),
     queryFn:   () => vendorApi.getOrder(orderId!),
-    enabled:   !!orderId && orderId > 0,
+    enabled:   !!orderId,
     staleTime: 30_000,
   });
 }
@@ -99,7 +99,7 @@ export function useUpdateOrderStatus() {
       orderId,
       order_status,
     }: {
-      orderId: number;
+      orderId: string | number;
       order_status: VendorOrderStatus;
     }) => vendorApi.updateOrderStatus(orderId, order_status),
 

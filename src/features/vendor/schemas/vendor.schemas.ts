@@ -72,7 +72,7 @@ export const VendorDashboardPayoutProfileSchema = z.object({
 });
 
 export const VendorDashboardOrderSchema = z.object({
-  id:              z.number(),
+  id:              z.union([z.string(), z.number()]),
   oid:             z.string().optional(),
   buyer_email:     z.string().optional().default(""),
   buyer_full_name: z.string().optional().default(""),
@@ -323,7 +323,7 @@ export const VendorProductUpdateSchema = VendorProductCreateSchema.partial();
 
 // ── Order ─────────────────────────────────────────────────────────────────────
 export const VendorOrderItemSchema = z.object({
-  id:            z.number(),
+  id:            z.union([z.string(), z.number()]),
   product_title: z.string(),
   product_pid:   z.string(),
   qty:           z.number(),
@@ -332,7 +332,7 @@ export const VendorOrderItemSchema = z.object({
 });
 
 export const VendorOrderSchema = z.object({
-  id:              z.number(),
+  id:              z.union([z.string(), z.number()]),
   oid:             z.string(),
   buyer_email:     z.string(),
   buyer_full_name: z.string(),

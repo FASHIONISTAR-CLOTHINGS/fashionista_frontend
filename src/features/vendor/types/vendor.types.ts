@@ -173,7 +173,7 @@ export interface VendorDashboard {
   payout_profile: VendorPayoutProfile | null;
 
   recent_orders:  Array<{
-    id:              number;
+    id:              string | number;
     oid?:            string;
     buyer_email:     string;
     buyer_full_name: string;
@@ -292,7 +292,7 @@ export type VendorProductUpdatePayload = Partial<VendorProductCreatePayload>;
 
 // ── Orders ────────────────────────────────────────────────────────────────────
 export interface VendorOrderItem {
-  id:            number;
+  id:            string | number;
   product_title: string;
   product_pid:   string;
   qty:           number;
@@ -301,7 +301,7 @@ export interface VendorOrderItem {
 }
 
 export interface VendorOrder {
-  id:              number;
+  id:              string | number;
   oid:             string;
   buyer_email:     string;
   buyer_full_name: string;

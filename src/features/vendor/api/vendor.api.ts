@@ -352,7 +352,7 @@ export const vendorApi = {
     return VendorOrderListSchema.parse(data);
   },
 
-  async getOrder(orderId: number) {
+  async getOrder(orderId: string | number) {
     const data = await apiAsync.get(`vendor/orders/${orderId}/`).json();
     return VendorOrderSchema.parse(unwrapData(data));
   },
@@ -362,7 +362,7 @@ export const vendorApi = {
     return data;
   },
 
-  async updateOrderStatus(orderId: number, order_status: VendorOrderStatus): Promise<{ message: string }> {
+  async updateOrderStatus(orderId: string | number, order_status: VendorOrderStatus): Promise<{ message: string }> {
     const { data } = await apiSync.patch(`v1/vendor/orders/${orderId}/status/`, { order_status });
     return data as { message: string };
   },

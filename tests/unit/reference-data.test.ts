@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BANKS_NG, COUNTRIES, filterCities, filterLgasByState, loadCountryLocations } from "@/shared/reference-data";
+import { BANKS_NG, COUNTRIES, filterCities, filterLgasByState, loadCountryLocations } from "@/components/reference-data";
 
 describe("shared reference data", () => {
   it("keeps Nigeria first in the country selector", () => {
