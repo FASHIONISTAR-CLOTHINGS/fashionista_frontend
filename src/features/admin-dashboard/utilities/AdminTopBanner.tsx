@@ -291,7 +291,7 @@ export const AdminTopBanner = ({
       {/* ── Welcome Cluster (Standardized Identity Integration) ── */}
       <div className="flex items-center gap-4">
         <UserAvatar 
-          user={user} 
+          user={user ? { ...user, avatar: user.avatar || undefined } : null} 
           size="md" 
           showRing={true} 
           status="online" 

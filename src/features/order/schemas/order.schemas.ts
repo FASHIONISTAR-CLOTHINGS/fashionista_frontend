@@ -197,31 +197,42 @@ function normalizeFinalTotal<T extends { final_total?: string; total_amount?: st
 /** Exported list schema — wraps base with the final_total normalization transform. */
 export const OrderListItemSchema = OrderListItemBaseSchema.transform(normalizeFinalTotal);
 
-export const OrderDetailSchema = OrderListItemBaseSchema.extend({
-  buyer_name: z.string().optional().default(""),
-  buyer_email: z.string().optional().default(""),
-  buyer_phone: z.string().nullable().optional().default(null),
-  buyer_address: z.record(z.unknown()).optional().default({}),
-  delivery_address: z.any().optional(),
-  items: z.array(OrderItemSnapshotSchema),
-  status_history: z.array(OrderStatusHistorySchema),
-  delivery_tracking: OrderDeliveryTrackingSchema.nullable().optional().default(null),
-  refund_request: OrderRefundRequestSchema.nullable().optional().default(null),
-  notes: z.string().optional().default(""),
-  idempotency_key: z.string().optional().default(""),
-  paid_at: z.string().nullable().optional().default(null),
-  first_paid_at: z.string().nullable().optional().default(null),
-  final_paid_at: z.string().nullable().optional().default(null),
-  active_payment_path: z.string().optional().default(""),
-  delivered_at: z.string().nullable().optional().default(null),
-  cancelled_at: z.string().nullable().optional().default(null),
-  payment_records: z.array(OrderPaymentRecordSchema).optional().default([]),
-  commercial_transition_logs: z
-    .array(OrderCommercialTransitionLogSchema)
-    .optional()
-    .default([]),
-  updated_at: z.string(),
-}).transform(normalizeFinalTotal);
+export const OrderDetailSchema = z.preprocess(
+  (val: any) => {
+    if (val && typeof val === "object") {
+      // Coerce cart_order_items to items for compatibility with admin dashboard order detail serializer
+      if (val.cart_order_items && !val.items) {
+        val = { ...val, items: val.cart_order_items };
+      }
+    }
+    return val;
+  },
+  OrderListItemBaseSchema.extend({
+    buyer_name: z.string().optional().default(""),
+    buyer_email: z.string().optional().default(""),
+    buyer_phone: z.string().nullable().optional().default(null),
+    buyer_address: z.record(z.unknown()).optional().default({}),
+    delivery_address: z.any().optional(),
+    items: z.array(OrderItemSnapshotSchema).optional().default([]),
+    status_history: z.array(OrderStatusHistorySchema).optional().default([]),
+    delivery_tracking: OrderDeliveryTrackingSchema.nullable().optional().default(null),
+    refund_request: OrderRefundRequestSchema.nullable().optional().default(null),
+    notes: z.string().optional().default(""),
+    idempotency_key: z.string().optional().default(""),
+    paid_at: z.string().nullable().optional().default(null),
+    first_paid_at: z.string().nullable().optional().default(null),
+    final_paid_at: z.string().nullable().optional().default(null),
+    active_payment_path: z.string().optional().default(""),
+    delivered_at: z.string().nullable().optional().default(null),
+    cancelled_at: z.string().nullable().optional().default(null),
+    payment_records: z.array(OrderPaymentRecordSchema).optional().default([]),
+    commercial_transition_logs: z
+      .array(OrderCommercialTransitionLogSchema)
+      .optional()
+      .default([]),
+    updated_at: z.string(),
+  }).transform(normalizeFinalTotal)
+);
 
 export const PaginatedOrderListSchema = z.object({
   count: z.number().int().min(0),
