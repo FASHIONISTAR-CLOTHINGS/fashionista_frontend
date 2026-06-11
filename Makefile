@@ -27,6 +27,15 @@ NEXT_DEV_PORT ?= 3000
 NEXT_DEV_MEMORY_MB ?= 3072
 NEXT_DEV_ENV = NODE_OPTIONS=--max-old-space-size=$(NEXT_DEV_MEMORY_MB)
 
+# Detect if running on Windows and inside OneDrive to fallback to webpack automatically
+USE_WEBPACK :=
+ifeq ($(OS),Windows_NT)
+  ifneq (,$(findstring OneDrive,$(CURDIR)))
+    USE_WEBPACK := --webpack
+  endif
+endif
+
+
 ##@ Help
 
 help: ## Display this help message
@@ -46,11 +55,14 @@ install: ## Install Node.js dependencies with pnpm
 	pnpm install
 	@echo "$(GREEN)✓ Dependencies installed$(NC)"
 
-dev: ## Start Next.js development server (Turbopack default in v16 — port 3000)
-	@echo "$(CYAN)Starting Next.js dev server (Turbopack is default in Next.js 16)...$(NC)"
+dev: ## Start Next.js development server (Webpack fallback on Windows OneDrive)
+	@echo "$(CYAN)Starting Next.js dev server...$(NC)"
 	@echo "$(YELLOW)  Node memory: $(NEXT_DEV_MEMORY_MB)MB$(NC)"
 	@echo "$(YELLOW)  URL: http://localhost:$(NEXT_DEV_PORT)$(NC)"
-	$(NEXT_DEV_ENV) $(PNPM) exec next dev --hostname $(NEXT_DEV_HOST) --port $(NEXT_DEV_PORT)
+ifneq ($(USE_WEBPACK),)
+	@echo "$(YELLOW)⚠ Detected Windows + OneDrive. Falling back to Webpack to prevent Turbopack watch-state deadlocks.$(NC)"
+endif
+	$(NEXT_DEV_ENV) $(PNPM) exec next dev $(USE_WEBPACK) --hostname $(NEXT_DEV_HOST) --port $(NEXT_DEV_PORT)
 
 dev-webpack: ## Start Next.js dev server with Webpack (fallback — use --webpack flag)
 	@echo "$(CYAN)Starting Next.js dev server with Webpack (Turbopack disabled)...$(NC)"
