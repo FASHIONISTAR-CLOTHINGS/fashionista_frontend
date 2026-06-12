@@ -4,7 +4,7 @@ import { FashionistarImage } from "@/components/media";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import React, { FormEvent, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -129,8 +129,8 @@ import {
 
 // useMounted hook for safe client-side Recharts rendering
 function useMounted() {
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
     setMounted(true);
   }, []);
   return mounted;

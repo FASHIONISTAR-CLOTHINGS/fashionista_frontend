@@ -14,7 +14,7 @@
 
 "use client";
 
-import React from "react";
+import * as React from "react";
 import { AlertTriangle, CheckCircle2, Clock, RefreshCw, ShieldAlert } from "lucide-react";
 import { useSlaStatus } from "../hooks/use-sla";
 import {

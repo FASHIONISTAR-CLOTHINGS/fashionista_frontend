@@ -71,17 +71,28 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       // consumer callback errors must not affect boundary
     }
 
-    // Sentry integration — async import for Next.js tree-shaking
-    import("@sentry/nextjs")
-      .then((Sentry) => {
-        Sentry.captureException(error, {
+    // Sentry integration — use global captureException injected by Sentry's
+    // client SDK (sentry.client.config.ts / instrumentation.ts).
+    // We avoid a dynamic import() here because that causes Webpack to pull in
+    // Node-only @sentry/node / OpenTelemetry packages into the client bundle.
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const w = typeof window !== "undefined" ? (window as any) : null;
+      const captureException =
+        w?.__SENTRY__?.hub?.getClient()?.captureException?.bind(
+          w.__SENTRY__.hub.getClient()
+        ) ??
+        w?.Sentry?.captureException;
+
+      if (typeof captureException === "function") {
+        captureException(error, {
           extra: { componentStack: info.componentStack },
         });
-      })
-      .catch(() => {
-        // Sentry not installed or not reachable — fall back to console
-        console.error("[ErrorBoundary] Unhandled render error:", error, info.componentStack);
-      });
+      }
+    } catch {
+      // Sentry not installed or not reachable — fall back to console
+      console.error("[ErrorBoundary] Unhandled render error:", error, info.componentStack);
+    }
   }
 
   private reset = (): void => {

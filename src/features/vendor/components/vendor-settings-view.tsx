@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   User, Lock, Bell, Shield, Wallet, Sun,
   Monitor, Tag, LogOut,
