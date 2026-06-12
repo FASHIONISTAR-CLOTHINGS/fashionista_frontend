@@ -65,13 +65,22 @@ export function Step2Pricing() {
   const { data: couriers = [] } = useQuery({
     queryKey: ["product-builder", "couriers"],
     queryFn: async () => {
-      const data = await apiAsync
-        .get("product/couriers/?page_size=50&active=true")
-        .json<CourierEnvelope>();
-      return data.results ?? [];
+      try {
+        const data = await apiAsync
+          .get("product/couriers/?page_size=50&active=true")
+          .json<CourierEnvelope>();
+        return data.results ?? [];
+      } catch {
+        // Courier endpoint not yet implemented — silently return empty list.
+        // The courier select will only show "Platform default" until the
+        // backend endpoint /api/v1/ninja/product/couriers/ is deployed.
+        return [] as Courier[];
+      }
     },
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
+    retry: 0,                   // don't retry 404s
+    throwOnError: false,        // don't bubble to error boundary
   });
 
   const price = form.watch("price");
