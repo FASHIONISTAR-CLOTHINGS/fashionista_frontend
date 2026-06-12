@@ -21,7 +21,6 @@ export * from "./switch";
 export * from "./textarea";
 export * from "./tooltip";
 export { LoadingSpinner, EmptyState, DataTable } from "./common";
-export * from "./composites";
 
 
 

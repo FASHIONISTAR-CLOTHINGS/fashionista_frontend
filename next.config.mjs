@@ -237,7 +237,15 @@ const nextConfig = {
       },
     ],
   }),
-  serverExternalPackages: ["sharp", "@opentelemetry/sdk-trace-web"],
+  serverExternalPackages: [
+    "sharp",
+    "@opentelemetry/sdk-trace-web",
+    "@opentelemetry/instrumentation",
+    "@sentry/node",
+    "require-in-the-middle",
+    "import-in-the-middle",
+  ],
+
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,

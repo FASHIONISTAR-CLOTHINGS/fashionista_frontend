@@ -1,6 +1,7 @@
 "use client";
 
-import BarChart from "@/components/ui/composites/Charts";
+import { MultiBarChart } from "@/components/ui/composites/Charts";
+
 
 import { FashionistarImage } from "@/components/media";
 import { Button } from "@/components/ui/button";
@@ -278,7 +279,8 @@ export function AdminHomeDashboard() {
       {/* Charts */}
       <div className="bg-white p-5 rounded-[10px] shadow">
         <div className="h-[350px]">
-          <BarChart data={chartData} series={series} />
+          <MultiBarChart data={chartData} series={series} />
+
         </div>
       </div>
 

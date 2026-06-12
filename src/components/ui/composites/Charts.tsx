@@ -25,7 +25,8 @@ import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
-} from "@/components/ui/tooltip";
+} from "../tooltip";
+
 
 // ─── Recharts SVG Engine ───────────────────────────────────────────────────
 import {
