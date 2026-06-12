@@ -183,7 +183,6 @@ async function createPublishedBrowserProduct(
       data: {
         title: productTitle,
         description: "Live browser verification product created for the wallet-first order flow.",
-        short_description: "Live browser verification product",
         price: "15000.00",
         old_price: "18000.00",
         currency: "NGN",

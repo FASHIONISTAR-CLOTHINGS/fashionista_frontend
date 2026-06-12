@@ -203,7 +203,6 @@ export function Step1BasicInfo() {
     return (
       <div className="space-y-8 animate-pulse">
         <FieldSkeleton label="Product Title *" />
-        <FieldSkeleton label="Short Description" />
         <FieldSkeleton label="Full Description *" />
         <FieldSkeleton label="Condition *" />
         <div className="space-y-4">
@@ -236,32 +235,6 @@ export function Step1BasicInfo() {
             </FormControl>
             <FormDescription className="text-zinc-500 text-xs">
               {field.value?.length ?? 0} / 255 characters
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      {/* ── Short Description ── */}
-      <FormField
-        control={form.control}
-        name="short_description"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="text-[#1A1208] font-semibold text-sm">
-              Short Description
-            </FormLabel>
-            <FormControl>
-              <Textarea
-                {...field}
-                rows={2}
-                placeholder="Brief marketing copy shown on listing cards (max 500 chars)"
-                className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl resize-none px-4 py-3"
-                maxLength={500}
-              />
-            </FormControl>
-            <FormDescription className="text-zinc-500 text-xs">
-              {field.value?.length ?? 0} / 500 characters
             </FormDescription>
             <FormMessage />
           </FormItem>

@@ -1792,7 +1792,6 @@ export function VendorProductComposerView() {
     let savedSlug: string | null = productSlugRef.current;
     const sharedPayload = {
       title: values.title, description: values.description,
-      short_description: values.short_description ?? "",
       price: values.price, old_price: values.old_price ?? undefined,
       currency: values.currency ?? "NGN",
       shipping_amount: values.shipping_amount ?? "0.00",

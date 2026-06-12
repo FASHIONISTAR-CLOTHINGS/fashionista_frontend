@@ -203,8 +203,8 @@ export function Step3Gallery() {
     // If cover was removed, promote next image
     if (removed.public_id === coverPublicId) {
       const nextImage = updated.find((i) => i.media_type === "image");
-      form.setValue("cover_image_public_id", nextImage?.public_id ?? null);
-      form.setValue("cover_image_url", nextImage?.secure_url ?? null);
+      form.setValue("cover_image_public_id", nextImage?.public_id ?? "");
+      form.setValue("cover_image_url", nextImage?.secure_url ?? undefined);
     }
   };
 

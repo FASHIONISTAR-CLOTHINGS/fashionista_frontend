@@ -164,7 +164,6 @@ test("debug add to cart flow", async ({ page, request }) => {
       data: {
         title: productTitle,
         description: "Debug Product Description",
-        short_description: "Debug Product Short Description",
         price: "10000.00",
         old_price: "12000.00",
         currency: "NGN",

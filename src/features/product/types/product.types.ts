@@ -234,7 +234,6 @@ export interface ProductDetail {
   slug: string;
   sku: string;
   description: string;
-  short_description: string;
   price: string;
   old_price: string | null;
   discount_percentage: number;
@@ -340,7 +339,6 @@ export type PaginatedWishlist = PaginatedResponse<WishlistItem>;
 export interface CreateProductInput {
   title: string;
   description: string;
-  short_description?: string;
   price: string;
   old_price?: string;
   currency?: string;

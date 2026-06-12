@@ -57,18 +57,10 @@ export const Step1Schema = z.object({
     .min(5, "Title must be at least 5 characters")
     .max(255, "Title is too long (max 255 characters)"),
 
-  /** Rich-text description (HTML string from editor). Min 30 chars when stripped. */
+  /** Rich-text description (HTML string from editor). Min 30 characters. */
   description: z
     .string()
-    .min(30, "Description must be at least 30 characters")
-    .max(10_000, "Description is too long"),
-
-  /** Short marketing copy shown on listing cards. */
-  short_description: z
-    .string()
-    .max(500, "Short description is too long (max 500 characters)")
-    .optional()
-    .or(z.literal("")),
+    .min(30, "Description must be at least 30 characters"),
 
   /**
    * Product condition — maps to backend ProductCondition choices.
@@ -196,14 +188,11 @@ export type GalleryItem = z.infer<typeof GalleryItemSchema>;
 
 export const Step3Schema = z.object({
   /**
-   * Primary product image — required for publishing.
-   * May be null during draft-save, validated on submit.
+   * Primary product image — required.
    */
   cover_image_public_id: z
-    .string()
-    .min(1, "A cover image is required")
-    .nullable()
-    .optional(),
+    .string({ required_error: "A cover image is required" })
+    .min(1, "A cover image is required"),
 
   cover_image_url: z.string().url("Invalid cover image URL").nullable().optional(),
 

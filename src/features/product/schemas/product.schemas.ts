@@ -279,7 +279,6 @@ export const ProductDetailSchema = z
     slug: z.string(),
     sku: z.string(),
     description: z.string(),
-    short_description: z.string().default(""),
     price: DecimalStrSchema,
     old_price: DecimalStrSchema.nullable(),
     discount_percentage: z.number().min(0).max(100).default(0),

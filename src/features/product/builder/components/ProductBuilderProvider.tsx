@@ -113,7 +113,7 @@ export function useBuilderContext(): BuilderContextValue {
 import type { Path } from "react-hook-form";
 
 const STEP_FIELDS: Record<number, Array<Path<ProductBuilderFormValues>>> = {
-  1: ["title", "description", "short_description", "condition", "category_ids", "sub_category_ids", "tag_ids"],
+  1: ["title", "description", "condition", "category_ids", "sub_category_ids", "tag_ids"],
   2: ["price", "old_price", "currency", "stock_qty", "weight_kg", "requires_measurement", "is_customisable", "shipping_amount", "courier_id"],
   3: ["cover_image_public_id", "cover_image_url", "gallery"],
   4: ["size_ids", "color_ids"],
@@ -130,7 +130,7 @@ const STEP_FIELDS: Record<number, Array<Path<ProductBuilderFormValues>>> = {
 const DEFAULT_VALUES: Partial<ProductBuilderFormValues> = {
   title: "",
   description: "",
-  short_description: "",
+
   price: "",
   old_price: "",
   weight_kg: "",

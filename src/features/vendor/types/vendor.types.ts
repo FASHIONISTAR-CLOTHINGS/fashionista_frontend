@@ -243,7 +243,6 @@ export interface VendorProductListItem {
 export interface VendorProductCreatePayload {
   title:                 string;
   description:           string;
-  short_description?:    string;
   price:                 string;         // Decimal string e.g. "25000.00"
   old_price?:            string | null;  // Decimal string or null
   currency?:             string;         // default "NGN"

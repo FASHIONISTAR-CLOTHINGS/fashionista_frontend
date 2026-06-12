@@ -269,8 +269,7 @@ export const VendorProductListSchema = z.object({
  */
 export const VendorProductCreateSchema = z.object({
   title:               z.string().min(1, "Product title is required"),
-  description:         z.string().min(1, "Description is required"),
-  short_description:   z.string().max(500).optional(),
+  description:         z.string().min(30, "Description must be at least 30 characters"),
   price:               z.string().regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid decimal string"),
   old_price:           z.string().regex(/^\d+(\.\d{1,2})?$/).optional().nullable(),
   currency:            z.string().default("NGN"),
