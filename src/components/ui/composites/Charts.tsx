@@ -164,6 +164,11 @@ export const ChartContainer = React.forwardRef<HTMLDivElement, ChartContainerPro
   ({ id, className, children, config, initialDimension = INITIAL_DIMENSION, ...props }, ref) => {
     const uniqueId = React.useId();
     const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`;
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+      setMounted(true);
+    }, []);
 
     return (
       <ChartContext.Provider value={{ config }}>
@@ -190,9 +195,13 @@ export const ChartContainer = React.forwardRef<HTMLDivElement, ChartContainerPro
           {...props}
         >
           <ChartStyle id={chartId} config={config} />
-          <ResponsiveContainer initialDimension={initialDimension}>
-            {children}
-          </ResponsiveContainer>
+          {mounted ? (
+            <ResponsiveContainer initialDimension={initialDimension}>
+              {children}
+            </ResponsiveContainer>
+          ) : (
+            <div className="w-full h-full bg-slate-50/50 rounded-2xl animate-pulse" />
+          )}
         </div>
       </ChartContext.Provider>
     );

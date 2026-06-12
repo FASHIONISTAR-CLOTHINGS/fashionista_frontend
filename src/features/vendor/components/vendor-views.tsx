@@ -127,6 +127,15 @@ import {
 
 
 
+// useMounted hook for safe client-side Recharts rendering
+function useMounted() {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+  return mounted;
+}
+
 // ── Brand Palette (local) ────────────────────────────────────────────────────
 const BV = {
   gold:     "#FDA600",
@@ -845,6 +854,7 @@ export function VendorDashboardView() {
   const { data: setupState }           = useVendorSetupState();
   const { data: revenueData, isLoading: isRevenueLoading } = useVendorRevenueChart();
   const stats = resolveDashboardStats(dashboard);
+  const mounted = useMounted();
 
   if (isLoading) {
     return (
@@ -1044,6 +1054,8 @@ export function VendorDashboardView() {
         <div className="h-72 w-full">
           {isRevenueLoading ? (
             <SkeletonCard className="h-full w-full" />
+          ) : !mounted ? (
+            <div className="h-full w-full bg-slate-50/50 rounded-2xl animate-pulse" />
           ) : (
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <AreaChart data={revenueData?.data ?? []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -2220,6 +2232,7 @@ export function VendorAnalyticsView() {
 // ── Revenue Area Chart Helper ─────────────────────────────────────────────────
 function VendorRevenueAreaChart() {
   const { data: rawChart, isLoading } = useVendorRevenueChart();
+  const mounted = useMounted();
   const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
   const chartArr = Array.isArray(rawChart)
@@ -2235,7 +2248,7 @@ function VendorRevenueAreaChart() {
       }))
     : MONTHS.slice(0, 6).map((m) => ({ month: m, revenue: 0 }));
 
-  if (isLoading) return <SkeletonCard className="h-52" />;
+  if (isLoading || !mounted) return <SkeletonCard className="h-52" />;
 
   return (
     <ResponsiveContainer width="100%" height={200} minWidth={0}>
@@ -2266,6 +2279,7 @@ function VendorRevenueAreaChart() {
 // ── Monthly Orders Bar Chart ──────────────────────────────────────────────────
 function VendorOrderBarChart() {
   const { data: rawChart, isLoading } = useVendorOrderChart();
+  const mounted = useMounted();
   const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
   const chartArr = Array.isArray(rawChart)
@@ -2281,7 +2295,7 @@ function VendorOrderBarChart() {
       }))
     : MONTHS.slice(0, 6).map((m) => ({ month: m, orders: 0 }));
 
-  if (isLoading) return <SkeletonCard className="h-52" />;
+  if (isLoading || !mounted) return <SkeletonCard className="h-52" />;
 
   return (
     <ResponsiveContainer width="100%" height={200} minWidth={0}>
@@ -2307,6 +2321,7 @@ function VendorOrderBarChart() {
 // ── Payment Distribution Pie Chart ───────────────────────────────────────────
 function VendorPaymentPieChart() {
   const { data: rawDist, isLoading } = useVendorPaymentDistribution();
+  const mounted = useMounted();
 
   const dist = Array.isArray(rawDist)
     ? rawDist
@@ -2330,7 +2345,7 @@ function VendorPaymentPieChart() {
         { name: "Cash", value: 5 },
       ];
 
-  if (isLoading) return <SkeletonCard className="h-52" />;
+  if (isLoading || !mounted) return <SkeletonCard className="h-52" />;
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -2368,6 +2383,7 @@ function VendorPaymentPieChart() {
 // ── Top Categories Horizontal Bar Chart ──────────────────────────────────────
 function VendorTopCategoriesChart() {
   const { data: rawCats, isLoading } = useVendorTopCategories();
+  const mounted = useMounted();
 
   const cats = Array.isArray(rawCats)
     ? rawCats
@@ -2392,7 +2408,7 @@ function VendorTopCategoriesChart() {
         { name: "Agbada", revenue: 380000 },
       ];
 
-  if (isLoading) return <SkeletonCard className="h-52" />;
+  if (isLoading || !mounted) return <SkeletonCard className="h-52" />;
 
   return (
     <ResponsiveContainer width="100%" height={200} minWidth={0}>
