@@ -627,7 +627,9 @@ export async function fetchActiveDraftSessions(): Promise<ProductDraftSession[]>
 export async function fetchDraftSessionDetail(
   draftKey: string,
 ): Promise<ProductDraftSession> {
-  const raw = await apiAsync.get(`products/vendor/drafts/${draftKey}/`).json();
+  const raw = await apiAsync
+    .get(`products/vendor/drafts/${draftKey}/`, { _suppressGlobalToast: true } as any)
+    .json();
   return parseApiResponse(
     ProductDraftSessionSchema,
     unwrapApiData(raw),

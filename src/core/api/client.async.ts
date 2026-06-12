@@ -160,7 +160,7 @@ export const apiAsync: KyInstance = ky.create({
           if (typeof window !== "undefined") {
             const status = response.status;
             // Only show for non-401 (handled by refresh logic above)
-            if (status !== 401) {
+            if (status !== 401 && !(options as any)._suppressGlobalToast) {
               let richMessage = "An unexpected error occurred. Please try again.";
               try {
                 const body = await response.clone().json() as Record<string, unknown>;
