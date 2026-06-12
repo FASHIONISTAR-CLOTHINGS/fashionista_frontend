@@ -1045,7 +1045,7 @@ export function VendorDashboardView() {
           {isRevenueLoading ? (
             <SkeletonCard className="h-full w-full" />
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <AreaChart data={revenueData?.data ?? []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
@@ -2238,7 +2238,7 @@ function VendorRevenueAreaChart() {
   if (isLoading) return <SkeletonCard className="h-52" />;
 
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ResponsiveContainer width="100%" height={200} minWidth={0}>
       <AreaChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
@@ -2284,7 +2284,7 @@ function VendorOrderBarChart() {
   if (isLoading) return <SkeletonCard className="h-52" />;
 
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ResponsiveContainer width="100%" height={200} minWidth={0}>
       <BarChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="orderGrad" x1="0" y1="0" x2="0" y2="1">
@@ -2334,7 +2334,7 @@ function VendorPaymentPieChart() {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <ResponsiveContainer width="100%" height={180}>
+      <ResponsiveContainer width="100%" height={180} minWidth={0}>
         <PieChart>
           <Pie
             data={items}
@@ -2395,7 +2395,7 @@ function VendorTopCategoriesChart() {
   if (isLoading) return <SkeletonCard className="h-52" />;
 
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ResponsiveContainer width="100%" height={200} minWidth={0}>
       <BarChart
         layout="vertical"
         data={items}

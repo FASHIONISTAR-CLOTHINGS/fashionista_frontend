@@ -9,7 +9,6 @@
 
 export * from "./badge";
 export * from "./button";
-export * from "./chart";
 export * from "./FashionistarPagination";
 export * from "./form";
 export * from "./input";
@@ -22,6 +21,7 @@ export * from "./switch";
 export * from "./textarea";
 export * from "./tooltip";
 export { LoadingSpinner, EmptyState, DataTable } from "./common";
+export * from "./composites";
 
 
 

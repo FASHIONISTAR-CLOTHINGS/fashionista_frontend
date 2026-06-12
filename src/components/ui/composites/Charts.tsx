@@ -2,32 +2,30 @@
  * @file Charts.tsx
  * @version 3.0.0 - Production Optimized (React 19 / Next.js 16 / Tailwind CSS v4)
  * @description Consolidated visual chart engine built natively for high-concurrency dashboards.
- * 
- * ALL Legacy systems, Chart.js dependencies, and backward-compatibility layers have been removed.
+ * @description Consolidated visual chart engine built natively using modern Recharts SVG elements.
+
+ * ALL Legacy Chart.js structures and backward-compatibility wrappers have been removed.
+ * Includes complete integration with shared CSS-only custom tooltip primitives.
  * 
  * DESIGN SPECIFICATIONS:
- * - High Performance: Zero runtime JS color math; native CSS variables mapped via inline styles.
- * - Resilient Layouts: Built-in safe fallbacks for empty datasets or delayed API loads.
- * - Tailwind v4 Standard: Stylized borders, native backdrop blur, and balanced layout shifts (CLS).
- * 
- * SYSTEM EXPORTS:
- *  - `ChartContainer`      - Core layout manager with initial sizing calculations.
- *  - `ChartTooltip`        - Wrapper for the hover information card.
- *  - `ChartTooltipContent` - Formatter for rich, accessible tooltips.
- *  - `ChartLegend`         - Customizable visual chart key wrapper.
- *  - `ChartLegendContent`  - Label formatter for interactive charts.
- *  - `RechartsBarChart`    - Responsive bar chart.
- *  - `LineChart`           - Clean trendline visualizer.
- *  - `AreaChart`           - Shaded area chart with dynamic gradients.
- *  - `PieChartDisplay`     - Responsive donut / pie chart.
- *  - `ComposedChart`       - Multi-series chart (Area + Bar + Line).
- *  - `RadarChartDisplay`   - Attributes mapping model (ideal for user profiles).
+ * - High Performance: CSS-only layout tooltips to preserve SSR compatibility.
+ * - Resilient Layouts: Automated boundary card fallbacks for blank or delayed API loads.
+ * - Tailwind v4 Ready: Explicit theme variable rendering using modern CSS variables.
  */
 
 "use client";
 
 import * as React from "react";
+import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// ─── Shared UI Custom Tooltip Primitive Imports ──────────────────────────────
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 
 // ─── Recharts SVG Engine ───────────────────────────────────────────────────
 import {
@@ -494,7 +492,7 @@ export function getPayloadConfigFromPayload(
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PART 3: RECHARTS NAMED COMPOSED COMPONENTS (PRODUCTION HARDENED)
+// PART 3: MODERN RECHARTS COMPOSITIONS
 // ─────────────────────────────────────────────────────────────────────────────
 
 type RechartsMargin = {
@@ -517,8 +515,37 @@ interface RechartsChartProps {
 }
 
 /**
+ * Modern Chart Card Header component.
+ * Integrates your shared, CSS-only tooltip for layout description text.
+ */
+const ChartCardHeader = ({ 
+  title, 
+  description 
+}: { 
+  title: string; 
+  description?: string 
+}) => (
+  <CardHeader className="relative flex flex-col space-y-1 p-6 pb-4">
+    <div className="flex items-center justify-between w-full">
+      <CardTitle>{title}</CardTitle>
+      {description && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger className="p-1.5 text-muted-foreground hover:text-foreground transition-colors duration-200 focus-visible:outline-hidden cursor-pointer" aria-label="Dataset description">
+              <Info size={15} />
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[240px] leading-relaxed">
+              {description}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </div>
+  </CardHeader>
+);
+
+/**
  * Responsive bar chart powered by Recharts + Shadcn/ui ChartContainer.
- * Fully responsive and supports custom theme colors.
  */
 export function RechartsBarChart({
   data = [],
@@ -545,10 +572,7 @@ export function RechartsBarChart({
 
   return (
     <Card className={className}>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        {description && <CardDescription>{description}</CardDescription>}
-      </CardHeader>
+      <ChartCardHeader title={title} description={description} />
       <CardContent>
         <ChartContainer config={chartConfig}>
           <ReBarChart data={data} margin={margin}>
@@ -606,10 +630,7 @@ export function LineChart({
 
   return (
     <Card className={className}>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        {description && <CardDescription>{description}</CardDescription>}
-      </CardHeader>
+      <ChartCardHeader title={title} description={description} />
       <CardContent>
         <ChartContainer config={chartConfig}>
           <ReLineChart data={data} margin={margin}>
@@ -670,10 +691,7 @@ export function AreaChart({
 
   return (
     <Card className={className}>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        {description && <CardDescription>{description}</CardDescription>}
-      </CardHeader>
+      <ChartCardHeader title={title} description={description} />
       <CardContent>
         <ChartContainer config={chartConfig}>
           <ReAreaChart data={data} margin={margin}>
@@ -773,10 +791,7 @@ export function PieChartDisplay({
 
   return (
     <Card className={className}>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        {description && <CardDescription>{description}</CardDescription>}
-      </CardHeader>
+      <ChartCardHeader title={title} description={description} />
       <CardContent>
         <ChartContainer
           config={chartConfig}
@@ -864,10 +879,7 @@ export function ComposedChart({
 
   return (
     <Card className={className}>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        {description && <CardDescription>{description}</CardDescription>}
-      </CardHeader>
+      <ChartCardHeader title={title} description={description} />
       <CardContent>
         <ChartContainer config={chartConfig}>
           <ReComposedChart data={data} margin={{ top: 12, right: 12, bottom: 0, left: 0 }}>
@@ -905,8 +917,7 @@ interface RadarChartProps {
 }
 
 /**
- * Radar dashboard layout. Ideal for seller capabilities,
- * designer brand parameters, or client shopping preferences mapping.
+ * Radar dashboard layout. Ideal for designer brand parameters or client shopping maps.
  */
 export function RadarChartDisplay({
   data = [],
@@ -939,10 +950,7 @@ export function RadarChartDisplay({
 
   return (
     <Card className={className}>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        {description && <CardDescription>{description}</CardDescription>}
-      </CardHeader>
+      <ChartCardHeader title={title} description={description} />
       <CardContent>
         <ChartContainer config={chartConfig} className="mx-auto max-h-[300px] aspect-square">
           <ReRadarChart cx="50%" cy="50%" outerRadius="75%" data={data}>
@@ -987,7 +995,7 @@ export function MultiBarChart({
   data = [],
   xAxisKey = "name",
   series = [],
-  title,
+  title = "Aggregate Distribution Data",
   description,
   className,
 }: MultiBarChartProps) {
@@ -1006,14 +1014,9 @@ export function MultiBarChart({
   }
 
   return (
-    <Card className={cn("w-full h-full border-none shadow-none bg-transparent", className)}>
-      {(title || description) && (
-        <CardHeader className="px-0 pt-0">
-          {title && <CardTitle>{title}</CardTitle>}
-          {description && <CardDescription>{description}</CardDescription>}
-        </CardHeader>
-      )}
-      <CardContent className="p-0 h-full w-full">
+    <Card className={className}>
+      <ChartCardHeader title={title} description={description} />
+      <CardContent className="h-full w-full">
         <ChartContainer config={chartConfig} className="w-full h-full min-h-[300px]">
           <ReBarChart data={data} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -1045,5 +1048,10 @@ export function MultiBarChart({
   );
 }
 
-// Default export is set to MultiBarChart for admin-dashboard compatibility
-export default MultiBarChart;
+// ─────────────────────────────────────────────────────────────────────────────
+// PART 4: SYSTEM EXPORTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Standard Named Export Primitives
+// Default export is set to the highly scalable multi-series Bar Chart component
+export default RechartsBarChart;
