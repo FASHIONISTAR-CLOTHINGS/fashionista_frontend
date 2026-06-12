@@ -53,7 +53,7 @@ import {
   Tooltip as RechartsTooltip,
   Legend as RechartsLegend,
 } from "recharts";
-import type { TooltipContent, TooltipValueType } from "recharts/types/component/DefaultTooltipContent";
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PART 1: COMPANION DESIGN-SYSTEM CARD COMPONENTS
@@ -124,7 +124,7 @@ CardContent.displayName = "CardContent";
 
 const THEMES = { light: "", dark: ".dark" } as const;
 const INITIAL_DIMENSION = { width: 320, height: 200 } as const;
-type TooltipNameType = number | string;
+
 
 export type ChartConfig = Record<
   string,
@@ -238,13 +238,15 @@ export const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) 
 export const ChartTooltip = RechartsTooltip;
 
 export interface ChartTooltipContentProps
-  extends React.ComponentProps<typeof RechartsTooltip>,
-    React.ComponentProps<"div"> {
+  extends Omit<React.ComponentProps<typeof RechartsTooltip>, "content">,
+    Omit<React.ComponentProps<"div">, "content"> {
   hideLabel?: boolean;
   hideIndicator?: boolean;
   indicator?: "line" | "dot" | "dashed";
   nameKey?: string;
   labelKey?: string;
+  payload?: any[];
+  label?: any;
 }
 
 export const ChartTooltipContent = React.forwardRef<
@@ -320,8 +322,8 @@ export const ChartTooltipContent = React.forwardRef<
         {!nestLabel ? tooltipLabel : null}
         <div className="grid gap-1.5">
           {payload
-            .filter((item) => item.type !== "none")
-            .map((item, index) => {
+            .filter((item: any) => item.type !== "none")
+            .map((item: any, index: number) => {
               const key = `${nameKey ?? item.name ?? item.dataKey ?? "value"}`;
               const itemConfig = getPayloadConfigFromPayload(config, item, key);
               const indicatorColor = color ?? item.payload?.fill ?? item.color;
@@ -397,10 +399,11 @@ ChartTooltipContent.displayName = "ChartTooltipContent";
 export const ChartLegend = RechartsLegend;
 
 export interface ChartLegendContentProps
-  extends React.ComponentProps<"div">,
-    Omit<React.ComponentProps<typeof RechartsLegend>, "content"> {
+  extends React.ComponentProps<"div"> {
   hideIcon?: boolean;
   nameKey?: string;
+  payload?: any[];
+  verticalAlign?: "top" | "bottom" | "middle";
 }
 
 export const ChartLegendContent = React.forwardRef<HTMLDivElement, ChartLegendContentProps>(
@@ -421,8 +424,8 @@ export const ChartLegendContent = React.forwardRef<HTMLDivElement, ChartLegendCo
         )}
       >
         {payload
-          .filter((item) => item.type !== "none")
-          .map((item, index) => {
+          .filter((item: any) => item.type !== "none")
+          .map((item: any, index: number) => {
             const key = `${nameKey ?? item.dataKey ?? "value"}`;
             const itemConfig = getPayloadConfigFromPayload(config, item, key);
 
@@ -965,5 +968,82 @@ export function RadarChartDisplay({
   );
 }
 
-// Default export is set to the modernized Bar Chart primitive
-export default RechartsBarChart;
+// ─── MultiBarChart component ──────────────────────────────────────────
+
+interface MultiBarChartProps {
+  data: Record<string, unknown>[];
+  xAxisKey?: string;
+  series: {
+    key: string;
+    label: string;
+    color: string;
+  }[];
+  title?: string;
+  description?: string;
+  className?: string;
+}
+
+export function MultiBarChart({
+  data = [],
+  xAxisKey = "name",
+  series = [],
+  title,
+  description,
+  className,
+}: MultiBarChartProps) {
+  const chartConfig = React.useMemo<ChartConfig>(() => {
+    return Object.fromEntries(
+      series.map((s) => [s.key, { label: s.label, color: s.color }])
+    );
+  }, [series]);
+
+  if (!data || data.length === 0) {
+    return (
+      <Card className={cn("flex flex-col items-center justify-center p-8 text-center min-h-[300px]", className)}>
+        <p className="text-sm font-semibold text-muted-foreground">No records found to render visual data</p>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className={cn("w-full h-full border-none shadow-none bg-transparent", className)}>
+      {(title || description) && (
+        <CardHeader className="px-0 pt-0">
+          {title && <CardTitle>{title}</CardTitle>}
+          {description && <CardDescription>{description}</CardDescription>}
+        </CardHeader>
+      )}
+      <CardContent className="p-0 h-full w-full">
+        <ChartContainer config={chartConfig} className="w-full h-full min-h-[300px]">
+          <ReBarChart data={data} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
+            <CartesianGrid vertical={false} strokeDasharray="3 3" />
+            <XAxis
+              dataKey={xAxisKey}
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+            />
+            <YAxis tickLine={false} axisLine={false} tickMargin={10} />
+            <ChartTooltip
+              cursor={false}
+              content={<ChartTooltipContent indicator="dot" />}
+            />
+            <ChartLegend content={<ChartLegendContent />} />
+            {series.map((s) => (
+              <Bar
+                key={s.key}
+                dataKey={s.key}
+                fill={`var(--color-${s.key})`}
+                radius={[4, 4, 0, 0]}
+                maxBarSize={30}
+              />
+            ))}
+          </ReBarChart>
+        </ChartContainer>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Default export is set to MultiBarChart for admin-dashboard compatibility
+export default MultiBarChart;

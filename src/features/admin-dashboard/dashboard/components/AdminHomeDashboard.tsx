@@ -1,7 +1,7 @@
 "use client";
 
 import BarChart from "@/components/ui/composites/Charts";
-import { ChartOptions, ChartData } from "chart.js";
+
 import { FashionistarImage } from "@/components/media";
 import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
@@ -27,71 +27,26 @@ interface MarketingProp {
 export function AdminHomeDashboard() {
   const { data: kpiData, isLoading } = useAdminDashboardKPI();
 
-  const data: ChartData<"bar", number[], string> = {
-    labels: [
-      "Jan",
-      "Feb",
-      "Mar",
-      "April",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sept",
-      "Oct",
-      "Nov",
-      "Dec",
-    ],
-    datasets: [
-      {
-        label: "Sales",
-        data: [2, 5, 8, 10, 24, 12, 18, 20, 25, 15, 26, 31],
-        borderWidth: 1,
-        backgroundColor: "#fda600",
-        barThickness: 15,
-        barPercentage: 0.8,
-        categoryPercentage: 0.5,
-      },
-      {
-        label: "Visitors",
-        data: [6, 12, 8, 15, 17, 9, 13, 8, 12, 25, 16, 22],
-        borderWidth: 1,
-        backgroundColor: "#000",
-        barThickness: 15,
-        barPercentage: 0.8,
-        categoryPercentage: 0.5,
-      },
-      {
-        label: "Products",
-        data: [22, 16, 23, 15, 10, 17, 19, 12, 5, 14, 10, 11],
-        borderWidth: 1,
-        backgroundColor: "#25784A",
-        barThickness: 15,
-        barPercentage: 0.8,
-        categoryPercentage: 0.5,
-      },
-    ],
-  };
+  const chartData = [
+    { name: "Jan", sales: 2, visitors: 6, products: 22 },
+    { name: "Feb", sales: 5, visitors: 12, products: 16 },
+    { name: "Mar", sales: 8, visitors: 8, products: 23 },
+    { name: "April", sales: 10, visitors: 15, products: 15 },
+    { name: "May", sales: 24, visitors: 17, products: 10 },
+    { name: "Jun", sales: 12, visitors: 9, products: 17 },
+    { name: "Jul", sales: 18, visitors: 13, products: 19 },
+    { name: "Aug", sales: 20, visitors: 8, products: 12 },
+    { name: "Sept", sales: 25, visitors: 12, products: 5 },
+    { name: "Oct", sales: 15, visitors: 25, products: 14 },
+    { name: "Nov", sales: 26, visitors: 16, products: 10 },
+    { name: "Dec", sales: 31, visitors: 22, products: 11 },
+  ];
 
-  const options: ChartOptions<"bar"> = {
-    maintainAspectRatio: false,
-    responsive: true,
-    plugins: {
-      legend: { position: "top" },
-      title: {
-        display: true,
-        text: "Sales of the month",
-      },
-    },
-    scales: {
-      x: {
-        stacked: false,
-      },
-      y: {
-        stacked: false,
-      },
-    },
-  };
+  const series = [
+    { key: "sales", label: "Sales", color: "#fda600" },
+    { key: "visitors", label: "Visitors", color: "#000" },
+    { key: "products", label: "Products", color: "#25784A" },
+  ];
 
   const members: MembersProp[] = [
     {
@@ -323,7 +278,7 @@ export function AdminHomeDashboard() {
       {/* Charts */}
       <div className="bg-white p-5 rounded-[10px] shadow">
         <div className="h-[350px]">
-          <BarChart options={options} data={data} />
+          <BarChart data={chartData} series={series} />
         </div>
       </div>
 
