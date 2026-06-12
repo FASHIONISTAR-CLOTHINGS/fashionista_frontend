@@ -128,6 +128,15 @@ const STEP_FIELDS: Record<number, Array<Path<ProductBuilderFormValues>>> = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const DEFAULT_VALUES: Partial<ProductBuilderFormValues> = {
+  title: "",
+  description: "",
+  short_description: "",
+  price: "",
+  old_price: "",
+  weight_kg: "",
+  shipping_amount: "",
+  meta_title: "",
+  meta_description: "",
   condition: "new",
   currency: "NGN",
   stock_qty: 1,
@@ -147,6 +156,19 @@ const DEFAULT_VALUES: Partial<ProductBuilderFormValues> = {
   faqs: [],
   gallery: [],
 };
+
+function sanitizePayload(payload: any): ProductBuilderFormValues {
+  const sanitized = { ...DEFAULT_VALUES } as any;
+  if (payload && typeof payload === "object") {
+    Object.keys(DEFAULT_VALUES).forEach((key) => {
+      const val = payload[key];
+      if (val !== undefined && val !== null) {
+        sanitized[key] = val;
+      }
+    });
+  }
+  return sanitized;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PROVIDER COMPONENT
@@ -173,7 +195,7 @@ export function ProductBuilderProvider({
   // ── Form ──────────────────────────────────────────────────────────────────
   const form = useForm<ProductBuilderFormValues>({
     resolver: zodResolver(ProductBuilderFormSchema),
-    defaultValues: { ...DEFAULT_VALUES, ...initialValues },
+    defaultValues: sanitizePayload(initialValues),
     mode: "onTouched",          // Validate on blur — lower cognitive load
     reValidateMode: "onChange", // Re-validate on change after first touch
   });
@@ -295,26 +317,44 @@ export function ProductBuilderProvider({
           store.setLastSyncedAt(remote.last_synced_at);
 
           // Populate form
-          form.reset({ ...DEFAULT_VALUES, ...(remote.payload || {}) });
+          form.reset(sanitizePayload(remote.payload));
           setCurrentStep(remote.current_step ?? 1);
         } else {
           // Create draft session on backend if not exists
-          const created = await createDraftSession({
-            draft_key: key,
-            idempotency_key: idempotency || undefined,
-            payload: payload || {},
-            current_step: step,
-          });
-          store.setLastSyncedAt(created.last_synced_at);
-          store.setSyncStatus("synced");
-          form.reset({ ...DEFAULT_VALUES, ...payload });
-          setCurrentStep(step ?? 1);
+          try {
+            const created = await createDraftSession({
+              draft_key: key,
+              idempotency_key: idempotency || undefined,
+              payload: payload || {},
+              current_step: step,
+            });
+            store.setLastSyncedAt(created.last_synced_at);
+            store.setSyncStatus("synced");
+            form.reset(sanitizePayload(payload));
+            setCurrentStep(step ?? 1);
+          } catch (createErr) {
+            console.warn("Draft key conflict or creation failure, regenerating key:", createErr);
+            const newKey = generateUUID();
+            const newIdempotency = generateUUID();
+            store.setDraftKey(newKey);
+            store.setIdempotencyKey(newIdempotency);
+            const created = await createDraftSession({
+              draft_key: newKey,
+              idempotency_key: newIdempotency,
+              payload: payload || {},
+              current_step: step,
+            });
+            store.setLastSyncedAt(created.last_synced_at);
+            store.setSyncStatus("synced");
+            form.reset(sanitizePayload(payload));
+            setCurrentStep(step ?? 1);
+          }
         }
       } catch (err) {
         console.error("Backend draft sync failed, using offline values:", err);
         store.setSyncStatus("failed");
         // Fallback to local store values
-        form.reset({ ...DEFAULT_VALUES, ...payload });
+        form.reset(sanitizePayload(payload));
         setCurrentStep(step ?? 1);
       } finally {
         setDraftLoaded(true);
