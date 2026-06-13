@@ -296,7 +296,7 @@ export function Step1BasicInfo() {
       <FormField
         control={form.control}
         name="category_ids"
-        render={() => (
+        render={({ fieldState }) => (
           <FormItem className="space-y-3">
             <FormLabel className="text-[#1A1208] font-semibold text-sm">
               Categories <span className="text-[#FDA600]">*</span>
@@ -304,7 +304,11 @@ export function Step1BasicInfo() {
             <FormDescription className="text-zinc-500 text-xs">
               Select 1 to 15 categories your product specializes in. Powers search, catalog filtering, and AI matching.
             </FormDescription>
-            <div className="rounded-xl border border-[#D9D9D9] bg-[#FAFAF8] p-4">
+            <div className={`rounded-xl border p-4 transition-all duration-200 ${
+              fieldState.invalid
+                ? "border-destructive bg-destructive/5 animate-validation-blink"
+                : "border-[#D9D9D9] bg-[#FAFAF8]"
+            }`}>
               <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                 {categories.map((cat) => {
                   const selected = selectedCategoryIds.includes(cat.id);

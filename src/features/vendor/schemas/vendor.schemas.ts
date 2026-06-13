@@ -268,8 +268,12 @@ export const VendorProductListSchema = z.object({
  * Source: apps/product/serializers/product_serializers.py
  */
 export const VendorProductCreateSchema = z.object({
-  title:               z.string().min(1, "Product title is required"),
-  description:         z.string().min(30, "Description must be at least 30 characters"),
+  title:               z.string().min(1, "Product title is required").refine((val) => val.length === 0 || val.length >= 5, {
+    message: "Title must be at least 5 characters",
+  }),
+  description:         z.string().min(1, "Product description is required").refine((val) => val.length === 0 || val.trim().length >= 30, {
+    message: "Description must be at least 30 characters",
+  }),
   price:               z.string().regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid decimal string"),
   old_price:           z.string().regex(/^\d+(\.\d{1,2})?$/).optional().nullable(),
   currency:            z.string().default("NGN"),

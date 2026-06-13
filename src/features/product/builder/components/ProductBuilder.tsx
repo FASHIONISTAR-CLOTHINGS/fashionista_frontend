@@ -47,12 +47,34 @@ const STEP_COMPONENTS: Record<number, React.ComponentType> = {
 // NAVIGATION BAR
 // ─────────────────────────────────────────────────────────────────────────────
 
+const isStepComplete = (step: number, values: any): boolean => {
+  if (step === 1) {
+    const title = (values.title || "").trim();
+    const description = (values.description || "").trim();
+    const categoryIds = values.category_ids || [];
+    return title.length >= 5 && description.length >= 100 && categoryIds.length >= 1;
+  }
+  if (step === 2) {
+    const price = (values.price || "").trim();
+    const stockQty = Number(values.stock_qty);
+    return price.length > 0 && !isNaN(stockQty) && stockQty >= 1;
+  }
+  if (step === 3) {
+    const coverImage = (values.cover_image_public_id || "").trim();
+    return coverImage.length > 0;
+  }
+  return true;
+};
+
 function BuilderNavigation() {
   const { currentStep, nextStep, prevStep, isSubmitting, form } = useBuilderContext();
   const isFirst = currentStep === 1;
   const isLast = currentStep === BUILDER_STEPS.length;
   const publishIntent = form.watch("publish_intent");
   const syncStatus = useDraftStore((state) => state.syncStatus);
+
+  const values = form.watch();
+  const stepComplete = isStepComplete(currentStep, values);
 
   const renderSyncStatus = () => {
     switch (syncStatus) {
@@ -117,7 +139,12 @@ function BuilderNavigation() {
           type="button"
           onClick={nextStep}
           disabled={isSubmitting}
-          className="gap-2 px-6 bg-[#FDA600] hover:bg-[#E8960A] text-black font-semibold shadow-lg shadow-[#FDA600]/25"
+          className={cn(
+            "gap-2 px-6 font-semibold transition-all duration-200",
+            stepComplete
+              ? "bg-[#FDA600] hover:bg-[#E8960A] text-black shadow-lg shadow-[#FDA600]/25 opacity-100"
+              : "bg-[#FDA600]/35 text-black/40 hover:bg-[#FDA600]/45 shadow-none border border-[#FDA600]/10 cursor-pointer"
+          )}
         >
           Continue
           <ChevronRight className="w-4 h-4" />

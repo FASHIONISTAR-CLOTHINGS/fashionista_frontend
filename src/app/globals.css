@@ -514,41 +514,65 @@ progress {
   animation: shimmer-pan 1.6s ease-in-out infinite;
 }
 
+@keyframes validation-blink {
+  0%, 100% {
+    border-color: hsl(var(--destructive));
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+  }
+  50% {
+    border-color: rgba(239, 68, 68, 0.3);
+    box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.05);
+  }
+}
+
+.animate-validation-blink {
+  animation: validation-blink 1s ease-in-out 3;
+}
+
+input[aria-invalid="true"],
+textarea[aria-invalid="true"],
+button[aria-invalid="true"] {
+  border-color: hsl(var(--destructive)) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15) !important;
+  animation: validation-blink 1s ease-in-out 3;
+}
+
 @theme inline {
   --font-heading: var(--font-bon-foyage);
   --font-sans: var(--font-satoshi);
   --font-bon-foyage: var(--font-bon-foyage);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
+  --color-sidebar-ring: hsl(var(--sidebar-ring, 184 97% 15%));
+  --color-sidebar-border: hsl(var(--sidebar-border, 220 15% 88%));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-active-text));
+  --color-sidebar-accent: hsl(var(--sidebar-active));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-active-text));
+  --color-sidebar-primary: hsl(var(--sidebar-active));
+  --color-sidebar-foreground: hsl(var(--sidebar-text));
+  --color-sidebar: hsl(var(--sidebar-bg));
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-foreground: var(--foreground);
-  --color-background: var(--background);
+  --color-ring: hsl(var(--ring));
+  --color-input: hsl(var(--input));
+  --color-border: hsl(var(--border));
+  --color-destructive: hsl(var(--destructive));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card: hsl(var(--card));
+  --color-foreground: hsl(var(--foreground));
+  --color-background: hsl(var(--background));
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -557,6 +581,7 @@ progress {
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 }
+
 
 
 

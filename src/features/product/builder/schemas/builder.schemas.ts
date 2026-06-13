@@ -54,13 +54,19 @@ export const Step1Schema = z.object({
   /** Full product title shown on PDP and catalog listings. */
   title: z
     .string()
-    .min(5, "Title must be at least 5 characters")
-    .max(255, "Title is too long (max 255 characters)"),
+    .min(1, "Product title is required")
+    .max(255, "Title is too long (max 255 characters)")
+    .refine((val) => val.length === 0 || val.length >= 5, {
+      message: "Title must be at least 5 characters",
+    }),
 
   /** Rich-text description (HTML string from editor). Min 30 characters. */
   description: z
     .string()
-    .min(30, "Description must be at least 30 characters"),
+    .min(1, "Product description is required")
+    .refine((val) => val.length === 0 || val.trim().length >= 30, {
+      message: "Description must be at least 30 characters",
+    }),
 
   /**
    * Product condition — maps to backend ProductCondition choices.
