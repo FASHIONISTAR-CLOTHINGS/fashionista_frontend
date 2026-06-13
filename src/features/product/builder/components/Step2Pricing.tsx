@@ -262,7 +262,7 @@ export function Step2Pricing() {
                   </Tooltip>
                 </div>
                 <FormDescription className="text-zinc-500 text-xs">
-                  Tailored specifically to the customer's size measurements
+                  Tailored specifically to the customer&apos;s size measurements
                 </FormDescription>
               </div>
               <FormControl>
@@ -317,7 +317,7 @@ export function Step2Pricing() {
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="e.g. 1000.00 (Default is calculated ₦2,500.00 or according to specific courier rate at checkout)"
+                  placeholder="e.g. 1000.00 (Default is calculated ₦2,500.00 or according to courier rate.)"
                   className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
                 />
               </FormControl>
