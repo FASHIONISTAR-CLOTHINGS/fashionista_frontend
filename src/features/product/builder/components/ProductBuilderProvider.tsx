@@ -134,7 +134,7 @@ const DEFAULT_VALUES: Partial<ProductBuilderFormValues> = {
   price: "",
   old_price: "",
   weight_kg: "",
-  shipping_amount: "1000.00",
+  shipping_amount: "2500.00",
   meta_title: "",
   meta_description: "",
   condition: "new",
