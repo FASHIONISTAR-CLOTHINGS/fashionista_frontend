@@ -148,6 +148,7 @@ export type FaqRow = z.infer<typeof FaqRowSchema>;
 
 // STEP 1: Info & Specs
 export const Step1Schema = z.object({
+  /** Full product title shown on PDP and catalog listings. */
   title: z
     .string()
     .min(1, "Product title is required")
@@ -155,24 +156,42 @@ export const Step1Schema = z.object({
     .refine((val) => val.length === 0 || val.length >= 5, {
       message: "Title must be at least 5 characters",
     }),
+
+  /** Rich-text description (HTML string from editor). Min 30 characters. */
   description: z
     .string()
     .min(1, "Product description is required")
     .refine((val) => val.length === 0 || val.trim().length >= 30, {
       message: "Description must be at least 30 characters",
     }),
+
+  /**
+   * Product condition — maps to backend ProductCondition choices.
+   * Defaults to "new" for apparel use-case.
+   */
   condition: z.enum(["new", "used", "refurbished"], {
     required_error: "Select a product condition",
   }),
+
+  /**
+   * Canonical catalog categories.
+   *
+   * Mirrors the backend Product.categories M2M contract:
+   * one selection is required, five is the hard cap for SEO/ranking quality.
+   */
   category_ids: z
     .array(z.string().uuid("Select a valid category"))
     .min(1, "Select at least one category")
     .max(15, "You can select up to 15 categories")
     .default([]),
+
+  /** Optional deeper discovery facets. Also capped at 15 backend-side. */
   sub_category_ids: z
     .array(z.string().uuid("Select a valid sub-category"))
     .max(15, "You can select up to 15 sub-categories")
     .default([]),
+
+  /** Comma-separated tag UUIDs — multi-select from ProductTag catalog. */
   tag_ids: z.array(z.string().uuid()).max(10, "You can add up to 10 tags").default([]),
   specifications: z.array(SpecRowSchema).max(20, "Maximum 20 specifications allowed").default([]),
 });
@@ -234,8 +253,14 @@ export type Step3Values = z.infer<typeof Step3Schema>;
 // STEP 4: Pricing & SKUs
 export const Step4BaseSchema = z.object({
   price: MoneySchema,
+
+  /** Strike-through price (before discount). Must be > price when provided. */
   old_price: OptionalMoneySchema,
+
+  /** ISO-4217 currency code. Platform default: NGN. */
   currency: z.string().length(3, "Currency must be a 3-letter ISO code").default("NGN"),
+
+  /** Physical stock quantity. */
   stock_qty: QtySchema.min(1, "Stock must be at least 1 unit"),
   max_stock: QtySchema.optional().nullable(),
   weight_kg: z
@@ -244,6 +269,8 @@ export const Step4BaseSchema = z.object({
     .optional()
     .or(z.literal("")),
   shipping_amount: OptionalMoneySchema,
+
+  /** Delivery courier UUID — optional; platform default used when absent. */
   courier_id: FKIdSchema,
   variants: z.array(VariantRowSchema).max(100, "Too many variants").default([]),
 });
@@ -270,10 +297,20 @@ export const Step5Schema = z.object({
   publish_intent: z.enum(["draft", "pending"], {
     required_error: "Select a publish intent",
   }),
+
+  /** Feature this product on the homepage hero carousel. */
   featured: z.boolean().default(false),
+
+  /** Mark as a hot-deal / flash-sale item. */
   hot_deal: z.boolean().default(false),
+
+  /** True for downloadable digital goods (no shipping required). */
   digital: z.boolean().default(false),
+
+  /** SEO meta title override. Falls back to product title when blank. */
   meta_title: z.string().max(160).optional().or(z.literal("")),
+
+  /** SEO meta description override. Shown in search-engine snippets. */
   meta_description: z.string().max(320).optional().or(z.literal("")),
   age_group: z.string().optional().default(""),
   gender_target: z.string().optional().default(""),
@@ -333,9 +370,13 @@ export type ProductBuilderFormValues = z.infer<typeof ProductBuilderFormSchema>;
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface StepMeta {
+  /** 1-indexed step number. */
   step: number;
+  /** Label shown in the stepper bar. */
   label: string;
+  /** Icon name from lucide-react. */
   icon: string;
+  /** Tooltip / helper text shown on hover. */
   description: string;
 }
 
@@ -347,7 +388,9 @@ export const BUILDER_STEPS: StepMeta[] = [
   { step: 5, label: "FAQs & Publish",   icon: "SendHorizontal", description: "Frequently asked questions, SEO tags, and publish settings" },
 ] as const;
 
+/** Total number of builder steps — used for progress calculation. */
 export const TOTAL_STEPS = BUILDER_STEPS.length;
 
+/** Returns 0–100 progress percentage for current step. */
 export const builderProgress = (currentStep: number): number =>
   Math.round(((currentStep - 1) / (TOTAL_STEPS - 1)) * 100);

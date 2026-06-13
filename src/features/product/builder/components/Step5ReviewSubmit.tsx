@@ -13,7 +13,6 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,9 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { Plus, Trash2, GripVertical, Settings, SendHorizontal, BookOpen, Sparkles } from "lucide-react";
+import { Plus, Trash2, Settings, SendHorizontal, BookOpen, Sparkles } from "lucide-react";
 
 const GENDER_OPTIONS = [
   { value: "unisex", label: "Unisex" },
@@ -46,17 +43,10 @@ const AGE_OPTIONS = [
 export function Step5ReviewSubmit() {
   const form = useFormContext<ProductBuilderFormValues>();
 
-  const { fields: specFields, append: appendSpec, remove: removeSpec } = useFieldArray({
-    control: form.control,
-    name: "specifications",
-  });
-
   const { fields: faqFields, append: appendFaq, remove: removeFaq } = useFieldArray({
     control: form.control,
     name: "faqs",
   });
-
-  const publishIntent = form.watch("publish_intent");
 
   return (
     <div className="space-y-10">
@@ -124,68 +114,7 @@ export function Step5ReviewSubmit() {
         </div>
       </div>
 
-      {/* ── SECTION 2 — SPECIFICATIONS ── */}
-      <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-[#ECE6D6] pb-3">
-          <div>
-            <h3 className="text-md font-bold text-[#1A1208]">Product Specifications</h3>
-            <p className="text-xs text-[#7A6B44] mt-0.5">Add key-value properties like Fabric weight, Embroidery yarn, fit type, etc.</p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => appendSpec({ title: "", content: "" })}
-            className="text-[#01454A] border-[#01454A]/30 hover:bg-[#F0F5F5] rounded-lg text-xs"
-          >
-            <Plus className="w-3.5 h-3.5 mr-1" /> Add Specification
-          </Button>
-        </div>
 
-        {specFields.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-zinc-200 py-6 text-center bg-white text-xs text-zinc-400">
-            No specifications added. Custom properties highlight product details nicely.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {specFields.map((field, idx) => (
-              <div key={field.id} className="flex gap-4 items-center bg-white border border-zinc-200 rounded-xl p-3">
-                <FormField
-                  control={form.control}
-                  name={`specifications.${idx}.title`}
-                  render={({ field: f }) => (
-                    <FormItem className="flex-1">
-                      <FormControl>
-                        <Input {...f} placeholder="e.g. Embroidery Thread" className="text-xs h-9 bg-white" />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name={`specifications.${idx}.content`}
-                  render={({ field: f }) => (
-                    <FormItem className="flex-1">
-                      <FormControl>
-                        <Input {...f} placeholder="e.g. Silk, metallic gold" className="text-xs h-9 bg-white" />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeSpec(idx)}
-                  className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* ── SECTION 3 — FAQS ── */}
       <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-6 space-y-4">

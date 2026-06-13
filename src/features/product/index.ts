@@ -179,10 +179,10 @@ export {
   ProductBuilderProvider,
   useBuilderContext,
   // Individual step components
-  Step1BasicInfo,
-  Step2AestheticsMedia,
-  Step3VariantsSizing,
-  Step4ShippingLogistics,
+  Step1InfoAndSpecs,
+  Step2SizingAndFabric,
+  Step3MediaAndMapping,
+  Step4PricingAndSKUs,
   Step5ReviewSubmit,
   // Stepper nav
   BuilderStepper,

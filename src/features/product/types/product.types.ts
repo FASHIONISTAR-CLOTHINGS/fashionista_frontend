@@ -446,7 +446,6 @@ export interface CreateProductInput {
   gender_target?: string;
   courier_id?: string | null;
   measurement_template?: string | null;
-  measurement_guide?: ProductMeasurementGuideRow[];
   variants?: Array<{
     size_id?: string | null;
     color_id?: string | null;

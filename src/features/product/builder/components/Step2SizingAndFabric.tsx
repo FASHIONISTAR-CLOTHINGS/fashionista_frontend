@@ -2,15 +2,15 @@
 
 /**
  * @file Step2SizingAndFabric.tsx
- * @description Step 2 — Sizes, Colours, Sizing Guides (Measurement Profiles/Templates), and Fabric Details
+ * @description Step 2 — Sizes, Colors, Sizing Templates, Measurements Matrix & Fabric Details
  */
 
-import * as React from "react";
-import { useFormContext, useFieldArray } from "react-hook-form";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useFormContext, useFieldArray } from "react-hook-form";
 import { apiAsync } from "@/core/api/client.async";
-import { fetchVendorMeasurementTemplates } from "../api/product.api";
-import type { ProductBuilderFormValues, MeasurementGuideRow } from "../schemas/builder.schemas";
+import { fetchVendorMeasurementTemplates } from "../../api/product.api";
+import type { ProductBuilderFormValues } from "../schemas/builder.schemas";
 
 // ── Shadcn/ui primitives ──────────────────────────────────────────────────────
 import {
@@ -24,6 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -31,28 +32,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import {
-  Loader2,
-  Check,
-  Palette,
-  Ruler,
-  InfoIcon,
-  Shirt,
-  Plus,
-  Trash2,
-  ListFilter,
-} from "lucide-react";
+import { Check, Loader2, Ruler, Trash2, Plus, Info, Palette, Scissors, Sparkles } from "lucide-react";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TYPES & CONSTANTS
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface SizeOption { id: string; name: string; }
-interface ColorOption { id: string; name: string; hex_code: string; }
+interface CatalogItem { id: string; name: string; hex_code?: string; }
 interface PaginatedEnvelope<T> { results?: T[]; }
 
 const CARE_INSTRUCTIONS = [
@@ -60,60 +44,65 @@ const CARE_INSTRUCTIONS = [
   { value: "hand_wash", label: "Hand Wash Only" },
   { value: "dry_clean", label: "Dry Clean Only" },
   { value: "do_not_wash", label: "Do Not Wash" },
-  { value: "cold_wash", label: "Cold Wash Only" },
+  { value: "cold_wash", label: "Cold Wash" },
   { value: "tumble_dry", label: "Tumble Dry" },
   { value: "air_dry", label: "Air Dry" },
 ];
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN COMPONENT
-// ─────────────────────────────────────────────────────────────────────────────
 
 export function Step2SizingAndFabric() {
   const form = useFormContext<ProductBuilderFormValues>();
 
   const selectedSizes = form.watch("size_ids") ?? [];
   const selectedColors = form.watch("color_ids") ?? [];
-  const requiresMeasurement = form.watch("requires_measurement") ?? false;
-  const isCustomisable = form.watch("is_customisable") ?? false;
-  const measurementTemplate = form.watch("measurement_template");
-  const measurementGuide = form.watch("measurement_guide") ?? [];
+  const requiresMeasurement = form.watch("requires_measurement");
+  const selectedTemplateId = form.watch("measurement_template");
 
-  // Fabric Watchers
+  // Fabric watch
   const fabricType = form.watch("fabric_type");
   const fabricComposition = form.watch("fabric_composition") ?? [];
 
-  // Master Data Query
-  const { data: masterData, isLoading: masterLoading } = useQuery({
-    queryKey: ["product-builder", "sizes-colors-templates"],
+  // Field arrays for fabric composition & measurement guides
+  const { fields: compositionFields, append: appendComposition, remove: removeComposition } = useFieldArray({
+    control: form.control,
+    name: "fabric_composition",
+  });
+
+  const { fields: guideFields, append: appendGuideRow, remove: removeGuideRow, replace: replaceGuideRows } = useFieldArray({
+    control: form.control,
+    name: "measurement_guide",
+  });
+
+  // Fetch catalog metadata for sizes & colors
+  const { data: catalogData, isLoading: catalogLoading } = useQuery({
+    queryKey: ["product-builder", "variant-catalog-full"],
     queryFn: async () => {
-      const [sizesData, colorsData, templatesData] = await Promise.all([
-        apiAsync.get("product/sizes/?page_size=100").json<PaginatedEnvelope<SizeOption>>(),
-        apiAsync.get("product/colors/?page_size=100").json<PaginatedEnvelope<ColorOption>>(),
-        fetchVendorMeasurementTemplates().catch(() => []), // Silently fallback to empty array if fails
+      const [sizesData, colorsData] = await Promise.all([
+        apiAsync.get("product/sizes/?page_size=100").json<PaginatedEnvelope<CatalogItem>>(),
+        apiAsync.get("product/colors/?page_size=100").json<PaginatedEnvelope<CatalogItem>>(),
       ]);
 
       return {
         sizes: sizesData.results ?? [],
         colors: colorsData.results ?? [],
-        templates: templatesData ?? [],
+        sizeMap: Object.fromEntries((sizesData.results ?? []).map((s) => [s.id, s])),
+        colorMap: Object.fromEntries((colorsData.results ?? []).map((c) => [c.id, c])),
       };
     },
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
   });
 
-  const sizes = masterData?.sizes ?? [];
-  const colors = masterData?.colors ?? [];
-  const templates = masterData?.templates ?? [];
+  const sizes = catalogData?.sizes ?? [];
+  const colors = catalogData?.colors ?? [];
+  const sizeMap = catalogData?.sizeMap ?? {};
 
-  // Fabric Composition field array
-  const { fields: compositionFields, append: appendComposition, remove: removeComposition } = useFieldArray({
-    control: form.control,
-    name: "fabric_composition",
+  // Fetch measurement templates for dropdown
+  const { data: templates = [], isLoading: templatesLoading } = useQuery({
+    queryKey: ["product-builder", "vendor-measurement-templates"],
+    queryFn: fetchVendorMeasurementTemplates,
+    staleTime: 5 * 60_000,
   });
 
-  // Toggle selection helpers
   const toggleSize = (id: string) => {
     const current = form.getValues("size_ids") ?? [];
     const updated = current.includes(id)
@@ -130,77 +119,104 @@ export function Step2SizingAndFabric() {
     form.setValue("color_ids", updated, { shouldValidate: true });
   };
 
-  // Sync measurement guide rows with selected sizes
-  React.useEffect(() => {
-    if (sizes.length === 0) return;
+  // ── Sizing guide rows auto-population sync ─────────────────────────────────
+  useEffect(() => {
+    if (!requiresMeasurement) return;
+    
+    // If a template is currently selected, let it govern the table.
+    if (selectedTemplateId) return;
 
-    const currentRows = [...measurementGuide];
-    let updatedRows = currentRows.filter((row) => !row.size_id || selectedSizes.includes(row.size_id));
+    const current = form.getValues("measurement_guide") ?? [];
+    const newRows: any[] = [];
 
-    selectedSizes.forEach((sizeId) => {
-      const exists = updatedRows.some((row) => row.size_id === sizeId);
-      if (!exists) {
-        const sizeObj = sizes.find((s) => s.id === sizeId);
-        updatedRows.push({
-          size_id: sizeId,
-          size_label: sizeObj?.name || "Unknown",
-          chest_cm: "",
-          waist_cm: "",
-          hip_cm: "",
-          shoulder_cm: "",
-          sleeve_cm: "",
-          length_cm: "",
-          inseam_cm: "",
-          foot_length_cm: "",
-          sort_order: 0,
-        });
+    // Pre-populate rows matching checked sizes
+    selectedSizes.forEach((sId, index) => {
+      const sizeObj = sizeMap[sId];
+      if (!sizeObj) return;
+
+      const existing = current.find((r) => r.size_id === sId || r.size_label === sizeObj.name);
+      newRows.push({
+        size_id: sId,
+        size_label: sizeObj.name,
+        chest_cm: existing?.chest_cm ?? "",
+        waist_cm: existing?.waist_cm ?? "",
+        hip_cm: existing?.hip_cm ?? "",
+        shoulder_cm: existing?.shoulder_cm ?? "",
+        sleeve_cm: existing?.sleeve_cm ?? "",
+        length_cm: existing?.length_cm ?? "",
+        inseam_cm: existing?.inseam_cm ?? "",
+        foot_length_cm: existing?.foot_length_cm ?? "",
+        sort_order: index,
+      });
+    });
+
+    // Keep custom guide rows that aren't bound to a specific catalog size
+    current.forEach((r) => {
+      if (!r.size_id) {
+        newRows.push(r);
       }
     });
 
-    if (JSON.stringify(updatedRows) !== JSON.stringify(measurementGuide)) {
-      form.setValue("measurement_guide", updatedRows, { shouldValidate: true });
-    }
-  }, [selectedSizes, sizes, form]);
+    replaceGuideRows(newRows);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSizes.join(","), requiresMeasurement, sizeMap, selectedTemplateId]);
 
-  // Sync templates selection
   const handleTemplateChange = (templateId: string) => {
-    if (templateId === "custom") {
-      form.setValue("measurement_template", null);
+    if (templateId === "none") {
+      form.setValue("measurement_template", null, { shouldValidate: true });
       return;
     }
-
-    form.setValue("measurement_template", templateId);
-    const selectedTemplate = templates.find((t) => t.id === templateId);
-    if (selectedTemplate) {
-      const rows = selectedTemplate.template_rows.map((row) => ({
-        size_id: row.size_id || null,
+    const template = templates.find((t) => t.id === templateId);
+    if (template) {
+      form.setValue("measurement_template", templateId, { shouldValidate: true });
+      
+      // Copy rows from template to form guide rows
+      const guideRows = template.template_rows.map((row) => ({
+        size_id: row.size_id ?? null,
         size_label: row.size_label,
         chest_cm: row.chest_cm || "",
         waist_cm: row.waist_cm || "",
         hip_cm: row.hip_cm || "",
+        length_cm: row.length_cm || "",
         shoulder_cm: row.shoulder_cm || "",
         sleeve_cm: row.sleeve_cm || "",
-        length_cm: row.length_cm || "",
         inseam_cm: row.inseam_cm || "",
         foot_length_cm: row.foot_length_cm || "",
         sort_order: row.sort_order || 0,
       }));
-
-      // Update selected sizes based on the template sizes
-      const templateSizeIds = selectedTemplate.template_rows
-        .map((row) => row.size_id)
-        .filter((id): id is string => !!id);
       
-      form.setValue("size_ids", templateSizeIds);
-      form.setValue("measurement_guide", rows, { shouldValidate: true });
+      replaceGuideRows(guideRows);
     }
   };
 
-  const compositionSum = React.useMemo(() => {
+  const compositionSum = useMemo(() => {
     return fabricComposition.reduce((sum, item) => sum + (Number(item?.percentage) || 0), 0);
   }, [fabricComposition]);
 
-  if (masterLoading) {
+  const [hasFabric, setHasFabric] = useState(!!fabricType || fabricComposition.length > 0);
+
+  const toggleFabricForm = (checked: boolean) => {
+    setHasFabric(checked);
+    if (checked) {
+      form.setValue("fabric_type", "");
+      form.setValue("fabric_composition", [{ material: "", percentage: 100 }], { shouldValidate: true });
+      form.setValue("fabric_care_instructions", "machine_wash");
+      form.setValue("fabric_care_notes", "");
+      form.setValue("fabric_is_organic", false);
+      form.setValue("fabric_is_vegan", false);
+      form.setValue("fabric_country_of_origin", "");
+    } else {
+      form.setValue("fabric_type", "");
+      form.setValue("fabric_composition", []);
+      form.setValue("fabric_care_instructions", "machine_wash");
+      form.setValue("fabric_care_notes", "");
+      form.setValue("fabric_is_organic", false);
+      form.setValue("fabric_is_vegan", false);
+      form.setValue("fabric_country_of_origin", "");
+    }
+  };
+
+  if (catalogLoading) {
     return (
       <div className="flex items-center justify-center py-24">
         <Loader2 className="w-8 h-8 animate-spin text-[#01454A]" />
@@ -210,357 +226,109 @@ export function Step2SizingAndFabric() {
 
   return (
     <div className="space-y-10">
-      {/* ── SECTION 1: Sizes & Colours ── */}
+      {/* SECTION A: Sizes & Colors Catalog */}
       <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-6 space-y-6">
         <h3 className="text-md font-bold text-[#1A1208] border-b border-[#ECE6D6] pb-2 flex items-center gap-2">
           <Palette className="w-5 h-5 text-[#01454A]" />
-          1. Sizes &amp; Colours options
+          1. Color &amp; Size Catalog
         </h3>
 
         {/* Sizes */}
-        <FormField
-          control={form.control}
-          name="size_ids"
-          render={() => (
-            <FormItem className="space-y-3">
-              <FormLabel className="text-[#1A1208] font-semibold text-sm">Sizes</FormLabel>
-              <FormDescription className="text-zinc-500 text-xs">
-                Select all standard sizes you stock.
-              </FormDescription>
-
-              <div className="flex flex-wrap gap-2">
-                {sizes.map((size) => {
-                  const selected = selectedSizes.includes(size.id);
-                  return (
-                    <button
-                      key={size.id}
-                      type="button"
-                      onClick={() => toggleSize(size.id)}
-                      className={cn(
-                        "relative px-4 py-2.5 rounded-xl text-sm font-medium border transition-all duration-150",
-                        selected
-                          ? "bg-[#E6F4F5] border-[#01454A] text-[#01454A] font-semibold"
-                          : "bg-white border-[#D9D9D9] text-[#5A6465] hover:border-[#FDA600]/50 hover:text-[#1A1208]",
-                      )}
-                    >
-                      {selected && (
-                        <Check className="absolute top-1 right-1 w-3 h-3 text-[#01454A]" />
-                      )}
-                      {size.name}
-                    </button>
-                  );
-                })}
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Colours */}
-        <FormField
-          control={form.control}
-          name="color_ids"
-          render={() => (
-            <FormItem className="space-y-3">
-              <FormLabel className="text-[#1A1208] font-semibold text-sm">Colours</FormLabel>
-              <FormDescription className="text-zinc-500 text-xs">
-                Select all colour options you offer.
-              </FormDescription>
-
-              <div className="flex flex-wrap gap-3">
-                {colors.map((color) => {
-                  const selected = selectedColors.includes(color.id);
-                  return (
-                    <button
-                      key={color.id}
-                      type="button"
-                      title={color.name}
-                      onClick={() => toggleColor(color.id)}
-                      className={cn(
-                        "flex flex-col items-center gap-2 p-2 rounded-xl border transition-all duration-150 w-[72px] bg-white",
-                        selected
-                          ? "border-[#FDA600] bg-[#FFF6E3] shadow-sm"
-                          : "border-[#D9D9D9] hover:border-zinc-300",
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "w-9 h-9 rounded-full border flex items-center justify-center",
-                          selected ? "border-[#FDA600]" : "border-zinc-200",
-                        )}
-                        style={{ backgroundColor: color.hex_code }}
-                      >
-                        {selected && <Check className="w-4 h-4 text-black font-extrabold" />}
-                      </span>
-                      <span className="text-[10px] text-zinc-600 font-semibold text-center leading-tight line-clamp-2">
-                        {color.name}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      {/* ── SECTION 2: Fabric & Care ── */}
-      <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-6 space-y-6">
-        <h3 className="text-md font-bold text-[#1A1208] border-b border-[#ECE6D6] pb-2 flex items-center gap-2">
-          <Shirt className="w-5 h-5 text-[#01454A]" />
-          2. Fabric &amp; Care Details
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="fabric_type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">Fabric Type</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="e.g. Brocade, Cashmere, Senegalese Cotton, Silk Satin"
-                    className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="fabric_country_of_origin"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">Country of Origin</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="e.g. Nigeria, Senegal, Italy"
-                    className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {/* Fabric Composition Array */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <FormLabel className="text-[#1A1208] font-semibold text-sm">Material Composition (%)</FormLabel>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => appendComposition({ material: "", percentage: 0 })}
-              className="text-[#01454A] border-[#01454A]/30 hover:bg-[#F0F5F5] rounded-lg text-xs"
-            >
-              <Plus className="w-3.5 h-3.5 mr-1" /> Add Material
-            </Button>
-          </div>
-
-          <div className="space-y-3 bg-white p-4 border border-[#ECE6D6] rounded-xl shadow-sm">
-            {compositionFields.length === 0 && (
-              <p className="text-xs text-[#7A6B44] text-center py-2">No material composition added yet.</p>
-            )}
-            {compositionFields.map((field, index) => (
-              <div key={field.id} className="flex gap-4 items-center">
-                <FormField
-                  control={form.control}
-                  name={`fabric_composition.${index}.material`}
-                  render={({ field: matField }) => (
-                    <FormItem className="flex-1">
-                      <FormControl>
-                        <Input
-                          {...matField}
-                          placeholder="e.g. Cotton, Wool, Silk"
-                          className="bg-white border border-[#D9D9D9] text-[#1A1208] rounded-xl"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name={`fabric_composition.${index}.percentage`}
-                  render={({ field: pctField }) => (
-                    <FormItem className="w-32">
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            {...pctField}
-                            type="number"
-                            min="0"
-                            max="100"
-                            placeholder="100"
-                            onChange={(e) => pctField.onChange(parseInt(e.target.value, 10) || 0)}
-                            className="bg-white border border-[#D9D9D9] text-[#1A1208] rounded-xl pr-8"
-                          />
-                          <span className="absolute right-3 top-3 text-xs text-zinc-400">%</span>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button
+        <div className="space-y-2">
+          <FormLabel className="text-[#1A1208] font-semibold text-sm">Select Sizes</FormLabel>
+          <FormDescription className="text-xs text-zinc-500">
+            Select the sizes in which this product is available. Defines sizes axis for SKU creation.
+          </FormDescription>
+          <div className="flex flex-wrap gap-2 pt-2">
+            {sizes.map((size) => {
+              const selected = selectedSizes.includes(size.id);
+              return (
+                <button
+                  key={size.id}
                   type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeComposition(index)}
-                  className="text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg"
+                  onClick={() => toggleSize(size.id)}
+                  className={cn(
+                    "relative px-4 py-2.5 rounded-xl text-sm font-medium border transition-all",
+                    selected
+                      ? "bg-[#E6F4F5] border-[#01454A] text-[#01454A] font-semibold"
+                      : "bg-white border-[#D9D9D9] text-[#5A6465] hover:border-[#FDA600]/50"
+                  )}
                 >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            ))}
-
-            {compositionFields.length > 0 && (
-              <div className="flex justify-between items-center text-xs mt-2 border-t pt-2 border-dashed">
-                <span className="text-[#7A6B44]">Sum: {compositionSum}%</span>
-                {compositionSum !== 100 && (
-                  <span className="text-amber-600 font-semibold">Percentages must sum up to 100%</span>
-                )}
-              </div>
-            )}
+                  {selected && <Check className="absolute top-1 right-1 w-3 h-3 text-[#01454A]" />}
+                  {size.name}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Care instructions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="fabric_care_instructions"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">Care Instructions</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value ?? "machine_wash"}>
-                  <FormControl>
-                    <SelectTrigger className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3">
-                      <SelectValue placeholder="Care instructions" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208] shadow-lg">
-                    {CARE_INSTRUCTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="grid grid-cols-2 gap-4 items-end">
-            <FormField
-              control={form.control}
-              name="fabric_is_organic"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-xl bg-white border border-[#D9D9D9] px-4 py-3 h-[50px]">
-                  <FormLabel className="text-[#1A1208] font-semibold text-xs cursor-pointer">Organic</FormLabel>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      className="data-[state=checked]:bg-[#01454A]"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="fabric_is_vegan"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-xl bg-white border border-[#D9D9D9] px-4 py-3 h-[50px]">
-                  <FormLabel className="text-[#1A1208] font-semibold text-xs cursor-pointer">Vegan Friendly</FormLabel>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      className="data-[state=checked]:bg-[#01454A]"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+        {/* Colors */}
+        <div className="space-y-2">
+          <FormLabel className="text-[#1A1208] font-semibold text-sm">Select Colours</FormLabel>
+          <FormDescription className="text-xs text-zinc-500">
+            Select color options available for this product.
+          </FormDescription>
+          <div className="flex flex-wrap gap-3 pt-2">
+            {colors.map((color) => {
+              const selected = selectedColors.includes(color.id);
+              return (
+                <button
+                  key={color.id}
+                  type="button"
+                  title={color.name}
+                  onClick={() => toggleColor(color.id)}
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 p-2 rounded-xl border w-[72px] bg-white transition-all",
+                    selected ? "border-[#FDA600] bg-[#FFF6E3]" : "border-zinc-200 hover:border-zinc-300"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "w-8 h-8 rounded-full border flex items-center justify-center",
+                      selected ? "border-[#FDA600]" : "border-zinc-200"
+                    )}
+                    style={{ backgroundColor: color.hex_code }}
+                  >
+                    {selected && <Check className="w-4 h-4 text-black" />}
+                  </span>
+                  <span className="text-[10px] text-zinc-600 font-semibold text-center leading-none truncate w-full">
+                    {color.name}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
-
-        {/* Care Notes */}
-        <FormField
-          control={form.control}
-          name="fabric_care_notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-[#1A1208] font-semibold text-sm">Special Care Notes</FormLabel>
-              <FormControl>
-                <Textarea
-                  {...field}
-                  placeholder="e.g. Iron inside out, avoid direct sunlight when drying, or steam iron only..."
-                  className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
       </div>
 
-      {/* ── SECTION 3: Sizing & Measurement Guides ── */}
+      {/* SECTION B: Sizing Guides & Sizing template overrides */}
       <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-6 space-y-6">
         <div className="flex items-center justify-between border-b border-[#ECE6D6] pb-3">
           <div>
             <h3 className="text-md font-bold text-[#1A1208] flex items-center gap-2">
               <Ruler className="w-5 h-5 text-[#01454A]" />
-              3. Sizing &amp; Measurement Guide
+              2. Sizing &amp; Measurement Guide
             </h3>
             <p className="text-xs text-[#7A6B44] mt-0.5">
-              Enable this to specify body measurements for selected sizes, or use a pre-saved sizing template.
+              Input body size specifications in centimeters to guide buyers.
             </p>
           </div>
-          <FormField
-            control={form.control}
-            name="requires_measurement"
-            render={({ field }) => (
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  className="data-[state=checked]:bg-[#01454A]"
-                />
-              </FormControl>
-            )}
-          />
-        </div>
-
-        {requiresMeasurement && (
-          <div className="space-y-6 animate-step-enter">
-            {/* Customisable flag */}
+          <div className="flex items-center gap-6">
             <FormField
               control={form.control}
-              name="is_customisable"
+              name="requires_measurement"
               render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-xl bg-white border border-[#D9D9D9] p-4">
-                  <div className="space-y-0.5 pr-2">
-                    <FormLabel className="text-[#1A1208] font-semibold text-sm cursor-pointer">
-                      Allow Custom Sizing Request
-                    </FormLabel>
-                    <FormDescription className="text-zinc-500 text-xs">
-                      If checked, customers can submit their custom measurements during checkout.
-                    </FormDescription>
+                <FormItem className="flex items-center gap-2 space-y-0 bg-white border border-[#D9D9D9] px-3 py-1.5 rounded-xl">
+                  <div className="flex items-center gap-1">
+                    <FormLabel className="text-xs font-bold text-[#1A1208] cursor-pointer">Bespoke Fit</FormLabel>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="w-3.5 h-3.5 text-zinc-400 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-black text-white text-xs max-w-xs p-2 rounded-lg">
+                        Enforces customer measurements checkout form.
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                   <FormControl>
                     <Switch
@@ -573,33 +341,387 @@ export function Step2SizingAndFabric() {
               )}
             />
 
-            {/* Template Selection */}
+            <FormField
+              control={form.control}
+              name="is_customisable"
+              render={({ field }) => (
+                <FormItem className="flex items-center gap-2 space-y-0 bg-white border border-[#D9D9D9] px-3 py-1.5 rounded-xl">
+                  <FormLabel className="text-xs font-bold text-[#1A1208] cursor-pointer">Allow Customisation</FormLabel>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      className="data-[state=checked]:bg-[#01454A]"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {requiresMeasurement && (
+          <div className="space-y-6">
+            {/* Reusable template selector */}
+            <div className="bg-white p-4 border border-[#ECE6D6] rounded-xl space-y-3">
+              <FormLabel className="text-[#1A1208] font-semibold text-xs flex items-center gap-1.5">
+                <Scissors className="w-3.5 h-3.5 text-[#01454A]" /> Reuse Sizing Template (Avoid fatigue)
+              </FormLabel>
+              {templatesLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin text-[#01454A]" />
+              ) : (
+                <Select
+                  onValueChange={handleTemplateChange}
+                  value={selectedTemplateId || "none"}
+                >
+                  <SelectTrigger className="bg-white border border-[#D9D9D9] text-[#1A1208] text-xs max-w-sm rounded-xl">
+                    <SelectValue placeholder="Select a saved template…" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208] shadow-lg rounded-xl">
+                    <SelectItem value="none">No template (Manual Sizes)</SelectItem>
+                    {templates.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.name} ({t.template_rows.length} sizes)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
             <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#7A6B44]">Centimeter Guide Table Override</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => appendGuideRow({
+                    size_label: "",
+                    chest_cm: "",
+                    waist_cm: "",
+                    hip_cm: "",
+                    shoulder_cm: "",
+                    sleeve_cm: "",
+                    length_cm: "",
+                    inseam_cm: "",
+                    foot_length_cm: "",
+                    sort_order: guideFields.length,
+                  })}
+                  className="text-[#01454A] border-[#01454A]/30 hover:bg-[#F0F5F5] rounded-lg text-xs"
+                >
+                  <Plus className="w-3.5 h-3.5 mr-1" /> Add Custom Size Row
+                </Button>
+              </div>
+
+              <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-zinc-200 bg-zinc-50 font-bold uppercase tracking-wider text-zinc-500">
+                      <th className="px-3 py-3 whitespace-nowrap">Size Label *</th>
+                      <th className="px-3 py-3 whitespace-nowrap">Chest (cm)</th>
+                      <th className="px-3 py-3 whitespace-nowrap">Waist (cm)</th>
+                      <th className="px-3 py-3 whitespace-nowrap">Hips (cm)</th>
+                      <th className="px-3 py-3 whitespace-nowrap">Shoulder (cm)</th>
+                      <th className="px-3 py-3 whitespace-nowrap">Sleeve (cm)</th>
+                      <th className="px-3 py-3 whitespace-nowrap">Length (cm)</th>
+                      <th className="px-3 py-3 text-center whitespace-nowrap">Remove</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {guideFields.map((field, index) => (
+                      <tr key={field.id} className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50/20">
+                        {/* Label */}
+                        <td className="px-3 py-2">
+                          <FormField
+                            control={form.control}
+                            name={`measurement_guide.${index}.size_label`}
+                            render={({ field: f }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Input
+                                    {...f}
+                                    className="h-8 w-24 bg-white border border-[#D9D9D9] text-[#1A1208] text-xs px-2"
+                                    placeholder="e.g. S, XL"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </td>
+
+                        {/* Chest */}
+                        <td className="px-3 py-2">
+                          <FormField
+                            control={form.control}
+                            name={`measurement_guide.${index}.chest_cm`}
+                            render={({ field: f }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Input {...f} className="h-8 w-16 bg-white border border-[#D9D9D9] text-xs px-2" placeholder="e.g. 90-95" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </td>
+
+                        {/* Waist */}
+                        <td className="px-3 py-2">
+                          <FormField
+                            control={form.control}
+                            name={`measurement_guide.${index}.waist_cm`}
+                            render={({ field: f }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Input {...f} className="h-8 w-16 bg-white border border-[#D9D9D9] text-xs px-2" placeholder="e.g. 75-80" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </td>
+
+                        {/* Hips */}
+                        <td className="px-3 py-2">
+                          <FormField
+                            control={form.control}
+                            name={`measurement_guide.${index}.hip_cm`}
+                            render={({ field: f }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Input {...f} className="h-8 w-16 bg-white border border-[#D9D9D9] text-xs px-2" placeholder="e.g. 95-100" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </td>
+
+                        {/* Shoulder */}
+                        <td className="px-3 py-2">
+                          <FormField
+                            control={form.control}
+                            name={`measurement_guide.${index}.shoulder_cm`}
+                            render={({ field: f }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Input {...f} className="h-8 w-16 bg-white border border-[#D9D9D9] text-xs px-2" placeholder="e.g. 45" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </td>
+
+                        {/* Sleeve */}
+                        <td className="px-3 py-2">
+                          <FormField
+                            control={form.control}
+                            name={`measurement_guide.${index}.sleeve_cm`}
+                            render={({ field: f }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Input {...f} className="h-8 w-16 bg-white border border-[#D9D9D9] text-xs px-2" placeholder="e.g. 60" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </td>
+
+                        {/* Length */}
+                        <td className="px-3 py-2">
+                          <FormField
+                            control={form.control}
+                            name={`measurement_guide.${index}.length_cm`}
+                            render={({ field: f }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Input {...f} className="h-8 w-16 bg-white border border-[#D9D9D9] text-xs px-2" placeholder="e.g. 110" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </td>
+
+                        {/* Remove */}
+                        <td className="px-3 py-2 text-center">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeGuideRow(index)}
+                            className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* SECTION C: Fabric details */}
+      <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-6 space-y-6">
+        <div className="flex items-center justify-between border-b border-[#ECE6D6] pb-3">
+          <div>
+            <h3 className="text-md font-bold text-[#1A1208] flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#01454A]" />
+              3. Fabric &amp; Material Properties
+            </h3>
+            <p className="text-xs text-[#7A6B44] mt-0.5">
+              Provide specific material detail to describe premium tactile feel.
+            </p>
+          </div>
+          <Switch
+            checked={hasFabric}
+            onCheckedChange={toggleFabricForm}
+            className="data-[state=checked]:bg-[#01454A]"
+          />
+        </div>
+
+        {hasFabric && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
-                name="measurement_template"
+                name="fabric_type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                      Sizing Template Profile
-                    </FormLabel>
-                    <FormDescription className="text-zinc-500 text-xs">
-                      Choose a pre-saved measurement template profile to automatically fill the sizing chart.
-                    </FormDescription>
-                    <Select
-                      onValueChange={handleTemplateChange}
-                      value={field.value || "custom"}
-                    >
+                    <FormLabel className="text-[#1A1208] font-semibold text-sm">Fabric Type *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="e.g. Cashmere, Senegalese Cotton, Silk Satin"
+                        className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="fabric_country_of_origin"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[#1A1208] font-semibold text-sm">Country of Origin</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        placeholder="e.g. Nigeria, Senegal, Italy"
+                        className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Fabric Composition Array */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <FormLabel className="text-[#1A1208] font-semibold text-sm">Material Composition (%)</FormLabel>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => appendComposition({ material: "", percentage: 0 })}
+                  className="text-[#01454A] border-[#01454A]/30 hover:bg-[#F0F5F5] rounded-lg text-xs"
+                >
+                  <Plus className="w-3.5 h-3.5 mr-1" /> Add Material
+                </Button>
+              </div>
+
+              <div className="space-y-3 bg-white p-4 border border-[#ECE6D6] rounded-xl">
+                {compositionFields.map((field, index) => (
+                  <div key={field.id} className="flex gap-4 items-center">
+                    <FormField
+                      control={form.control}
+                      name={`fabric_composition.${index}.material`}
+                      render={({ field: matField }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input
+                              {...matField}
+                              placeholder="e.g. Cotton, Wool, Silk"
+                              className="bg-white border border-[#D9D9D9] text-[#1A1208] rounded-xl"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name={`fabric_composition.${index}.percentage`}
+                      render={({ field: pctField }) => (
+                        <FormItem className="w-32">
+                          <FormControl>
+                            <div className="relative">
+                              <Input
+                                {...pctField}
+                                type="number"
+                                min="0"
+                                max="100"
+                                placeholder="100"
+                                onChange={(e) => pctField.onChange(parseInt(e.target.value, 10) || 0)}
+                                className="bg-white border border-[#D9D9D9] text-[#1A1208] rounded-xl pr-8"
+                              />
+                              <span className="absolute right-3 top-3 text-xs text-zinc-400">%</span>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {compositionFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeComposition(index)}
+                        className="text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+
+                <div className="flex justify-between items-center text-xs mt-2 border-t pt-2 border-dashed">
+                  <span className="text-[#7A6B44]">Sum: {compositionSum}%</span>
+                  {compositionSum !== 100 && (
+                    <span className="text-amber-600 font-semibold">Composition percentages should sum to 100%</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Care instructions */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="fabric_care_instructions"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[#1A1208] font-semibold text-sm">Care Instructions</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value ?? "machine_wash"}>
                       <FormControl>
                         <SelectTrigger className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3">
-                          <SelectValue placeholder="Custom / Manual Sizing Chart" />
+                          <SelectValue placeholder="Care instructions" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208] shadow-lg">
-                        <SelectItem value="custom">Manual / Custom Guide Chart</SelectItem>
-                        {templates.map((t) => (
-                          <SelectItem key={t.id} value={t.id}>
-                            {t.name}
+                      <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208] shadow-lg rounded-xl">
+                        {CARE_INSTRUCTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value} className="cursor-pointer">
+                            {opt.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -608,101 +730,63 @@ export function Step2SizingAndFabric() {
                   </FormItem>
                 )}
               />
+
+              <div className="grid grid-cols-2 gap-4 items-center">
+                <FormField
+                  control={form.control}
+                  name="fabric_is_organic"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-xl bg-white border border-[#D9D9D9] px-4 py-2 mt-6">
+                      <FormLabel className="text-[#1A1208] font-semibold text-xs cursor-pointer">Organic</FormLabel>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="data-[state=checked]:bg-[#01454A]"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="fabric_is_vegan"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-xl bg-white border border-[#D9D9D9] px-4 py-2 mt-6">
+                      <FormLabel className="text-[#1A1208] font-semibold text-xs cursor-pointer">Vegan Friendly</FormLabel>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="data-[state=checked]:bg-[#01454A]"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
-            {/* Measurement Input Chart Table */}
-            {selectedSizes.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[#D9D9D9] py-8 text-center bg-white">
-                <p className="text-[#7A6B44] text-sm font-semibold">
-                  Please select one or more Sizes above to build the measurement guide chart.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                  Sizing Guide Matrix (Dimensions in cm)
-                </FormLabel>
-                
-                <div className="overflow-x-auto rounded-xl border border-[#D9D9D9] bg-white shadow-sm">
-                  <table className="w-full text-left border-collapse text-xs">
-                    <thead>
-                      <tr className="bg-zinc-50 border-b border-[#ECE6D6] text-zinc-600 font-bold uppercase tracking-wider">
-                        <th className="p-3 border-r border-[#ECE6D6] w-24">Size</th>
-                        <th className="p-3 border-r border-[#ECE6D6]">Chest (cm)</th>
-                        <th className="p-3 border-r border-[#ECE6D6]">Waist (cm)</th>
-                        <th className="p-3 border-r border-[#ECE6D6]">Hips (cm)</th>
-                        <th className="p-3 border-r border-[#ECE6D6]">Shoulders (cm)</th>
-                        <th className="p-3 border-r border-[#ECE6D6]">Sleeves (cm)</th>
-                        <th className="p-3">Length (cm)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {measurementGuide.map((row, idx) => (
-                        <tr key={row.size_id || idx} className="border-b border-[#ECE6D6] hover:bg-zinc-50/50">
-                          <td className="p-3 border-r border-[#ECE6D6] bg-zinc-50/55 font-bold text-[#1A1208]">
-                            {row.size_label}
-                          </td>
-                          <td className="p-2 border-r border-[#ECE6D6]">
-                            <Input
-                              type="text"
-                              value={form.watch(`measurement_guide.${idx}.chest_cm`) || ""}
-                              onChange={(e) => form.setValue(`measurement_guide.${idx}.chest_cm`, e.target.value)}
-                              placeholder="e.g. 92-96"
-                              className="h-8 text-xs border-[#D9D9D9] rounded-lg px-2"
-                            />
-                          </td>
-                          <td className="p-2 border-r border-[#ECE6D6]">
-                            <Input
-                              type="text"
-                              value={form.watch(`measurement_guide.${idx}.waist_cm`) || ""}
-                              onChange={(e) => form.setValue(`measurement_guide.${idx}.waist_cm`, e.target.value)}
-                              placeholder="e.g. 76-80"
-                              className="h-8 text-xs border-[#D9D9D9] rounded-lg px-2"
-                            />
-                          </td>
-                          <td className="p-2 border-r border-[#ECE6D6]">
-                            <Input
-                              type="text"
-                              value={form.watch(`measurement_guide.${idx}.hip_cm`) || ""}
-                              onChange={(e) => form.setValue(`measurement_guide.${idx}.hip_cm`, e.target.value)}
-                              placeholder="e.g. 98-102"
-                              className="h-8 text-xs border-[#D9D9D9] rounded-lg px-2"
-                            />
-                          </td>
-                          <td className="p-2 border-r border-[#ECE6D6]">
-                            <Input
-                              type="text"
-                              value={form.watch(`measurement_guide.${idx}.shoulder_cm`) || ""}
-                              onChange={(e) => form.setValue(`measurement_guide.${idx}.shoulder_cm`, e.target.value)}
-                              placeholder="e.g. 42"
-                              className="h-8 text-xs border-[#D9D9D9] rounded-lg px-2"
-                            />
-                          </td>
-                          <td className="p-2 border-r border-[#ECE6D6]">
-                            <Input
-                              type="text"
-                              value={form.watch(`measurement_guide.${idx}.sleeve_cm`) || ""}
-                              onChange={(e) => form.setValue(`measurement_guide.${idx}.sleeve_cm`, e.target.value)}
-                              placeholder="e.g. 62"
-                              className="h-8 text-xs border-[#D9D9D9] rounded-lg px-2"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              type="text"
-                              value={form.watch(`measurement_guide.${idx}.length_cm`) || ""}
-                              onChange={(e) => form.setValue(`measurement_guide.${idx}.length_cm`, e.target.value)}
-                              placeholder="e.g. 75"
-                              className="h-8 text-xs border-[#D9D9D9] rounded-lg px-2"
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+            {/* Care Notes */}
+            <FormField
+              control={form.control}
+              name="fabric_care_notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[#1A1208] font-semibold text-sm">Special Care Notes</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      value={field.value ?? ""}
+                      placeholder="e.g. Iron inside out, avoid direct sunlight when drying, or steam iron only..."
+                      className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         )}
       </div>

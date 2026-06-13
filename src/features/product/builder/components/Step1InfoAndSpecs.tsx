@@ -2,11 +2,10 @@
 
 /**
  * @file Step1InfoAndSpecs.tsx
- * @description Step 1 — Basic Details & Specifications
- * Consolidates title, description, condition, category facets, tags, and custom specifications table.
+ * @description Step 1 — Basic Information & Technical Specifications
+ * Consolidates title, description, condition, category facets, tags, and technical specifications.
  */
 
-import * as React from "react";
 import { useFormContext, useFieldArray } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { apiAsync } from "@/core/api/client.async";
@@ -32,7 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, Check, Plus, Trash2, GripVertical, ListChecks } from "lucide-react";
+import { X, Check, Plus, Trash2, FileText } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES & CONSTANTS
@@ -82,7 +81,7 @@ async function fetchTags(): Promise<SelectOption[]> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SKELETON
+// SKELETONS
 // ─────────────────────────────────────────────────────────────────────────────
 
 function FieldSkeleton({ label }: { label: string }) {
@@ -95,7 +94,7 @@ function FieldSkeleton({ label }: { label: string }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MAIN COMPONENT
+// MAIN STEP 1 COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function Step1InfoAndSpecs() {
@@ -196,12 +195,7 @@ export function Step1InfoAndSpecs() {
     );
   };
 
-  const addSpec = () => {
-    if (specFields.length < 20) {
-      appendSpec({ title: "", content: "" });
-    }
-  };
-
+  // ── Initial skeleton during first catalog fetch ───────────────────────────
   const initialLoading = catsLoading || tagsLoading;
 
   if (initialLoading) {
@@ -221,8 +215,8 @@ export function Step1InfoAndSpecs() {
 
   return (
     <div className="space-y-10">
-      {/* SECTION A: Base Info */}
-      <div className="space-y-6">
+      {/* SECTION A: Base Details */}
+      <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-6 space-y-6">
         <h3 className="text-md font-bold text-[#1A1208] border-b border-[#ECE6D6] pb-2">
           1. Basic Details
         </h3>
@@ -304,10 +298,10 @@ export function Step1InfoAndSpecs() {
         />
       </div>
 
-      {/* SECTION B: Discovery Categories */}
-      <div className="space-y-6">
+      {/* SECTION B: Categories & Tags */}
+      <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-6 space-y-6">
         <h3 className="text-md font-bold text-[#1A1208] border-b border-[#ECE6D6] pb-2">
-          2. Categories & Tags
+          2. Categories &amp; Tags
         </h3>
 
         {/* Categories grid */}
@@ -320,7 +314,7 @@ export function Step1InfoAndSpecs() {
                 Categories <span className="text-[#FDA600]">*</span>
               </FormLabel>
               <div className={`rounded-xl border p-4 ${
-                fieldState.invalid ? "border-destructive bg-destructive/5" : "border-[#D9D9D9] bg-[#FAFAF8]"
+                fieldState.invalid ? "border-destructive bg-destructive/5" : "border-[#D9D9D9] bg-white"
               }`}>
                 <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                   {categories.map((cat) => {
@@ -332,7 +326,7 @@ export function Step1InfoAndSpecs() {
                         onClick={() => toggleCategory(cat.id)}
                         className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${
                           selected
-                            ? "border-[#FDA600] bg-[#FFF6E3] shadow-sm"
+                            ? "border-[#FDA600] bg-[#FFF6E3] shadow-sm font-semibold"
                             : "border-[#D9D9D9] bg-white hover:border-[#FDA600]/50"
                         }`}
                       >
@@ -341,7 +335,7 @@ export function Step1InfoAndSpecs() {
                         }`}>
                           {selected && <Check className="h-3 w-3 text-black" />}
                         </span>
-                        <span className="text-sm font-semibold text-[#1A1208] truncate">{cat.name}</span>
+                        <span className="text-sm text-[#1A1208] truncate">{cat.name}</span>
                       </button>
                     );
                   })}
@@ -359,7 +353,7 @@ export function Step1InfoAndSpecs() {
           render={() => (
             <FormItem className="space-y-3">
               <FormLabel className="text-[#1A1208] font-semibold text-sm">Sub-Categories</FormLabel>
-              <div className="rounded-xl border border-[#D9D9D9] bg-[#FAFAF8] p-4">
+              <div className="rounded-xl border border-[#D9D9D9] bg-white p-4">
                 {!selectedPrimaryCategoryId ? (
                   <div className="rounded-xl border border-dashed border-[#D9D9D9] p-5 text-center bg-white">
                     <p className="text-sm font-semibold text-[#5A6465]">Select a category above first</p>
@@ -385,7 +379,7 @@ export function Step1InfoAndSpecs() {
                           onClick={() => toggleSubCategory(sub.id)}
                           className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${
                             selected
-                              ? "border-[#FDA600] bg-[#FFF6E3] shadow-sm"
+                              ? "border-[#FDA600] bg-[#FFF6E3] shadow-sm font-semibold"
                               : "border-[#D9D9D9] bg-white hover:border-[#FDA600]/50"
                           }`}
                         >
@@ -394,7 +388,7 @@ export function Step1InfoAndSpecs() {
                           }`}>
                             {selected && <Check className="h-3 w-3 text-black" />}
                           </span>
-                          <span className="text-sm font-semibold text-[#1A1208] truncate">{sub.name}</span>
+                          <span className="text-sm text-[#1A1208] truncate">{sub.name}</span>
                         </button>
                       );
                     })}
@@ -412,7 +406,7 @@ export function Step1InfoAndSpecs() {
           name="tag_ids"
           render={() => (
             <FormItem>
-              <FormLabel className="text-[#1A1208] font-semibold text-sm">Tags</FormLabel>
+              <FormLabel className="text-[#1A1208] font-semibold text-sm">Discovery Tags</FormLabel>
               {selectedTagIds.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-3">
                   {selectedTagIds.map((tagId) => {
@@ -462,102 +456,75 @@ export function Step1InfoAndSpecs() {
       </div>
 
       {/* SECTION C: Specifications */}
-      <div className="space-y-6">
-        <div>
-          <h3 className="text-md font-bold text-[#1A1208] border-b border-[#ECE6D6] pb-2 flex items-center gap-2">
-            <ListChecks className="w-5 h-5 text-[#01454A]" />
-            3. Product Specifications
-          </h3>
-          <p className="text-[#7A6B44] text-xs mt-1">
-            Add key details like fit type, style, neckline, or pattern to help customers choose.
-            Maximum 20 entries.
-          </p>
-        </div>
-
-        {/* Empty state */}
-        {specFields.length === 0 && (
-          <div className="rounded-xl border border-dashed border-[#D9D9D9] py-10 text-center bg-[#FAFAF8]">
-            <p className="text-[#7A6B44] text-sm">
-              No custom specifications added yet.
+      <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-6 space-y-4">
+        <div className="flex items-center justify-between border-b border-[#ECE6D6] pb-3">
+          <div>
+            <h3 className="text-md font-bold text-[#1A1208] flex items-center gap-2">
+              <FileText className="w-4 h-4 text-[#01454A]" /> 3. Technical Specifications
+            </h3>
+            <p className="text-xs text-[#7A6B44] mt-0.5">
+              Add technical specs or garment characteristics (e.g. Lining material, Embroidery style).
             </p>
           </div>
-        )}
-
-        {/* Spec rows */}
-        <div className="space-y-3">
-          {specFields.map((field, idx) => (
-            <div
-              key={field.id}
-              className="group flex gap-3 items-start rounded-xl bg-white border border-[#D9D9D9] p-4 hover:border-[#FDA600]/40 transition-colors shadow-sm"
-            >
-              {/* Drag handle */}
-              <div className="flex-shrink-0 pt-2 text-[#7A6B44] cursor-grab group-hover:text-[#1A1208] transition-colors">
-                <GripVertical className="w-4 h-4" />
-              </div>
-
-              {/* Fields */}
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name={`specifications.${idx}.title`}
-                  render={({ field: f }) => (
-                    <FormItem>
-                      <FormLabel className="text-zinc-500 text-xs font-semibold">Specification Title</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...f}
-                          placeholder="e.g. Fit Type"
-                          className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-3 py-2 text-xs"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name={`specifications.${idx}.content`}
-                  render={({ field: f }) => (
-                    <FormItem>
-                      <FormLabel className="text-zinc-500 text-xs font-semibold">Value / Detail</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...f}
-                          placeholder="e.g. Regular Custom Fit"
-                          className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-3 py-2 text-xs"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Delete */}
-              <button
-                type="button"
-                onClick={() => removeSpec(idx)}
-                className="flex-shrink-0 pt-7 text-[#7A6B44] hover:text-red-600 transition-colors"
-                title="Remove specification"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {/* Add button */}
-        {specFields.length < 20 && (
           <Button
             type="button"
             variant="outline"
-            onClick={addSpec}
-            className="w-full border-dashed border-[#D9D9D9] text-[#7A6B44] hover:text-[#01454A] hover:border-[#01454A]/40 bg-transparent hover:bg-[#E6F4F5]/30 rounded-xl py-3"
+            size="sm"
+            onClick={() => appendSpec({ title: "", content: "" })}
+            className="text-[#01454A] border-[#01454A]/30 hover:bg-[#F0F5F5] rounded-lg text-xs font-semibold"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Specification ({specFields.length}/20)
+            <Plus className="w-3.5 h-3.5 mr-1" /> Add Spec Row
           </Button>
+        </div>
+
+        {specFields.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-zinc-200 py-6 text-center bg-white text-xs text-zinc-400">
+            No specifications added. Add properties like hem finish, stitch type, button layout, etc.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {specFields.map((field, idx) => (
+              <div key={field.id} className="bg-white border border-zinc-200 rounded-xl p-4 space-y-3 relative group shadow-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name={`specifications.${idx}.title`}
+                    render={({ field: f }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-[#7A6B44] font-semibold">Specification Name *</FormLabel>
+                        <FormControl>
+                          <Input {...f} placeholder="e.g. Embroidery Technique" className="text-xs h-9 bg-white" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`specifications.${idx}.content`}
+                    render={({ field: f }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-[#7A6B44] font-semibold">Value / Content *</FormLabel>
+                        <FormControl>
+                          <Input {...f} placeholder="e.g. Chain stitch hand embroidery" className="text-xs h-9 bg-white" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeSpec(idx)}
+                  className="absolute top-2 right-2 h-7 w-7 text-red-500 hover:bg-red-50 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

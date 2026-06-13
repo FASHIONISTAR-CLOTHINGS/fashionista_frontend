@@ -44,6 +44,7 @@ import { SocialProofBadge } from "@/features/product/components/SocialProofBadge
 import { useRecentlyViewed } from "@/features/catalog/hooks/use-recently-viewed";
 import { FashionistarImage } from "@/components/media";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 
 interface ProductDetailClientProps {
@@ -451,6 +452,138 @@ export function ProductDetailClient({
                 <p className="whitespace-pre-wrap">{product.description}</p>
               </AccordionItem>
             )}
+            
+            {product.fabric && (
+              <AccordionItem title="Fabric & Care">
+                <div className="space-y-4 pt-1">
+                  <div className="flex flex-wrap gap-2">
+                    {product.fabric.is_organic && (
+                      <Badge variant="outline" className="border-emerald-500/30 bg-emerald-50/50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 text-[10px]">
+                        Organic
+                      </Badge>
+                    )}
+                    {product.fabric.is_vegan && (
+                      <Badge variant="outline" className="border-green-500/30 bg-green-50/50 text-green-700 dark:bg-green-950/20 dark:text-green-400 text-[10px]">
+                        Vegan
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <span className="font-semibold text-foreground block mb-0.5">Fabric Type</span>
+                      <span className="text-muted-foreground">{product.fabric.fabric_type}</span>
+                    </div>
+                    {product.fabric.country_of_origin && (
+                      <div>
+                        <span className="font-semibold text-foreground block mb-0.5">Origin</span>
+                        <span className="text-muted-foreground">{product.fabric.country_of_origin}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Composition breakdown */}
+                  {(() => {
+                    let compositionList: { material: string; percentage: number }[] = [];
+                    if (Array.isArray(product.fabric?.composition)) {
+                      compositionList = product.fabric.composition as any;
+                    } else if (product.fabric?.composition && typeof product.fabric.composition === "object") {
+                      compositionList = Object.entries(product.fabric.composition).map(([material, val]) => ({
+                        material,
+                        percentage: typeof val === "number" ? val : parseInt(String(val)) || 0
+                      }));
+                    }
+                    if (compositionList.length === 0) return null;
+                    return (
+                      <div>
+                        <span className="font-semibold text-foreground text-xs block mb-1.5">Composition</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {compositionList.map((c, i) => (
+                            <Badge key={i} variant="secondary" className="text-[10px] py-0.5 px-2">
+                              {c.material} ({c.percentage}%)
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  <div className="border-t border-border pt-3 space-y-2">
+                    <div>
+                      <span className="font-semibold text-foreground text-xs block">Care Instructions</span>
+                      <span className="text-muted-foreground capitalize text-xs">
+                        {product.fabric.care_instructions.replace(/_/g, " ")}
+                      </span>
+                    </div>
+                    {product.fabric.care_notes && (
+                      <div>
+                        <span className="font-semibold text-foreground text-xs block">Special Notes</span>
+                        <p className="text-muted-foreground text-xs italic mt-0.5">{product.fabric.care_notes}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </AccordionItem>
+            )}
+
+            {product.measurement_guide && product.measurement_guide.length > 0 && (
+              <AccordionItem title="Size Chart & Measurement Guide">
+                <div className="space-y-3 pt-1">
+                  <p className="text-xs text-muted-foreground">
+                    Measurements are in centimeters. Compare these values with your body dimensions to find the perfect fit.
+                  </p>
+                  {(() => {
+                    const rows = [...product.measurement_guide].sort((a, b) => a.sort_order - b.sort_order);
+                    
+                    // Determine which columns have data
+                    const hasChest = rows.some(r => r.chest_cm && r.chest_cm !== "0" && r.chest_cm.trim() !== "");
+                    const hasWaist = rows.some(r => r.waist_cm && r.waist_cm !== "0" && r.waist_cm.trim() !== "");
+                    const hasHip = rows.some(r => r.hip_cm && r.hip_cm !== "0" && r.hip_cm.trim() !== "");
+                    const hasShoulder = rows.some(r => r.shoulder_cm && r.shoulder_cm !== "0" && r.shoulder_cm.trim() !== "");
+                    const hasSleeve = rows.some(r => r.sleeve_cm && r.sleeve_cm !== "0" && r.sleeve_cm.trim() !== "");
+                    const hasLength = rows.some(r => r.length_cm && r.length_cm !== "0" && r.length_cm.trim() !== "");
+                    const hasInseam = rows.some(r => r.inseam_cm && r.inseam_cm !== "0" && r.inseam_cm.trim() !== "");
+                    const hasFoot = rows.some(r => r.foot_length_cm && r.foot_length_cm !== "0" && r.foot_length_cm.trim() !== "");
+
+                    return (
+                      <div className="overflow-x-auto rounded-xl border border-border bg-card">
+                        <table className="w-full min-w-[500px] border-collapse text-left text-[11px]">
+                          <thead>
+                            <tr className="border-b border-border bg-muted/50 text-foreground font-semibold">
+                              <th className="p-2.5">Size</th>
+                              {hasChest && <th className="p-2.5">Chest</th>}
+                              {hasWaist && <th className="p-2.5">Waist</th>}
+                              {hasHip && <th className="p-2.5">Hips</th>}
+                              {hasShoulder && <th className="p-2.5">Shoulder</th>}
+                              {hasSleeve && <th className="p-2.5">Sleeve</th>}
+                              {hasLength && <th className="p-2.5">Length</th>}
+                              {hasInseam && <th className="p-2.5">Inseam</th>}
+                              {hasFoot && <th className="p-2.5">Foot</th>}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border text-muted-foreground">
+                            {rows.map((r, i) => (
+                              <tr key={i} className="hover:bg-muted/30 transition-colors">
+                                <td className="p-2.5 font-semibold text-foreground">{r.size_label}</td>
+                                {hasChest && <td className="p-2.5">{r.chest_cm || "—"}</td>}
+                                {hasWaist && <td className="p-2.5">{r.waist_cm || "—"}</td>}
+                                {hasHip && <td className="p-2.5">{r.hip_cm || "—"}</td>}
+                                {hasShoulder && <td className="p-2.5">{r.shoulder_cm || "—"}</td>}
+                                {hasSleeve && <td className="p-2.5">{r.sleeve_cm || "—"}</td>}
+                                {hasLength && <td className="p-2.5">{r.length_cm || "—"}</td>}
+                                {hasInseam && <td className="p-2.5">{r.inseam_cm || "—"}</td>}
+                                {hasFoot && <td className="p-2.5">{r.foot_length_cm || "—"}</td>}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </AccordionItem>
+            )}
+
             {product.specifications?.length > 0 && (
               <AccordionItem title="Specifications">
                 <dl className="space-y-2">

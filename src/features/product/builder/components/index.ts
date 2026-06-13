@@ -11,10 +11,10 @@ export { ProductBuilder } from "./ProductBuilder";
 export { ProductBuilderProvider, useBuilderContext } from "./ProductBuilderProvider";
 
 // ── Step Components ───────────────────────────────────────────────────────────
-export { Step1BasicInfo } from "./Step1BasicInfo";
-export { Step2AestheticsMedia } from "./Step2AestheticsMedia";
-export { Step3VariantsSizing } from "./Step3VariantsSizing";
-export { Step4ShippingLogistics } from "./Step4ShippingLogistics";
+export { Step1InfoAndSpecs } from "./Step1InfoAndSpecs";
+export { Step2SizingAndFabric } from "./Step2SizingAndFabric";
+export { Step3MediaAndMapping } from "./Step3MediaAndMapping";
+export { Step4PricingAndSKUs } from "./Step4PricingAndSKUs";
 export { Step5ReviewSubmit } from "./Step5ReviewSubmit";
 
 // ── Navigation ────────────────────────────────────────────────────────────────

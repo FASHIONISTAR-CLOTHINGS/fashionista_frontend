@@ -547,29 +547,3 @@ export const ProductDraftSessionSchema = z
   })
   .passthrough();
 
-export const VendorMeasurementTemplateRowSchema = z
-  .object({
-    id: z.string(),
-    size_id: z.string().nullable().optional(),
-    size_label: z.string(),
-    chest_cm: z.string().default(""),
-    waist_cm: z.string().default(""),
-    hip_cm: z.string().default(""),
-    length_cm: z.string().default(""),
-    shoulder_cm: z.string().default(""),
-    sleeve_cm: z.string().default(""),
-    inseam_cm: z.string().default(""),
-    foot_length_cm: z.string().default(""),
-    sort_order: z.number().int().default(0),
-  })
-  .passthrough();
-
-export const VendorMeasurementTemplateSchema = z
-  .object({
-    id: z.string(),
-    vendor_id: z.string(),
-    name: z.string(),
-    description: z.string().default(""),
-    template_rows: z.array(VendorMeasurementTemplateRowSchema).default([]),
-  })
-  .passthrough();
