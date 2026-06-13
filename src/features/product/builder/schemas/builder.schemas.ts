@@ -30,15 +30,28 @@ const QtySchema = z.number().int().min(0, "Quantity cannot be negative");
 /** Monetary string — mirrors backend DecimalField precision(12,2). */
 const MoneySchema = z
   .string()
+  .min(1, "Price is required")
   .regex(/^\d+(\.\d{1,2})?$/, "Enter a valid price (e.g. 12500.00)")
-  .min(1, "Price is required");
+  .refine((val) => {
+    const parsed = parseFloat(val);
+    return !isNaN(parsed) && parsed >= 5000;
+  }, {
+    message: "Price must be at least ₦5,000.00",
+  });
 
 /** Optional monetary string — allows empty string. */
 const OptionalMoneySchema = z
   .string()
   .regex(/^(\d+(\.\d{1,2})?)?$/, "Enter a valid price or leave blank")
   .optional()
-  .or(z.literal(""));
+  .or(z.literal(""))
+  .refine((val) => {
+    if (!val || val === "") return true;
+    const parsed = parseFloat(val);
+    return !isNaN(parsed) && parsed >= 5000;
+  }, {
+    message: "Price must be at least ₦5,000.00",
+  });
 
 /** UUID or empty string — used for FK references. */
 const FKIdSchema = z.string().uuid("Select a valid option").optional().nullable();

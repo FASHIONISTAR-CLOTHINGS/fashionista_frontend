@@ -138,8 +138,8 @@ export function Step2Pricing() {
                   {...field}
                   type="number"
                   step="0.01"
-                  min="0"
-                  placeholder="e.g. 25000.00"
+                  min="5000"
+                  placeholder="e.g. 35000.00 (Must be at least ₦5,000.00)"
                   className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
                 />
               </FormControl>
@@ -171,13 +171,13 @@ export function Step2Pricing() {
                 {...field}
                 type="number"
                 step="0.01"
-                min="0"
-                placeholder="Leave blank if no discount"
+                min="5000"
+                placeholder="e.g. 45000.00 (Leave blank if no discount on Selling price)"
                 className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
               />
             </FormControl>
             <FormDescription className="text-zinc-500 text-xs">
-              Must be higher than the selling price if provided
+              Must be higher than the selling price if provided.
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -206,7 +206,7 @@ export function Step2Pricing() {
                 />
               </FormControl>
               <FormDescription className="text-zinc-500 text-xs">
-                Total units available across all variants
+                How many pieces of this item are ready to sell?
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -247,21 +247,22 @@ export function Step2Pricing() {
           name="requires_measurement"
           render={({ field }) => (
             <FormItem className="flex items-center justify-between rounded-xl bg-white border border-[#D9D9D9] p-4">
-              <div className="space-y-0.5">
+              <div className="space-y-0.5 pr-2">
                 <div className="flex items-center gap-2">
-                  <FormLabel className="text-[#1A1208] font-semibold text-sm cursor-pointer">\r\n                    Requires Measurement
+                  <FormLabel className="text-[#1A1208] font-semibold text-sm cursor-pointer">
+                    Requires Measurement
                   </FormLabel>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <InfoIcon className="w-3.5 h-3.5 text-zinc-400 cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent className="bg-[#1A1208] text-white text-xs max-w-xs p-2 rounded-lg">
-                      Enable this for tailored/made-to-measure items. Customers will be asked to provide body measurements during checkout.
+                      Enable this for tailored/made-to-measure items. Customers will be asked to provide body measurements during checkout (measurements (chest, waist, shoulder, trouser length))
                     </TooltipContent>
                   </Tooltip>
                 </div>
                 <FormDescription className="text-zinc-500 text-xs">
-                  Made-to-measure / tailored items
+                  Tailored specifically to the customer's size measurements
                 </FormDescription>
               </div>
               <FormControl>
@@ -280,11 +281,12 @@ export function Step2Pricing() {
           name="is_customisable"
           render={({ field }) => (
             <FormItem className="flex items-center justify-between rounded-xl bg-white border border-[#D9D9D9] p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-[#1A1208] font-semibold text-sm cursor-pointer">\r\n                  Allow Customisation
+              <div className="space-y-0.5 pr-2">
+                <FormLabel className="text-[#1A1208] font-semibold text-sm cursor-pointer">
+                  Allow Customisation
                 </FormLabel>
                 <FormDescription className="text-zinc-500 text-xs">
-                  Customer can add personalisation notes
+                  Check this if customers can request changes, like adding embroidery or choosing custom colors.
                 </FormDescription>
               </div>
               <FormControl>
@@ -307,7 +309,7 @@ export function Step2Pricing() {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                Flat Shipping Fee
+                Flat Shipping Fee (₦)
               </FormLabel>
               <FormControl>
                 <Input
@@ -315,10 +317,13 @@ export function Step2Pricing() {
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="Leave blank for free / calculated"
+                  placeholder="e.g. 1000.00 (Default is calculated ₦2,500.00 or according to specific courier rate at checkout)"
                   className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
                 />
               </FormControl>
+              <FormDescription className="text-zinc-500 text-xs">
+                How much does it cost to send this to a customer? (Default is ₦2,500.00 or according to specific courier rate at checkout)
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

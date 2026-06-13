@@ -274,8 +274,21 @@ export const VendorProductCreateSchema = z.object({
   description:         z.string().min(1, "Product description is required").refine((val) => val.length === 0 || val.trim().length >= 30, {
     message: "Description must be at least 30 characters",
   }),
-  price:               z.string().regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid decimal string"),
-  old_price:           z.string().regex(/^\d+(\.\d{1,2})?$/).optional().nullable(),
+  price:               z.string()
+    .regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid decimal string")
+    .refine((val) => {
+      const parsed = parseFloat(val);
+      return !isNaN(parsed) && parsed >= 5000;
+    }, { message: "Price must be at least ₦5,000.00" }),
+  old_price:           z.string()
+    .regex(/^\d+(\.\d{1,2})?$/)
+    .optional()
+    .nullable()
+    .refine((val) => {
+      if (!val || val === "") return true;
+      const parsed = parseFloat(val);
+      return !isNaN(parsed) && parsed >= 5000;
+    }, { message: "Original price must be at least ₦5,000.00" }),
   currency:            z.string().default("NGN"),
   shipping_amount:     z.string().optional(),
   stock_qty:           z.number().int().min(0),
@@ -310,7 +323,11 @@ export const VendorProductCreateSchema = z.object({
   variants: z.array(z.object({
     size_id:        z.string().uuid().nullable().optional(),
     color_id:       z.string().uuid().nullable().optional(),
-    price_override: z.string().nullable().optional(),
+    price_override: z.string().nullable().optional().refine((val) => {
+      if (!val || val === "") return true;
+      const parsed = parseFloat(val);
+      return !isNaN(parsed) && parsed >= 5000;
+    }, { message: "Price override must be at least ₦5,000.00" }),
     stock_qty:      z.number().int().min(0).optional().default(0),
     sku:            z.string().optional(),
     is_active:      z.boolean().optional().default(true),

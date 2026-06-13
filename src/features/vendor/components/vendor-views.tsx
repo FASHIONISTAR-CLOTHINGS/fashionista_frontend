@@ -1835,13 +1835,13 @@ export function VendorProductComposerView() {
       {/* Resume Draft banner — shown if a draft session is active */}
       <ResumeDraftBanner />
 
-      <div className="flex items-center justify-between rounded-2xl bg-white border border-[#ECE6D6] px-8 py-6 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl bg-white border border-[#ECE6D6] px-8 py-6 shadow-sm">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44]">Product Studio</p>
-          <h1 className="mt-1 font-bon_foyage text-4xl text-[#1A1208]">Add New Product</h1>
+          <h1 className="mt-1 font-bon_foyage text-3xl sm:text-4xl text-[#1A1208] leading-tight">Add New Product</h1>
         </div>
         <Link href="/vendor/products/catalog"
-          className="rounded-xl border border-[#D9D9D9] px-5 py-2.5 text-sm font-semibold text-[#5A6465] transition hover:bg-[#F8F5ED]">
+          className="w-full sm:w-auto text-center rounded-xl border border-[#D9D9D9] px-5 py-2.5 text-sm font-semibold text-[#5A6465] transition hover:bg-[#F8F5ED]">
           Open catalog
         </Link>
       </div>

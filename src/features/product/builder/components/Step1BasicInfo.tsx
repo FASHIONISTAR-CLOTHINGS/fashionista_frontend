@@ -228,7 +228,7 @@ export function Step1BasicInfo() {
             <FormControl>
               <Input
                 {...field}
-                placeholder="e.g. Premium Hand-Stitched Agbada Set"
+                placeholder="e.g. Royal Blue Hand-Embroidered Male Agbada Set (3-piece)"
                 className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
                 maxLength={255}
               />
@@ -254,7 +254,7 @@ export function Step1BasicInfo() {
               <Textarea
                 {...field}
                 rows={6}
-                placeholder="Detailed product description — fabric, craftsmanship, sizing, care instructions…"
+                placeholder="Write about the fabrics used (e.g. Cashmere, Senegalese Cotton), custom embroidery detailing, washing care instructions, and what is included in the package (e.g. Agbada, Inner Kaftan, Trousers, Cap)..."
                 className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
               />
             </FormControl>
