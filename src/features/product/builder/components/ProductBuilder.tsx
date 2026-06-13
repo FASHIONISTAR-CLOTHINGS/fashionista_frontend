@@ -16,13 +16,10 @@ import { useBuilderContext } from "./ProductBuilderProvider";
 import { useDraftStore } from "../store";
 import { BuilderStepper } from "./BuilderStepper";
 import { Step1BasicInfo } from "./Step1BasicInfo";
-import { Step2Pricing } from "./Step2Pricing";
-import { Step3Gallery } from "./Step3Gallery";
-import { Step4SizesColors } from "./Step4SizesColors";
-import { Step5Variants } from "./Step5Variants";
-import { Step6Specifications } from "./Step6Specifications";
-import { Step7Faqs } from "./Step7Faqs";
-import { Step8Publish } from "./Step8Publish";
+import { Step2AestheticsMedia } from "./Step2AestheticsMedia";
+import { Step3VariantsSizing } from "./Step3VariantsSizing";
+import { Step4ShippingLogistics } from "./Step4ShippingLogistics";
+import { Step5ReviewSubmit } from "./Step5ReviewSubmit";
 import { BUILDER_STEPS } from "../schemas/builder.schemas";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -34,13 +31,10 @@ import { ChevronLeft, ChevronRight, Loader2, SendHorizontal, Save } from "lucide
 
 const STEP_COMPONENTS: Record<number, React.ComponentType> = {
   1: Step1BasicInfo,
-  2: Step2Pricing,
-  3: Step3Gallery,
-  4: Step4SizesColors,
-  5: Step5Variants,
-  6: Step6Specifications,
-  7: Step7Faqs,
-  8: Step8Publish,
+  2: Step2AestheticsMedia,
+  3: Step3VariantsSizing,
+  4: Step4ShippingLogistics,
+  5: Step5ReviewSubmit,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -52,14 +46,18 @@ const isStepComplete = (step: number, values: any): boolean => {
     const title = (values.title || "").trim();
     const description = (values.description || "").trim();
     const categoryIds = values.category_ids || [];
-    return title.length >= 5 && description.length >= 100 && categoryIds.length >= 1;
-  }
-  if (step === 2) {
     const price = (values.price || "").trim();
     const stockQty = Number(values.stock_qty);
-    return price.length > 0 && !isNaN(stockQty) && stockQty >= 1;
+    return (
+      title.length >= 5 &&
+      description.length >= 30 &&
+      categoryIds.length >= 1 &&
+      price.length > 0 &&
+      !isNaN(stockQty) &&
+      stockQty >= 1
+    );
   }
-  if (step === 3) {
+  if (step === 2) {
     const coverImage = (values.cover_image_public_id || "").trim();
     return coverImage.length > 0;
   }

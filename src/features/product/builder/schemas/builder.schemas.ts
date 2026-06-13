@@ -1,6 +1,6 @@
 /**
  * @file builder.schemas.ts
- * @description 8-step product builder Zod FormSchema.
+ * @description Consolidated 5-step product builder Zod FormSchema.
  *
  * Every step has:
  *   1. An isolated StepSchema (validates only that step's fields → clean UX errors)
@@ -8,14 +8,11 @@
  *
  * ────────────────────────────────────────────────────────────────────────────
  * Step map:
- *   Step 1 – BasicInformation   (title, description, condition, capped categories)
- *   Step 2 – Pricing & Stock    (price, old_price, currency, stock_qty, shipping)
- *   Step 3 – Gallery            (cover image + up-to-12 gallery media)
- *   Step 4 – Sizes & Colors     (multiselect sizes + colors from catalog)
- *   Step 5 – Variants           (SKU-level rows linking size/color to price/qty)
- *   Step 6 – Specifications     (key-value attribute table)
- *   Step 7 – FAQs               (Q&A pairs)
- *   Step 8 – PublishSettings    (status, featured flags, shipping courier)
+ *   Step 1 – Info & Specs       (title, description, condition, categories, specifications)
+ *   Step 2 – Sizing & Fabric    (sizes, colors, fabric composition/care, templates, measurement guides)
+ *   Step 3 – Media & Gallery    (cover image, gallery media with color/variant mapping)
+ *   Step 4 – Pricing & SKUs     (base price, old_price, stock, weight, variants SKU table)
+ *   Step 5 – FAQs & Publish     (Q&A accordion, publish intent, featured/hot_deal, SEO meta, demographic tags)
  * ────────────────────────────────────────────────────────────────────────────
  */
 import { z } from "zod";
@@ -60,11 +57,97 @@ const FKIdSchema = z.string().uuid("Select a valid option").optional().nullable(
 const LabelSchema = z.string().min(1, "This field is required").max(255);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// STEP 1 — BASIC INFORMATION
+// SUB-SCHEMAS
 // ─────────────────────────────────────────────────────────────────────────────
 
+export const SpecRowSchema = z.object({
+  title: LabelSchema.max(100, "Spec title is too long"),
+  content: z.string().min(1, "Specification value is required").max(2000),
+});
+
+export type SpecRow = z.infer<typeof SpecRowSchema>;
+
+export const FabricCompositionItemSchema = z.object({
+  material: z.string().min(1, "Material name is required"),
+  percentage: z.number().int().min(0).max(100, "Percentage must be 0-100"),
+});
+
+export type FabricCompositionItem = z.infer<typeof FabricCompositionItemSchema>;
+
+export const MeasurementGuideRowSchema = z.object({
+  size_id: z.string().uuid().nullable().optional(),
+  size_label: z.string().min(1, "Size label is required"),
+  chest_cm: z.string().optional().default(""),
+  waist_cm: z.string().optional().default(""),
+  hip_cm: z.string().optional().default(""),
+  shoulder_cm: z.string().optional().default(""),
+  sleeve_cm: z.string().optional().default(""),
+  length_cm: z.string().optional().default(""),
+  inseam_cm: z.string().optional().default(""),
+  foot_length_cm: z.string().optional().default(""),
+  sort_order: z.number().int().default(0),
+});
+
+export type MeasurementGuideRow = z.infer<typeof MeasurementGuideRowSchema>;
+
+export const GalleryItemSchema = z.object({
+  public_id: z.string().min(1, "Upload not complete"),
+  secure_url: z.string().url("Invalid media URL"),
+  media_type: z.enum(["image", "video"]).default("image"),
+  alt_text: z.string().max(200).optional().or(z.literal("")),
+  ordering: z.number().int().min(0).default(0),
+  variant_id: z.string().uuid().nullable().optional(),
+  color_id: z.string().uuid().nullable().optional(),
+});
+
+export type GalleryItem = z.infer<typeof GalleryItemSchema>;
+
+export const VariantRowSchema = z.object({
+  size_id: z.string().uuid().nullable().optional(),
+  color_id: z.string().uuid().nullable().optional(),
+  price_override: OptionalMoneySchema,
+  stock_qty: QtySchema,
+  sku: z.string().max(100).optional().or(z.literal("")),
+  is_active: z.boolean().default(true),
+  barcode: z.string().max(100).optional().or(z.literal("")),
+  weight_kg: z
+    .string()
+    .regex(/^(\d+(\.\d{1,3})?)?$/, "Weight must be decimal")
+    .optional()
+    .or(z.literal("")),
+  dimensions_cm: z
+    .object({
+      length: z.number().optional(),
+      width: z.number().optional(),
+      height: z.number().optional(),
+    })
+    .optional()
+    .nullable(),
+  notes: z.string().optional().default(""),
+  is_default: z.boolean().default(false),
+});
+
+export type VariantRow = z.infer<typeof VariantRowSchema>;
+
+export const FaqRowSchema = z.object({
+  question: z
+    .string()
+    .min(5, "Question must be at least 5 characters")
+    .max(500, "Question is too long"),
+  answer: z
+    .string()
+    .min(10, "Answer must be at least 10 characters")
+    .max(2000, "Answer is too long"),
+});
+
+export type FaqRow = z.infer<typeof FaqRowSchema>;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STEP VALIDATION SCHEMAS
+// ─────────────────────────────────────────────────────────────────────────────
+
+// STEP 1: Info & Specs
 export const Step1Schema = z.object({
-  /** Full product title shown on PDP and catalog listings. */
   title: z
     .string()
     .min(1, "Product title is required")
@@ -72,97 +155,100 @@ export const Step1Schema = z.object({
     .refine((val) => val.length === 0 || val.length >= 5, {
       message: "Title must be at least 5 characters",
     }),
-
-  /** Rich-text description (HTML string from editor). Min 30 characters. */
   description: z
     .string()
     .min(1, "Product description is required")
     .refine((val) => val.length === 0 || val.trim().length >= 30, {
       message: "Description must be at least 30 characters",
     }),
-
-  /**
-   * Product condition — maps to backend ProductCondition choices.
-   * Defaults to "new" for apparel use-case.
-   */
   condition: z.enum(["new", "used", "refurbished"], {
     required_error: "Select a product condition",
   }),
-
-  /**
-   * Canonical catalog categories.
-   *
-   * Mirrors the backend Product.categories M2M contract:
-   * one selection is required, five is the hard cap for SEO/ranking quality.
-   */
   category_ids: z
     .array(z.string().uuid("Select a valid category"))
     .min(1, "Select at least one category")
     .max(15, "You can select up to 15 categories")
     .default([]),
-
-  /** Optional deeper discovery facets. Also capped at 15 backend-side. */
   sub_category_ids: z
     .array(z.string().uuid("Select a valid sub-category"))
     .max(15, "You can select up to 15 sub-categories")
     .default([]),
-
-  /** Comma-separated tag UUIDs — multi-select from ProductTag catalog. */
   tag_ids: z.array(z.string().uuid()).max(10, "You can add up to 10 tags").default([]),
+  specifications: z.array(SpecRowSchema).max(20, "Maximum 20 specifications allowed").default([]),
 });
 
 export type Step1Values = z.infer<typeof Step1Schema>;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 2 — PRICING & STOCK
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Step2BaseSchema — the raw object without superRefine, used for .merge()
- * in the composite ProductBuilderFormSchema (ZodEffects is incompatible with .merge()).
- */
+// STEP 2: Sizing & Fabric
 export const Step2BaseSchema = z.object({
-  /** Selling price in the selected currency. */
+  size_ids: z
+    .array(z.string().uuid())
+    .max(30, "You can select up to 30 sizes")
+    .default([]),
+  color_ids: z
+    .array(z.string().uuid())
+    .max(20, "You can select up to 20 colors")
+    .default([]),
+  requires_measurement: z.boolean().default(false),
+  is_customisable: z.boolean().default(false),
+  measurement_template: z.string().uuid().nullable().optional(),
+  measurement_guide: z.array(MeasurementGuideRowSchema).default([]),
+  
+  // Fabric details
+  fabric_type: z.string().max(120).optional().or(z.literal("")),
+  fabric_composition: z.array(FabricCompositionItemSchema).default([]),
+  fabric_care_instructions: z
+    .enum([
+      "machine_wash",
+      "hand_wash",
+      "dry_clean",
+      "do_not_wash",
+      "cold_wash",
+      "tumble_dry",
+      "air_dry",
+    ])
+    .default("machine_wash"),
+  fabric_care_notes: z.string().optional().default(""),
+  fabric_is_organic: z.boolean().default(false),
+  fabric_is_vegan: z.boolean().default(false),
+  fabric_country_of_origin: z.string().max(80).optional().default(""),
+});
+
+export const Step2Schema = Step2BaseSchema;
+export type Step2Values = z.infer<typeof Step2Schema>;
+
+// STEP 3: Media & Gallery Mapping
+export const Step3Schema = z.object({
+  cover_image_public_id: z
+    .string({ required_error: "A cover image is required" })
+    .min(1, "A cover image is required"),
+  cover_image_url: z.string().url("Invalid cover image URL").nullable().optional(),
+  gallery: z
+    .array(GalleryItemSchema)
+    .max(12, "Maximum 12 gallery items allowed")
+    .default([]),
+});
+
+export type Step3Values = z.infer<typeof Step3Schema>;
+
+// STEP 4: Pricing & SKUs
+export const Step4BaseSchema = z.object({
   price: MoneySchema,
-
-  /** Strike-through price (before discount). Must be > price when provided. */
   old_price: OptionalMoneySchema,
-
-  /** ISO-4217 currency code. Platform default: NGN. */
   currency: z.string().length(3, "Currency must be a 3-letter ISO code").default("NGN"),
-
-  /** Physical stock quantity. */
   stock_qty: QtySchema.min(1, "Stock must be at least 1 unit"),
-
-  /** Weight in kilograms. */
+  max_stock: QtySchema.optional().nullable(),
   weight_kg: z
     .string()
     .regex(/^(\d+(\.\d{1,3})?)?$/, "Enter a valid weight in kg (e.g. 1.5)")
     .optional()
     .or(z.literal("")),
-
-  /**
-   * Whether this product requires a body measurement before ordering.
-   * True = tailored/made-to-measure item.
-   */
-  requires_measurement: z.boolean().default(false),
-
-  /** True if the customer can send customisation notes. */
-  is_customisable: z.boolean().default(false),
-
-  /** Flat shipping amount added to cart total. */
   shipping_amount: OptionalMoneySchema,
-
-  /** Delivery courier UUID — optional; platform default used when absent. */
   courier_id: FKIdSchema,
+  variants: z.array(VariantRowSchema).max(100, "Too many variants").default([]),
 });
 
-/**
- * Step2Schema — for standalone step-level validation (includes old_price cross-check).
- * NOT used in .merge() — use Step2BaseSchema there instead.
- */
-export const Step2Schema = Step2BaseSchema.superRefine((data, ctx) => {
-  // old_price must be strictly greater than selling price when provided
+export const Step4Schema = Step4BaseSchema.superRefine((data, ctx) => {
   if (data.old_price && data.old_price !== "") {
     const oldP = parseFloat(data.old_price);
     const current = parseFloat(data.price);
@@ -176,229 +262,35 @@ export const Step2Schema = Step2BaseSchema.superRefine((data, ctx) => {
   }
 });
 
-export type Step2Values = z.infer<typeof Step2Schema>;
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 3 — GALLERY (media upload references)
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * A single gallery item produced by the two-phase Cloudinary upload.
- * After direct upload succeeds, the client stores the resulting public_id here.
- */
-export const GalleryItemSchema = z.object({
-  /** Cloudinary public_id returned after direct upload. */
-  public_id: z.string().min(1, "Upload not complete"),
-
-  /** Pre-signed URL from Cloudinary for display in the builder preview. */
-  secure_url: z.string().url("Invalid media URL"),
-
-  /** Media type: 'image' | 'video'. */
-  media_type: z.enum(["image", "video"]).default("image"),
-
-  /** Descriptive alt text for accessibility and SEO. */
-  alt_text: z.string().max(200).optional().or(z.literal("")),
-
-  /** Display ordering — managed by DnD handler. */
-  ordering: z.number().int().min(0).default(0),
-});
-
-export type GalleryItem = z.infer<typeof GalleryItemSchema>;
-
-export const Step3Schema = z.object({
-  /**
-   * Primary product image — required.
-   */
-  cover_image_public_id: z
-    .string({ required_error: "A cover image is required" })
-    .min(1, "A cover image is required"),
-
-  cover_image_url: z.string().url("Invalid cover image URL").nullable().optional(),
-
-  /** Gallery media array — up to 12 items, at least 1 after cover. */
-  gallery: z
-    .array(GalleryItemSchema)
-    .max(12, "Maximum 12 gallery items allowed")
-    .default([]),
-});
-
-export type Step3Values = z.infer<typeof Step3Schema>;
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 4 — SIZES & COLORS
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const Step4Schema = z.object({
-  /**
-   * Array of ProductSize UUIDs selected from the catalog.
-   * At least one size required when variants will be created.
-   */
-  size_ids: z
-    .array(z.string().uuid())
-    .max(30, "You can select up to 30 sizes")
-    .default([]),
-
-  /**
-   * Array of ProductColor UUIDs selected from the catalog.
-   * At least one color required when variants will be created.
-   */
-  color_ids: z
-    .array(z.string().uuid())
-    .max(20, "You can select up to 20 colors")
-    .default([]),
-});
-
 export type Step4Values = z.infer<typeof Step4Schema>;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 5 — VARIANTS
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * A single variant row — one SKU per size+color combination.
- * The vendor table is auto-generated by the step component from
- * the Cartesian product of Step 4's size_ids × color_ids.
- */
-export const VariantRowSchema = z.object({
-  /** UUID of the size dimension — must match a Step4 size_ids entry. */
-  size_id: z.string().uuid().nullable().optional(),
-
-  /** UUID of the color dimension — must match a Step4 color_ids entry. */
-  color_id: z.string().uuid().nullable().optional(),
-
-  /**
-   * Variant-specific price override. If empty, the product base price applies.
-   * Allows premium pricing for e.g. extra-large sizes.
-   */
-  price_override: OptionalMoneySchema,
-
-  /** Stock units for this specific SKU. */
-  stock_qty: QtySchema,
-
-  /**
-   * Explicit SKU code. Auto-generated from product slug + size + color
-   * when left blank; vendor can customise.
-   */
-  sku: z.string().max(100).optional().or(z.literal("")),
-
-  /** Whether this variant is currently offered. */
-  is_active: z.boolean().default(true),
-});
-
-export type VariantRow = z.infer<typeof VariantRowSchema>;
-
+// STEP 5: FAQs & Publish
 export const Step5Schema = z.object({
-  /**
-   * Variant rows. May be empty if the product has no size/color matrix
-   * (simple product). When populated, each row must be valid.
-   */
-  variants: z.array(VariantRowSchema).max(100, "Too many variants (max 100)").default([]),
+  faqs: z.array(FaqRowSchema).max(10, "Maximum 10 FAQs allowed").default([]),
+  publish_intent: z.enum(["draft", "pending"], {
+    required_error: "Select a publish intent",
+  }),
+  featured: z.boolean().default(false),
+  hot_deal: z.boolean().default(false),
+  digital: z.boolean().default(false),
+  meta_title: z.string().max(160).optional().or(z.literal("")),
+  meta_description: z.string().max(320).optional().or(z.literal("")),
+  age_group: z.string().optional().default(""),
+  gender_target: z.string().optional().default(""),
 });
 
 export type Step5Values = z.infer<typeof Step5Schema>;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// STEP 6 — SPECIFICATIONS
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const SpecRowSchema = z.object({
-  /** Specification title e.g. "Material", "Care Instructions". */
-  title: LabelSchema.max(100, "Spec title is too long"),
-
-  /** Rich-text or plain-text content for the spec value. */
-  content: z.string().min(1, "Specification value is required").max(2_000),
-});
-
-export type SpecRow = z.infer<typeof SpecRowSchema>;
-
-export const Step6Schema = z.object({
-  /**
-   * Key-value specification pairs. Free-form — up to 20 rows.
-   * Displayed on PDP in a structured table.
-   */
-  specifications: z.array(SpecRowSchema).max(20, "Maximum 20 specifications allowed").default([]),
-});
-
-export type Step6Values = z.infer<typeof Step6Schema>;
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 7 — FAQs
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const FaqRowSchema = z.object({
-  question: z
-    .string()
-    .min(5, "Question must be at least 5 characters")
-    .max(500, "Question is too long"),
-  answer: z
-    .string()
-    .min(10, "Answer must be at least 10 characters")
-    .max(2_000, "Answer is too long"),
-});
-
-export type FaqRow = z.infer<typeof FaqRowSchema>;
-
-export const Step7Schema = z.object({
-  /** Customer FAQ pairs — up to 10. Renders as an accordion on PDP. */
-  faqs: z.array(FaqRowSchema).max(10, "Maximum 10 FAQs allowed").default([]),
-});
-
-export type Step7Values = z.infer<typeof Step7Schema>;
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 8 — PUBLISH SETTINGS
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const Step8Schema = z.object({
-  /**
-   * Publish intent:
-   *   "draft"   → save, not visible to customers
-   *   "pending" → submit for admin review
-   */
-  publish_intent: z.enum(["draft", "pending"], {
-    required_error: "Select a publish intent",
-  }),
-
-  /** Feature this product on the homepage hero carousel. */
-  featured: z.boolean().default(false),
-
-  /** Mark as a hot-deal / flash-sale item. */
-  hot_deal: z.boolean().default(false),
-
-  /** True for downloadable digital goods (no shipping required). */
-  digital: z.boolean().default(false),
-
-  /** SEO meta title override. Falls back to product title when blank. */
-  meta_title: z.string().max(160).optional().or(z.literal("")),
-
-  /** SEO meta description override. Shown in search-engine snippets. */
-  meta_description: z.string().max(320).optional().or(z.literal("")),
-});
-
-export type Step8Values = z.infer<typeof Step8Schema>;
-
-// ─────────────────────────────────────────────────────────────────────────────
 // COMPOSITE FULL-FORM SCHEMA
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Merged schema used for final form submission.
- * Step-level schemas are merged so react-hook-form can share one
- * FormProvider across all 8 steps.
- *
- * Additional cross-step refinements are applied here:
- *  - cover_image_public_id is required when publish_intent === "pending"
- *  - stock_qty sum from variants must not exceed product-level stock
- */
 export const ProductBuilderFormSchema = Step1Schema.merge(Step2BaseSchema)
   .merge(Step3Schema)
-  .merge(Step4Schema)
+  .merge(Step4BaseSchema)
   .merge(Step5Schema)
-  .merge(Step6Schema)
-  .merge(Step7Schema)
-  .merge(Step8Schema)
   .superRefine((data, ctx) => {
-    // old_price must be strictly greater than selling price when provided
+    // Pricing check
     if (data.old_price && data.old_price !== "") {
       const oldP = parseFloat(data.old_price as string);
       const current = parseFloat(data.price);
@@ -411,7 +303,7 @@ export const ProductBuilderFormSchema = Step1Schema.merge(Step2BaseSchema)
       }
     }
 
-    // Require cover image when submitting for review
+    // Cover image check
     if (data.publish_intent === "pending" && !data.cover_image_public_id) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -420,7 +312,7 @@ export const ProductBuilderFormSchema = Step1Schema.merge(Step2BaseSchema)
       });
     }
 
-    // Variant stock sum validation
+    // Variant stock sum check
     const variants = data.variants as Array<{ stock_qty?: number }> | undefined;
     if (variants && variants.length > 0) {
       const variantTotal = variants.reduce((sum: number, v) => sum + (v.stock_qty ?? 0), 0);
@@ -441,30 +333,21 @@ export type ProductBuilderFormValues = z.infer<typeof ProductBuilderFormSchema>;
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface StepMeta {
-  /** 1-indexed step number. */
   step: number;
-  /** Label shown in the stepper bar. */
   label: string;
-  /** Icon name from lucide-react. */
   icon: string;
-  /** Tooltip / helper text shown on hover. */
   description: string;
 }
 
 export const BUILDER_STEPS: StepMeta[] = [
-  { step: 1, label: "Basic Info",       icon: "Info",         description: "Product title, description, and category facets" },
-  { step: 2, label: "Pricing & Stock",  icon: "DollarSign",   description: "Set pricing, currency, stock and shipping" },
-  { step: 3, label: "Gallery",          icon: "Image",        description: "Upload cover image and media gallery" },
-  { step: 4, label: "Sizes & Colors",   icon: "Palette",      description: "Select available sizes and colours" },
-  { step: 5, label: "Variants",         icon: "Layers",       description: "Define SKU-level price and stock per variation" },
-  { step: 6, label: "Specifications",   icon: "ListChecks",   description: "Add material, care, and technical specs" },
-  { step: 7, label: "FAQs",             icon: "HelpCircle",   description: "Add frequently asked questions" },
-  { step: 8, label: "Publish",          icon: "SendHorizontal", description: "Configure visibility and SEO, then publish" },
+  { step: 1, label: "Info & Specs",     icon: "Info",           description: "Basic details, categories, and technical specifications" },
+  { step: 2, label: "Sizing & Fabric",  icon: "Palette",        description: "Sizes, colors, fabric properties, and size charts" },
+  { step: 3, label: "Media & Mapping",  icon: "Image",          description: "Upload cover and gallery media with variant mappings" },
+  { step: 4, label: "Pricing & SKUs",   icon: "DollarSign",     description: "Set base price, stock, and variations matrix" },
+  { step: 5, label: "FAQs & Publish",   icon: "SendHorizontal", description: "Frequently asked questions, SEO tags, and publish settings" },
 ] as const;
 
-/** Total number of builder steps — used for progress calculation. */
 export const TOTAL_STEPS = BUILDER_STEPS.length;
 
-/** Returns 0–100 progress percentage for current step. */
 export const builderProgress = (currentStep: number): number =>
   Math.round(((currentStep - 1) / (TOTAL_STEPS - 1)) * 100);

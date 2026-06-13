@@ -113,14 +113,11 @@ export function useBuilderContext(): BuilderContextValue {
 import type { Path } from "react-hook-form";
 
 const STEP_FIELDS: Record<number, Array<Path<ProductBuilderFormValues>>> = {
-  1: ["title", "description", "condition", "category_ids", "sub_category_ids", "tag_ids"],
-  2: ["price", "old_price", "currency", "stock_qty", "weight_kg", "requires_measurement", "is_customisable", "shipping_amount", "courier_id"],
-  3: ["cover_image_public_id", "cover_image_url", "gallery"],
-  4: ["size_ids", "color_ids"],
-  5: ["variants"],
-  6: ["specifications"],
-  7: ["faqs"],
-  8: ["publish_intent", "featured", "hot_deal", "digital", "meta_title", "meta_description"],
+  1: ["title", "description", "condition", "category_ids", "sub_category_ids", "tag_ids", "price", "old_price", "currency", "stock_qty", "max_stock"],
+  2: ["cover_image_public_id", "cover_image_url", "gallery", "fabric"],
+  3: ["size_ids", "color_ids", "variants", "requires_measurement", "is_customisable", "measurement_guide"],
+  4: ["shipping_amount", "courier_id", "shipping_profile"],
+  5: ["publish_intent", "featured", "hot_deal", "digital", "meta_title", "meta_description", "gender_target", "age_group", "faqs", "specifications"],
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -133,13 +130,13 @@ const DEFAULT_VALUES: Partial<ProductBuilderFormValues> = {
 
   price: "",
   old_price: "",
-  weight_kg: "",
   shipping_amount: "2500.00",
   meta_title: "",
   meta_description: "",
   condition: "new",
   currency: "NGN",
   stock_qty: 1,
+  max_stock: null,
   requires_measurement: false,
   is_customisable: false,
   featured: false,
@@ -155,6 +152,11 @@ const DEFAULT_VALUES: Partial<ProductBuilderFormValues> = {
   specifications: [],
   faqs: [],
   gallery: [],
+  fabric: null,
+  shipping_profile: null,
+  measurement_guide: [],
+  gender_target: "",
+  age_group: "",
 };
 
 function sanitizePayload(payload: any): ProductBuilderFormValues {

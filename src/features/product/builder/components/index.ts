@@ -1,10 +1,7 @@
 /**
  * @file components/index.ts
  * @description Enterprise Product Builder component barrel.
- *
- * ONLY export the 8-step enterprise builder components.
- * Legacy MultiStep components (MultiStep, BasicInformation, Prices,
- * Category, Gallery, Sizes, Color, Specification) have been deleted.
+ * Exporting the 5-step consolidated product builder components.
  */
 
 // ── Orchestrator ──────────────────────────────────────────────────────────────
@@ -15,13 +12,10 @@ export { ProductBuilderProvider, useBuilderContext } from "./ProductBuilderProvi
 
 // ── Step Components ───────────────────────────────────────────────────────────
 export { Step1BasicInfo } from "./Step1BasicInfo";
-export { Step2Pricing } from "./Step2Pricing";
-export { Step3Gallery } from "./Step3Gallery";
-export { Step4SizesColors } from "./Step4SizesColors";
-export { Step5Variants } from "./Step5Variants";
-export { Step6Specifications } from "./Step6Specifications";
-export { Step7Faqs } from "./Step7Faqs";
-export { Step8Publish } from "./Step8Publish";
+export { Step2AestheticsMedia } from "./Step2AestheticsMedia";
+export { Step3VariantsSizing } from "./Step3VariantsSizing";
+export { Step4ShippingLogistics } from "./Step4ShippingLogistics";
+export { Step5ReviewSubmit } from "./Step5ReviewSubmit";
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 export { BuilderStepper } from "./BuilderStepper";

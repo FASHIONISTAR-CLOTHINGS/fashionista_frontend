@@ -1,13 +1,13 @@
 "use client";
 
 /**
- * @file Step1BasicInfo.tsx
- * @description Step 1 — Basic Information & Pricing
- * Consolidates title, description, condition, category facets, tags, currency, price, old_price, stock_qty, and max_stock.
+ * @file Step1InfoAndSpecs.tsx
+ * @description Step 1 — Basic Details & Specifications
+ * Consolidates title, description, condition, category facets, tags, and custom specifications table.
  */
 
 import * as React from "react";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useFieldArray } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { apiAsync } from "@/core/api/client.async";
 import type { ProductBuilderFormValues } from "../schemas/builder.schemas";
@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, Check, TrendingDown } from "lucide-react";
+import { X, Check, Plus, Trash2, GripVertical, ListChecks } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES & CONSTANTS
@@ -47,14 +47,6 @@ interface SelectOption {
 interface PaginatedOptions {
   results: SelectOption[];
 }
-
-const CURRENCIES = [
-  { code: "NGN", label: "₦ Nigerian Naira" },
-  { code: "USD", label: "$ US Dollar" },
-  { code: "GBP", label: "£ British Pound" },
-  { code: "EUR", label: "€ Euro" },
-  { code: "GHS", label: "₵ Ghanaian Cedi" },
-];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // API FETCHERS — Ky-based
@@ -103,10 +95,10 @@ function FieldSkeleton({ label }: { label: string }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// COMPOSITE STEP 1 COMPONENT
+// MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function Step1BasicInfo() {
+export function Step1InfoAndSpecs() {
   const form = useFormContext<ProductBuilderFormValues>();
 
   const selectedCategoryIds = form.watch("category_ids") ?? [];
@@ -114,18 +106,11 @@ export function Step1BasicInfo() {
   const selectedPrimaryCategoryId = selectedCategoryIds[0] ?? "";
   const selectedTagIds = form.watch("tag_ids") ?? [];
 
-  const price = form.watch("price");
-  const oldPrice = form.watch("old_price");
-
-  // Compute live discount percentage
-  const discountPct = React.useMemo(() => {
-    const p = parseFloat(price ?? "0");
-    const o = parseFloat(oldPrice ?? "0");
-    if (!isNaN(p) && !isNaN(o) && o > p && o > 0) {
-      return Math.round(((o - p) / o) * 100);
-    }
-    return null;
-  }, [price, oldPrice]);
+  // Specifications field array
+  const { fields: specFields, append: appendSpec, remove: removeSpec } = useFieldArray({
+    control: form.control,
+    name: "specifications",
+  });
 
   // ── TanStack Query — categories (cached 5 min) ────────────────────────────
   const {
@@ -211,7 +196,12 @@ export function Step1BasicInfo() {
     );
   };
 
-  // ── Initial skeleton during first catalog fetch ───────────────────────────
+  const addSpec = () => {
+    if (specFields.length < 20) {
+      appendSpec({ title: "", content: "" });
+    }
+  };
+
   const initialLoading = catsLoading || tagsLoading;
 
   if (initialLoading) {
@@ -221,7 +211,6 @@ export function Step1BasicInfo() {
         <FieldSkeleton label="Full Description *" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <FieldSkeleton label="Condition *" />
-          <FieldSkeleton label="Stock Quantity *" />
         </div>
         <div className="space-y-4">
           <FieldSkeleton label="Categories *" />
@@ -315,164 +304,10 @@ export function Step1BasicInfo() {
         />
       </div>
 
-      {/* SECTION B: Pricing & Stock */}
+      {/* SECTION B: Discovery Categories */}
       <div className="space-y-6">
         <h3 className="text-md font-bold text-[#1A1208] border-b border-[#ECE6D6] pb-2">
-          2. Pricing & Stock
-        </h3>
-
-        {/* Currency & Selling Price */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <FormField
-            control={form.control}
-            name="currency"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">Currency</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3">
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208] shadow-lg">
-                    {CURRENCIES.map((c) => (
-                      <SelectItem key={c.code} value={c.code}>
-                        {c.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-2">
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                  Selling Price <span className="text-[#FDA600]">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    type="number"
-                    step="0.01"
-                    min="5000"
-                    placeholder="e.g. 35000.00 (Must be at least ₦5,000.00)"
-                    className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {/* Original Price */}
-        <FormField
-          control={form.control}
-          name="old_price"
-          render={({ field }) => (
-            <FormItem>
-              <div className="flex items-center gap-3">
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                  Original Price (before discount)
-                </FormLabel>
-                {discountPct !== null && (
-                  <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 gap-1 font-semibold">
-                    <TrendingDown className="w-3 h-3" />
-                    {discountPct}% OFF
-                  </Badge>
-                )}
-              </div>
-              <FormControl>
-                <Input
-                  {...field}
-                  type="number"
-                  step="0.01"
-                  min="5000"
-                  placeholder="e.g. 45000.00 (Leave blank if no discount)"
-                  className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
-                />
-              </FormControl>
-              <FormDescription className="text-zinc-500 text-xs">
-                Must be higher than the selling price if provided.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Stock & Max Stock */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="stock_qty"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                  Stock Quantity <span className="text-[#FDA600]">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    type="number"
-                    min="1"
-                    step="1"
-                    placeholder="e.g. 50"
-                    onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
-                    className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
-                  />
-                </FormControl>
-                <FormDescription className="text-zinc-500 text-xs">
-                  Available items for purchase.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="max_stock"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                  Max Purchase Qty Limit
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={field.value ?? ""}
-                    placeholder="e.g. 5 (Leave blank for unlimited)"
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value, 10);
-                      field.onChange(isNaN(val) ? null : val);
-                    }}
-                    className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3"
-                  />
-                </FormControl>
-                <FormDescription className="text-zinc-500 text-xs">
-                  Maximum quantity a customer can buy in a single order.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-      </div>
-
-      {/* SECTION C: Discovery Categories */}
-      <div className="space-y-6">
-        <h3 className="text-md font-bold text-[#1A1208] border-b border-[#ECE6D6] pb-2">
-          3. Categories & Tags
+          2. Categories & Tags
         </h3>
 
         {/* Categories grid */}
@@ -577,7 +412,7 @@ export function Step1BasicInfo() {
           name="tag_ids"
           render={() => (
             <FormItem>
-              <FormLabel className="text-[#1A1208] font-semibold text-sm font-outfit">Tags</FormLabel>
+              <FormLabel className="text-[#1A1208] font-semibold text-sm">Tags</FormLabel>
               {selectedTagIds.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-3">
                   {selectedTagIds.map((tagId) => {
@@ -610,7 +445,7 @@ export function Step1BasicInfo() {
                     <SelectValue placeholder={selectedTagIds.length >= 10 ? "Maximum tags reached" : "Add a tag…"} />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208] max-h-60 overflow-y-auto">
+                <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208] max-h-60 overflow-y-auto shadow-lg rounded-xl">
                   {tags
                     .filter((t) => !selectedTagIds.includes(t.id))
                     .map((tag) => (
@@ -624,6 +459,106 @@ export function Step1BasicInfo() {
             </FormItem>
           )}
         />
+      </div>
+
+      {/* SECTION C: Specifications */}
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-md font-bold text-[#1A1208] border-b border-[#ECE6D6] pb-2 flex items-center gap-2">
+            <ListChecks className="w-5 h-5 text-[#01454A]" />
+            3. Product Specifications
+          </h3>
+          <p className="text-[#7A6B44] text-xs mt-1">
+            Add key details like fit type, style, neckline, or pattern to help customers choose.
+            Maximum 20 entries.
+          </p>
+        </div>
+
+        {/* Empty state */}
+        {specFields.length === 0 && (
+          <div className="rounded-xl border border-dashed border-[#D9D9D9] py-10 text-center bg-[#FAFAF8]">
+            <p className="text-[#7A6B44] text-sm">
+              No custom specifications added yet.
+            </p>
+          </div>
+        )}
+
+        {/* Spec rows */}
+        <div className="space-y-3">
+          {specFields.map((field, idx) => (
+            <div
+              key={field.id}
+              className="group flex gap-3 items-start rounded-xl bg-white border border-[#D9D9D9] p-4 hover:border-[#FDA600]/40 transition-colors shadow-sm"
+            >
+              {/* Drag handle */}
+              <div className="flex-shrink-0 pt-2 text-[#7A6B44] cursor-grab group-hover:text-[#1A1208] transition-colors">
+                <GripVertical className="w-4 h-4" />
+              </div>
+
+              {/* Fields */}
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name={`specifications.${idx}.title`}
+                  render={({ field: f }) => (
+                    <FormItem>
+                      <FormLabel className="text-zinc-500 text-xs font-semibold">Specification Title</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...f}
+                          placeholder="e.g. Fit Type"
+                          className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-3 py-2 text-xs"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name={`specifications.${idx}.content`}
+                  render={({ field: f }) => (
+                    <FormItem>
+                      <FormLabel className="text-zinc-500 text-xs font-semibold">Value / Detail</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...f}
+                          placeholder="e.g. Regular Custom Fit"
+                          className="bg-white border border-[#D9D9D9] text-[#1A1208] placeholder:text-[#7A6B44]/50 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-3 py-2 text-xs"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Delete */}
+              <button
+                type="button"
+                onClick={() => removeSpec(idx)}
+                className="flex-shrink-0 pt-7 text-[#7A6B44] hover:text-red-600 transition-colors"
+                title="Remove specification"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Add button */}
+        {specFields.length < 20 && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addSpec}
+            className="w-full border-dashed border-[#D9D9D9] text-[#7A6B44] hover:text-[#01454A] hover:border-[#01454A]/40 bg-transparent hover:bg-[#E6F4F5]/30 rounded-xl py-3"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Specification ({specFields.length}/20)
+          </Button>
+        )}
       </div>
     </div>
   );

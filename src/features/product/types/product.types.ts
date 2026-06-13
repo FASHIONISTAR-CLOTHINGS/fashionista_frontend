@@ -107,6 +107,8 @@ export interface ProductGalleryMedia {
   media_type: MediaType;
   alt_text: string;
   ordering: number;
+  variant?: string | null;
+  color?: string | null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -128,6 +130,79 @@ export interface ProductVariant {
   dimensions_cm?: Record<string, unknown> | null;
   notes?: string;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRODUCT FABRIC, MEASUREMENTS & SHIPPING PROFILES (Phase 1)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface FabricCompositionItem {
+  material: string;
+  percentage: number;
+}
+
+export interface ProductFabric {
+  id: string;
+  fabric_type: string;
+  composition: FabricCompositionItem[] | Record<string, unknown>;
+  care_instructions: string;
+  care_notes: string;
+  is_organic: boolean;
+  is_vegan: boolean;
+  country_of_origin: string;
+}
+
+export interface ProductMeasurementGuideRow {
+  id: string;
+  size?: ProductSize | null;
+  size_label: string;
+  chest_cm: string;
+  waist_cm: string;
+  hip_cm: string;
+  shoulder_cm: string;
+  sleeve_cm: string;
+  length_cm: string;
+  inseam_cm: string;
+  foot_length_cm: string;
+  sort_order: number;
+  template?: string | null;
+}
+
+export interface VendorMeasurementTemplateRow {
+  id?: string;
+  size_id?: string | null;
+  size_label: string;
+  chest_cm?: string;
+  waist_cm?: string;
+  hip_cm?: string;
+  length_cm?: string;
+  shoulder_cm?: string;
+  sleeve_cm?: string;
+  inseam_cm?: string;
+  foot_length_cm?: string;
+  sort_order?: number;
+}
+
+export interface VendorMeasurementTemplate {
+  id: string;
+  vendor_id?: string | null;
+  name: string;
+  description?: string;
+  template_rows: VendorMeasurementTemplateRow[];
+}
+
+export interface ProductShippingProfile {
+  id: string;
+  weight_kg: string;
+  length_cm: string;
+  width_cm: string;
+  height_cm: string;
+  is_fragile: boolean;
+  requires_signature: boolean;
+  restricted_countries: string[];
+  free_shipping_threshold: string | null;
+  processing_days: number;
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PRODUCT REVIEW
@@ -271,6 +346,10 @@ export interface ProductDetail {
   meta_description?: string;
   age_group?: string;
   gender_target?: string;
+  fabric?: ProductFabric | null;
+  shipping_profile?: ProductShippingProfile | null;
+  measurement_guide?: ProductMeasurementGuideRow[] | null;
+  measurement_template?: string | null;
   category_name: string | null;
   category_slug: string | null;
   sub_category_name: string | null;
@@ -366,6 +445,8 @@ export interface CreateProductInput {
   age_group?: string;
   gender_target?: string;
   courier_id?: string | null;
+  measurement_template?: string | null;
+  measurement_guide?: ProductMeasurementGuideRow[];
   variants?: Array<{
     size_id?: string | null;
     color_id?: string | null;
@@ -380,6 +461,9 @@ export interface CreateProductInput {
     notes?: string;
   }>;
   idempotency_key?: string;        // UUID v4 string
+  fabric?: Omit<ProductFabric, "id"> | null;
+  shipping_profile?: Omit<ProductShippingProfile, "id"> | null;
+  measurement_guide?: Array<Omit<ProductMeasurementGuideRow, "id">> | null;
 }
 
 export interface UpdateProductInput extends Partial<CreateProductInput> {}

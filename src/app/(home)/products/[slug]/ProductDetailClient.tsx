@@ -307,6 +307,22 @@ export function ProductDetailClient({
             </span>
           </div>
 
+          {/* Target Demographic */}
+          {(product.gender_target || product.age_group) && (
+            <div className="flex gap-2">
+              {product.gender_target && (
+                <Badge variant="secondary" className="capitalize text-xs font-semibold">
+                  Target: {product.gender_target}
+                </Badge>
+              )}
+              {product.age_group && (
+                <Badge variant="secondary" className="capitalize text-xs font-semibold">
+                  Age: {product.age_group}
+                </Badge>
+              )}
+            </div>
+          )}
+
           {/* Price */}
           <div className="flex items-baseline gap-3">
             <span className="text-3xl font-bold text-foreground">
@@ -318,6 +334,17 @@ export function ProductDetailClient({
               </span>
             )}
           </div>
+
+          {/* Pre-Order Alert */}
+          {product.is_pre_order && (
+            <div className="flex items-start gap-2 rounded-xl border border-dashed border-[#01454A]/30 bg-[#F7FAFA] px-4 py-3">
+              <Package size={15} className="mt-0.5 shrink-0 text-[#01454A]" />
+              <p className="text-xs text-foreground">
+                <strong>Pre-Order Item:</strong> Expected dispatch date:{" "}
+                <span className="font-semibold">{product.pre_order_date ? formatDate(product.pre_order_date) : "TBD"}</span>.
+              </p>
+            </div>
+          )}
 
           {/* Measurement warning */}
           {product.requires_measurement && (

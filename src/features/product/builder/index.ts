@@ -14,13 +14,10 @@ export { ProductBuilder } from "./components/ProductBuilder";
 
 // ── Step Components ──────────────────────────────────────────────────────────
 export { Step1BasicInfo } from "./components/Step1BasicInfo";
-export { Step2Pricing } from "./components/Step2Pricing";
-export { Step3Gallery } from "./components/Step3Gallery";
-export { Step4SizesColors } from "./components/Step4SizesColors";
-export { Step5Variants } from "./components/Step5Variants";
-export { Step6Specifications } from "./components/Step6Specifications";
-export { Step7Faqs } from "./components/Step7Faqs";
-export { Step8Publish } from "./components/Step8Publish";
+export { Step2AestheticsMedia } from "./components/Step2AestheticsMedia";
+export { Step3VariantsSizing } from "./components/Step3VariantsSizing";
+export { Step4ShippingLogistics } from "./components/Step4ShippingLogistics";
+export { Step5ReviewSubmit } from "./components/Step5ReviewSubmit";
 
 // ── Stepper ──────────────────────────────────────────────────────────────────
 export { BuilderStepper } from "./components/BuilderStepper";

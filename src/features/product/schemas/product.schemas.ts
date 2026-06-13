@@ -124,6 +124,83 @@ export const ProductFaqSchema = z
   })
   .passthrough();
 
+export const ProductMeasurementGuideSchema = z
+  .object({
+    id: z.string().optional(),
+    size_label: z.string(),
+    chest_cm: z.string().optional().default(""),
+    waist_cm: z.string().optional().default(""),
+    hip_cm: z.string().optional().default(""),
+    shoulder_cm: z.string().optional().default(""),
+    sleeve_cm: z.string().optional().default(""),
+    length_cm: z.string().optional().default(""),
+    inseam_cm: z.string().optional().default(""),
+    foot_length_cm: z.string().optional().default(""),
+    sort_order: z.number().int().default(0),
+    template: z.string().uuid().nullable().optional(),
+  })
+  .passthrough();
+
+export const FabricCompositionItemSchema = z.object({
+  material: z.string(),
+  percentage: z.number().min(0).max(100),
+});
+
+export const ProductFabricSchema = z
+  .object({
+    id: z.string().uuid().optional(),
+    fabric_type: z.string(),
+    composition: z.union([z.array(FabricCompositionItemSchema), z.record(z.string(), z.unknown())]).default([]),
+    care_instructions: z.string().default("machine_wash"),
+    care_notes: z.string().optional().default(""),
+    is_organic: z.boolean().default(false),
+    is_vegan: z.boolean().default(false),
+    country_of_origin: z.string().optional().default(""),
+  })
+  .passthrough();
+
+export const ProductShippingProfileSchema = z
+  .object({
+    id: z.string().uuid().optional(),
+    weight_kg: DecimalStrSchema.default("0.00"),
+    length_cm: DecimalStrSchema.default("0.00"),
+    width_cm: DecimalStrSchema.default("0.00"),
+    height_cm: DecimalStrSchema.default("0.00"),
+    is_fragile: z.boolean().default(false),
+    requires_signature: z.boolean().default(false),
+    restricted_countries: z.array(z.string()).default([]),
+    free_shipping_threshold: DecimalStrSchema.nullable().optional(),
+    processing_days: z.number().int().min(1).default(1),
+  })
+  .passthrough();
+
+export const VendorMeasurementTemplateRowSchema = z
+  .object({
+    id: z.string().optional(),
+    size_id: z.string().uuid().nullable().optional(),
+    size_label: z.string(),
+    chest_cm: z.string().optional().default(""),
+    waist_cm: z.string().optional().default(""),
+    hip_cm: z.string().optional().default(""),
+    length_cm: z.string().optional().default(""),
+    shoulder_cm: z.string().optional().default(""),
+    sleeve_cm: z.string().optional().default(""),
+    inseam_cm: z.string().optional().default(""),
+    foot_length_cm: z.string().optional().default(""),
+    sort_order: z.number().int().default(0),
+  })
+  .passthrough();
+
+export const VendorMeasurementTemplateSchema = z
+  .object({
+    id: IdSchema,
+    vendor_id: IdSchema.nullable().optional(),
+    name: z.string(),
+    description: z.string().optional().default(""),
+    template_rows: z.array(VendorMeasurementTemplateRowSchema).default([]),
+  })
+  .passthrough();
+
 // ─────────────────────────────────────────────────────────────────────────────
 // GALLERY MEDIA
 // ─────────────────────────────────────────────────────────────────────────────
@@ -136,6 +213,8 @@ export const ProductGalleryMediaSchema = z
     media_type: MediaTypeSchema,
     alt_text: z.string().default(""),
     ordering: z.number().int(),
+    variant: z.string().uuid().nullable().optional(),
+    color: z.string().uuid().nullable().optional(),
   })
   .passthrough();
 
@@ -309,6 +388,10 @@ export const ProductDetailSchema = z
     specifications: z.array(ProductSpecificationSchema).default([]),
     faqs: z.array(ProductFaqSchema).default([]),
     variants: z.array(ProductVariantSchema).default([]),
+    measurement_guide: z.array(ProductMeasurementGuideSchema).default([]),
+    measurement_template: z.string().uuid().nullable().optional(),
+    fabric: ProductFabricSchema.nullable().optional(),
+    shipping_profile: ProductShippingProfileSchema.nullable().optional(),
     status: ProductStatusSchema,
     weight_kg: DecimalStrSchema.nullable().optional(),
     condition: ProductConditionSchema.default("new"),
@@ -461,5 +544,32 @@ export const ProductDraftSessionSchema = z
     linked_product_id: z.string().nullable().optional(),
     expires_at: z.string(),
     last_synced_at: z.string(),
+  })
+  .passthrough();
+
+export const VendorMeasurementTemplateRowSchema = z
+  .object({
+    id: z.string(),
+    size_id: z.string().nullable().optional(),
+    size_label: z.string(),
+    chest_cm: z.string().default(""),
+    waist_cm: z.string().default(""),
+    hip_cm: z.string().default(""),
+    length_cm: z.string().default(""),
+    shoulder_cm: z.string().default(""),
+    sleeve_cm: z.string().default(""),
+    inseam_cm: z.string().default(""),
+    foot_length_cm: z.string().default(""),
+    sort_order: z.number().int().default(0),
+  })
+  .passthrough();
+
+export const VendorMeasurementTemplateSchema = z
+  .object({
+    id: z.string(),
+    vendor_id: z.string(),
+    name: z.string(),
+    description: z.string().default(""),
+    template_rows: z.array(VendorMeasurementTemplateRowSchema).default([]),
   })
   .passthrough();

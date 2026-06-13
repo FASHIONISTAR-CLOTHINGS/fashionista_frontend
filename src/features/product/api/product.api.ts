@@ -71,6 +71,7 @@ import {
   ProductInventoryLogSchema,
   PaginatedInventoryLogsSchema,
   ProductDraftSessionSchema,
+  VendorMeasurementTemplateSchema,
 } from "../schemas/product.schemas";
 import type {
   PaginatedProductList,
@@ -94,6 +95,7 @@ import type {
   CouponValidateInput,
   ProductFilterParams,
   ProductDraftSession,
+  VendorMeasurementTemplate,
 } from "../types/product.types";
 
 function guestOptions() {
@@ -635,5 +637,22 @@ export async function fetchDraftSessionDetail(
     unwrapApiData(raw),
     "fetchDraftSessionDetail",
   ) as ProductDraftSession;
+}
+
+/**
+ * Fetch vendor measurement templates.
+ * Endpoint: GET /api/v1/ninja/products/vendor/measurement-templates/
+ */
+export async function fetchVendorMeasurementTemplates(): Promise<VendorMeasurementTemplate[]> {
+  const raw = await apiAsync.get("products/vendor/measurement-templates/").json();
+  const list = unwrapApiData(raw);
+  if (!Array.isArray(list)) return [];
+  return list.map((item) =>
+    parseApiResponse(
+      VendorMeasurementTemplateSchema,
+      item,
+      "fetchVendorMeasurementTemplates",
+    ) as VendorMeasurementTemplate,
+  );
 }
 

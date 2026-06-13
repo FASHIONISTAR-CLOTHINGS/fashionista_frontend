@@ -26,8 +26,8 @@ export function VendorProductBuilderWrapper({
     _values: ProductBuilderFormValues,
     _productId: string | null,
   ): Promise<void> => {
-    // The actual submit logic is handled at the step level (Step8Publish).
-    // This top-level handler is called only if Step8 bubbles up a final confirm.
+    // The actual submit logic is handled at the step level (Step5ReviewSubmit).
+    // This top-level handler is called only if Step5 bubbles up a final confirm.
     toast.info("Finalising product draft…");
   };
 

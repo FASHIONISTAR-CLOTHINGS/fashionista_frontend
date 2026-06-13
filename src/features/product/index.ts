@@ -171,7 +171,7 @@ export {
 } from "./components/ProductCardSkeleton";
 export { default as ProductGrid } from "./components/ProductGrid";
 
-// ── Vendor Product Builder (8-step enterprise builder) ────────────────────
+// ── Vendor Product Builder (5-step enterprise builder) ────────────────────
 export {
   // Orchestrator
   ProductBuilder,
@@ -180,13 +180,10 @@ export {
   useBuilderContext,
   // Individual step components
   Step1BasicInfo,
-  Step2Pricing,
-  Step3Gallery,
-  Step4SizesColors,
-  Step5Variants,
-  Step6Specifications,
-  Step7Faqs,
-  Step8Publish,
+  Step2AestheticsMedia,
+  Step3VariantsSizing,
+  Step4ShippingLogistics,
+  Step5ReviewSubmit,
   // Stepper nav
   BuilderStepper,
   // Schemas + metadata
@@ -202,9 +199,6 @@ export type {
   Step3Values,
   Step4Values,
   Step5Values,
-  Step6Values,
-  Step7Values,
-  Step8Values,
   GalleryItem,
   VariantRow,
   SpecRow,
