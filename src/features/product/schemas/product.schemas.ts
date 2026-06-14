@@ -127,7 +127,7 @@ export const ProductFaqSchema = z
 export const ProductMeasurementGuideSchema = z
   .object({
     id: z.string().optional(),
-    size_label: z.string(),
+    size_label: z.enum(["XS", "S", "M", "L", "XL", "XXL", "Custom"]),
     chest_cm: z.string().optional().default(""),
     waist_cm: z.string().optional().default(""),
     hip_cm: z.string().optional().default(""),

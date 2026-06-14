@@ -137,7 +137,7 @@ export function Step2SizingAndFabric() {
       const existing = current.find((r) => r.size_id === sId || r.size_label === sizeObj.name);
       newRows.push({
         size_id: sId,
-        size_label: sizeObj.name,
+        size_label: sizeObj.name as any,
         chest_cm: existing?.chest_cm ?? "",
         waist_cm: existing?.waist_cm ?? "",
         hip_cm: existing?.hip_cm ?? "",
@@ -173,7 +173,7 @@ export function Step2SizingAndFabric() {
       // Copy rows from template to form guide rows
       const guideRows = template.template_rows.map((row) => ({
         size_id: row.size_id ?? null,
-        size_label: row.size_label,
+        size_label: row.size_label as any,
         chest_cm: row.chest_cm || "",
         waist_cm: row.waist_cm || "",
         hip_cm: row.hip_cm || "",
@@ -397,7 +397,7 @@ export function Step2SizingAndFabric() {
                   variant="outline"
                   size="sm"
                   onClick={() => appendGuideRow({
-                    size_label: "",
+                    size_label: "Custom",
                     chest_cm: "",
                     waist_cm: "",
                     hip_cm: "",
@@ -439,11 +439,17 @@ export function Step2SizingAndFabric() {
                             render={({ field: f }) => (
                               <FormItem>
                                 <FormControl>
-                                  <Input
-                                    {...f}
-                                    className="h-8 w-24 bg-white border border-[#D9D9D9] text-[#1A1208] text-xs px-2"
-                                    placeholder="e.g. S, XL"
-                                  />
+                                  <select
+                                    value={f.value}
+                                    onChange={f.onChange}
+                                    className="h-8 w-24 bg-white border border-[#D9D9D9] rounded-md text-[#1A1208] text-xs px-2 focus:outline-none focus:ring-1 focus:ring-[#01454A]"
+                                  >
+                                    {["XS", "S", "M", "L", "XL", "XXL", "Custom"].map((opt) => (
+                                      <option key={opt} value={opt}>
+                                        {opt}
+                                      </option>
+                                    ))}
+                                  </select>
                                 </FormControl>
                               </FormItem>
                             )}

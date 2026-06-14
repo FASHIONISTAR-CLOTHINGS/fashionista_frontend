@@ -76,7 +76,7 @@ export type FabricCompositionItem = z.infer<typeof FabricCompositionItemSchema>;
 
 export const MeasurementGuideRowSchema = z.object({
   size_id: z.string().uuid().nullable().optional(),
-  size_label: z.string().min(1, "Size label is required"),
+  size_label: z.enum(["XS", "S", "M", "L", "XL", "XXL", "Custom"], { required_error: "Size label is required" }),
   chest_cm: z.string().optional().default(""),
   waist_cm: z.string().optional().default(""),
   hip_cm: z.string().optional().default(""),
