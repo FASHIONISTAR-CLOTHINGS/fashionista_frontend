@@ -86,13 +86,8 @@ export const ProductVendorSchema = z
   .passthrough();
 
 
-export const ProductColorSchema = z
-  .object({
-    id: IdSchema,
-    name: z.string(),
-    hex_code: z.string(),
-  })
-  .passthrough();
+// NOTE: ProductColor as a separate FK model has been removed.
+// Color is now stored as direct fields (color_name / color_hex) on ProductVariantGalleryMedia.
 
 export const ProductTagSchema = z
   .object({
@@ -196,42 +191,40 @@ export const VendorMeasurementTemplateSchema = z
   .passthrough();
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GALLERY MEDIA
+// CONSOLIDATED VARIANT + GALLERY MEDIA
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const ProductGalleryMediaSchema = z
-  .object({
-    id: IdSchema,
-    media_url: NullableUrlSchema,
-    thumbnail_url: NullableUrlSchema,
-    media_type: MediaTypeSchema,
-    alt_text: z.string().default(""),
-    ordering: z.number().int(),
-    variant: z.string().uuid().nullable().optional(),
-    color: z.string().uuid().nullable().optional(),
-  })
-  .passthrough();
-
-// ─────────────────────────────────────────────────────────────────────────────
-// VARIANT
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const ProductVariantSchema = z
+export const ProductVariantGalleryMediaSchema = z
   .object({
     id: IdSchema,
     sku: z.string(),
-    color: ProductColorSchema.nullable(),
-    price_override: DecimalStrSchema.nullable(),
-    stock_qty: z.number().int().min(0),
-    is_active: z.boolean(),
+    size: ProductMeasurementGuideSchema.nullable().optional(),
+    color_name: z.string().default(""),
+    color_hex: z.string().default(""),
+    swatch_image_url: NullableUrlSchema.optional(),
+    price_override: DecimalStrSchema.nullable().optional(),
+    stock_qty: z.number().int().min(0).default(0),
+    is_active: z.boolean().default(true),
+    is_default: z.boolean().default(false),
     image_url: NullableUrlSchema.optional(),
-    barcode: z.string().nullable().optional(),
-    is_default: z.boolean().optional(),
+    media_url: NullableUrlSchema.optional(),
+    media_type: MediaTypeSchema.default("image"),
+    alt_text: z.string().default(""),
+    ordering: z.number().int().default(0),
+    is_primary: z.boolean().default(false),
+    video_thumbnail_url: NullableUrlSchema.optional(),
+    duration_sec: z.number().int().nullable().optional(),
+    barcode: z.string().default(""),
     weight_kg: DecimalStrSchema.nullable().optional(),
     dimensions_cm: z.record(z.string(), z.unknown()).nullable().optional(),
-    notes: z.string().optional().default(""),
+    notes: z.string().default(""),
   })
   .passthrough();
+
+// Backward-compat alias (old gallery item shape — now unified with variant)
+export const ProductGalleryMediaSchema = ProductVariantGalleryMediaSchema;
+// Backward-compat alias (old variant shape — now unified with gallery media)
+export const ProductVariantSchema = ProductVariantGalleryMediaSchema;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REVIEW
@@ -334,7 +327,6 @@ export const ProductListItemSchema = z
     vendor_slug: z.string().nullable().optional(),
     requires_measurement: z.boolean().default(false),
     is_customisable: z.boolean().default(false),
-    colors: z.array(ProductColorSchema).default([]),
     created_at: IsoDateSchema,
   })
   .passthrough();
@@ -357,7 +349,7 @@ export const ProductDetailSchema = z
     shipping_amount: DecimalStrSchema.default("0.00"),
     image_url: NullableUrlSchema,
     cover_image_url: NullableUrlSchema.optional(),
-    gallery: z.array(ProductGalleryMediaSchema).default([]),
+    variants: z.array(ProductVariantGalleryMediaSchema).default([]),
     in_stock: z.boolean(),
     stock_qty: z.number().int().min(0),
     max_stock: z.number().int().nullable().optional(),
@@ -374,11 +366,9 @@ export const ProductDetailSchema = z
     digital: z.boolean().default(false),
     requires_measurement: z.boolean().default(false),
     is_customisable: z.boolean().default(false),
-    colors: z.array(ProductColorSchema).default([]),
     tags: z.array(ProductTagSchema).default([]),
     specifications: z.array(ProductSpecificationSchema).default([]),
     faqs: z.array(ProductFaqSchema).default([]),
-    variants: z.array(ProductVariantSchema).default([]),
     measurement_guide: z.array(ProductMeasurementGuideSchema).default([]),
     measurement_template: z.string().uuid().nullable().optional(),
     fabric: ProductFabricSchema.nullable().optional(),

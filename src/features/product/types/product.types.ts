@@ -67,12 +67,8 @@ export interface ProductVendor {
   is_verified: boolean;
 }
 
-
-export interface ProductColor {
-  id: string;
-  name: string;
-  hex_code: string;
-}
+// NOTE: ProductColor as a separate FK model has been removed.
+// Color is now stored as direct fields (color_name / color_hex) on ProductVariantGalleryMedia.
 
 export interface ProductTag {
   id: string;
@@ -93,37 +89,42 @@ export interface ProductFaq {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GALLERY MEDIA
+// CONSOLIDATED VARIANT + GALLERY MEDIA
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface ProductGalleryMedia {
-  id: string;
-  media_url: string | null;       // Full Cloudinary secure_url (auto q/f)
-  thumbnail_url: string | null;   // Cloudinary 400×400 thumb URL
-  media_type: MediaType;
-  alt_text: string;
-  ordering: number;
-  variant?: string | null;
-  color?: string | null;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PRODUCT VARIANT
-// ─────────────────────────────────────────────────────────────────────────────
-
-export interface ProductVariant {
+export interface ProductVariantGalleryMedia {
   id: string;
   sku: string;
-  color: ProductColor | null;
-  price_override: string | null;  // Decimal string e.g. "25000.00"
+  size?: ProductMeasurementGuideRow | null;
+  color_name: string;           // Direct text field e.g. "Midnight Blue"
+  color_hex: string;            // Direct hex field e.g. "#1A1A4E"
+  swatch_image_url?: string | null;
+  price_override: string | null; // Decimal string e.g. "25000.00"
   stock_qty: number;
   is_active: boolean;
-  image_url: string | null;
-  barcode?: string | null;
-  is_default?: boolean;
+  is_default: boolean;
+  image_url?: string | null;    // Variant hero image
+  media_url?: string | null;    // Gallery Cloudinary URL
+  media_type: MediaType;        // "image" | "video"
+  alt_text: string;
+  ordering: number;
+  is_primary: boolean;
+  video_thumbnail_url?: string | null;
+  duration_sec?: number | null;
+  barcode: string;
   weight_kg?: string | null;
   dimensions_cm?: Record<string, unknown> | null;
-  notes?: string;
+  notes: string;
+}
+
+// Backward-compat aliases
+export type ProductGalleryMedia = ProductVariantGalleryMedia;
+export type ProductVariant = ProductVariantGalleryMedia;
+// Kept for reference in older components still using ProductColor inline
+export interface ProductColor {
+  id?: string;
+  name: string;
+  hex_code: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -288,7 +289,6 @@ export interface ProductListItem {
   vendor_slug: string | null;
   requires_measurement: boolean;
   is_customisable: boolean;
-  colors: ProductColor[];
   created_at: string;
 }
 
@@ -309,7 +309,8 @@ export interface ProductDetail {
   shipping_amount: string;
   image_url: string | null;
   cover_image_url: string | null;
-  gallery: ProductGalleryMedia[];
+  /** Unified variants: each item is both a product variant and a potential gallery media entry. */
+  variants: ProductVariantGalleryMedia[];
   in_stock: boolean;
   stock_qty: number;
   max_stock: number | null;
@@ -324,11 +325,9 @@ export interface ProductDetail {
   digital: boolean;
   requires_measurement: boolean;
   is_customisable: boolean;
-  colors: ProductColor[];
   tags: ProductTag[];
   specifications: ProductSpecification[];
   faqs: ProductFaq[];
-  variants: ProductVariant[];
   status: ProductStatus;
   weight_kg?: string | null;
   condition: ProductCondition;
@@ -423,7 +422,6 @@ export interface CreateProductInput {
   category_ids: string[];
   sub_category_ids?: string[];
   size_ids?: string[];
-  color_ids?: string[];
   tag_ids?: string[];
   requires_measurement: boolean;
   is_customisable: boolean;
@@ -438,9 +436,11 @@ export interface CreateProductInput {
   gender_target?: string;
   courier_id?: string | null;
   measurement_template?: string | null;
+  /** Unified variant + gallery media items to create/update. */
   variants?: Array<{
     size_id?: string | null;
-    color_id?: string | null;
+    color_name?: string;          // Direct text field
+    color_hex?: string;           // Direct hex field
     price_override?: string | null;
     stock_qty?: number;
     sku?: string;
@@ -450,6 +450,11 @@ export interface CreateProductInput {
     is_default?: boolean;
     dimensions_cm?: Record<string, unknown> | null;
     notes?: string;
+    media_type?: MediaType;
+    alt_text?: string;
+    ordering?: number;
+    is_primary?: boolean;
+    duration_sec?: number | null;
   }>;
   idempotency_key?: string;        // UUID v4 string
   fabric?: Omit<ProductFabric, "id"> | null;
