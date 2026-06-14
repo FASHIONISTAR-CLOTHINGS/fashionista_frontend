@@ -6,10 +6,11 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFormContext, useFieldArray } from "react-hook-form";
 import { apiAsync } from "@/core/api/client.async";
-import { fetchVendorMeasurementTemplates } from "../../api/product.api";
+import { fetchVendorMeasurementTemplates, createVendorMeasurementTemplate } from "../../api/product.api";
+import { toast } from "sonner";
 import type { ProductBuilderFormValues } from "../schemas/builder.schemas";
 
 // ── Shadcn/ui primitives ──────────────────────────────────────────────────────
@@ -51,6 +52,8 @@ const CARE_INSTRUCTIONS = [
 
 export function Step2SizingAndFabric() {
   const form = useFormContext<ProductBuilderFormValues>();
+  const queryClient = useQueryClient();
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
 
   const selectedSizes = form.watch("size_ids") ?? [];
   const selectedColors = form.watch("color_ids") ?? [];
@@ -160,6 +163,46 @@ export function Step2SizingAndFabric() {
     replaceGuideRows(newRows);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSizes.join(","), requiresMeasurement, sizeMap, selectedTemplateId]);
+
+  const handleSaveTemplate = async () => {
+    const templateName = window.prompt("Enter template name (e.g. Kaftan Senator Slim):");
+    if (!templateName || !templateName.trim()) {
+      return;
+    }
+    setIsSavingTemplate(true);
+    try {
+      const guideRows = form.getValues("measurement_guide") ?? [];
+      const payload = {
+        name: templateName.trim(),
+        description: "clothing",
+        template_rows: guideRows.map((row) => ({
+          size_label: row.size_label,
+          chest_cm: row.chest_cm || "",
+          waist_cm: row.waist_cm || "",
+          hip_cm: row.hip_cm || "",
+          length_cm: row.length_cm || "",
+          shoulder_cm: row.shoulder_cm || "",
+          sleeve_cm: row.sleeve_cm || "",
+          inseam_cm: row.inseam_cm || "",
+          foot_length_cm: row.foot_length_cm || "",
+          sort_order: row.sort_order || 0,
+        })),
+      };
+
+      const newTemplate = await createVendorMeasurementTemplate(payload);
+      toast.success("Sizing template saved successfully!");
+
+      await queryClient.invalidateQueries({
+        queryKey: ["product-builder", "vendor-measurement-templates"],
+      });
+
+      form.setValue("measurement_template", newTemplate.id, { shouldValidate: true });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to save template");
+    } finally {
+      setIsSavingTemplate(false);
+    }
+  };
 
   const handleTemplateChange = (templateId: string) => {
     if (templateId === "none") {
@@ -387,6 +430,30 @@ export function Step2SizingAndFabric() {
                   </SelectContent>
                 </Select>
               )}
+              {!selectedTemplateId || selectedTemplateId === "none" ? (
+                <div className="pt-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={guideFields.length === 0 || isSavingTemplate}
+                    onClick={handleSaveTemplate}
+                    className="w-full sm:w-auto bg-[#01454A] text-white hover:bg-[#01454A]/90 border-0 rounded-lg text-xs"
+                  >
+                    {isSavingTemplate ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                        Saving Sizing Template...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                        Save Current Sizing Guide as Reusable Template
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ) : null}
             </div>
 
             <div className="space-y-4">

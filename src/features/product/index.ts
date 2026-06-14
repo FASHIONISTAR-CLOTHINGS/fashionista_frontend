@@ -21,7 +21,6 @@ export type {
   ProductCategory,
   ProductBrand,
   ProductVendor,
-  ProductSize,
   ProductColor,
   ProductTag,
   ProductSpecification,

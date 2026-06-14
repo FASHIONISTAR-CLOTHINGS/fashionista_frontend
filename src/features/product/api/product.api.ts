@@ -656,3 +656,23 @@ export async function fetchVendorMeasurementTemplates(): Promise<VendorMeasureme
   );
 }
 
+/**
+ * Create/update a reusable measurement template.
+ * Endpoint: POST /api/v1/ninja/products/vendor/measurement-templates/
+ */
+export async function createVendorMeasurementTemplate(
+  payload: Omit<VendorMeasurementTemplate, "id"> & { id?: string },
+): Promise<VendorMeasurementTemplate> {
+  const raw = await apiAsync
+    .post("products/vendor/measurement-templates/", {
+      json: payload,
+    })
+    .json();
+  return parseApiResponse(
+    VendorMeasurementTemplateSchema,
+    unwrapApiData(raw),
+    "createVendorMeasurementTemplate",
+  ) as VendorMeasurementTemplate;
+}
+
+

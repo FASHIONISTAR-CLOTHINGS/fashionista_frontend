@@ -85,12 +85,6 @@ export const ProductVendorSchema = z
   })
   .passthrough();
 
-export const ProductSizeSchema = z
-  .object({
-    id: IdSchema,
-    name: z.string(),
-  })
-  .passthrough();
 
 export const ProductColorSchema = z
   .object({
@@ -226,7 +220,6 @@ export const ProductVariantSchema = z
   .object({
     id: IdSchema,
     sku: z.string(),
-    size: ProductSizeSchema.nullable(),
     color: ProductColorSchema.nullable(),
     price_override: DecimalStrSchema.nullable(),
     stock_qty: z.number().int().min(0),
@@ -341,7 +334,6 @@ export const ProductListItemSchema = z
     vendor_slug: z.string().nullable().optional(),
     requires_measurement: z.boolean().default(false),
     is_customisable: z.boolean().default(false),
-    sizes: z.array(ProductSizeSchema).default([]),
     colors: z.array(ProductColorSchema).default([]),
     created_at: IsoDateSchema,
   })
@@ -382,7 +374,6 @@ export const ProductDetailSchema = z
     digital: z.boolean().default(false),
     requires_measurement: z.boolean().default(false),
     is_customisable: z.boolean().default(false),
-    sizes: z.array(ProductSizeSchema).default([]),
     colors: z.array(ProductColorSchema).default([]),
     tags: z.array(ProductTagSchema).default([]),
     specifications: z.array(ProductSpecificationSchema).default([]),

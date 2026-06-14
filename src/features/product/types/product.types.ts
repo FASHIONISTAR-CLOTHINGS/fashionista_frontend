@@ -67,10 +67,6 @@ export interface ProductVendor {
   is_verified: boolean;
 }
 
-export interface ProductSize {
-  id: string;
-  name: string;
-}
 
 export interface ProductColor {
   id: string;
@@ -118,7 +114,6 @@ export interface ProductGalleryMedia {
 export interface ProductVariant {
   id: string;
   sku: string;
-  size: ProductSize | null;
   color: ProductColor | null;
   price_override: string | null;  // Decimal string e.g. "25000.00"
   stock_qty: number;
@@ -153,7 +148,6 @@ export interface ProductFabric {
 
 export interface ProductMeasurementGuideRow {
   id: string;
-  size?: ProductSize | null;
   size_label: string;
   chest_cm: string;
   waist_cm: string;
@@ -294,7 +288,6 @@ export interface ProductListItem {
   vendor_slug: string | null;
   requires_measurement: boolean;
   is_customisable: boolean;
-  sizes: ProductSize[];
   colors: ProductColor[];
   created_at: string;
 }
@@ -331,7 +324,6 @@ export interface ProductDetail {
   digital: boolean;
   requires_measurement: boolean;
   is_customisable: boolean;
-  sizes: ProductSize[];
   colors: ProductColor[];
   tags: ProductTag[];
   specifications: ProductSpecification[];
