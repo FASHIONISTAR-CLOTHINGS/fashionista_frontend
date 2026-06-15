@@ -1793,43 +1793,43 @@ function DraftSessionCard({ draft, isLocal, localStep, onResume, onDiscard, isDi
   const title = (draft.payload as any)?.title;
 
   return (
-    <div className="group relative flex flex-col gap-4 rounded-2xl border border-[#ECE6D6] bg-white p-5 shadow-sm hover:shadow-md hover:border-[#FDA600]/30 transition-all duration-200">
+    <div className="group relative flex flex-col gap-3 sm:gap-4 rounded-xl sm:rounded-2xl border border-[#ECE6D6] bg-white p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-[#FDA600]/30 transition-all duration-200">
       {/* Live badge */}
       {isLocal && (
-        <span className="absolute top-4 right-4 flex items-center gap-1.5 rounded-full bg-[#01454A]/8 border border-[#01454A]/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-[#01454A]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#01454A] animate-pulse" />
+        <span className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-1.5 rounded-full bg-[#01454A]/8 border border-[#01454A]/20 px-2.5 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#01454A]">
+          <span className="h-1 sm:h-1.5 w-1 sm:w-1.5 rounded-full bg-[#01454A] animate-pulse" />
           Active
         </span>
       )}
 
       {/* Header */}
-      <div className="flex items-start gap-3 pr-16">
-        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#FFF6E3] to-[#FFECC0] border border-[#FDA600]/25">
-          <Package className="h-5 w-5 text-[#FDA600]" />
+      <div className="flex items-start gap-2.5 sm:gap-3 pr-14 sm:pr-16">
+        <div className="flex h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br from-[#FFF6E3] to-[#FFECC0] border border-[#FDA600]/25">
+          <Package className="h-4 w-4 sm:h-5 sm:w-5 text-[#FDA600]" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-0.5">Product Draft</p>
-          <h3 className="text-sm font-bold text-[#1A1208] truncate">
+          <p className="text-[9px] sm:text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-0.5">Product Draft</p>
+          <h3 className="text-xs sm:text-sm font-bold text-[#1A1208] truncate">
             {title ? `"${title}"` : "Untitled product"}
           </h3>
-          <p className="mt-0.5 text-[11px] text-[#7A6B44]/75">
+          <p className="mt-0.5 text-[10px] sm:text-[11px] text-[#7A6B44]/75">
             Draft key: <span className="font-mono">{String(draft.draft_key).slice(0, 8)}…</span>
           </p>
         </div>
       </div>
 
       {/* Step progress bar */}
-      <div className="space-y-1.5">
+      <div className="space-y-1 sm:space-y-1.5">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold text-[#1A1208]">{stepLabel}</span>
-          <span className="text-[11px] text-[#7A6B44]">{progress}% complete</span>
+          <span className="text-[10px] sm:text-[11px] font-bold text-[#1A1208]">{stepLabel}</span>
+          <span className="text-[10px] sm:text-[11px] text-[#7A6B44]">{progress}% complete</span>
         </div>
         <DraftStepProgress step={step} />
         <div className="flex items-center justify-between">
-          <span className="text-[10px] text-[#BDBDBD]">
+          <span className="text-[9px] sm:text-[10px] text-[#BDBDBD]">
             Step {step} of 5
           </span>
-          <span className="flex items-center gap-1 text-[10px] text-[#7A6B44]">
+          <span className="flex items-center gap-1 text-[9px] sm:text-[10px] text-[#7A6B44]">
             <Clock className="h-3 w-3" />
             {syncTime}
           </span>
@@ -1837,22 +1837,22 @@ function DraftSessionCard({ draft, isLocal, localStep, onResume, onDiscard, isDi
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2 mt-1">
+      <div className="flex gap-2 mt-0.5 sm:mt-1">
         <Button
           type="button"
           onClick={() => onResume(draft)}
-          className="flex-1 h-9 rounded-xl bg-[#FDA600] text-black text-xs font-bold hover:bg-[#E8960A] transition shadow-sm shadow-[#FDA600]/20 border-none cursor-pointer min-h-0"
+          className="flex-1 h-8 sm:h-9 rounded-lg sm:rounded-xl bg-[#FDA600] text-black text-[11px] sm:text-xs font-bold hover:bg-[#E8960A] transition shadow-sm shadow-[#FDA600]/20 border-none cursor-pointer min-h-0"
         >
-          <ArrowRight className="h-3.5 w-3.5 mr-1" />
+          <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
           Resume building
         </Button>
         <Button
           type="button"
           onClick={() => onDiscard(draft)}
           disabled={isDiscarding}
-          className="h-9 px-3 rounded-xl border border-[#F2C9C9] bg-white text-[#8A3B3B] text-xs font-semibold hover:bg-[#FFF7F7] transition border-solid cursor-pointer min-h-0 disabled:opacity-40"
+          className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-lg sm:rounded-xl border border-[#F2C9C9] bg-white text-[#8A3B3B] text-[11px] sm:text-xs font-semibold hover:bg-[#FFF7F7] transition border-solid cursor-pointer min-h-0 disabled:opacity-40"
         >
-          {isDiscarding ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <X className="h-3.5 w-3.5" />}
+          {isDiscarding ? <RefreshCw className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" /> : <X className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
         </Button>
       </div>
     </div>
@@ -1928,21 +1928,21 @@ function VendorDraftSessionPanel({ onResumeDraft }: { onResumeDraft: (draft: Pro
   };
 
   return (
-    <div className="rounded-3xl border border-[#FDA600]/25 bg-gradient-to-br from-[#FFFBF0] to-[#FFF8E8] p-6 shadow-sm">
+    <div className="rounded-2xl sm:rounded-3xl border border-[#FDA600]/25 bg-gradient-to-br from-[#FFFBF0] to-[#FFF8E8] p-4 sm:p-6 shadow-sm">
       {/* Panel header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FDA600] shadow-sm shadow-[#FDA600]/30">
-            <RefreshCw className="h-4 w-4 text-black" />
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg sm:rounded-xl bg-[#FDA600] shadow-sm shadow-[#FDA600]/30">
+            <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-black" />
           </div>
           <div>
-            <p className="text-sm font-bold text-[#1A1208]">
+            <p className="text-xs sm:text-sm font-bold text-[#1A1208]">
               In-Progress Drafts
-              <span className="ml-2 inline-flex items-center justify-center h-5 w-5 rounded-full bg-[#FDA600] text-[10px] font-black text-black">
+              <span className="ml-1.5 sm:ml-2 inline-flex items-center justify-center h-4.5 w-4.5 sm:h-5 sm:w-5 rounded-full bg-[#FDA600] text-[9px] sm:text-[10px] font-black text-black">
                 {allDrafts.length}
               </span>
             </p>
-            <p className="text-[11px] text-[#7A6B44] mt-0.5">
+            <p className="text-[10px] sm:text-[11px] text-[#7A6B44] mt-0.5">
               You have unfinished product drafts. Resume or discard below.
             </p>
           </div>
@@ -1950,9 +1950,9 @@ function VendorDraftSessionPanel({ onResumeDraft }: { onResumeDraft: (draft: Pro
         <Button
           type="button"
           onClick={() => setIsExpanded((v) => !v)}
-          className="h-8 w-8 rounded-xl border border-[#FDA600]/30 bg-white text-[#7A6B44] hover:bg-[#FFF6E3] transition p-0 min-w-0 min-h-0 flex items-center justify-center cursor-pointer"
+          className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg sm:rounded-xl border border-[#FDA600]/30 bg-white text-[#7A6B44] hover:bg-[#FFF6E3] transition p-0 min-w-0 min-h-0 flex items-center justify-center cursor-pointer"
         >
-          <ChevronRight className={["h-4 w-4 transition-transform duration-200", isExpanded ? "rotate-90" : "rotate-0"].join(" ")} />
+          <ChevronRight className={["h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform duration-200", isExpanded ? "rotate-90" : "rotate-0"].join(" ")} />
         </Button>
       </div>
 
@@ -1995,10 +1995,20 @@ export function VendorProductComposerView() {
   const updateMutation = useUpdateProduct(productSlugRef.current ?? "");
 
   // Draft resume handler — loads selected draft's payload into the local store
+  const localDraftKey    = useDraftStore((s) => s.draft_key);
   const setDraftKey      = useDraftStore((s) => s.setDraftKey);
   const setCurrentStep   = useDraftStore((s) => s.setCurrentStep);
   const setPayload       = useDraftStore((s) => s.setPayload);
   const setIdempotency   = useDraftStore((s) => s.setIdempotencyKey);
+
+  const [showDraftPanel, setShowDraftPanel] = useState(true);
+
+  // If localDraftKey becomes null (draft discarded or committed), show the draft panel again
+  useEffect(() => {
+    if (!localDraftKey) {
+      setShowDraftPanel(true);
+    }
+  }, [localDraftKey]);
 
   const handleResumeDraft = (draft: ProductDraftSession) => {
     setDraftKey(String(draft.draft_key));
@@ -2006,6 +2016,8 @@ export function VendorProductComposerView() {
     setCurrentStep(draft.current_step ?? 1);
     setPayload((draft.payload as Record<string, any>) ?? {});
     toast.success(`Resuming draft — step ${draft.current_step ?? 1} of 5`);
+    // Close the draft panel immediately
+    setShowDraftPanel(false);
     // Scroll builder into view
     document.getElementById("product-builder-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -2047,7 +2059,7 @@ export function VendorProductComposerView() {
   return (
     <div className="space-y-6">
       {/* ── Draft Session Panel — shows all active/pending drafts ── */}
-      <VendorDraftSessionPanel onResumeDraft={handleResumeDraft} />
+      {showDraftPanel && <VendorDraftSessionPanel onResumeDraft={handleResumeDraft} />}
 
       {/* ── Page header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl bg-white border border-[#ECE6D6] px-8 py-6 shadow-sm">

@@ -277,54 +277,68 @@ export function ProductBuilderProvider({
     useDraftStore.getState().resetStore();
   }, []);
 
-  // Load draft on mount (skip if initialValues provided = edit mode)
+  const draftKey = useDraftStore((s) => s.draft_key);
+
+  // Load and reconcile draft reactively (handles mount AND resume events)
   useEffect(() => {
     if (initialValues) {
       setDraftLoaded(true);
       return;
     }
 
-    async function initDraft() {
+    if (!draftKey) {
       const store = useDraftStore.getState();
-      let key = store.draft_key;
-      let idempotency = store.idempotency_key;
-      let step = store.current_step;
-      let payload = store.payload;
-
-      // If no session key exists, check backup
-      if (!key) {
-        const loadedBackup = store.loadBackup();
-        if (loadedBackup) {
-          const updatedStore = useDraftStore.getState();
-          key = updatedStore.draft_key;
-          idempotency = updatedStore.idempotency_key;
-          step = updatedStore.current_step;
-          payload = updatedStore.payload;
-        }
+      const loadedBackup = store.loadBackup();
+      if (loadedBackup) {
+        // loadBackup updates draft_key, which will trigger this useEffect again.
+        return;
       }
-
       // If still no key, generate new ones
-      if (!key) {
-        key = generateUUID();
-        idempotency = generateUUID();
-        store.setDraftKey(key);
-        store.setIdempotencyKey(idempotency);
-        store.setCurrentStep(1);
-        store.setPayload({});
-      }
+      const newKey = generateUUID();
+      const newIdempotency = generateUUID();
+      store.setDraftKey(newKey);
+      store.setIdempotencyKey(newIdempotency);
+      store.setCurrentStep(1);
+      store.setPayload({});
+      return;
+    }
 
-      // Reconcile/sync with backend
+    async function syncAndReconcile(keyToSync: string) {
+      const store = useDraftStore.getState();
+
+      // ── 1. IMMEDIATELY load from local storage / sessionStorage state ──
+      const localPayload = store.payload || {};
+      const localStep = store.current_step || 1;
+
+      // Reset form fields immediately with local values to provide instant UI hydration
+      form.reset(sanitizePayload(localPayload));
+      setCurrentStep(localStep);
+      setDraftLoaded(true);
+
+      // ── 2. Correlate identities and reconcile with backend ──
       try {
         store.setSyncStatus("saving");
         let remote = null;
         try {
-          remote = await fetchDraftSessionDetail(key);
-        } catch (e) {
-          // Does not exist on backend yet
+          remote = await fetchDraftSessionDetail(keyToSync);
+        } catch (e: any) {
+          // Stale key recovery: if backend returns 404, the draft no longer exists on DB.
+          // Clear stale key immediately and generate a fresh session.
+          const is404 = e?.status === 404 || e?.response?.status === 404 || String(e).includes("404");
+          if (is404) {
+            console.warn("Stale draft key not found on backend (404). Clearing stale key.");
+            const newKey = generateUUID();
+            const newIdempotency = generateUUID();
+            store.setDraftKey(newKey);
+            store.setIdempotencyKey(newIdempotency);
+            store.setCurrentStep(1);
+            store.setPayload({});
+            return;
+          }
         }
 
         if (remote && remote.status === "active") {
-          // Update store with remote values
+          // Reconcile: update local store and form with remote data
           store.setDraftKey(remote.draft_key);
           store.setIdempotencyKey(remote.idempotency_key);
           store.setCurrentStep(remote.current_step ?? 1);
@@ -332,54 +346,45 @@ export function ProductBuilderProvider({
           store.setSyncStatus("synced");
           store.setLastSyncedAt(remote.last_synced_at);
 
-          // Populate form
           form.reset(sanitizePayload(remote.payload));
           setCurrentStep(remote.current_step ?? 1);
+        } else if (remote && remote.status !== "active") {
+          // Stale draft: status is committed, expired, discarded etc.
+          console.warn(`Draft session ${keyToSync} status is ${remote.status}, not active. Clearing.`);
+          const newKey = generateUUID();
+          const newIdempotency = generateUUID();
+          store.setDraftKey(newKey);
+          store.setIdempotencyKey(newIdempotency);
+          store.setCurrentStep(1);
+          store.setPayload({});
         } else {
-          // Create draft session on backend if not exists
+          // Does not exist on backend yet (remote is null) -> create draft on backend
           try {
             const created = await createDraftSession({
-              draft_key: key,
-              idempotency_key: idempotency || undefined,
-              payload: payload || {},
-              current_step: step,
+              draft_key: keyToSync,
+              idempotency_key: store.idempotency_key || undefined,
+              payload: localPayload,
+              current_step: localStep,
             });
             store.setLastSyncedAt(created.last_synced_at);
             store.setSyncStatus("synced");
-            form.reset(sanitizePayload(payload));
-            setCurrentStep(step ?? 1);
           } catch (createErr) {
             console.warn("Draft key conflict or creation failure, regenerating key:", createErr);
             const newKey = generateUUID();
             const newIdempotency = generateUUID();
             store.setDraftKey(newKey);
             store.setIdempotencyKey(newIdempotency);
-            const created = await createDraftSession({
-              draft_key: newKey,
-              idempotency_key: newIdempotency,
-              payload: payload || {},
-              current_step: step,
-            });
-            store.setLastSyncedAt(created.last_synced_at);
-            store.setSyncStatus("synced");
-            form.reset(sanitizePayload(payload));
-            setCurrentStep(step ?? 1);
           }
         }
       } catch (err) {
-        console.error("Backend draft sync failed, using offline values:", err);
+        console.error("Backend draft reconciliation failed, using offline values:", err);
         store.setSyncStatus("failed");
-        // Fallback to local store values
-        form.reset(sanitizePayload(payload));
-        setCurrentStep(step ?? 1);
-      } finally {
-        setDraftLoaded(true);
       }
     }
 
-    initDraft();
+    syncAndReconcile(draftKey);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [draftKey, initialValues]);
 
   // Watch all fields → debounced draft save
   useEffect(() => {
