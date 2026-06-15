@@ -7,12 +7,11 @@
 
 import { useCallback, useRef, useState, useMemo } from "react";
 import { useFormContext } from "react-hook-form";
-import { useQuery } from "@tanstack/react-query";
 import { apiAsync } from "@/core/api/client.async";
 import type { ProductBuilderFormValues, GalleryItem } from "../schemas/builder.schemas";
+import { SingleColorSwatchPicker, type SelectedColor } from "./ColorSwatchPicker";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FashionistarImage, FashionistarVideo } from "@/components/media";
 import { cn } from "@/lib/utils";
 import {
@@ -43,9 +42,6 @@ interface UploadState {
   error: string | null;
   done: boolean;
 }
-
-interface ColorOption { id: string; name: string; hex_code: string; }
-interface PaginatedEnvelope<T> { results?: T[]; }
 
 const MAX_GALLERY = 12;
 const ACCEPTED_IMAGES = "image/jpeg,image/png,image/webp,image/avif";
@@ -83,23 +79,8 @@ export function Step3MediaAndMapping() {
   const coverPublicId = form.watch("cover_image_public_id");
   const coverImageUrl = form.watch("cover_image_url");
 
-  // Get selected colors from Step 2 to allow mapping
-  const selectedColorIds = form.watch("color_ids") ?? [];
-
-  // Fetch colors metadata to get their human-readable names
-  const { data: colorsData } = useQuery({
-    queryKey: ["product-builder", "colors-lookup"],
-    queryFn: async () => {
-      const res = await apiAsync.get("product/colors/?page_size=100").json<PaginatedEnvelope<ColorOption>>();
-      return res.results ?? [];
-    },
-    staleTime: 5 * 60_000,
-  });
-
-  const activeColors = useMemo(() => {
-    if (!colorsData) return [];
-    return colorsData.filter((c) => selectedColorIds.includes(c.id));
-  }, [colorsData, selectedColorIds]);
+  // Get selected colors from Step 2 — already as {color_name, color_hex} objects
+  const selectedColors: SelectedColor[] = (form.watch("selected_colors") as any) ?? [];
 
   // Refs
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -197,8 +178,8 @@ export function Step3MediaAndMapping() {
             media_type: isVideo ? "video" : "image",
             alt_text: file.name.replace(/\.[^.]+$/, ""),
             ordering: gallery.length,
-            color_id: null,
-            variant_id: null,
+            color_name: "",
+            color_hex: "",
           };
 
           const current = form.getValues("gallery") ?? [];
@@ -446,38 +427,28 @@ export function Step3MediaAndMapping() {
                     </div>
                   </div>
 
-                  {/* Variation Link Form Section */}
+                  {/* Variation Link — SingleColorSwatchPicker */}
                   <div className="p-3 space-y-2">
                     <div className="flex items-center gap-1.5 text-[#7A6B44]">
                       <Link className="w-3.5 h-3.5 text-[#01454A]" />
-                      <span className="text-xs font-semibold">Associate Variation</span>
+                      <span className="text-xs font-semibold">Associate Colour Variation</span>
                     </div>
-
-                    <Select
-                      onValueChange={(val) => {
-                        const nextVal = val === "none" ? null : val;
-                        form.setValue(`gallery.${idx}.color_id`, nextVal, { shouldValidate: true });
+                    <SingleColorSwatchPicker
+                      value={
+                        form.watch(`gallery.${idx}.color_name`)
+                          ? {
+                              color_name: form.watch(`gallery.${idx}.color_name`) as string,
+                              color_hex: form.watch(`gallery.${idx}.color_hex`) as string,
+                            }
+                          : null
+                      }
+                      availableColors={selectedColors.length > 0 ? selectedColors : undefined}
+                      onChange={(color) => {
+                        form.setValue(`gallery.${idx}.color_name` as any, color?.color_name ?? "", { shouldValidate: true });
+                        form.setValue(`gallery.${idx}.color_hex` as any, color?.color_hex ?? "", { shouldValidate: true });
                       }}
-                      value={form.watch(`gallery.${idx}.color_id`) || "none"}
-                    >
-                      <SelectTrigger className="h-8 text-xs border-[#D9D9D9] bg-white rounded-lg">
-                        <SelectValue placeholder="Associate Colour" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208]">
-                        <SelectItem value="none">General / No Colour Link</SelectItem>
-                        {activeColors.map((color) => (
-                          <SelectItem key={color.id} value={color.id}>
-                            <div className="flex items-center gap-2">
-                              <span
-                                className="w-3.5 h-3.5 rounded-full border border-zinc-200 flex-shrink-0"
-                                style={{ backgroundColor: color.hex_code }}
-                              />
-                              {color.name}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder="Link to colour variant…"
+                    />
                   </div>
                 </div>
               );

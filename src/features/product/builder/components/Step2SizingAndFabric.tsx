@@ -12,6 +12,7 @@ import { apiAsync } from "@/core/api/client.async";
 import { fetchVendorMeasurementTemplates, createVendorMeasurementTemplate } from "../../api/product.api";
 import { toast } from "sonner";
 import type { ProductBuilderFormValues } from "../schemas/builder.schemas";
+import { MultiColorSwatchPicker, type SelectedColor } from "./ColorSwatchPicker";
 
 // ── Shadcn/ui primitives ──────────────────────────────────────────────────────
 import {
@@ -37,7 +38,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import { Check, Loader2, Ruler, Trash2, Plus, Info, Palette, Scissors, Sparkles } from "lucide-react";
 
-interface CatalogItem { id: string; name: string; hex_code?: string; }
+interface CatalogItem { id: string; name: string; }
 interface PaginatedEnvelope<T> { results?: T[]; }
 
 const CARE_INSTRUCTIONS = [
@@ -56,7 +57,8 @@ export function Step2SizingAndFabric() {
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
 
   const selectedSizes = form.watch("size_ids") ?? [];
-  const selectedColors = form.watch("color_ids") ?? [];
+  // Colors are now stored as direct objects, not UUIDs
+  const selectedColors: SelectedColor[] = (form.watch("selected_colors") as any) ?? [];
   const requiresMeasurement = form.watch("requires_measurement");
   const selectedTemplateId = form.watch("measurement_template");
 
@@ -75,20 +77,14 @@ export function Step2SizingAndFabric() {
     name: "measurement_guide",
   });
 
-  // Fetch catalog metadata for sizes & colors
+  // Fetch catalog metadata for sizes ONLY (colors are now pre-built client-side)
   const { data: catalogData, isLoading: catalogLoading } = useQuery({
-    queryKey: ["product-builder", "variant-catalog-full"],
+    queryKey: ["product-builder", "sizes-catalog"],
     queryFn: async () => {
-      const [sizesData, colorsData] = await Promise.all([
-        apiAsync.get("product/sizes/?page_size=100").json<PaginatedEnvelope<CatalogItem>>(),
-        apiAsync.get("product/colors/?page_size=100").json<PaginatedEnvelope<CatalogItem>>(),
-      ]);
-
+      const sizesData = await apiAsync.get("product/sizes/?page_size=100").json<PaginatedEnvelope<CatalogItem>>();
       return {
         sizes: sizesData.results ?? [],
-        colors: colorsData.results ?? [],
         sizeMap: Object.fromEntries((sizesData.results ?? []).map((s) => [s.id, s])),
-        colorMap: Object.fromEntries((colorsData.results ?? []).map((c) => [c.id, c])),
       };
     },
     staleTime: 5 * 60_000,
@@ -96,7 +92,6 @@ export function Step2SizingAndFabric() {
   });
 
   const sizes = catalogData?.sizes ?? [];
-  const colors = catalogData?.colors ?? [];
   const sizeMap = catalogData?.sizeMap ?? {};
 
   // Fetch measurement templates for dropdown
@@ -114,12 +109,8 @@ export function Step2SizingAndFabric() {
     form.setValue("size_ids", updated, { shouldValidate: true });
   };
 
-  const toggleColor = (id: string) => {
-    const current = form.getValues("color_ids") ?? [];
-    const updated = current.includes(id)
-      ? current.filter((c) => c !== id)
-      : [...current, id];
-    form.setValue("color_ids", updated, { shouldValidate: true });
+  const handleColorsChange = (colors: SelectedColor[]) => {
+    form.setValue("selected_colors" as any, colors, { shouldValidate: true });
   };
 
   // ── Sizing guide rows auto-population sync ─────────────────────────────────
@@ -305,41 +296,19 @@ export function Step2SizingAndFabric() {
           </div>
         </div>
 
-        {/* Colors */}
+        {/* Colors — MultiColorSwatchPicker */}
         <div className="space-y-2">
           <FormLabel className="text-[#1A1208] font-semibold text-sm">Select Colours</FormLabel>
           <FormDescription className="text-xs text-zinc-500">
-            Select color options available for this product.
+            Choose the colour options available for this product. Colours are pre-built — no external API needed.
           </FormDescription>
-          <div className="flex flex-wrap gap-3 pt-2">
-            {colors.map((color) => {
-              const selected = selectedColors.includes(color.id);
-              return (
-                <button
-                  key={color.id}
-                  type="button"
-                  title={color.name}
-                  onClick={() => toggleColor(color.id)}
-                  className={cn(
-                    "flex flex-col items-center gap-1.5 p-2 rounded-xl border w-[72px] bg-white transition-all",
-                    selected ? "border-[#FDA600] bg-[#FFF6E3]" : "border-zinc-200 hover:border-zinc-300"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "w-8 h-8 rounded-full border flex items-center justify-center",
-                      selected ? "border-[#FDA600]" : "border-zinc-200"
-                    )}
-                    style={{ backgroundColor: color.hex_code }}
-                  >
-                    {selected && <Check className="w-4 h-4 text-black" />}
-                  </span>
-                  <span className="text-[10px] text-zinc-600 font-semibold text-center leading-none truncate w-full">
-                    {color.name}
-                  </span>
-                </button>
-              );
-            })}
+          <div className="pt-2">
+            <MultiColorSwatchPicker
+              selectedColors={selectedColors}
+              onChange={handleColorsChange}
+              maxColors={20}
+              placeholder="Search and add colour variants…"
+            />
           </div>
         </div>
       </div>

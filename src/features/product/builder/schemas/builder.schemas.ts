@@ -96,15 +96,18 @@ export const GalleryItemSchema = z.object({
   media_type: z.enum(["image", "video"]).default("image"),
   alt_text: z.string().max(200).optional().or(z.literal("")),
   ordering: z.number().int().min(0).default(0),
-  variant_id: z.string().uuid().nullable().optional(),
-  color_id: z.string().uuid().nullable().optional(),
+  /** Color association: direct text (no FK). Empty string = no link. */
+  color_name: z.string().max(100).optional().default(""),
+  color_hex: z.string().max(7).optional().default(""),
 });
 
 export type GalleryItem = z.infer<typeof GalleryItemSchema>;
 
 export const VariantRowSchema = z.object({
   size_id: z.string().uuid().nullable().optional(),
-  color_id: z.string().uuid().nullable().optional(),
+  /** Direct color fields — no FK, no API call needed. */
+  color_name: z.string().max(100).optional().default(""),
+  color_hex: z.string().max(7).optional().default(""),
   price_override: OptionalMoneySchema,
   stock_qty: QtySchema,
   sku: z.string().max(100).optional().or(z.literal("")),
@@ -204,10 +207,22 @@ export const Step2BaseSchema = z.object({
     .array(z.string().uuid())
     .max(30, "You can select up to 30 sizes")
     .default([]),
-  color_ids: z
-    .array(z.string().uuid())
-    .max(20, "You can select up to 20 colors")
+
+  /**
+   * Selected colors stored as direct objects {color_name, color_hex}.
+   * No FK required — selected from the pre-built FASHION_COLORS palette.
+   * These become the color axis for the variant matrix (Step 4).
+   */
+  selected_colors: z
+    .array(
+      z.object({
+        color_name: z.string().min(1, "Color name required").max(100),
+        color_hex: z.string().min(4, "Hex required").max(7),
+      })
+    )
+    .max(20, "You can select up to 20 colours")
     .default([]),
+
   requires_measurement: z.boolean().default(false),
   is_customisable: z.boolean().default(false),
   measurement_template: z.string().uuid().nullable().optional(),

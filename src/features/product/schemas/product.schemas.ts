@@ -199,14 +199,11 @@ export const ProductVariantGalleryMediaSchema = z
     id: IdSchema,
     sku: z.string(),
     size: ProductMeasurementGuideSchema.nullable().optional(),
+    /** Direct text field — no FK. e.g. "Midnight Blue" */
     color_name: z.string().default(""),
+    /** Direct hex field — e.g. "#1A1A4E" */
     color_hex: z.string().default(""),
-    swatch_image_url: NullableUrlSchema.optional(),
-    price_override: DecimalStrSchema.nullable().optional(),
     stock_qty: z.number().int().min(0).default(0),
-    is_active: z.boolean().default(true),
-    is_default: z.boolean().default(false),
-    image_url: NullableUrlSchema.optional(),
     media_url: NullableUrlSchema.optional(),
     media_type: MediaTypeSchema.default("image"),
     alt_text: z.string().default(""),
@@ -215,8 +212,6 @@ export const ProductVariantGalleryMediaSchema = z
     video_thumbnail_url: NullableUrlSchema.optional(),
     duration_sec: z.number().int().nullable().optional(),
     barcode: z.string().default(""),
-    weight_kg: DecimalStrSchema.nullable().optional(),
-    dimensions_cm: z.record(z.string(), z.unknown()).nullable().optional(),
     notes: z.string().default(""),
   })
   .passthrough();

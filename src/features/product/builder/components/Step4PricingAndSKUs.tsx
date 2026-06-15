@@ -80,7 +80,9 @@ export function Step4PricingAndSKUs() {
   const form = useFormContext<ProductBuilderFormValues>();
 
   const sizeIds = form.watch("size_ids") ?? [];
-  const colorIds = form.watch("color_ids") ?? [];
+  /** Colors now as direct objects {color_name, color_hex} from Step 2 selection. */
+  const selectedColors: { color_name: string; color_hex: string }[] =
+    (form.watch("selected_colors") as any) ?? [];
   const price = form.watch("price");
   const oldPrice = form.watch("old_price");
 
@@ -89,19 +91,17 @@ export function Step4PricingAndSKUs() {
     name: "variants",
   });
 
-  // Queries: Couriers and Variant Catalog metadata
+  // Fetch only couriers — sizes are resolved from IDs, colors no longer need an API call
   const { data: catalogData, isLoading: catalogLoading } = useQuery({
-    queryKey: ["product-builder", "variant-matrix-metadata"],
+    queryKey: ["product-builder", "couriers-and-sizes"],
     queryFn: async () => {
-      const [sizesData, colorsData, couriersData] = await Promise.all([
+      const [sizesData, couriersData] = await Promise.all([
         apiAsync.get("product/sizes/?page_size=100").json<PaginatedEnvelope<CatalogItem>>(),
-        apiAsync.get("product/colors/?page_size=100").json<PaginatedEnvelope<CatalogItem>>(),
         apiAsync.get("product/couriers/?page_size=50&active=true").json<CourierEnvelope>().catch(() => ({ results: [] })),
       ]);
 
       return {
         sizeMap: Object.fromEntries((sizesData.results ?? []).map((s) => [s.id, s])),
-        colorMap: Object.fromEntries((colorsData.results ?? []).map((c) => [c.id, c])),
         couriers: couriersData.results ?? [],
       };
     },
@@ -110,7 +110,6 @@ export function Step4PricingAndSKUs() {
   });
 
   const sizeMap = catalogData?.sizeMap ?? {};
-  const colorMap = catalogData?.colorMap ?? {};
   const couriers = catalogData?.couriers ?? [];
 
   // Compute discount pct
@@ -123,29 +122,33 @@ export function Step4PricingAndSKUs() {
     return null;
   }, [price, oldPrice]);
 
-  // Matrix generation
+  // Matrix generation — cross-product of sizes × selected colors
   React.useEffect(() => {
-    if (sizeIds.length === 0 && colorIds.length === 0) return;
+    if (sizeIds.length === 0 && selectedColors.length === 0) return;
 
     let index = 0;
     const newRows: VariantRow[] = [];
 
     const sizeLoop = sizeIds.length > 0 ? sizeIds : [null];
-    const colorLoop = colorIds.length > 0 ? colorIds : [null];
+    // Color axis: use selected_colors objects directly
+    const colorLoop = selectedColors.length > 0 ? selectedColors : [null];
 
     for (const sId of sizeLoop) {
-      for (const cId of colorLoop) {
+      for (const c of colorLoop) {
+        const cName = c?.color_name ?? "";
+        const cHex  = c?.color_hex  ?? "";
         const existing = variantFields.find(
-          (f) => f.size_id === sId && f.color_id === cId,
+          (f) => f.size_id === sId && (f.color_name ?? "") === cName,
         );
         newRows.push({
           size_id: sId,
-          color_id: cId,
+          color_name: cName,
+          color_hex: cHex,
           price_override: existing?.price_override ?? "",
           stock_qty: existing?.stock_qty ?? 0,
           sku: existing?.sku ?? autoSku(
             sId ? (sizeMap[sId]?.name ?? sId) : "ONE",
-            cId ? (colorMap[cId]?.name ?? cId) : "ONE",
+            cName || "ONE",
             index,
           ),
           is_active: existing?.is_active ?? true,
@@ -157,7 +160,12 @@ export function Step4PricingAndSKUs() {
     }
     replaceVariants(newRows);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sizeIds.join(","), colorIds.join(","), replaceVariants, sizeMap, colorMap]);
+  }, [
+    sizeIds.join(","),
+    selectedColors.map((c) => c.color_name).join(","),
+    replaceVariants,
+    sizeMap,
+  ]);
 
   if (catalogLoading) {
     return (
@@ -405,7 +413,7 @@ export function Step4PricingAndSKUs() {
       </div>
 
       {/* ── SECTION C: Variations SKU Matrix Table ── */}
-      {(sizeIds.length > 0 || colorIds.length > 0) && (
+      {(sizeIds.length > 0 || selectedColors.length > 0) && (
         <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-6 space-y-6">
           <h3 className="text-md font-bold text-[#1A1208] border-b border-[#ECE6D6] pb-2 flex items-center gap-2">
             <Box className="w-5 h-5 text-[#01454A]" />
@@ -427,7 +435,6 @@ export function Step4PricingAndSKUs() {
               <tbody>
                 {variantFields.map((field, idx) => {
                   const size = field.size_id ? sizeMap[field.size_id] : null;
-                  const color = field.color_id ? colorMap[field.color_id] : null;
 
                   return (
                     <tr key={field.id} className="border-b border-[#ECE6D6] hover:bg-zinc-50/50">
@@ -440,14 +447,15 @@ export function Step4PricingAndSKUs() {
                           <span className="text-zinc-400">—</span>
                         )}
                       </td>
-                      <td className="p-3 border-r border-[#ECE6D6]">
-                        {color ? (
+                    <td className="p-3 border-r border-[#ECE6D6]">
+                        {field.color_name ? (
                           <div className="flex items-center gap-1.5">
                             <span
                               className="w-3.5 h-3.5 rounded-full border border-zinc-200 flex-shrink-0"
-                              style={{ backgroundColor: color.hex_code }}
+                              style={{ backgroundColor: field.color_hex || "transparent" }}
                             />
-                            <span className="font-semibold text-zinc-700">{color.name}</span>
+                            <span className="font-semibold text-zinc-700">{field.color_name}</span>
+                            <span className="text-zinc-400 font-mono text-[10px]">{field.color_hex}</span>
                           </div>
                         ) : (
                           <span className="text-zinc-400">—</span>

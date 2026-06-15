@@ -96,15 +96,12 @@ export interface ProductVariantGalleryMedia {
   id: string;
   sku: string;
   size?: ProductMeasurementGuideRow | null;
-  color_name: string;           // Direct text field e.g. "Midnight Blue"
-  color_hex: string;            // Direct hex field e.g. "#1A1A4E"
-  swatch_image_url?: string | null;
-  price_override: string | null; // Decimal string e.g. "25000.00"
+  /** Direct text field — no FK. e.g. "Midnight Blue" */
+  color_name: string;
+  /** Direct hex field — e.g. "#1A1A4E" */
+  color_hex: string;
   stock_qty: number;
-  is_active: boolean;
-  is_default: boolean;
-  image_url?: string | null;    // Variant hero image
-  media_url?: string | null;    // Gallery Cloudinary URL
+  media_url?: string | null;    // Cloudinary URL for gallery image/video
   media_type: MediaType;        // "image" | "video"
   alt_text: string;
   ordering: number;
@@ -112,8 +109,6 @@ export interface ProductVariantGalleryMedia {
   video_thumbnail_url?: string | null;
   duration_sec?: number | null;
   barcode: string;
-  weight_kg?: string | null;
-  dimensions_cm?: Record<string, unknown> | null;
   notes: string;
 }
 

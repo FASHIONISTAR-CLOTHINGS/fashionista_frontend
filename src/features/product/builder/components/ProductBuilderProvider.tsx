@@ -116,7 +116,7 @@ const STEP_FIELDS: Record<number, Array<Path<ProductBuilderFormValues>>> = {
   1: ["title", "description", "condition", "category_ids", "sub_category_ids", "tag_ids", "specifications"],
   2: [
     "size_ids",
-    "color_ids",
+    "selected_colors",
     "requires_measurement",
     "is_customisable",
     "measurement_template",
@@ -167,7 +167,7 @@ const DEFAULT_VALUES: Partial<ProductBuilderFormValues> = {
   specifications: [],
 
   size_ids: [],
-  color_ids: [],
+  selected_colors: [],
   requires_measurement: false,
   is_customisable: false,
   measurement_template: null,
