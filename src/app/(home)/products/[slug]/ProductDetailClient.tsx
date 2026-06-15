@@ -155,19 +155,23 @@ export function ProductDetailClient({
     return null;
   }
 
+  // gallery = canonical field; variants = backward-compat alias
+  const galleryItems = product.gallery?.length
+    ? product.gallery
+    : (product.variants ?? []);
+
   const images =
-    product.gallery?.length
-      ? product.gallery.map((g) => g.media_url ?? "/gown.svg")
+    galleryItems.length
+      ? galleryItems.map((g) => (g as { media_url?: string | null }).media_url ?? "/gown.svg")
       : product.cover_image_url
       ? [product.cover_image_url]
       : ["/gown.svg"];
 
-  const selectedVariant = product.variants?.find((v) => v.id === selectedVariantId);
-  const displayPrice = selectedVariant?.price_override
-    ? parseFloat(selectedVariant.price_override)
-    : parseFloat(product.price);
+  // Variant: no price_override on the new model — always show base price
+  const displayPrice = parseFloat(product.price);
 
-  const inStock = selectedVariant ? selectedVariant.stock_qty > 0 : product.stock_qty > 0;
+  // stock check — use product-level stock_qty (variant no longer carries it)
+  const inStock = product.stock_qty > 0;
 
   const handleAddToCart = () => {
     if (!inStock) return;
@@ -360,30 +364,38 @@ export function ProductDetailClient({
             </div>
           )}
 
-          {/* Size selector */}
-          {product.variants && product.variants.length > 0 && (
+          {/* Color / Size variant selector (based on gallery color swatches) */}
+          {galleryItems.length > 0 && galleryItems.some((v) => (v as { color_name?: string }).color_name) && (
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Select Size / Variant
+                Select Colour
               </p>
               <div className="flex flex-wrap gap-2">
-                {product.variants.map((v) => (
-                  <Button
-                    key={v.id}
-                    variant={selectedVariantId === v.id ? "default" : "outline"}
-                    onClick={() => setSelectedVariantId(v.id)}
-                    disabled={!v.is_active || v.stock_qty === 0}
-                    className={`rounded-lg border px-4 py-2 text-sm font-semibold transition h-auto min-h-0 ${
-                      selectedVariantId === v.id
-                        ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]"
-                        : v.stock_qty === 0 || !v.is_active
-                        ? "border-border bg-muted text-muted-foreground line-through cursor-not-allowed opacity-50"
-                        : "border-border hover:border-[hsl(var(--accent))] hover:text-[hsl(var(--accent))]"
-                    }`}
-                  >
-                    {v.size?.name ?? v.color?.name ?? v.sku}
-                  </Button>
-                ))}
+                {galleryItems
+                  .filter((v): v is typeof v & { color_name: string; color_hex: string } =>
+                    !!(v as { color_name?: string }).color_name
+                  )
+                  .map((v, i) => {
+                    const cn_ = (v as { color_name: string }).color_name;
+                    const hex = (v as { color_hex?: string }).color_hex ?? "";
+                    return (
+                      <Button
+                        key={i}
+                        variant={selectedVariantId === String(i) ? "default" : "outline"}
+                        onClick={() => setSelectedVariantId(String(i))}
+                        className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition h-auto min-h-0`}
+                        title={cn_}
+                      >
+                        {hex && (
+                          <span
+                            className="inline-block h-4 w-4 rounded-full border border-black/10 flex-shrink-0"
+                            style={{ background: hex }}
+                          />
+                        )}
+                        {cn_}
+                      </Button>
+                    );
+                  })}
               </div>
             </div>
           )}
@@ -468,7 +480,7 @@ export function ProductDetailClient({
                       </Badge>
                     )}
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4 text-xs">
                     <div>
                       <span className="font-semibold text-foreground block mb-0.5">Fabric Type</span>
@@ -482,31 +494,15 @@ export function ProductDetailClient({
                     )}
                   </div>
 
-                  {/* Composition breakdown */}
-                  {(() => {
-                    let compositionList: { material: string; percentage: number }[] = [];
-                    if (Array.isArray(product.fabric?.composition)) {
-                      compositionList = product.fabric.composition as any;
-                    } else if (product.fabric?.composition && typeof product.fabric.composition === "object") {
-                      compositionList = Object.entries(product.fabric.composition).map(([material, val]) => ({
-                        material,
-                        percentage: typeof val === "number" ? val : parseInt(String(val)) || 0
-                      }));
-                    }
-                    if (compositionList.length === 0) return null;
-                    return (
-                      <div>
-                        <span className="font-semibold text-foreground text-xs block mb-1.5">Composition</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {compositionList.map((c, i) => (
-                            <Badge key={i} variant="secondary" className="text-[10px] py-0.5 px-2">
-                              {c.material} ({c.percentage}%)
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })()}
+                  {/* fabric_composition replaces old 'composition' JSONField */}
+                  {(product.fabric as { fabric_composition?: string }).fabric_composition && (
+                    <div>
+                      <span className="font-semibold text-foreground text-xs block mb-1">Composition</span>
+                      <p className="text-muted-foreground text-xs">
+                        {(product.fabric as { fabric_composition?: string }).fabric_composition}
+                      </p>
+                    </div>
+                  )}
 
                   <div className="border-t border-border pt-3 space-y-2">
                     <div>
@@ -515,6 +511,7 @@ export function ProductDetailClient({
                         {product.fabric.care_instructions.replace(/_/g, " ")}
                       </span>
                     </div>
+                    {/* care_notes retained in schema as optional field */}
                     {product.fabric.care_notes && (
                       <div>
                         <span className="font-semibold text-foreground text-xs block">Special Notes</span>
@@ -584,10 +581,12 @@ export function ProductDetailClient({
               </AccordionItem>
             )}
 
-            {product.specifications?.length > 0 && (
+            {/* Specifications (kept as optional, guarded) */}
+            {(product as { specifications?: unknown[] }).specifications &&
+              (product as { specifications: { title: string; content: string }[] }).specifications.length > 0 && (
               <AccordionItem title="Specifications">
                 <dl className="space-y-2">
-                  {product.specifications.map((s, i) => (
+                  {(product as { specifications: { title: string; content: string }[] }).specifications.map((s, i) => (
                     <div key={i} className="flex justify-between">
                       <dt className="font-medium text-foreground">{s.title}</dt>
                       <dd>{s.content}</dd>

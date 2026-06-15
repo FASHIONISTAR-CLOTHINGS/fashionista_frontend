@@ -1751,7 +1751,7 @@ function ResumeDraftBanner() {
         <div>
           <p className="text-sm font-bold text-[#01454A]">Unsaved product draft detected</p>
           <p className="mt-0.5 text-xs text-[#01454A]/70">
-            You started building a product (step {step ?? 1} of 8). Resume where you left off or discard.
+            You started building a product (step {step ?? 1} of 5). Resume where you left off or discard.
           </p>
         </div>
       </div>
@@ -1783,11 +1783,7 @@ export function VendorProductComposerView() {
   const updateMutation    = useUpdateProduct(productSlugRef.current ?? "");
 
   const handleBuilderSubmit = async (values: ProductBuilderFormValues, productId: string | null) => {
-    const sizeIds   = (values.size_ids   ?? []) as string[];
-    const colorIds  = (values.color_ids  ?? []) as string[];
-    const tagIds    = (values.tag_ids    ?? []) as string[];
     const hotDeal   = (values.hot_deal   ?? false) as boolean;
-    const isDigital = (values.digital    ?? false) as boolean;
 
     let savedSlug: string | null = productSlugRef.current;
     const sharedPayload = {
@@ -1800,20 +1796,11 @@ export function VendorProductComposerView() {
       is_customisable: values.is_customisable as boolean,
       category_ids: values.category_ids,
       sub_category_ids: values.sub_category_ids ?? [],
-      size_ids: sizeIds, color_ids: colorIds, tag_ids: tagIds,
-      hot_deal: hotDeal, digital: isDigital,
+      hot_deal: hotDeal,
       weight_kg: values.weight_kg || undefined,
       condition: values.condition,
       meta_title: values.meta_title || undefined,
       meta_description: values.meta_description || undefined,
-      variants: (values.variants ?? []).map(v => ({
-        size_id: v.size_id || null,
-        color_id: v.color_id || null,
-        price_override: v.price_override || null,
-        stock_qty: v.stock_qty ?? 0,
-        sku: v.sku || undefined,
-        is_active: v.is_active ?? true,
-      })),
     };
 
     if (productSlugRef.current) {
@@ -1889,7 +1876,7 @@ function CatalogProductCard({ product }: { product: ProductListItem }) {
         <div className="mt-2.5 flex items-center justify-between text-xs text-[#5A6465] gap-2 flex-wrap">
           <span className="font-bold text-[#1A1208]">{formatPrice(Number(product.price))}</span>
           <span className="flex items-center gap-1">
-            <Package className="h-3.5 w-3.5 text-[#FDA600]" /> Stock: {product.stock_qty}
+            <Package className="h-3.5 w-3.5 text-[#FDA600]" /> Stock: {(product as Record<string, unknown>).stock_qty as number ?? "—"}
           </span>
         </div>
       </div>
