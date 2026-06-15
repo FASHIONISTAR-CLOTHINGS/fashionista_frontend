@@ -22,11 +22,10 @@ export type {
   ProductBrand,
   ProductVendor,
   ProductColor,
-  ProductTag,
-  ProductSpecification,
   ProductFaq,
   ProductGalleryMedia,
   ProductVariant,
+  ProductFabricSpecification,
   // Core
   ProductListItem,
   ProductDetail,
@@ -179,10 +178,10 @@ export {
   useBuilderContext,
   // Individual step components
   Step1InfoAndSpecs,
-  Step2SizingAndFabric,
+  Step2PricingAndMeasurements,
   Step3MediaAndMapping,
-  Step4PricingAndSKUs,
-  Step5ReviewSubmit,
+  Step4Shipping,
+  Step5FAQAndReview,
   // Stepper nav
   BuilderStepper,
   // Schemas + metadata
@@ -199,11 +198,9 @@ export type {
   Step4Values,
   Step5Values,
   GalleryItem,
-  VariantRow,
-  SpecRow,
   FaqRow,
+  MeasurementGuideRow,
   StepMeta,
 } from "./builder";
 
 // ── Admin Dashboard ────────────────────────────────────────────────────────────
-

@@ -48,14 +48,14 @@ const isStepComplete = (step: number, values: any): boolean => {
     const categoryIds = values.category_ids || [];
     return title.length >= 5 && description.length >= 30 && categoryIds.length >= 1;
   }
-  if (step === 3) {
-    const coverImage = (values.cover_image_public_id || "").trim();
-    return coverImage.length > 0;
-  }
-  if (step === 4) {
+  if (step === 2) {
     const price = (values.price || "").trim();
     const stockQty = Number(values.stock_qty);
     return price.length > 0 && !isNaN(stockQty) && stockQty >= 1;
+  }
+  if (step === 3) {
+    const coverImage = (values.cover_image_public_id || "").trim();
+    return coverImage.length > 0;
   }
   return true;
 };
