@@ -135,7 +135,8 @@ export const ProductFabricSpecificationSchema = z
   .object({
     id: z.string().uuid().optional(),
     fabric_type: z.string(),
-    composition: z.union([z.array(FabricCompositionItemSchema), z.record(z.string(), z.unknown())]).default([]),
+    /** fabric_composition replaces the legacy 'composition' JSONField — now a plain char field */
+    fabric_composition: z.string().optional().default(""),
     care_instructions: z.string().default("machine_wash"),
     care_notes: z.string().optional().default(""),
     is_organic: z.boolean().default(false),
@@ -297,10 +298,16 @@ export const ProductListItemSchema = z
     price: DecimalStrSchema,
     old_price: DecimalStrSchema.nullable(),
     discount_percentage: z.number().min(0).max(100).default(0),
+    /** Computed discount flag from the backend serializer */
+    is_discounted: z.boolean().default(false),
+    /** Computed discounted price string */
+    discounted_price: DecimalStrSchema.nullable().optional(),
+    /** Whether cash payment is accepted for this product */
+    cash_payment_mode: z.boolean().default(true),
     currency: z.string().default("NGN"),
     image_url: NullableUrlSchema,
     in_stock: z.boolean(),
-    stock_qty: z.number().int().min(0),
+    stock_qty: z.number().int().min(0).default(0),
     featured: z.boolean().default(false),
     hot_deal: z.boolean().default(false),
     digital: z.boolean().default(false),
@@ -318,6 +325,15 @@ export const ProductListItemSchema = z
     vendor_slug: z.string().nullable().optional(),
     requires_measurement: z.boolean().default(false),
     is_customisable: z.boolean().default(false),
+    /** color swatches for this product (derived from gallery) */
+    colors: z
+      .array(
+        z.object({
+          color_name: z.string(),
+          color_hex: z.string(),
+        }).passthrough()
+      )
+      .default([]),
     created_at: IsoDateSchema,
   })
   .passthrough();
@@ -336,10 +352,19 @@ export const ProductDetailSchema = z
     price: DecimalStrSchema,
     old_price: DecimalStrSchema.nullable(),
     discount_percentage: z.number().min(0).max(100).default(0),
+    /** Computed discount flag from the backend serializer */
+    is_discounted: z.boolean().default(false),
+    /** Computed discounted price string */
+    discounted_price: DecimalStrSchema.nullable().optional(),
+    /** Whether cash payment is accepted for this product */
+    cash_payment_mode: z.boolean().default(true),
     currency: z.string().default("NGN"),
     shipping_amount: DecimalStrSchema.default("0.00"),
     image_url: NullableUrlSchema,
     cover_image_url: NullableUrlSchema.optional(),
+    /** gallery = ProductVariantGalleryMedia rows (canonical field name) */
+    gallery: z.array(ProductVariantGalleryMediaSchema).default([]),
+    /** variants = backward-compat alias for gallery */
     variants: z.array(ProductVariantGalleryMediaSchema).default([]),
     in_stock: z.boolean(),
     stock_qty: z.number().int().min(0),

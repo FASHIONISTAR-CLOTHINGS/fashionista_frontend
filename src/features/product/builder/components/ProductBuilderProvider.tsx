@@ -2,7 +2,7 @@
 
 /**
  * @file ProductBuilderProvider.tsx
- * @description Root context and form provider for the 8-step product builder.
+ * @description Root context and form provider for the 5-step product builder.
  *
  * Uses react-hook-form with zodResolver over the composite ProductBuilderFormSchema.
  * All step components consume form state via `useFormContext()` — no prop-drilling.
@@ -13,16 +13,13 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * Architecture:
  *   ProductBuilderProvider (FormProvider)
- *     └─ BuilderStepper        ← step navigation bar
- *        └─ StepContent        ← renders active step component
- *           ├─ Step1BasicInfo
- *           ├─ Step2Pricing
- *           ├─ Step3Gallery
- *           ├─ Step4SizesColors
- *           ├─ Step5Variants
- *           ├─ Step6Specifications
- *           ├─ Step7Faqs
- *           └─ Step8Publish
+ *     └─ BuilderStepper                  ← step navigation bar
+ *        └─ StepContent                  ← renders active step component
+ *           ├─ Step1InfoAndSpecs         ← title, description, condition, gender, age, categories
+ *           ├─ Step2PricingAndMeasurements ← pricing, fabric spec, measurement guide
+ *           ├─ Step3MediaAndMapping      ← cover image, gallery, color/size mappings
+ *           ├─ Step4Shipping             ← weight, shipping cost, preferred courier
+ *           └─ Step5FAQAndReview         ← FAQs, SEO, publish settings, review summary
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
