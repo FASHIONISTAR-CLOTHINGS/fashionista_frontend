@@ -12,6 +12,7 @@ import type { ProductBuilderFormValues, GalleryItem } from "../schemas/builder.s
 import { SingleColorSwatchPicker, type SelectedColor } from "./ColorSwatchPicker";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FashionistarImage, FashionistarVideo } from "@/components/media";
 import { cn } from "@/lib/utils";
 import {
