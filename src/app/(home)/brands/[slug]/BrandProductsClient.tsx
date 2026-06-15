@@ -8,40 +8,14 @@ interface BrandProductsClientProps {
   brandSlug: string;
 }
 
-function toProductCardItem(product: {
-  id: string;
-  title: string;
-  slug: string;
-  sku: string;
-  price: string;
-  old_price: string | null;
-  discount_percentage: number;
-  currency: string;
-  image_url: string | null;
-  in_stock: boolean;
-  stock_qty: number;
-  featured: boolean;
-  hot_deal: boolean;
-  digital: boolean;
-  rating: number;
-  review_count: number;
-  computed_review_count: number;
-  computed_avg_rating: number;
-  category_name: string | null;
-  category_slug: string | null;
-  vendor_name: string;
-  vendor_slug: string | null;
-  requires_measurement: boolean;
-  is_customisable: boolean;
-  sizes: { id: string; name: string }[];
-  colors: { id: string; name: string; hex_code: string }[];
-  created_at: string | null;
-}): ProductListItem {
+function toProductCardItem(product: any): ProductListItem {
   return {
     ...product,
+    is_discounted: product.is_discounted ?? false,
+    discounted_price: product.discounted_price ?? null,
+    cash_payment_mode: product.cash_payment_mode ?? false,
     brand_name: null,
     brand_slug: null,
-    vendor_name: product.vendor_name,
     created_at: product.created_at ?? new Date(0).toISOString(),
   };
 }

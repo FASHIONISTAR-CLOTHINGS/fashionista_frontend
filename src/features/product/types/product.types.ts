@@ -249,7 +249,7 @@ export interface ProductListItem {
   discount_percentage: number;
   is_discounted: boolean;
   discounted_price: string | null;
-  cash_payment_mode: string;
+  cash_payment_mode: boolean;
   currency: string;
   image_url: string | null;        // Cloudinary card-size URL
   in_stock: boolean;
@@ -285,7 +285,7 @@ export interface ProductDetail {
   discount_percentage: number;
   is_discounted: boolean;
   discounted_price: string | null;
-  cash_payment_mode: string;
+  cash_payment_mode: boolean;
   currency: string;
   shipping_amount: string;
   image_url: string | null;

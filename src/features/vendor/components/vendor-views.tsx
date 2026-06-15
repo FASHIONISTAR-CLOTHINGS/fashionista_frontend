@@ -1876,7 +1876,7 @@ function CatalogProductCard({ product }: { product: ProductListItem }) {
         <div className="mt-2.5 flex items-center justify-between text-xs text-[#5A6465] gap-2 flex-wrap">
           <span className="font-bold text-[#1A1208]">{formatPrice(Number(product.price))}</span>
           <span className="flex items-center gap-1">
-            <Package className="h-3.5 w-3.5 text-[#FDA600]" /> Stock: {(product as Record<string, unknown>).stock_qty as number ?? "—"}
+            <Package className="h-3.5 w-3.5 text-[#FDA600]" /> Stock: {product.in_stock ? "Available" : "Empty"}
           </span>
         </div>
       </div>

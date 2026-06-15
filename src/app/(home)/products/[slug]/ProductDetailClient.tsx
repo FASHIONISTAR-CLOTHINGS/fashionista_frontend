@@ -156,13 +156,11 @@ export function ProductDetailClient({
   }
 
   // gallery = canonical field; variants = backward-compat alias
-  const galleryItems = product.gallery?.length
-    ? product.gallery
-    : (product.variants ?? []);
+  const galleryItems = product.variants ?? [];
 
   const images =
     galleryItems.length
-      ? galleryItems.map((g) => (g as { media_url?: string | null }).media_url ?? "/gown.svg")
+      ? galleryItems.map((g: any) => g.media_url ?? "/gown.svg")
       : product.cover_image_url
       ? [product.cover_image_url]
       : ["/gown.svg"];
@@ -170,8 +168,8 @@ export function ProductDetailClient({
   // Variant: no price_override on the new model — always show base price
   const displayPrice = parseFloat(product.price);
 
-  // stock check — use product-level stock_qty (variant no longer carries it)
-  const inStock = product.stock_qty > 0;
+  // stock check — use product-level stock
+  const inStock = product.in_stock;
 
   const handleAddToCart = () => {
     if (!inStock) return;
@@ -249,7 +247,7 @@ export function ProductDetailClient({
           {/* Thumbnails */}
           {images.length > 1 && (
             <div className="mt-3 grid grid-cols-5 gap-2">
-              {images.map((src, idx) => (
+              {images.map((src: string, idx: number) => (
                 <Button
                   key={idx}
                   variant="ghost"
@@ -365,19 +363,19 @@ export function ProductDetailClient({
           )}
 
           {/* Color / Size variant selector (based on gallery color swatches) */}
-          {galleryItems.length > 0 && galleryItems.some((v) => (v as { color_name?: string }).color_name) && (
+          {galleryItems.length > 0 && galleryItems.some((v: any) => v.color_name) && (
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Select Colour
               </p>
               <div className="flex flex-wrap gap-2">
                 {galleryItems
-                  .filter((v): v is typeof v & { color_name: string; color_hex: string } =>
-                    !!(v as { color_name?: string }).color_name
+                  .filter((v: any): v is typeof v & { color_name: string; color_hex: string } =>
+                    !!v.color_name
                   )
-                  .map((v, i) => {
-                    const cn_ = (v as { color_name: string }).color_name;
-                    const hex = (v as { color_hex?: string }).color_hex ?? "";
+                  .map((v: any, i: number) => {
+                    const cn_ = v.color_name;
+                    const hex = v.color_hex ?? "";
                     return (
                       <Button
                         key={i}
@@ -511,13 +509,6 @@ export function ProductDetailClient({
                         {product.fabric.care_instructions.replace(/_/g, " ")}
                       </span>
                     </div>
-                    {/* care_notes retained in schema as optional field */}
-                    {product.fabric.care_notes && (
-                      <div>
-                        <span className="font-semibold text-foreground text-xs block">Special Notes</span>
-                        <p className="text-muted-foreground text-xs italic mt-0.5">{product.fabric.care_notes}</p>
-                      </div>
-                    )}
                   </div>
                 </div>
               </AccordionItem>
@@ -582,11 +573,11 @@ export function ProductDetailClient({
             )}
 
             {/* Specifications (kept as optional, guarded) */}
-            {(product as { specifications?: unknown[] }).specifications &&
-              (product as { specifications: { title: string; content: string }[] }).specifications.length > 0 && (
+            {(product as unknown as { specifications?: { title: string; content: string }[] }).specifications &&
+              (product as unknown as { specifications: { title: string; content: string }[] }).specifications.length > 0 && (
               <AccordionItem title="Specifications">
                 <dl className="space-y-2">
-                  {(product as { specifications: { title: string; content: string }[] }).specifications.map((s, i) => (
+                  {(product as unknown as { specifications: { title: string; content: string }[] }).specifications.map((s, i) => (
                     <div key={i} className="flex justify-between">
                       <dt className="font-medium text-foreground">{s.title}</dt>
                       <dd>{s.content}</dd>
