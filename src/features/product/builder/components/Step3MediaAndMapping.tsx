@@ -7,7 +7,7 @@
 
 import React, { useState, useRef } from "react";
 import { useFormContext, useFieldArray } from "react-hook-form";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import type { ProductBuilderFormValues } from "../schemas/builder.schemas";
 import {
   FormField,
@@ -234,7 +234,7 @@ function UploadProgressArea({
 
 export function Step3MediaAndMapping() {
   const form = useFormContext<ProductBuilderFormValues>();
-  const queryClient = useQueryClient();
+
 
   const title = form.watch("title") || "";
   const coverUrl = form.watch("cover_image_url") ?? "";
@@ -379,17 +379,20 @@ export function Step3MediaAndMapping() {
     }
   };
 
-  const updateGalleryUploadState = (idx: number, patch: Partial<{ isUploading: boolean; progress: number; error: string | null }>) => {
-    setGalleryUploads((prev) => ({
-      ...prev,
-      [idx]: {
-        isUploading: false,
-        progress: 0,
-        error: null,
-        ...(prev[idx] || {}),
-        ...patch,
-      },
-    }));
+  const updateGalleryUploadState = (
+    idx: number,
+    patch: Partial<{ isUploading: boolean; progress: number; error: string | null }>,
+  ) => {
+    setGalleryUploads((prev) => {
+      const current = prev[idx] || { isUploading: false, progress: 0, error: null };
+      return {
+        ...prev,
+        [idx]: {
+          ...current,
+          ...patch,
+        },
+      };
+    });
   };
 
   const addGalleryItem = (type: MediaType = "image") => {
@@ -474,7 +477,7 @@ export function Step3MediaAndMapping() {
       }
 
       // Save template to backend
-      const savedTemplate = await createVendorMeasurementTemplate({
+      await createVendorMeasurementTemplate({
         name: templateName.trim(),
         description: "Measurement template rows",
         template_rows: finalRows as any,
