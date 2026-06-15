@@ -55,7 +55,7 @@ interface PaginatedCouriers {
 async function fetchCouriers(): Promise<CourierOption[]> {
   try {
     const data = await apiAsync
-      .get("logistics/couriers/?page_size=50&active=true")
+      .get("product/couriers/?page_size=50&active=true")
       .json<PaginatedCouriers>();
     return data.results ?? [];
   } catch {

@@ -297,13 +297,13 @@ export const ProductListItemSchema = z
     sku: z.string(),
     price: DecimalStrSchema,
     old_price: DecimalStrSchema.nullable(),
-    discount_percentage: z.number().min(0).max(100).default(0),
+    discount_percentage: z.coerce.number().min(0).max(100).nullable().transform((val) => val ?? 0).default(0),
     /** Computed discount flag from the backend serializer */
     is_discounted: z.boolean().default(false),
     /** Computed discounted price string */
     discounted_price: DecimalStrSchema.nullable().optional(),
     /** Whether cash payment is accepted for this product */
-    cash_payment_mode: z.boolean().default(true),
+    cash_payment_mode: z.union([z.boolean(), z.string()]).transform((val) => typeof val === "boolean" ? val : val !== "disabled").default(true),
     currency: z.string().default("NGN"),
     image_url: NullableUrlSchema,
     in_stock: z.boolean(),
@@ -351,13 +351,13 @@ export const ProductDetailSchema = z
     description: z.string(),
     price: DecimalStrSchema,
     old_price: DecimalStrSchema.nullable(),
-    discount_percentage: z.number().min(0).max(100).default(0),
+    discount_percentage: z.coerce.number().min(0).max(100).nullable().transform((val) => val ?? 0).default(0),
     /** Computed discount flag from the backend serializer */
     is_discounted: z.boolean().default(false),
     /** Computed discounted price string */
     discounted_price: DecimalStrSchema.nullable().optional(),
     /** Whether cash payment is accepted for this product */
-    cash_payment_mode: z.boolean().default(true),
+    cash_payment_mode: z.union([z.boolean(), z.string()]).transform((val) => typeof val === "boolean" ? val : val !== "disabled").default(true),
     currency: z.string().default("NGN"),
     shipping_amount: DecimalStrSchema.default("0.00"),
     image_url: NullableUrlSchema,
