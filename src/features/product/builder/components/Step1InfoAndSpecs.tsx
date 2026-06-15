@@ -6,7 +6,7 @@
  * Consolidates title, description, condition, category facets, tags, and technical specifications.
  */
 
-import { useFormContext, useFieldArray } from "react-hook-form";
+import { useFormContext,  } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { apiAsync } from "@/core/api/client.async";
 import type { ProductBuilderFormValues } from "../schemas/builder.schemas";
@@ -106,7 +106,7 @@ export function Step1InfoAndSpecs() {
   const selectedTagIds = form.watch("tag_ids") ?? [];
 
   // Specifications field array
-  const { fields: specFields, append: appendSpec, remove: removeSpec } = useFieldArray({
+  const { fields: specFields, append: appendSpec, remove: removeSpec } = ({
     control: form.control,
     name: "specifications",
   });
@@ -179,22 +179,8 @@ export function Step1InfoAndSpecs() {
   };
 
   // ── Tag helpers ────────────────────────────────────────────────────────────
-  const addTag = (tagId: string) => {
-    const current = form.getValues("tag_ids") ?? [];
-    if (!current.includes(tagId) && current.length < 10) {
-      form.setValue("tag_ids", [...current, tagId], { shouldValidate: true });
-    }
-  };
-
-  const removeTag = (tagId: string) => {
-    const current = form.getValues("tag_ids") ?? [];
-    form.setValue(
-      "tag_ids",
-      current.filter((id) => id !== tagId),
-      { shouldValidate: true },
-    );
-  };
-
+  
+  
   // ── Initial skeleton during first catalog fetch ───────────────────────────
   const initialLoading = catsLoading || tagsLoading;
 
@@ -400,133 +386,7 @@ export function Step1InfoAndSpecs() {
           )}
         />
 
-        {/* Tags */}
-        <FormField
-          control={form.control}
-          name="tag_ids"
-          render={() => (
-            <FormItem>
-              <FormLabel className="text-[#1A1208] font-semibold text-sm">Discovery Tags</FormLabel>
-              {selectedTagIds.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {selectedTagIds.map((tagId) => {
-                    const tag = tags.find((t) => t.id === tagId);
-                    return (
-                      <Badge
-                        key={tagId}
-                        variant="secondary"
-                        className="bg-[#FFF6E3] text-[#7A6B44] border-[#FDA600]/25 pl-3 pr-1 gap-1"
-                      >
-                        {tag?.name ?? tagId}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeTag(tagId)}
-                          className="h-4 w-4 p-0 text-[#01454A] hover:text-red-600 hover:bg-transparent"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </Badge>
-                    );
-                  })}
-                </div>
-              )}
-
-              <Select onValueChange={addTag} value="" disabled={selectedTagIds.length >= 10}>
-                <FormControl>
-                  <SelectTrigger className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 py-3">
-                    <SelectValue placeholder={selectedTagIds.length >= 10 ? "Maximum tags reached" : "Add a tag…"} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208] max-h-60 overflow-y-auto shadow-lg rounded-xl">
-                  {tags
-                    .filter((t) => !selectedTagIds.includes(t.id))
-                    .map((tag) => (
-                      <SelectItem key={tag.id} value={tag.id}>
-                        {tag.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      {/* SECTION C: Specifications */}
-      <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-[#ECE6D6] pb-3">
-          <div>
-            <h3 className="text-md font-bold text-[#1A1208] flex items-center gap-2">
-              <FileText className="w-4 h-4 text-[#01454A]" /> 3. Technical Specifications
-            </h3>
-            <p className="text-xs text-[#7A6B44] mt-0.5">
-              Add technical specs or garment characteristics (e.g. Lining material, Embroidery style).
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => appendSpec({ title: "", content: "" })}
-            className="text-[#01454A] border-[#01454A]/30 hover:bg-[#F0F5F5] rounded-lg text-xs font-semibold"
-          >
-            <Plus className="w-3.5 h-3.5 mr-1" /> Add Spec Row
-          </Button>
         </div>
-
-        {specFields.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-zinc-200 py-6 text-center bg-white text-xs text-zinc-400">
-            No specifications added. Add properties like hem finish, stitch type, button layout, etc.
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {specFields.map((field, idx) => (
-              <div key={field.id} className="bg-white border border-zinc-200 rounded-xl p-4 space-y-3 relative group shadow-sm">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name={`specifications.${idx}.title`}
-                    render={({ field: f }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs text-[#7A6B44] font-semibold">Specification Name *</FormLabel>
-                        <FormControl>
-                          <Input {...f} placeholder="e.g. Embroidery Technique" className="text-xs h-9 bg-white" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`specifications.${idx}.content`}
-                    render={({ field: f }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs text-[#7A6B44] font-semibold">Value / Content *</FormLabel>
-                        <FormControl>
-                          <Input {...f} placeholder="e.g. Chain stitch hand embroidery" className="text-xs h-9 bg-white" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeSpec(idx)}
-                  className="absolute top-2 right-2 h-7 w-7 text-red-500 hover:bg-red-50 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

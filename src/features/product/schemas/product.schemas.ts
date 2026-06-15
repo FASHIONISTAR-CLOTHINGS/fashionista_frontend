@@ -130,12 +130,8 @@ export const ProductMeasurementGuideSchema = z
   })
   .passthrough();
 
-export const FabricCompositionItemSchema = z.object({
-  material: z.string(),
-  percentage: z.number().min(0).max(100),
-});
 
-export const ProductFabricSchema = z
+export const ProductFabricSpecificationSchema = z
   .object({
     id: z.string().uuid().optional(),
     fabric_type: z.string(),
@@ -366,7 +362,7 @@ export const ProductDetailSchema = z
     faqs: z.array(ProductFaqSchema).default([]),
     measurement_guide: z.array(ProductMeasurementGuideSchema).default([]),
     measurement_template: z.string().uuid().nullable().optional(),
-    fabric: ProductFabricSchema.nullable().optional(),
+    fabric: ProductFabricSpecificationSchema.nullable().optional(),
     shipping_profile: ProductShippingProfileSchema.nullable().optional(),
     status: ProductStatusSchema,
     weight_kg: DecimalStrSchema.nullable().optional(),

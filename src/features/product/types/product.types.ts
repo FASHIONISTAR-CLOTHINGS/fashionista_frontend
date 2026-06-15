@@ -70,17 +70,7 @@ export interface ProductVendor {
 // NOTE: ProductColor as a separate FK model has been removed.
 // Color is now stored as direct fields (color_name / color_hex) on ProductVariantGalleryMedia.
 
-export interface ProductTag {
-  id: string;
-  name: string;
-  slug: string;
-}
 
-export interface ProductSpecification {
-  id: string;
-  title: string;
-  content: string;
-}
 
 export interface ProductFaq {
   id: string;
@@ -100,7 +90,6 @@ export interface ProductVariantGalleryMedia {
   color_name: string;
   /** Direct hex field — e.g. "#1A1A4E" */
   color_hex: string;
-  stock_qty: number;
   media_url?: string | null;    // Cloudinary URL for gallery image/video
   media_type: MediaType;        // "image" | "video"
   alt_text: string;
@@ -109,7 +98,6 @@ export interface ProductVariantGalleryMedia {
   video_thumbnail_url?: string | null;
   duration_sec?: number | null;
   barcode: string;
-  notes: string;
 }
 
 // Backward-compat aliases
@@ -126,17 +114,11 @@ export interface ProductColor {
 // PRODUCT FABRIC, MEASUREMENTS & SHIPPING PROFILES (Phase 1)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface FabricCompositionItem {
-  material: string;
-  percentage: number;
-}
 
-export interface ProductFabric {
+export interface ProductFabricSpecification {
   id: string;
   fabric_type: string;
-  composition: FabricCompositionItem[] | Record<string, unknown>;
   care_instructions: string;
-  care_notes: string;
   is_organic: boolean;
   is_vegan: boolean;
   country_of_origin: string;
@@ -265,13 +247,14 @@ export interface ProductListItem {
   price: string;                   // Decimal string
   old_price: string | null;
   discount_percentage: number;
+  is_discounted: boolean;
+  discounted_price: string | null;
+  cash_payment_mode: string;
   currency: string;
   image_url: string | null;        // Cloudinary card-size URL
   in_stock: boolean;
-  stock_qty: number;
   featured: boolean;
   hot_deal: boolean;
-  digital: boolean;
   rating: number;
   review_count: number;
   computed_review_count: number;   // From DB annotation
@@ -300,6 +283,9 @@ export interface ProductDetail {
   price: string;
   old_price: string | null;
   discount_percentage: number;
+  is_discounted: boolean;
+  discounted_price: string | null;
+  cash_payment_mode: string;
   currency: string;
   shipping_amount: string;
   image_url: string | null;
@@ -307,7 +293,6 @@ export interface ProductDetail {
   /** Unified variants: each item is both a product variant and a potential gallery media entry. */
   variants: ProductVariantGalleryMedia[];
   in_stock: boolean;
-  stock_qty: number;
   max_stock: number | null;
   views: number;
   orders_count: number;
@@ -317,14 +302,10 @@ export interface ProductDetail {
   computed_avg_rating: number;
   featured: boolean;
   hot_deal: boolean;
-  digital: boolean;
   requires_measurement: boolean;
   is_customisable: boolean;
-  tags: ProductTag[];
-  specifications: ProductSpecification[];
   faqs: ProductFaq[];
   status: ProductStatus;
-  weight_kg?: string | null;
   condition: ProductCondition;
   is_pre_order: boolean;
   pre_order_date?: string | null;
@@ -332,10 +313,9 @@ export interface ProductDetail {
   meta_description?: string;
   age_group?: string;
   gender_target?: string;
-  fabric?: ProductFabric | null;
+  fabric?: ProductFabricSpecification | null;
   shipping_profile?: ProductShippingProfile | null;
   measurement_guide?: ProductMeasurementGuideRow[] | null;
-  measurement_template?: string | null;
   category_name: string | null;
   category_slug: string | null;
   sub_category_name: string | null;
@@ -406,22 +386,21 @@ export interface CreateProductInput {
   description: string;
   price: string;
   old_price?: string;
+  is_discounted?: boolean;
+  discount_percentage?: number;
+  discounted_price?: string | null;
+  cash_payment_mode?: string;
   currency?: string;
   shipping_amount?: string;
-  stock_qty: number;
   max_stock?: number | null;
-  weight_kg?: string | null;
   condition?: ProductCondition;
   is_pre_order?: boolean;
   pre_order_date?: string | null;
   category_ids: string[];
   sub_category_ids?: string[];
-  size_ids?: string[];
-  tag_ids?: string[];
   requires_measurement: boolean;
   is_customisable: boolean;
   hot_deal?: boolean;
-  digital?: boolean;
   featured?: boolean;
   commission_rate?: string;
   status?: ProductStatus;
@@ -430,21 +409,13 @@ export interface CreateProductInput {
   age_group?: string;
   gender_target?: string;
   courier_id?: string | null;
-  measurement_template?: string | null;
   /** Unified variant + gallery media items to create/update. */
   variants?: Array<{
     size_id?: string | null;
     color_name?: string;          // Direct text field
     color_hex?: string;           // Direct hex field
-    price_override?: string | null;
-    stock_qty?: number;
     sku?: string;
-    is_active?: boolean;
-    weight_kg?: string | null;
     barcode?: string;
-    is_default?: boolean;
-    dimensions_cm?: Record<string, unknown> | null;
-    notes?: string;
     media_type?: MediaType;
     alt_text?: string;
     ordering?: number;
@@ -452,7 +423,7 @@ export interface CreateProductInput {
     duration_sec?: number | null;
   }>;
   idempotency_key?: string;        // UUID v4 string
-  fabric?: Omit<ProductFabric, "id"> | null;
+  fabric?: Omit<ProductFabricSpecification, "id"> | null;
   shipping_profile?: Omit<ProductShippingProfile, "id"> | null;
   measurement_guide?: Array<Omit<ProductMeasurementGuideRow, "id">> | null;
 }
