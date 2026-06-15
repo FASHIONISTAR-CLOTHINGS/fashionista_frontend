@@ -57,6 +57,7 @@ export const GalleryItemSchema = z.object({
   color_name: z.string().max(100).optional().default(""),
   color_hex: z.string().max(7).optional().default(""),
   size_id: z.string().uuid().nullable().optional(),
+  sku: z.string().optional().default(""),
 });
 
 export type GalleryItem = z.infer<typeof GalleryItemSchema>;
@@ -126,6 +127,10 @@ export type Step2Values = z.infer<typeof Step2Schema>;
 export const Step3Schema = z.object({
   cover_image_public_id: z.string().min(1, "A cover image is required"),
   cover_image_url: z.string().url().nullable().optional(),
+  cover_image_sku: z.string().optional().default(""),
+  cover_image_color_name: z.string().optional().default(""),
+  cover_image_color_hex: z.string().optional().default(""),
+  cover_image_size_id: z.string().uuid().nullable().optional(),
   gallery: z.array(GalleryItemSchema).max(12, "Maximum 12 gallery items allowed").default([]),
 });
 
