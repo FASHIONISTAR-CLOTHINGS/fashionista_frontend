@@ -504,6 +504,8 @@ export function ProductDetailClient({
                         {product.fabric.care_instructions.replace(/_/g, " ")}
                       </span>
                     </div>
+                    {/* care_notes removed from model — care_instructions is the canonical field */}
+
                   </div>
                 </div>
               </AccordionItem>
