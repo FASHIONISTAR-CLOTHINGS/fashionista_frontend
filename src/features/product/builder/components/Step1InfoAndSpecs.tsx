@@ -14,6 +14,7 @@
  *   • sub_category_ids — Dependent sub-category multi-select (optional, 0–15)
  */
 
+import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { apiAsync } from "@/core/api/client.async";
@@ -37,7 +38,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, FileText, Tag, Users, Baby, ShoppingBag } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { Check, FileText, Tag, Users, Baby, ShoppingBag, ChevronDown, FolderOpen, Image as ImageIcon, X } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES & CONSTANTS
@@ -47,6 +59,7 @@ interface SelectOption {
   id: string;
   name: string;
   slug?: string;
+  image_url?: string;
 }
 
 interface PaginatedOptions {
@@ -149,6 +162,356 @@ function SectionCard({
         <h3 className="text-base font-bold text-[#1A1208]">{title}</h3>
       </div>
       {children}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DROPDOWN SELECTORS FOR CATEGORIES & SUB-CATEGORIES
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function CategoryDropdownSelector({
+  categories,
+  selectedCategoryIds,
+  toggleCategory,
+  onClearAll,
+  maxCategories = 15,
+}: {
+  categories: SelectOption[];
+  selectedCategoryIds: string[];
+  toggleCategory: (id: string) => void;
+  onClearAll: () => void;
+  maxCategories?: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedList = categories.filter((c) => selectedCategoryIds.includes(c.id));
+
+  return (
+    <div className="space-y-3 w-full">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            role="combobox"
+            aria-expanded={open}
+            className={cn(
+              "flex items-center justify-between w-full px-4 py-3 rounded-xl border text-sm font-medium transition-all",
+              "bg-white border-[#D9D9D9] text-[#5A6465]",
+              "hover:border-[#FDA600]/50 hover:bg-[#FFF6E3]/20",
+              "focus:outline-none focus:ring-2 focus:ring-[#01454A]/20 focus:border-[#01454A]",
+              open && "border-[#01454A] ring-2 ring-[#01454A]/20"
+            )}
+          >
+            <span className="flex items-center gap-2">
+              <FolderOpen className="w-4 h-4 text-[#01454A]" />
+              {selectedCategoryIds.length > 0 ? (
+                <span className="text-[#1A1208] font-semibold">
+                  {selectedCategoryIds.length} categor{selectedCategoryIds.length !== 1 ? "ies" : "y"} selected
+                </span>
+              ) : (
+                <span className="text-zinc-400">Select categories...</span>
+              )}
+            </span>
+            <ChevronDown
+              className={cn(
+                "w-4 h-4 text-zinc-400 transition-transform duration-200",
+                open && "rotate-180"
+              )}
+            />
+          </button>
+        </PopoverTrigger>
+
+        <PopoverContent
+          className="w-[340px] p-0 border border-[#D9D9D9] shadow-xl rounded-2xl bg-white overflow-hidden"
+          align="start"
+          side="bottom"
+          sideOffset={6}
+        >
+          <Command className="bg-white">
+            <div className="border-b border-[#ECE6D6] px-3 py-2">
+              <CommandInput
+                placeholder="Search categories (e.g. Traditional, Men...)"
+                className="h-9 text-sm placeholder:text-zinc-400 border-0 focus:ring-0 bg-transparent"
+              />
+            </div>
+            <CommandList className="max-h-[280px] overflow-y-auto overscroll-contain">
+              <CommandEmpty className="py-8 text-center text-sm text-zinc-400">
+                No category found.
+              </CommandEmpty>
+              <CommandGroup className="py-1">
+                {categories.map((cat) => {
+                  const selected = selectedCategoryIds.includes(cat.id);
+                  const disabled = !selected && selectedCategoryIds.length >= maxCategories;
+                  return (
+                    <CommandItem
+                      key={cat.id}
+                      value={cat.name}
+                      onSelect={() => {
+                        if (!disabled) toggleCategory(cat.id);
+                      }}
+                      className={cn(
+                        "flex items-center justify-between px-3 py-2 mx-1 rounded-lg cursor-pointer transition-all",
+                        "data-[selected=true]:bg-[#F5F5F5]",
+                        selected && "bg-[#F0F9F9]",
+                        disabled && "opacity-40 cursor-not-allowed"
+                      )}
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <span
+                          className={cn(
+                            "w-4 h-4 rounded-sm flex items-center justify-center flex-shrink-0 border border-[#01454A]/30 transition-all",
+                            selected ? "bg-[#01454A]" : "bg-transparent"
+                          )}
+                        >
+                          {selected && <Check className="w-2.5 h-2.5 text-white" />}
+                        </span>
+                        <span className="text-sm font-medium text-[#1A1208]">{cat.name}</span>
+                      </span>
+
+                      {cat.image_url ? (
+                        <img
+                          src={cat.image_url}
+                          alt={cat.name}
+                          className="w-7 h-7 rounded-md object-cover border border-zinc-200"
+                        />
+                      ) : (
+                        <span className="w-7 h-7 rounded-md bg-zinc-100 flex items-center justify-center border border-zinc-200">
+                          <ImageIcon className="w-3.5 h-3.5 text-zinc-400" />
+                        </span>
+                      )}
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            </CommandList>
+            {selectedCategoryIds.length > 0 && (
+              <div className="border-t border-[#ECE6D6] px-3 py-2 flex items-center justify-between bg-[#FAFAF8]">
+                <span className="text-xs text-zinc-500 font-medium">
+                  {selectedCategoryIds.length}/{maxCategories} selected
+                </span>
+                <button
+                  type="button"
+                  onClick={onClearAll}
+                  className="text-xs text-red-500 font-semibold hover:underline"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      {selectedList.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {selectedList.map((cat) => (
+            <Badge
+              key={cat.id}
+              className={cn(
+                "flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full border",
+                "bg-white border-[#D9D9D9] text-[#1A1208] hover:border-[#01454A]/50",
+                "transition-all cursor-default"
+              )}
+            >
+              {cat.image_url ? (
+                <img
+                  src={cat.image_url}
+                  alt={cat.name}
+                  className="w-4 h-4 rounded-full object-cover"
+                />
+              ) : (
+                <span className="w-4 h-4 rounded-full bg-zinc-100 flex items-center justify-center">
+                  <ImageIcon className="w-2 h-2 text-zinc-400" />
+                </span>
+              )}
+              <span className="text-xs font-semibold">{cat.name}</span>
+              <button
+                type="button"
+                onClick={() => toggleCategory(cat.id)}
+                className="ml-0.5 text-zinc-400 hover:text-red-500 transition-colors"
+                aria-label={`Remove ${cat.name}`}
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function SubCategoryDropdownSelector({
+  subCategories,
+  selectedSubCategoryIds,
+  toggleSubCategory,
+  onClearAll,
+  maxSubCategories = 15,
+  disabled = false,
+}: {
+  subCategories: SelectOption[];
+  selectedSubCategoryIds: string[];
+  toggleSubCategory: (id: string) => void;
+  onClearAll: () => void;
+  maxSubCategories?: number;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedList = subCategories.filter((c) => selectedSubCategoryIds.includes(c.id));
+
+  return (
+    <div className="space-y-3 w-full">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            role="combobox"
+            aria-expanded={open}
+            disabled={disabled}
+            className={cn(
+              "flex items-center justify-between w-full px-4 py-3 rounded-xl border text-sm font-medium transition-all",
+              "bg-white border-[#D9D9D9] text-[#5A6465]",
+              disabled
+                ? "bg-zinc-50 border-zinc-200 opacity-40 cursor-not-allowed"
+                : "hover:border-[#FDA600]/50 hover:bg-[#FFF6E3]/20 focus:outline-none focus:ring-2 focus:ring-[#01454A]/20 focus:border-[#01454A]",
+              open && !disabled && "border-[#01454A] ring-2 ring-[#01454A]/20"
+            )}
+          >
+            <span className="flex items-center gap-2">
+              <FolderOpen className="w-4 h-4 text-[#01454A]" />
+              {selectedSubCategoryIds.length > 0 ? (
+                <span className="text-[#1A1208] font-semibold">
+                  {selectedSubCategoryIds.length} sub-categor{selectedSubCategoryIds.length !== 1 ? "ies" : "y"} selected
+                </span>
+              ) : (
+                <span className="text-zinc-400">Select sub-categories...</span>
+              )}
+            </span>
+            <ChevronDown
+              className={cn(
+                "w-4 h-4 text-zinc-400 transition-transform duration-200",
+                open && "rotate-180"
+              )}
+            />
+          </button>
+        </PopoverTrigger>
+
+        <PopoverContent
+          className="w-[340px] p-0 border border-[#D9D9D9] shadow-xl rounded-2xl bg-white overflow-hidden"
+          align="start"
+          side="bottom"
+          sideOffset={6}
+        >
+          <Command className="bg-white">
+            <div className="border-b border-[#ECE6D6] px-3 py-2">
+              <CommandInput
+                placeholder="Search sub-categories..."
+                className="h-9 text-sm placeholder:text-zinc-400 border-0 focus:ring-0 bg-transparent"
+              />
+            </div>
+            <CommandList className="max-h-[280px] overflow-y-auto overscroll-contain">
+              <CommandEmpty className="py-8 text-center text-sm text-zinc-400">
+                No sub-category found.
+              </CommandEmpty>
+              <CommandGroup className="py-1">
+                {subCategories.map((sub) => {
+                  const selected = selectedSubCategoryIds.includes(sub.id);
+                  const disabledItem = !selected && selectedSubCategoryIds.length >= maxSubCategories;
+                  return (
+                    <CommandItem
+                      key={sub.id}
+                      value={sub.name}
+                      onSelect={() => {
+                        if (!disabledItem) toggleSubCategory(sub.id);
+                      }}
+                      className={cn(
+                        "flex items-center justify-between px-3 py-2 mx-1 rounded-lg cursor-pointer transition-all",
+                        "data-[selected=true]:bg-[#F5F5F5]",
+                        selected && "bg-[#F0F9F9]",
+                        disabledItem && "opacity-40 cursor-not-allowed"
+                      )}
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <span
+                          className={cn(
+                            "w-4 h-4 rounded-sm flex items-center justify-center flex-shrink-0 border border-[#01454A]/30 transition-all",
+                            selected ? "bg-[#01454A]" : "bg-transparent"
+                          )}
+                        >
+                          {selected && <Check className="w-2.5 h-2.5 text-white" />}
+                        </span>
+                        <span className="text-sm font-medium text-[#1A1208]">{sub.name}</span>
+                      </span>
+
+                      {sub.image_url ? (
+                        <img
+                          src={sub.image_url}
+                          alt={sub.name}
+                          className="w-7 h-7 rounded-md object-cover border border-zinc-200"
+                        />
+                      ) : (
+                        <span className="w-7 h-7 rounded-md bg-zinc-100 flex items-center justify-center border border-zinc-200">
+                          <ImageIcon className="w-3.5 h-3.5 text-zinc-400" />
+                        </span>
+                      )}
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            </CommandList>
+            {selectedSubCategoryIds.length > 0 && (
+              <div className="border-t border-[#ECE6D6] px-3 py-2 flex items-center justify-between bg-[#FAFAF8]">
+                <span className="text-xs text-zinc-500 font-medium">
+                  {selectedSubCategoryIds.length}/{maxSubCategories} selected
+                </span>
+                <button
+                  type="button"
+                  onClick={onClearAll}
+                  className="text-xs text-red-500 font-semibold hover:underline"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      {selectedList.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {selectedList.map((sub) => (
+            <Badge
+              key={sub.id}
+              className={cn(
+                "flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full border",
+                "bg-white border-[#D9D9D9] text-[#1A1208] hover:border-[#01454A]/50",
+                "transition-all cursor-default"
+              )}
+            >
+              {sub.image_url ? (
+                <img
+                  src={sub.image_url}
+                  alt={sub.name}
+                  className="w-4 h-4 rounded-full object-cover"
+                />
+              ) : (
+                <span className="w-4 h-4 rounded-full bg-zinc-100 flex items-center justify-center">
+                  <ImageIcon className="w-2 h-2 text-zinc-400" />
+                </span>
+              )}
+              <span className="text-xs font-semibold">{sub.name}</span>
+              <button
+                type="button"
+                onClick={() => toggleSubCategory(sub.id)}
+                className="ml-0.5 text-zinc-400 hover:text-red-500 transition-colors"
+                aria-label={`Remove ${sub.name}`}
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -384,66 +747,7 @@ export function Step1InfoAndSpecs() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-[#1A1208] font-semibold text-sm flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-[#01454A]" />
-                  Gender Target
-                </FormLabel>
-                <Select onValueChange={field.onChange} value={field.value ?? ""}>
-                  <FormControl>
-                    <SelectTrigger
-                      id="gender-target"
-                      className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-2 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 h-11"
-                    >
-                      <SelectValue placeholder="Select target gender…" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208] shadow-lg rounded-xl">
-                    {GENDER_OPTIONS.map((g) => (
-                      <SelectItem key={g.value} value={g.value} className="cursor-pointer">
-                        {g.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Age Group */}
-          <FormField
-            control={form.control}
-            name="age_group"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm flex items-center gap-1.5">
-                  <Baby className="w-3.5 h-3.5 text-[#01454A]" />
-                  Age Group
-                </FormLabel>
-                <Select onValueChange={field.onChange} value={field.value ?? ""}>
-                  <FormControl>
-                    <SelectTrigger
-                      id="age-group"
-                      className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-2 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 h-11"
-                    >
-                      <SelectValue placeholder="Select age group…" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208] shadow-lg rounded-xl">
-                    {AGE_GROUP_OPTIONS.map((a) => (
-                      <SelectItem key={a.value} value={a.value} className="cursor-pointer">
-                        {a.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-      </SectionCard>
-
-      {/* ── SECTION C: CATEGORIES ─────────────────────────────────────────── */}
+                  <Users className="w-3.5 h-3.5 text-[#01454      {/* ── SECTION C: CATEGORIES ─────────────────────────────────────────── */}
       <SectionCard icon={<Tag className="w-4 h-4" />} title="Categories">
 
         {/* Primary Categories */}
@@ -461,61 +765,17 @@ export function Step1InfoAndSpecs() {
                 </span>
               </div>
 
-              <div
-                className={`rounded-xl border p-4 transition-colors ${
-                  fieldState.invalid
-                    ? "border-destructive bg-destructive/5"
-                    : "border-[#D9D9D9] bg-white"
-                }`}
-              >
-                {categories.length === 0 ? (
-                  <p className="text-sm text-zinc-400 text-center py-4">
-                    No categories available.
-                  </p>
-                ) : (
-                  <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-                    {categories.map((cat) => {
-                      const selected = selectedCategoryIds.includes(cat.id);
-                      const disabled =
-                        !selected && selectedCategoryIds.length >= 15;
-                      return (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          disabled={disabled}
-                          onClick={() => toggleCategory(cat.id)}
-                          className={`flex items-center gap-3 rounded-xl border p-3.5 text-left transition-all duration-200 ${
-                            selected
-                              ? "border-[#FDA600] bg-[#FFF6E3] shadow-sm"
-                              : disabled
-                              ? "border-[#D9D9D9] bg-zinc-50 opacity-40 cursor-not-allowed"
-                              : "border-[#D9D9D9] bg-white hover:border-[#FDA600]/50 hover:bg-[#FFFDF5]"
-                          }`}
-                        >
-                          <span
-                            className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all ${
-                              selected
-                                ? "border-[#FDA600] bg-[#FDA600]"
-                                : "border-[#D9D9D9]"
-                            }`}
-                          >
-                            {selected && <Check className="h-2.5 w-2.5 text-white" />}
-                          </span>
-                          <span
-                            className={`text-sm truncate ${
-                              selected
-                                ? "font-semibold text-[#7A5500]"
-                                : "text-[#1A1208]"
-                            }`}
-                          >
-                            {cat.name}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+              <FormControl>
+                <CategoryDropdownSelector
+                  categories={categories}
+                  selectedCategoryIds={selectedCategoryIds}
+                  toggleCategory={toggleCategory}
+                  onClearAll={() => {
+                    form.setValue("category_ids", [], { shouldValidate: true });
+                    form.setValue("sub_category_ids", [], { shouldValidate: true });
+                  }}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -541,18 +801,33 @@ export function Step1InfoAndSpecs() {
                 )}
               </div>
 
-              <div className="rounded-xl border border-[#D9D9D9] bg-white p-4 min-h-[80px] flex items-center">
-                {!selectedPrimaryCategoryId ? (
-                  <p className="text-sm text-[#5A6465] italic text-center w-full">
-                    ← Select a primary category above to load sub-categories.
-                  </p>
-                ) : subsLoading ? (
-                  <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 w-full">
-                    {[1, 2, 3].map((i) => (
-                      <div
-                        key={i}
-                        className="h-12 rounded-xl bg-zinc-100 animate-pulse"
-                      />
+              <FormControl>
+                <SubCategoryDropdownSelector
+                  subCategories={subCategories}
+                  selectedSubCategoryIds={selectedSubCategoryIds}
+                  toggleSubCategory={toggleSubCategory}
+                  onClearAll={() => form.setValue("sub_category_ids", [], { shouldValidate: true })}
+                  disabled={!selectedPrimaryCategoryId || subsLoading}
+                />
+              </FormControl>
+              {!selectedPrimaryCategoryId && (
+                <p className="text-xs text-zinc-400 italic">
+                  Select a primary category to load sub-categories.
+                </p>
+              )}
+              {selectedPrimaryCategoryId && subsLoading && (
+                <p className="text-xs text-[#01454A] animate-pulse">
+                  Loading sub-categories...
+                </p>
+              )}
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </SectionCard>
+    </div>
+  );
+}                 />
                     ))}
                   </div>
                 ) : subCategories.length === 0 ? (
