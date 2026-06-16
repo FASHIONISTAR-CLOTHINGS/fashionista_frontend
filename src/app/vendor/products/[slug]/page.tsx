@@ -18,18 +18,13 @@ import {
   Trash2,
   Package,
   ShoppingBag,
-  Info,
   Ruler,
   Scissors,
-  ShieldCheck,
-  Droplets,
   HelpCircle,
   FileText,
   Clock,
-  ExternalLink,
 } from "lucide-react";
 
-import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useVendorProfile } from "@/features/vendor/hooks/use-vendor-setup";
 import {
   useProductDetail,
@@ -39,8 +34,9 @@ import {
   productKeys,
   ProductBuilder,
   ProductBuilderProvider,
+  FASHION_FAQS,
 } from "@/features/product";
-import type { ProductDetail, ProductListItem } from "@/features/product";
+import type { ProductDetail } from "@/features/product";
 import type { ProductBuilderFormValues } from "@/features/product/builder/schemas/builder.schemas";
 import { FashionistarImage, FashionistarVideo } from "@/components/media";
 import { Button } from "@/components/ui/button";
@@ -114,7 +110,6 @@ export default function VendorProductDetailPage({
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Auto-redirect if unauthenticated vendor loading
-  const user = useAuthStore((s) => s.user);
   useEffect(() => {
     if (!isLoading && !isError && product && product.vendor_id !== vendorId) {
       toast.error("Unauthorized to access this catalog product detail.");
@@ -182,16 +177,10 @@ export default function VendorProductDetailPage({
   const mapProductToFormValues = (p: ProductDetail): Partial<ProductBuilderFormValues> => {
     const category_ids = p.categories?.map((c) => c.id) || [];
     const sub_category_ids = p.sub_categories?.map((c) => c.id) || [];
-    const tag_ids = p.tags?.map((t) => t.id) || [];
-
-    const specifications = p.specifications?.map((s) => ({
-      title: s.title,
-      content: s.content,
-    })) || [];
 
     const measurement_guide = p.measurement_guide?.map((m) => ({
-      size_id: m.size?.id || undefined,
-      size_label: m.size_label,
+      size_id: m.id || undefined,
+      size_label: m.size_label as any,
       chest_cm: m.chest_cm || "",
       waist_cm: m.waist_cm || "",
       hip_cm: m.hip_cm || "",
@@ -209,39 +198,16 @@ export default function VendorProductDetailPage({
       media_type: g.media_type || "image",
       alt_text: g.alt_text || "",
       ordering: g.ordering || 0,
-      variant_id: g.variant || undefined,
-      color_id: g.color || undefined,
+      color_name: g.color_name || "",
+      color_hex: g.color_hex || "",
+      size_id: g.size?.id || undefined,
+      sku: g.sku || "",
     })) || [];
 
-    const variants = p.variants?.map((v) => ({
-      size_id: v.size?.id || undefined,
-      color_id: v.color?.id || undefined,
-      price_override: v.price_override || "",
-      stock_qty: v.stock_qty || 0,
-      sku: v.sku || "",
-      is_active: v.is_active ?? true,
-      barcode: v.barcode || "",
-      weight_kg: v.weight_kg || "",
-      dimensions_cm: v.dimensions_cm || null,
-      notes: v.notes || "",
-      is_default: v.is_default ?? false,
-    })) || [];
-
-    const faqs = p.faqs?.map((f) => ({
-      question: f.question,
-      answer: f.answer,
-    })) || [];
-
-    const fComp = p.fabric?.composition;
-    let fabric_composition: any[] = [];
-    if (Array.isArray(fComp)) {
-      fabric_composition = fComp;
-    } else if (fComp && typeof fComp === "object") {
-      fabric_composition = Object.entries(fComp).map(([material, val]) => ({
-        material,
-        percentage: typeof val === "number" ? val : parseInt(String(val)) || 0,
-      }));
-    }
+    const faqs = p.faqs?.map((f) => {
+      const matched = FASHION_FAQS.find((item) => item.question === f.question);
+      return matched ? matched.id : "";
+    }).filter(Boolean) || [];
 
     return {
       title: p.title,
@@ -259,22 +225,15 @@ export default function VendorProductDetailPage({
       pre_order_date: p.pre_order_date || null,
       category_ids,
       sub_category_ids,
-      tag_ids,
-      specifications,
       
       // Fabric
       fabric_type: p.fabric?.fabric_type || "",
       fabric_care_instructions: (p.fabric?.care_instructions || "machine_wash") as any,
-      fabric_care_notes: p.fabric?.care_notes || "",
       fabric_is_organic: p.fabric?.is_organic ?? false,
       fabric_is_vegan: p.fabric?.is_vegan ?? false,
       fabric_country_of_origin: p.fabric?.country_of_origin || "",
-      fabric_composition,
 
       // Sizing
-      size_ids: p.sizes?.map((s) => s.id) || [],
-      color_ids: p.colors?.map((c) => c.id) || [],
-      measurement_template: p.measurement_template || null,
       measurement_guide,
 
       // Media
@@ -284,24 +243,13 @@ export default function VendorProductDetailPage({
 
       // Shipping profile
       weight_kg: p.shipping_profile?.weight_kg || "",
-      shipping_profile: p.shipping_profile ? {
-        weight_kg: parseFloat(p.shipping_profile.weight_kg),
-        length_cm: parseFloat(p.shipping_profile.length_cm),
-        width_cm: parseFloat(p.shipping_profile.width_cm),
-        height_cm: parseFloat(p.shipping_profile.height_cm),
-        is_fragile: p.shipping_profile.is_fragile ?? false,
-        requires_signature: p.shipping_profile.requires_signature ?? false,
-        restricted_countries: p.shipping_profile.restricted_countries || [],
-        free_shipping_threshold: p.shipping_profile.free_shipping_threshold || "",
-        processing_days: p.shipping_profile.processing_days || 1,
-      } : undefined,
+      courier_id: null,
 
       // FAQs
       faqs,
       publish_intent: p.status === "published" || p.status === "pending" ? "pending" : "draft",
       featured: p.featured ?? false,
       hot_deal: p.hot_deal ?? false,
-      digital: p.digital ?? false,
       meta_title: p.meta_title || "",
       meta_description: p.meta_description || "",
       age_group: p.age_group || "",
@@ -313,13 +261,12 @@ export default function VendorProductDetailPage({
     try {
       const category_ids = values.category_ids;
       const sub_category_ids = values.sub_category_ids ?? [];
-      const tag_ids = values.tag_ids ?? [];
 
       const payload = {
         title: values.title,
         description: values.description,
         price: values.price,
-        old_price: values.old_price || null,
+        old_price: values.old_price || undefined,
         currency: values.currency,
         shipping_amount: values.shipping_amount || "2500.00",
         stock_qty: values.stock_qty,
@@ -331,35 +278,30 @@ export default function VendorProductDetailPage({
         pre_order_date: values.pre_order_date || null,
         category_ids,
         sub_category_ids,
-        tag_ids,
-        specifications: values.specifications,
         fabric: values.fabric_type ? {
           fabric_type: values.fabric_type,
           care_instructions: values.fabric_care_instructions,
-          care_notes: values.fabric_care_notes,
+          care_notes: product.fabric?.care_notes || "",
           is_organic: values.fabric_is_organic,
           is_vegan: values.fabric_is_vegan,
           country_of_origin: values.fabric_country_of_origin,
-          composition: values.fabric_composition,
+          composition: product.fabric?.composition || null,
         } : null,
-        shipping_profile: values.shipping_profile ? {
-          weight_kg: String(values.shipping_profile.weight_kg),
-          length_cm: String(values.shipping_profile.length_cm),
-          width_cm: String(values.shipping_profile.width_cm),
-          height_cm: String(values.shipping_profile.height_cm),
-          is_fragile: values.shipping_profile.is_fragile,
-          requires_signature: values.shipping_profile.requires_signature,
-          restricted_countries: values.shipping_profile.restricted_countries,
-          free_shipping_threshold: values.shipping_profile.free_shipping_threshold || null,
-          processing_days: values.shipping_profile.processing_days,
+        shipping_profile: values.weight_kg ? {
+          weight_kg: values.weight_kg,
+          length_cm: "0.0",
+          width_cm: "0.0",
+          height_cm: "0.0",
+          is_fragile: false,
+          requires_signature: false,
+          restricted_countries: [],
+          free_shipping_threshold: null,
+          processing_days: 1,
         } : null,
         measurement_guide: values.measurement_guide,
-        variants: values.variants,
-        faqs: values.faqs,
-        publish_intent: values.publish_intent,
+        status: values.publish_intent,
         featured: values.featured,
         hot_deal: values.hot_deal,
-        digital: values.digital,
         meta_title: values.meta_title,
         meta_description: values.meta_description,
         age_group: values.age_group,
@@ -785,26 +727,25 @@ export default function VendorProductDetailPage({
                     >
                       <div>
                         <span className="font-bold text-[#1A1208] block">
-                          {v.size?.name || "Standard Size"}
+                          {v.size?.size_label || "Standard Size"}
                         </span>
-                        {v.color?.name && (
+                        {v.color_name && (
                           <span className="text-[10px] text-[#7A6B44] block mt-0.5">
-                            Color: {v.color.name}
+                            Color: {v.color_name} {v.color_hex ? `(${v.color_hex})` : ""}
                           </span>
                         )}
                         {v.sku && (
                           <span className="text-[9px] text-[#7A6B44]/70 block font-mono">
-                            {v.sku}
+                            SKU: {v.sku}
                           </span>
                         )}
                       </div>
                       <div className="text-right">
-                        <span className="font-bold text-[#01454A] block">
-                          {v.price_override ? formatPrice(parseFloat(v.price_override)) : "Base Price"}
-                        </span>
-                        <span className="text-[10px] text-[#7A6B44] block mt-0.5">
-                          Stock: {v.stock_qty} units
-                        </span>
+                        {v.barcode && (
+                          <span className="text-[10px] text-[#7A6B44] block mt-0.5 font-mono">
+                            Barcode: {v.barcode}
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}

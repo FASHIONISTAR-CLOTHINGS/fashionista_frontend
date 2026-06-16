@@ -6,7 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import React, { FormEvent, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Edit, Trash2, Play } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 
 import {
   AlertTriangle,

@@ -17,7 +17,7 @@ export { Step1InfoAndSpecs } from "./components/Step1InfoAndSpecs";
 export { Step2PricingAndMeasurements } from "./components/Step2PricingAndMeasurements";
 export { Step3MediaAndMapping } from "./components/Step3MediaAndMapping";
 export { Step4Shipping } from "./components/Step4Shipping";
-export { Step5FAQAndReview } from "./components/Step5FAQAndReview";
+export { Step5FAQAndReview, FASHION_FAQS } from "./components/Step5FAQAndReview";
 
 // ── Stepper ──────────────────────────────────────────────────────────────────
 export { BuilderStepper } from "./components/BuilderStepper";

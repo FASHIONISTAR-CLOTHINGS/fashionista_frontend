@@ -57,7 +57,7 @@ import {
 // STATIC FAQ LIBRARY (10 expertly-crafted fashion FAQs)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const FASHION_FAQS = [
+export const FASHION_FAQS = [
   {
     id: "faq_01",
     icon: "📏",

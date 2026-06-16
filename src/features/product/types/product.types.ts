@@ -119,6 +119,8 @@ export interface ProductFabricSpecification {
   id: string;
   fabric_type: string;
   care_instructions: string;
+  care_notes?: string;
+  composition?: Record<string, number> | Array<{ material: string; percentage: number }> | null;
   is_organic: boolean;
   is_vegan: boolean;
   country_of_origin: string;
@@ -253,6 +255,7 @@ export interface ProductListItem {
   currency: string;
   image_url: string | null;        // Cloudinary card-size URL
   in_stock: boolean;
+  stock_qty?: number;
   featured: boolean;
   hot_deal: boolean;
   rating: number;
@@ -293,6 +296,7 @@ export interface ProductDetail {
   /** Unified variants: each item is both a product variant and a potential gallery media entry. */
   variants: ProductVariantGalleryMedia[];
   in_stock: boolean;
+  stock_qty?: number;
   max_stock: number | null;
   views: number;
   orders_count: number;
@@ -316,6 +320,14 @@ export interface ProductDetail {
   fabric?: ProductFabricSpecification | null;
   shipping_profile?: ProductShippingProfile | null;
   measurement_guide?: ProductMeasurementGuideRow[] | null;
+  categories?: Array<{ id: string; name: string; slug: string }> | null;
+  sub_categories?: Array<{ id: string; name: string; slug: string }> | null;
+  tags?: Array<{ id: string; name: string; slug: string }> | null;
+  specifications?: Array<{ title: string; content: string }> | null;
+  gallery?: Array<ProductVariantGalleryMedia> | null;
+  sizes?: Array<{ id: string; name: string; size_label: string }> | null;
+  colors?: Array<{ id: string; name: string; hex_code: string }> | null;
+  measurement_template?: string | null;
   category_name: string | null;
   category_slug: string | null;
   sub_category_name: string | null;
@@ -385,9 +397,9 @@ export interface CreateProductInput {
   title: string;
   description: string;
   price: string;
-  old_price?: string;
+  old_price?: string | null;
   is_discounted?: boolean;
-  discount_percentage?: number;
+  discount_percentage?: number | null;
   discounted_price?: string | null;
   cash_payment_mode?: string;
   currency?: string;

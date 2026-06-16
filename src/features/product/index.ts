@@ -196,6 +196,7 @@ export {
   Step3MediaAndMapping,
   Step4Shipping,
   Step5FAQAndReview,
+  FASHION_FAQS,
   // Stepper nav
   BuilderStepper,
   // Schemas + metadata
