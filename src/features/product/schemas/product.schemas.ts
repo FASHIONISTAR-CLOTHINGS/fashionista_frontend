@@ -322,6 +322,14 @@ export const ProductListItemSchema = z
     vendor_slug: z.string().nullable().optional(),
     requires_measurement: z.boolean().default(false),
     is_customisable: z.boolean().default(false),
+    condition: z.string().optional().default("new"),
+    gender_target: z.string().optional().default(""),
+    age_group: z.string().optional().default(""),
+    is_pre_order: z.boolean().default(false),
+    pre_order_date: IsoDateSchema.nullable().optional(),
+    sustainability_score: z.coerce.number().nullable().optional(),
+    carbon_footprint_kg: z.coerce.number().nullable().optional(),
+    ai_trend_score: z.coerce.number().default(0),
     /** color swatches for this product (derived from gallery) */
     colors: z
       .array(
@@ -395,6 +403,9 @@ export const ProductDetailSchema = z
     meta_description: z.string().optional().default(""),
     age_group: z.string().optional().default(""),
     gender_target: z.string().optional().default(""),
+    sustainability_score: z.coerce.number().nullable().optional(),
+    carbon_footprint_kg: z.coerce.number().nullable().optional(),
+    ai_trend_score: z.coerce.number().default(0),
     category_name: z.string().nullable().optional(),
     category_slug: z.string().nullable().optional(),
     sub_category_name: z.string().nullable().optional(),

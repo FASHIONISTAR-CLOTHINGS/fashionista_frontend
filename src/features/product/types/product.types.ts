@@ -268,6 +268,14 @@ export interface ProductListItem {
   vendor_slug: string | null;
   requires_measurement: boolean;
   is_customisable: boolean;
+  condition?: string;
+  gender_target?: string;
+  age_group?: string;
+  is_pre_order?: boolean;
+  pre_order_date?: string | null;
+  sustainability_score?: number | null;
+  carbon_footprint_kg?: number | null;
+  ai_trend_score?: number;
   created_at: string;
 }
 
@@ -315,6 +323,9 @@ export interface ProductDetail {
   meta_description?: string;
   age_group?: string;
   gender_target?: string;
+  sustainability_score?: number | null;
+  carbon_footprint_kg?: number | null;
+  ai_trend_score?: number;
   fabric?: ProductFabricSpecification | null;
   shipping_profile?: ProductShippingProfile | null;
   measurement_guide?: ProductMeasurementGuideRow[] | null;

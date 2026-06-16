@@ -42,7 +42,7 @@ import { productCatalogApi } from "@/features/catalog";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { SocialProofBadge } from "@/features/product/components/SocialProofBadge";
 import { useRecentlyViewed } from "@/features/catalog/hooks/use-recently-viewed";
-import { FashionistarImage } from "@/components/media";
+import { FashionistarImage, FashionistarVideo } from "@/components/media";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -78,6 +78,12 @@ function AccordionItem({
       )}
     </div>
   );
+}
+
+function isVideoUrl(url: string | null): boolean {
+  if (!url) return false;
+  const clean = url.split("?")[0].toLowerCase();
+  return clean.endsWith(".mp4") || clean.endsWith(".webm") || clean.endsWith(".mov") || url.includes("/video/upload/");
 }
 
 export function ProductDetailClient({
@@ -160,12 +166,19 @@ export function ProductDetailClient({
     ? (product as unknown as { gallery: typeof product.variants }).gallery
     : (product.variants ?? []);
 
-  const images =
-    galleryItems.length
-      ? galleryItems.map((g: { media_url?: string | null }) => g.media_url ?? "/gown.svg")
-      : product.cover_image_url
-      ? [product.cover_image_url]
-      : ["/gown.svg"];
+  const mediaItems = galleryItems.length
+    ? galleryItems.map((g) => ({
+        url: g.media_url ?? "/gown.svg",
+        type: g.media_type || "image",
+      }))
+    : product.cover_image_url
+    ? [
+        {
+          url: product.cover_image_url,
+          type: isVideoUrl(product.cover_image_url) ? "video" : "image",
+        },
+      ]
+    : [{ url: "/gown.svg", type: "image" }];
 
   // Variant: no price_override on the new model — always show base price
   const displayPrice = parseFloat(product.price);
@@ -207,15 +220,25 @@ export function ProductDetailClient({
         <div className="flex-1">
           {/* Main image */}
           <div className="relative h-[420px] w-full overflow-hidden rounded-2xl bg-[hsl(var(--brand-cream))] md:h-[520px]">
-            <FashionistarImage
-              src={images[activeImg] ?? "/gown.svg"}
-              alt={product.title}
-              fill
-              sizes="(max-width:768px) 100vw, 50vw"
-              className="h-full w-full"
-              imgClassName="object-contain p-4 transition-opacity duration-300"
-              priority
-            />
+            {mediaItems[activeImg].type === "video" ? (
+              <FashionistarVideo
+                src={mediaItems[activeImg].url}
+                autoPlay={false}
+                muted={true}
+                showControls={true}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <FashionistarImage
+                src={mediaItems[activeImg].url}
+                alt={product.title}
+                fill
+                sizes="(max-width:768px) 100vw, 50vw"
+                className="h-full w-full"
+                imgClassName="object-contain p-4 transition-opacity duration-300"
+                priority
+              />
+            )}
             {product.requires_measurement && (
               <span className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-[hsl(var(--primary))] px-3 py-1.5 text-xs font-semibold text-primary-foreground">
                 <Ruler size={12} /> Custom Fit Required
@@ -248,10 +271,9 @@ export function ProductDetailClient({
           </div>
 
           {/* Thumbnails */}
-          {images.length > 1 && (
+          {mediaItems.length > 1 && (
             <div className="mt-3 grid grid-cols-5 gap-2">
-              {images.map((src: string, idx: number) => (
-
+              {mediaItems.map((item, idx: number) => (
                 <Button
                   key={idx}
                   variant="ghost"
@@ -263,13 +285,20 @@ export function ProductDetailClient({
                   }`}
                 >
                   <FashionistarImage
-                    src={src}
+                    src={item.url}
                     alt={`${product.title} gallery thumbnail ${idx + 1}`}
                     fill
                     sizes="80px"
                     className="h-full w-full"
                     imgClassName="object-cover"
                   />
+                  {item.type === "video" && (
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/20 text-white z-10">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                      </svg>
+                    </span>
+                  )}
                 </Button>
               ))}
             </div>
@@ -385,7 +414,13 @@ export function ProductDetailClient({
                       <Button
                         key={i}
                         variant={selectedVariantId === String(i) ? "default" : "outline"}
-                        onClick={() => setSelectedVariantId(String(i))}
+                        onClick={() => {
+                          setSelectedVariantId(String(i));
+                          const idx = galleryItems.findIndex((item) => (item as { color_name?: string }).color_name === cn_);
+                          if (idx !== -1) {
+                            setActiveImg(idx);
+                          }
+                        }}
                         className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition h-auto min-h-0`}
                         title={cn_}
                       >
@@ -506,6 +541,82 @@ export function ProductDetailClient({
                     </div>
                     {/* care_notes removed from model — care_instructions is the canonical field */}
 
+                  </div>
+                </div>
+              </AccordionItem>
+            )}
+
+            {product.shipping_profile && (
+              <AccordionItem title="Shipping & Delivery">
+                <div className="space-y-4 pt-1">
+                  <div className="flex flex-wrap gap-2">
+                    {product.shipping_profile.is_fragile && (
+                      <Badge variant="outline" className="border-amber-500/30 bg-amber-50/50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400 text-[10px]">
+                        Fragile Product
+                      </Badge>
+                    )}
+                    {product.shipping_profile.requires_signature && (
+                      <Badge variant="outline" className="border-blue-500/30 bg-blue-50/50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 text-[10px]">
+                        Signature Required
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <span className="font-semibold text-foreground block mb-0.5">Package Weight</span>
+                      <span className="text-muted-foreground">{product.shipping_profile.weight_kg} kg</span>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-foreground block mb-0.5">Handling Time</span>
+                      <span className="text-muted-foreground">{product.shipping_profile.processing_days} handling day{product.shipping_profile.processing_days > 1 ? "s" : ""}</span>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-foreground block mb-0.5">Volumetric Dimensions</span>
+                      <span className="text-muted-foreground">
+                        {parseFloat(product.shipping_profile.length_cm)} × {parseFloat(product.shipping_profile.width_cm)} × {parseFloat(product.shipping_profile.height_cm)} cm
+                      </span>
+                    </div>
+                    {product.shipping_profile.free_shipping_threshold && (
+                      <div>
+                        <span className="font-semibold text-foreground block mb-0.5">Free Shipping Override</span>
+                        <span className="text-muted-foreground">Orders above {formatCurrency(parseFloat(product.shipping_profile.free_shipping_threshold), product.currency ?? "NGN")}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </AccordionItem>
+            )}
+
+            {product.sustainability_score !== undefined && product.sustainability_score !== null && (
+              <AccordionItem title="Sustainability & Environmental Impact">
+                <div className="space-y-4 pt-1">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-foreground flex items-center gap-1">🌱 Sustainability Score</span>
+                      <span className="text-emerald-600">{product.sustainability_score}/100</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                        style={{ width: `${product.sustainability_score}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    {product.carbon_footprint_kg !== undefined && product.carbon_footprint_kg !== null && (
+                      <div>
+                        <span className="font-semibold text-foreground block mb-0.5">Estimated Carbon Footprint</span>
+                        <span className="text-muted-foreground">{product.carbon_footprint_kg} kg CO₂e</span>
+                      </div>
+                    )}
+                    {product.ai_trend_score !== undefined && product.ai_trend_score !== null && (
+                      <div>
+                        <span className="font-semibold text-foreground block mb-0.5">Curation Trend Index</span>
+                        <span className="text-muted-foreground">{product.ai_trend_score}% Trend Index</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </AccordionItem>

@@ -143,6 +143,27 @@ export default function ProductCard({
           </span>
         )}
 
+        {/* Pre-order badge */}
+        {product.is_pre_order && (
+          <span className={`absolute ${hasDiscount ? "top-11" : "top-3"} left-3 z-10 rounded-full bg-amber-500 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm uppercase tracking-wider`}>
+            Pre-Order
+          </span>
+        )}
+
+        {/* Sustainability badge */}
+        {product.sustainability_score && product.sustainability_score > 70 && (
+          <span className="absolute bottom-3 left-3 z-10 flex items-center gap-1 rounded-full bg-emerald-600/90 backdrop-blur px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
+            🌱 Eco {product.sustainability_score}
+          </span>
+        )}
+
+        {/* Condition badge */}
+        {product.condition && product.condition !== "new" && (
+          <span className="absolute bottom-3 right-3 z-10 rounded-full bg-gray-900/80 backdrop-blur px-2 py-0.5 text-[9px] font-semibold text-gray-200 capitalize">
+            {product.condition}
+          </span>
+        )}
+
         {/* Measurement badge */}
         {product.requires_measurement && (
           <span className="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-full bg-[hsl(var(--primary))] px-2.5 py-1 text-xs font-semibold text-primary-foreground">
@@ -201,10 +222,15 @@ export default function ProductCard({
 
       {/* ── Card body ───────────────────────────────────────────────────── */}
       <Link href={`/products/${product.slug}`} className="flex flex-col gap-2 p-4 flex-1">
-        {/* Vendor name */}
-        <span className="text-xs font-semibold uppercase tracking-wide text-[hsl(var(--primary))]">
-          {product.vendor_name ?? "FASHIONISTAR"}
-        </span>
+        {/* Vendor name and Demographics */}
+        <div className="flex items-center justify-between text-xs font-semibold text-[hsl(var(--primary))] uppercase tracking-wide">
+          <span>{product.vendor_name ?? "FASHIONISTAR"}</span>
+          {(product.gender_target || product.age_group) && (
+            <span className="text-[10px] text-muted-foreground font-medium normal-case">
+              {[product.gender_target, product.age_group].filter(Boolean).join(" • ")}
+            </span>
+          )}
+        </div>
 
         {/* Product title */}
         <h3 className="line-clamp-2 font-semibold text-sm leading-5 text-foreground">
