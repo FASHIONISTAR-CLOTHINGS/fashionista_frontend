@@ -747,14 +747,73 @@ export function Step1InfoAndSpecs() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-[#1A1208] font-semibold text-sm flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-[#01454      {/* ── SECTION C: CATEGORIES ─────────────────────────────────────────── */}
+                  <Users className="w-3.5 h-3.5 text-[#01454A]" />
+                  Gender Target
+                </FormLabel>
+                <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                  <FormControl>
+                    <SelectTrigger
+                      id="gender-target"
+                      className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-2 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 h-11"
+                    >
+                      <SelectValue placeholder="Select target gender…" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208] shadow-lg rounded-xl">
+                    {GENDER_OPTIONS.map((g) => (
+                      <SelectItem key={g.value} value={g.value} className="cursor-pointer">
+                        {g.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Age Group */}
+          <FormField
+            control={form.control}
+            name="age_group"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-[#1A1208] font-semibold text-sm flex items-center gap-1.5">
+                  <Baby className="w-3.5 h-3.5 text-[#01454A]" />
+                  Age Group
+                </FormLabel>
+                <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                  <FormControl>
+                    <SelectTrigger
+                      id="age-group"
+                      className="bg-white border border-[#D9D9D9] text-[#1A1208] focus:ring-2 focus:ring-[#01454A] focus:border-[#01454A] rounded-xl px-4 h-11"
+                    >
+                      <SelectValue placeholder="Select age group…" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="bg-white border border-[#D9D9D9] text-[#1A1208] shadow-lg rounded-xl">
+                    {AGE_GROUP_OPTIONS.map((a) => (
+                      <SelectItem key={a.value} value={a.value} className="cursor-pointer">
+                        {a.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+      </SectionCard>
+
+      {/* ── SECTION C: CATEGORIES ─────────────────────────────────────────── */}
       <SectionCard icon={<Tag className="w-4 h-4" />} title="Categories">
 
         {/* Primary Categories */}
         <FormField
           control={form.control}
           name="category_ids"
-          render={({ fieldState }) => (
+          render={() => (
             <FormItem className="space-y-3">
               <div className="flex items-center justify-between">
                 <FormLabel className="text-[#1A1208] font-semibold text-sm">
@@ -820,66 +879,6 @@ export function Step1InfoAndSpecs() {
                   Loading sub-categories...
                 </p>
               )}
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </SectionCard>
-    </div>
-  );
-}                 />
-                    ))}
-                  </div>
-                ) : subCategories.length === 0 ? (
-                  <p className="text-sm text-zinc-400 italic text-center w-full">
-                    No sub-categories for this category.
-                  </p>
-                ) : (
-                  <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 w-full">
-                    {subCategories.map((sub) => {
-                      const selected = selectedSubCategoryIds.includes(sub.id);
-                      const disabled =
-                        !selected && selectedSubCategoryIds.length >= 15;
-                      return (
-                        <button
-                          key={sub.id}
-                          type="button"
-                          disabled={disabled}
-                          onClick={() => toggleSubCategory(sub.id)}
-                          className={`flex items-center gap-3 rounded-xl border p-3.5 text-left transition-all duration-200 ${
-                            selected
-                              ? "border-[#FDA600] bg-[#FFF6E3] shadow-sm"
-                              : disabled
-                              ? "border-[#D9D9D9] bg-zinc-50 opacity-40 cursor-not-allowed"
-                              : "border-[#D9D9D9] bg-white hover:border-[#FDA600]/50"
-                          }`}
-                        >
-                          <span
-                            className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all ${
-                              selected
-                                ? "border-[#FDA600] bg-[#FDA600]"
-                                : "border-[#D9D9D9]"
-                            }`}
-                          >
-                            {selected && (
-                              <Check className="h-2.5 w-2.5 text-white" />
-                            )}
-                          </span>
-                          <span
-                            className={`text-sm truncate ${
-                              selected
-                                ? "font-semibold text-[#7A5500]"
-                                : "text-[#1A1208]"
-                            }`}
-                          >
-                            {sub.name}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
               <FormMessage />
             </FormItem>
           )}

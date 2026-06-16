@@ -1,11 +1,12 @@
  "use client";
 
-import { FashionistarImage } from "@/components/media";
+import { FashionistarImage, FashionistarVideo } from "@/components/media";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import React, { FormEvent, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { Edit, Trash2, Play } from "lucide-react";
 
 import {
   AlertTriangle,
@@ -55,6 +56,7 @@ import {
   publishProduct,
   useVendorCatalogProducts,
   useUpdateProduct,
+  useDeleteProduct,
   productKeys,
   fetchActiveDraftSessions,
   discardDraftSession,
@@ -2095,37 +2097,113 @@ function formatPrice(v: number) {
 
 // formatDate unused and removed
 
-function CatalogProductCard({ product }: { product: ProductListItem }) {
-  return (
-    <div className="group rounded-2xl bg-white border border-[#ECE6D6] p-5 shadow-sm transition-all hover:shadow-md hover:border-[#FDA600]/30 flex gap-4 items-center">
-      {product.image_url ? (
-        <div className="relative h-20 w-20 overflow-hidden rounded-xl bg-[#F8F5ED] border border-[#ECE6D6] flex-shrink-0">
-          <FashionistarImage src={product.image_url} alt={product.title} fill={true} objectFit="cover" imgClassName="transition-transform group-hover:scale-105 animate-fadeIn" />
-        </div>
-      ) : (
-        <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-xl bg-[#F8F5ED] border border-[#ECE6D6] text-[#FDA600]">
-          <ShoppingBag className="h-8 w-8" />
-        </div>
-      )}
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            {product.sku && (
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[#7A6B44] mb-0.5">{product.sku}</p>
-            )}
-            <h2 className="text-sm font-bold text-[#1A1208] truncate leading-tight">{product.title}</h2>
-            {product.category_name && (
-              <p className="text-[11px] text-[#7A6B44]/75 mt-0.5">{product.category_name}</p>
-            )}
-          </div>
-          <StatusBadge status={product.in_stock ? "published" : "disabled"} />
-        </div>
-        <div className="mt-2.5 flex items-center justify-between text-xs text-[#5A6465] gap-2 flex-wrap">
-          <span className="font-bold text-[#1A1208]">{formatPrice(Number(product.price))}</span>
-          <span className="flex items-center gap-1">
-            <Package className="h-3.5 w-3.5 text-[#FDA600]" /> Stock: {"—"}
+function isVideoUrl(url: string | null): boolean {
+  if (!url) return false;
+  const clean = url.split("?")[0].toLowerCase();
+  return clean.endsWith(".mp4") || clean.endsWith(".webm") || clean.endsWith(".mov") || url.includes("/video/upload/");
+}
 
-          </span>
+function CatalogProductCard({ product }: { product: ProductListItem }) {
+  const deleteMutation = useDeleteProduct();
+  const qc = useQueryClient();
+  const router = useRouter();
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (confirm(`Are you sure you want to delete "${product.title}"?`)) {
+      try {
+        await deleteMutation.mutateAsync(product.slug);
+        void qc.invalidateQueries({ queryKey: productKeys.vendorList() });
+        toast.success("Product archived successfully.");
+      } catch (err: any) {
+        toast.error(err?.message || "Failed to delete product.");
+      }
+    }
+  };
+
+  return (
+    <div
+      onClick={() => router.push(`/vendor/products/${product.slug}`)}
+      className="group cursor-pointer rounded-2xl bg-[#FAFAF8] border border-[#ECE6D6] p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:border-[#FDA600]/40 flex gap-4 items-center relative overflow-hidden"
+    >
+      {/* Product Image/Video Container */}
+      <div className="relative h-20 w-20 overflow-hidden rounded-xl bg-[#F8F5ED] border border-[#ECE6D6] flex-shrink-0 flex items-center justify-center">
+        {product.image_url ? (
+          isVideoUrl(product.image_url) ? (
+            <div className="w-full h-full relative">
+              <FashionistarVideo
+                src={product.image_url}
+                autoPlay={false}
+                muted={true}
+                showControls={false}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-200" />
+            </div>
+          ) : (
+            <FashionistarImage
+              src={product.image_url}
+              alt={product.title}
+              fill={true}
+              objectFit="cover"
+              imgClassName="transition-transform duration-300 group-hover:scale-105 animate-fadeIn"
+            />
+          )
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-[#FDA600]">
+            <ShoppingBag className="h-8 w-8" />
+          </div>
+        )}
+      </div>
+
+      {/* Details Section */}
+      <div className="min-w-0 flex-1 flex flex-col justify-between h-20">
+        <div>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              {product.sku && (
+                <p className="text-[9px] font-black uppercase tracking-widest text-[#7A6B44] mb-0.5">{product.sku}</p>
+              )}
+              <h2 className="text-sm font-bold text-[#1A1208] truncate group-hover:text-[#01454A] transition-colors leading-tight">
+                {product.title}
+              </h2>
+              {product.category_name && (
+                <p className="text-[11px] font-medium text-[#7A6B44]/75 mt-0.5">{product.category_name}</p>
+              )}
+            </div>
+            <StatusBadge status={product.in_stock ? "published" : "disabled"} />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between text-xs gap-2 flex-wrap mt-auto">
+          <div>
+            <span className="font-extrabold text-[#01454A]">{formatPrice(Number(product.price))}</span>
+            <span className="text-[10px] text-[#7A6B44]/70 ml-2">
+              Stock: <strong className="text-[#1A1208]">{product.stock_qty ?? 0}</strong>
+            </span>
+          </div>
+
+          {/* Card Action Buttons */}
+          <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/vendor/products/${product.slug}`);
+              }}
+              className="p-1 rounded-lg border border-[#ECE6D6] hover:border-[#FDA600] hover:bg-white text-[#7A6B44] hover:text-[#01454A] transition-all"
+              title="View & Edit"
+            >
+              <Edit className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={handleDelete}
+              className="p-1 rounded-lg border border-[#ECE6D6] hover:border-red-500 hover:bg-red-50 text-[#7A6B44] hover:text-red-600 transition-all"
+              title="Delete Product"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
