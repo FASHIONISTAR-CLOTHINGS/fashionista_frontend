@@ -309,7 +309,6 @@ export const VendorProductCreateSchema = z.object({
   requires_measurement: z.boolean().optional().default(false),
   is_customisable:      z.boolean().optional().default(false),
   hot_deal:             z.boolean().optional().default(false),
-  digital:              z.boolean().optional().default(false),
   featured:             z.boolean().optional().default(false),
   commission_rate:      z.string().optional(),
   status:               z.enum(["draft", "pending", "published", "archived", "rejected"]).optional().default("draft"),

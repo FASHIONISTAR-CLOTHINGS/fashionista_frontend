@@ -154,7 +154,6 @@ const HomepageProductCardSchema = z.object({
   stock_qty: z.number().default(0),
   featured: z.boolean().default(false),
   hot_deal: z.boolean().default(false),
-  digital: z.boolean().default(false),
   rating: z.number().default(0),
   review_count: z.number().default(0),
   computed_review_count: z.number().default(0),

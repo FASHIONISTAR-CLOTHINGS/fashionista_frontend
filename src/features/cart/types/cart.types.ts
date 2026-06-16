@@ -140,7 +140,7 @@ export interface SubmitCheckoutInput {
     country: string;
     postal_code?: string;
   };
-  fulfillment_type?: "delivery" | "pickup" | "digital" | "custom";
+  fulfillment_type?: "delivery" | "pickup" | "custom";
   measurement_profile_id?: string | null;
   notes?: string;
   payment_method?: string;

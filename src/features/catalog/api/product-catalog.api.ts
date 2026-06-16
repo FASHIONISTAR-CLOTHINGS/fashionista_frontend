@@ -39,7 +39,6 @@ export interface CatalogProductCard {
   stock_qty: number;
   featured: boolean;
   hot_deal: boolean;
-  digital: boolean;
   rating: number;
   review_count: number;
   computed_review_count: number;

@@ -173,7 +173,6 @@ test("debug add to cart flow", async ({ page, request }) => {
         requires_measurement: false,
         is_customisable: false,
         hot_deal: false,
-        digital: false,
         idempotency_key: crypto.randomUUID(),
       },
     },

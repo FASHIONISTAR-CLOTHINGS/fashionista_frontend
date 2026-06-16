@@ -192,7 +192,6 @@ async function createPublishedBrowserProduct(
         requires_measurement: false,
         is_customisable: false,
         hot_deal: false,
-        digital: false,
         idempotency_key: crypto.randomUUID(),
       },
     },

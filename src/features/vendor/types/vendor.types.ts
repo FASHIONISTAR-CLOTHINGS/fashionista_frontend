@@ -263,7 +263,6 @@ export interface VendorProductCreatePayload {
   requires_measurement?: boolean;
   is_customisable?:      boolean;
   hot_deal?:             boolean;
-  digital?:              boolean;
   featured?:             boolean;
   commission_rate?:      string;         // Decimal string
   status?:               ProductStatus;
