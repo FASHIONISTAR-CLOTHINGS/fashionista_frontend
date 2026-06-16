@@ -135,10 +135,7 @@ export const ProductFabricSpecificationSchema = z
   .object({
     id: z.string().uuid().optional(),
     fabric_type: z.string(),
-    /** fabric_composition replaces the legacy 'composition' JSONField — now a plain char field */
-    fabric_composition: z.string().optional().default(""),
     care_instructions: z.string().default("machine_wash"),
-    care_notes: z.string().optional().default(""),
     is_organic: z.boolean().default(false),
     is_vegan: z.boolean().default(false),
     country_of_origin: z.string().optional().default(""),

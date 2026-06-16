@@ -497,16 +497,6 @@ export function ProductDetailClient({
                     )}
                   </div>
 
-                  {/* fabric_composition replaces old 'composition' JSONField */}
-                  {(product.fabric as { fabric_composition?: string }).fabric_composition && (
-                    <div>
-                      <span className="font-semibold text-foreground text-xs block mb-1">Composition</span>
-                      <p className="text-muted-foreground text-xs">
-                        {(product.fabric as { fabric_composition?: string }).fabric_composition}
-                      </p>
-                    </div>
-                  )}
-
                   <div className="border-t border-border pt-3 space-y-2">
                     <div>
                       <span className="font-semibold text-foreground text-xs block">Care Instructions</span>
@@ -514,8 +504,6 @@ export function ProductDetailClient({
                         {product.fabric.care_instructions.replace(/_/g, " ")}
                       </span>
                     </div>
-                    {/* care_notes removed from model — care_instructions is the canonical field */}
-
                   </div>
                 </div>
               </AccordionItem>

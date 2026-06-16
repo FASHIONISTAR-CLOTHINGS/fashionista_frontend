@@ -119,8 +119,6 @@ export interface ProductFabricSpecification {
   id: string;
   fabric_type: string;
   care_instructions: string;
-  care_notes?: string;
-  composition?: Record<string, number> | Array<{ material: string; percentage: number }> | null;
   is_organic: boolean;
   is_vegan: boolean;
   country_of_origin: string;

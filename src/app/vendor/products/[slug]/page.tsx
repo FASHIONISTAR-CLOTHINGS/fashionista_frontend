@@ -281,11 +281,9 @@ export default function VendorProductDetailPage({
         fabric: values.fabric_type ? {
           fabric_type: values.fabric_type,
           care_instructions: values.fabric_care_instructions,
-          care_notes: product.fabric?.care_notes || "",
           is_organic: values.fabric_is_organic,
           is_vegan: values.fabric_is_vegan,
           country_of_origin: values.fabric_country_of_origin,
-          composition: product.fabric?.composition || null,
         } : null,
         shipping_profile: values.weight_kg ? {
           weight_kg: values.weight_kg,
@@ -492,32 +490,6 @@ export default function VendorProductDetailPage({
                       )}
                     </div>
 
-                    {/* Composition list */}
-                    {(() => {
-                      let compositionList: { material: string; percentage: number }[] = [];
-                      if (Array.isArray(product.fabric.composition)) {
-                        compositionList = product.fabric.composition as any[];
-                      } else if (product.fabric.composition && typeof product.fabric.composition === "object") {
-                        compositionList = Object.entries(product.fabric.composition).map(([material, val]) => ({
-                          material,
-                          percentage: typeof val === "number" ? val : parseInt(String(val)) || 0,
-                        }));
-                      }
-                      if (compositionList.length === 0) return null;
-                      return (
-                        <div>
-                          <span className="font-bold text-[#1A1208] block mb-1.5">Composition Breakdown</span>
-                          <div className="flex flex-wrap gap-1.5">
-                            {compositionList.map((c, i) => (
-                              <Badge key={i} variant="secondary" className="text-[10px] py-0.5 px-2">
-                                {c.material} ({c.percentage}%)
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })()}
-
                     <div className="border-t border-[#ECE6D6] pt-3 space-y-2">
                       <div>
                         <span className="font-bold text-[#1A1208] block">Care Instructions</span>
@@ -525,12 +497,6 @@ export default function VendorProductDetailPage({
                           {product.fabric.care_instructions.replace(/_/g, " ")}
                         </span>
                       </div>
-                      {product.fabric.care_notes && (
-                        <div>
-                          <span className="font-bold text-[#1A1208] block">Special Care Notes</span>
-                          <p className="text-muted-foreground italic mt-0.5">{product.fabric.care_notes}</p>
-                        </div>
-                      )}
                     </div>
                   </div>
                 ) : (
