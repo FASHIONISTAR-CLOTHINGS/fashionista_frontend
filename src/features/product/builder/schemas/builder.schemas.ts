@@ -96,7 +96,7 @@ export const Step2BaseSchema = z.object({
   currency: z.string().length(3).default("NGN"),
   stock_qty: QtySchema.min(1, "Stock must be at least 1 unit"),
   max_stock: QtySchema.optional().nullable(),
-  cash_payment_mode: z.enum(["payment_before_delivery", "payment_on_delivery", "part_payment_before_delivery"]).default("payment_before_delivery"),
+  cash_payment_mode: z.enum(["disabled", "cod", "pay_at_shop", "both", "payment_on_delivery", "payment_before_delivery", "part_payment_before_delivery"]).default("disabled"),
   is_pre_order: z.boolean().default(false),
   pre_order_date: z.string().nullable().optional(),
 

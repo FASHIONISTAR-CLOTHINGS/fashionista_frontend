@@ -143,7 +143,7 @@ const DEFAULT_VALUES: Partial<ProductBuilderFormValues> = {
   currency: "NGN",
   stock_qty: 1,
   max_stock: null,
-  cash_payment_mode: "payment_before_delivery",
+  cash_payment_mode: "disabled",
   is_pre_order: false,
   pre_order_date: null,
 
@@ -439,23 +439,36 @@ export function ProductBuilderProvider({
           idempotency_key: store.idempotency_key || undefined,
         });
 
-        // 2. Commit draft session on backend (creates product once).
+        // 2. Commit draft session on backend (creates product exactly once).
         const committedProduct = await commitDraftSession(key);
 
-        // 3. Clear draft
+        // 3. Clear draft from localStorage IMMEDIATELY after successful commit
+        //    so that the next page load does not hit a ghost 404 for the deleted draft.
         clearDraft();
 
-        // 4. Notify parent for post-commit navigation/cache refresh only.
+        // 4. Notify parent for post-commit navigation/cache refresh.
         await onSubmit(values, committedProduct.slug || committedProduct.id);
       } else {
         await onSubmit(values, productId);
         clearDraft();
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to commit draft:", err);
-      toast.error("Submission failed", {
-        description: err instanceof Error ? err.message : "Could not save product.",
-      });
+      // Surface backend validation errors if present (400 response body)
+      let errMessage = "Could not save product. Please review your form and try again.";
+      const responseData = err?.response?.data || err?.data;
+      if (responseData?.errors && typeof responseData.errors === "object") {
+        const fieldErrors = Object.entries(responseData.errors)
+          .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`)
+          .slice(0, 3)
+          .join(" | ");
+        errMessage = fieldErrors || errMessage;
+      } else if (responseData?.message) {
+        errMessage = responseData.message;
+      } else if (err instanceof Error) {
+        errMessage = err.message;
+      }
+      toast.error("Submission failed", { description: errMessage });
     } finally {
       setIsSubmitting(false);
     }
