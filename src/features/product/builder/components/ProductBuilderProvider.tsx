@@ -322,18 +322,12 @@ export function ProductBuilderProvider({
         try {
           remote = await fetchDraftSessionDetail(keyToSync);
         } catch (e: any) {
-          // Stale key recovery: if backend returns 404, the draft no longer exists on DB.
-          // Clear stale key immediately and generate a fresh session.
           const is404 = e?.status === 404 || e?.response?.status === 404 || String(e).includes("404");
           if (is404) {
-            console.warn("Stale draft key not found on backend (404). Clearing stale key.");
-            const newKey = generateUUID();
-            const newIdempotency = generateUUID();
-            store.setDraftKey(newKey);
-            store.setIdempotencyKey(newIdempotency);
-            store.setCurrentStep(1);
-            store.setPayload({});
-            return;
+            console.warn("Draft key not found on backend (404). Will create new session on backend.");
+            remote = null;
+          } else {
+            throw e;
           }
         }
 
