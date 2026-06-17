@@ -169,7 +169,11 @@ const HomepageProductCardSchema = z.object({
     .array(z.object({ id: IdSchema, name: z.string(), hex_code: z.string() }))
     .default([]),
   created_at: z.string().nullable().optional().default(null),
-});
+}).transform((data) => ({
+  ...data,
+  store_name: data.vendor_name,
+  store_slug: data.vendor_slug,
+}));
 
 const HomepageReviewCardSchema = z.object({
   id: IdSchema,

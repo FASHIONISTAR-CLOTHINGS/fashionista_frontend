@@ -484,7 +484,7 @@ export const WishlistBulkStatusSchema = z
 // PAGINATED ENVELOPES
 // ─────────────────────────────────────────────────────────────────────────────
 
-function paginatedSchema<T>(itemSchema: z.ZodType<T>) {
+function paginatedSchema<T>(itemSchema: z.ZodType<T, any, any>) {
   return z.object({
     count: z.number().int().min(0),
     next: z.string().nullable(),
@@ -536,7 +536,7 @@ export const CouponValidateFormSchema = z.object({
  * Production: logs error and returns raw data cast to avoid blank screens.
  */
 export function parseApiResponse<T>(
-  schema: z.ZodType<T>,
+  schema: z.ZodType<T, any, any>,
   data: unknown,
   context?: string,
 ): T {

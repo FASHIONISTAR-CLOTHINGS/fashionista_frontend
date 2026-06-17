@@ -2168,8 +2168,8 @@ function CatalogProductCard({ product }: { product: ProductListItem }) {
         <div>
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              {product.sku && (
-                <p className="text-[9px] font-black uppercase tracking-widest text-[#7A6B44] mb-0.5">{product.sku}</p>
+              {(product as any).sku && (
+                <p className="text-[9px] font-black uppercase tracking-widest text-[#7A6B44] mb-0.5">{(product as any).sku}</p>
               )}
               <h2 className="text-sm font-bold text-[#1A1208] truncate group-hover:text-[#01454A] transition-colors leading-tight">
                 {product.title}

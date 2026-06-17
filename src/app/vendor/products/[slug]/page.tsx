@@ -384,9 +384,9 @@ export default function VendorProductDetailPage({
                 <div>
                   <h1 className="text-2xl font-bold text-[#1A1208]">{product.title}</h1>
                   <div className="flex gap-2 items-center mt-1">
-                    {product.sku && (
+                    {(product.variants?.[0]?.sku || (product as any).sku) && (
                       <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#7A6B44]">
-                        SKU: {product.sku}
+                        SKU: {product.variants?.[0]?.sku || (product as any).sku}
                       </span>
                     )}
                     <Badge variant="secondary" className="capitalize text-[10px] py-0.5 px-2">

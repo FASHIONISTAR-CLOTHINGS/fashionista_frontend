@@ -8,41 +8,36 @@ interface BrandProductsClientProps {
   brandSlug: string;
 }
 
-function toProductCardItem(product: {
-  id: string;
-  title: string;
-  slug: string;
-  sku: string;
-  price: string;
-  old_price: string | null;
-  discount_percentage: number;
-  is_discounted?: boolean;
-  discounted_price?: string | null;
-  currency: string;
-  image_url: string | null;
-  in_stock: boolean;
-  featured: boolean;
-  hot_deal: boolean;
-  rating: number;
-  review_count: number;
-  computed_review_count: number;
-  computed_avg_rating: number;
-  category_name: string | null;
-  category_slug: string | null;
-  vendor_name: string;
-  vendor_slug: string | null;
-  requires_measurement: boolean;
-  is_customisable: boolean;
-  created_at: string | null;
-}): ProductListItem {
+import type { HomepageProductCard } from "@/features/catalog";
+
+function toProductCardItem(product: HomepageProductCard): ProductListItem {
   return {
-    ...product,
-    is_discounted: product.is_discounted ?? false,
-    discounted_price: product.discounted_price ?? null,
-    cash_payment_mode: true,
+    id: product.id,
+    title: product.title,
+    slug: product.slug,
+    price: product.price,
+    old_price: product.old_price,
+    discount_percentage: product.discount_percentage,
+    is_discounted: !!product.old_price,
+    discounted_price: product.old_price ? product.price : null,
+    cash_payment_mode: "escrow",
+    currency: product.currency,
+    image_url: product.image_url,
+    in_stock: product.in_stock,
+    featured: product.featured,
+    hot_deal: product.hot_deal,
+    rating: product.rating,
+    review_count: product.review_count,
+    computed_review_count: product.computed_review_count,
+    computed_avg_rating: product.computed_avg_rating,
+    category_name: product.category_name,
+    category_slug: product.category_slug,
     brand_name: null,
     brand_slug: null,
-    vendor_name: product.vendor_name,
+    vendor_name: product.store_name,
+    vendor_slug: product.store_slug,
+    requires_measurement: product.requires_measurement,
+    is_customisable: product.is_customisable,
     created_at: product.created_at ?? new Date(0).toISOString(),
   };
 }

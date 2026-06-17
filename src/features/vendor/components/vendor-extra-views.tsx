@@ -1027,7 +1027,7 @@ export function VendorChatView() {
                                 title: prod.title,
                                 price: prod.price,
                                 image_url: prod.image_url,
-                                sku: prod.sku,
+                                sku: (prod as any).sku,
                               };
                               void sendMsg.mutateAsync({ body: JSON.stringify(payload) });
                               setShowCatalogModal(false);

@@ -93,8 +93,8 @@ function ProductCard({ product }: { product: HomepageProductCard }) {
       </p>
 
       {/* ── Vendor name ───────────────────────────────────────────────── */}
-      {product.vendor_name && (
-        <p className="font-raleway text-xs text-[#848484] -mt-1">{product.vendor_name}</p>
+      {product.store_name && (
+        <p className="font-raleway text-xs text-[#848484] -mt-1">{product.store_name}</p>
       )}
     </Link>
   );
