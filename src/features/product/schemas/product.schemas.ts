@@ -339,7 +339,7 @@ export const ProductListItemSchema = z
     gender_target: z.string().optional().default(""),
     age_group: z.string().optional().default(""),
     is_pre_order: z.boolean().default(false),
-    pre_order_date: IsoDateSchema.nullable().optional(),
+    pre_order_date: z.string().nullable().optional(),
     sustainability_score: z.coerce.number().nullable().optional(),
     carbon_footprint_kg: z.coerce.number().nullable().optional(),
     ai_trend_score: z.coerce.number().default(0),
@@ -347,9 +347,17 @@ export const ProductListItemSchema = z
     colors: z
       .array(
         z.object({
-          color_name: z.string(),
-          color_hex: z.string(),
+          color_name: z.string().optional(),
+          color_hex: z.string().optional(),
+          name: z.string().optional(),
+          hex_code: z.string().optional(),
         }).passthrough()
+      )
+      .transform((items) =>
+        items.map((item) => ({
+          color_name: item.color_name || item.name || "",
+          color_hex: item.color_hex || item.hex_code || "",
+        }))
       )
       .default([]),
     created_at: IsoDateSchema,
@@ -410,7 +418,7 @@ export const ProductDetailSchema = z
     weight_kg: DecimalStrSchema.nullable().optional(),
     condition: ProductConditionSchema.default("new"),
     is_pre_order: z.boolean().default(false),
-    pre_order_date: IsoDateSchema.nullable().optional(),
+    pre_order_date: z.string().nullable().optional(),
     meta_title: z.string().optional().default(""),
     meta_description: z.string().optional().default(""),
     age_group: z.string().optional().default(""),

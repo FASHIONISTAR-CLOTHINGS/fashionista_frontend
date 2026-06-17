@@ -156,7 +156,11 @@ export type Step3Values = z.infer<typeof Step3Schema>;
 // STEP 4: Shipping
 export const Step4BaseSchema = z.object({
   weight_kg: z.string().regex(/^(\d+(\.\d{1,3})?)?$/, "Enter a valid weight in kg (e.g. 1.5)").optional().or(z.literal("")),
-  shipping_amount: OptionalMoneySchema,
+  shipping_amount: z
+    .string()
+    .regex(/^(\d+(\.\d{1,2})?)?$/, "Enter a valid price or leave blank")
+    .optional()
+    .or(z.literal("")),
   courier_id: FKIdSchema,
 });
 

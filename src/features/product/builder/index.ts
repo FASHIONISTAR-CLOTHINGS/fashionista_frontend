@@ -9,6 +9,19 @@ export * from "./schemas/builder.schemas";
 // ── Provider / Context ───────────────────────────────────────────────────────
 export { ProductBuilderProvider, useBuilderContext } from "./components/ProductBuilderProvider";
 
+// ── API Actions ──────────────────────────────────────────────────────────────
+export {
+  BasicInformationAction,
+  PricesAction,
+  CategoryAction,
+  GalleryAction,
+  SpecificationAction,
+  SizesAction,
+  newProduct,
+  deleteProduct,
+  editProduct,
+} from "./api/actions";
+
 // ── Orchestrator ─────────────────────────────────────────────────────────────
 export { ProductBuilder } from "./components/ProductBuilder";
 

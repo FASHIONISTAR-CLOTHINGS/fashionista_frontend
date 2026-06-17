@@ -10,24 +10,21 @@ import {
 
 describe("Product Builder Schemas", () => {
   describe("Step 1: Info & Specs Schema", () => {
-    it("validates valid basic details and specifications", () => {
+    it("validates valid basic details", () => {
       const payload = {
         title: "Classic Agbada Ensemble",
         description: "A premium hand-made three-piece agbada for weddings and formal events.",
         condition: "new",
         category_ids: ["019ec340-cfc0-7383-b75e-350d09e7b807"],
         sub_category_ids: ["019ec340-d004-7c36-a640-ebfcf52b11e8"],
-        tag_ids: [],
-        specifications: [
-          { title: "Material", content: "Senegalese Cotton" },
-          { title: "Embroidery Style", content: "Chain stitch" }
-        ],
+        gender_target: "men",
+        age_group: "adult",
       };
 
       const parsed = Step1Schema.parse(payload);
       expect(parsed.title).toBe("Classic Agbada Ensemble");
       expect(parsed.condition).toBe("new");
-      expect(parsed.specifications).toHaveLength(2);
+      expect(parsed.gender_target).toBe("men");
     });
 
     it("fails when title is too short", () => {
@@ -46,11 +43,12 @@ describe("Product Builder Schemas", () => {
     });
   });
 
-  describe("Step 2: Sizing & Fabric Schema", () => {
-    it("validates valid sizing parameters and fabric details", () => {
+  describe("Step 2: Pricing, Sizing & Fabric Schema", () => {
+    it("validates valid sizing parameters, fabric details, price and stock", () => {
       const payload = {
-        size_ids: ["019ec340-cfc0-7383-b75e-350d09e7b807"],
-        color_ids: ["019ec340-d004-7c36-a640-ebfcf52b11e8"],
+        price: "15000.00",
+        old_price: "20000.00",
+        stock_qty: 10,
         requires_measurement: true,
         is_customisable: false,
         measurement_guide: [
@@ -61,18 +59,32 @@ describe("Product Builder Schemas", () => {
           }
         ],
         fabric_type: "Damask",
-        fabric_composition: [
-          { material: "Silk", percentage: 60 },
-          { material: "Cotton", percentage: 40 }
-        ],
         fabric_care_instructions: "dry_clean",
-        fabric_care_notes: "Gentle dry clean only",
+        fabric_is_organic: false,
+        fabric_is_vegan: false,
+        fabric_country_of_origin: "Nigeria",
       };
 
       const parsed = Step2Schema.parse(payload);
       expect(parsed.requires_measurement).toBe(true);
       expect(parsed.fabric_type).toBe("Damask");
-      expect(parsed.fabric_composition).toHaveLength(2);
+      expect(parsed.price).toBe("15000.00");
+    });
+
+    it("fails when old_price is less than price", () => {
+      const payload = {
+        price: "15000.00",
+        old_price: "12000.00",
+        stock_qty: 10,
+        requires_measurement: false,
+        fabric_type: "",
+      };
+
+      const result = Step2Schema.safeParse(payload);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toContain("Original price must be higher");
+      }
     });
   });
 
@@ -97,56 +109,24 @@ describe("Product Builder Schemas", () => {
     });
   });
 
-  describe("Step 4: Pricing & SKUs Schema", () => {
-    it("validates pricing and variants", () => {
+  describe("Step 4: Shipping Schema", () => {
+    it("validates shipping details", () => {
       const payload = {
-        price: "15000.00",
-        old_price: "20000.00",
-        currency: "NGN",
-        stock_qty: 10,
         weight_kg: "1.5",
-        variants: [
-          {
-            size_id: "019ec340-cfc0-7383-b75e-350d09e7b807",
-            color_id: "019ec340-d004-7c36-a640-ebfcf52b11e8",
-            price_override: "16000.00",
-            stock_qty: 5,
-            sku: "VAR-XL-BLUE-001",
-            is_active: true,
-            is_default: true,
-            notes: "Classic cut",
-          }
-        ]
+        shipping_amount: "2000.00",
+        courier_id: "019ec340-cfc0-7383-b75e-350d09e7b807",
       };
 
       const parsed = Step4Schema.parse(payload);
-      expect(parsed.price).toBe("15000.00");
-      expect(parsed.variants[0].sku).toBe("VAR-XL-BLUE-001");
-    });
-
-    it("fails when old_price is less than price", () => {
-      const payload = {
-        price: "15000.00",
-        old_price: "12000.00",
-        currency: "NGN",
-        stock_qty: 10,
-        variants: []
-      };
-
-      const result = Step4Schema.safeParse(payload);
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.issues[0].message).toContain("higher than the current price");
-      }
+      expect(parsed.weight_kg).toBe("1.5");
+      expect(parsed.shipping_amount).toBe("2000.00");
     });
   });
 
   describe("Step 5: FAQs & Publish Schema", () => {
     it("validates FAQs and publishing flags", () => {
       const payload = {
-        faqs: [
-          { question: "Is this dry clean only?", answer: "Yes, we recommend dry cleaning for fabric longevity." }
-        ],
+        faqs: ["Question 1", "Question 2"],
         publish_intent: "pending",
         featured: false,
         hot_deal: true,
@@ -156,7 +136,7 @@ describe("Product Builder Schemas", () => {
 
       const parsed = Step5Schema.parse(payload);
       expect(parsed.publish_intent).toBe("pending");
-      expect(parsed.faqs).toHaveLength(1);
+      expect(parsed.faqs).toHaveLength(2);
     });
   });
 
@@ -170,9 +150,9 @@ describe("Product Builder Schemas", () => {
         sub_category_ids: [],
         tag_ids: [],
         specifications: [],
+        gender_target: "",
+        age_group: "",
         
-        size_ids: ["019ec340-cfc0-7383-b75e-350d09e7b807"],
-        color_ids: ["019ec340-d004-7c36-a640-ebfcf52b11e8"],
         requires_measurement: false,
         is_customisable: false,
         measurement_template: null,
@@ -197,18 +177,6 @@ describe("Product Builder Schemas", () => {
         weight_kg: "",
         shipping_amount: "",
         courier_id: null,
-        variants: [
-          {
-            size_id: "019ec340-cfc0-7383-b75e-350d09e7b807",
-            color_id: "019ec340-d004-7c36-a640-ebfcf52b11e8",
-            price_override: "",
-            stock_qty: 5,
-            sku: "",
-            is_active: true,
-            is_default: false,
-            notes: "",
-          }
-        ],
 
         faqs: [],
         publish_intent: "pending",
@@ -216,78 +184,10 @@ describe("Product Builder Schemas", () => {
         hot_deal: false,
         meta_title: "",
         meta_description: "",
-        age_group: "",
-        gender_target: "",
       };
 
       const result = ProductBuilderFormSchema.safeParse(payload);
       expect(result.success).toBe(true);
-    });
-
-    it("fails when total variant stock exceeds main product stock", () => {
-      const payload = {
-        title: "Classic Agbada Ensemble",
-        description: "A premium hand-made three-piece agbada for weddings and formal events.",
-        condition: "new",
-        category_ids: ["019ec340-cfc0-7383-b75e-350d09e7b807"],
-        sub_category_ids: [],
-        tag_ids: [],
-        specifications: [],
-        
-        size_ids: ["019ec340-cfc0-7383-b75e-350d09e7b807"],
-        color_ids: ["019ec340-d004-7c36-a640-ebfcf52b11e8"],
-        requires_measurement: false,
-        is_customisable: false,
-        measurement_template: null,
-        measurement_guide: [],
-        fabric_type: "",
-        fabric_composition: [],
-        fabric_care_instructions: "machine_wash",
-        fabric_care_notes: "",
-        fabric_is_organic: false,
-        fabric_is_vegan: false,
-        fabric_country_of_origin: "",
-
-        cover_image_public_id: "cloudinary_id",
-        cover_image_url: "https://res.cloudinary.com/test/test.jpg",
-        gallery: [],
-
-        price: "15000.00",
-        old_price: "",
-        currency: "NGN",
-        stock_qty: 10,
-        max_stock: null,
-        weight_kg: "",
-        shipping_amount: "",
-        courier_id: null,
-        variants: [
-          {
-            size_id: "019ec340-cfc0-7383-b75e-350d09e7b807",
-            color_id: "019ec340-d004-7c36-a640-ebfcf52b11e8",
-            price_override: "",
-            stock_qty: 12, // 12 > 10
-            sku: "",
-            is_active: true,
-            is_default: false,
-            notes: "",
-          }
-        ],
-
-        faqs: [],
-        publish_intent: "pending",
-        featured: false,
-        hot_deal: false,
-        meta_title: "",
-        meta_description: "",
-        age_group: "",
-        gender_target: "",
-      };
-
-      const result = ProductBuilderFormSchema.safeParse(payload);
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.issues[0].message).toContain("exceeds product stock");
-      }
     });
   });
 });

@@ -9,24 +9,14 @@ import {
   SpecificationSchema,
 } from "@/features/product/builder/schemas";
 import { redirect } from "next/navigation";
-// const schema = z.object({
-//   image_1: z
-//     .instanceof(File, {
-//       message: "Image is required and should be a file",
-//     })
-//     .refine((file) => file.size <= 10 * 1024 * 1024, {
-//       message: "Image must be less than 5MB",
-//     }) // 5MB limit
-//     .refine(
-//       (file) =>
-//         ["image/jpeg", "image/jpg", "image/png", "image/gif"].includes(
-//           file.type
-//         ),
-//       { message: "Image must be a JPEG, PNG, or GIF" }
-//     ),
-//   title: z.string().min(3, "Product title is required "),
-//   discription: z.string().min(10, "Product description is required"),
-// });
+
+
+
+
+
+
+
+
 export const BasicInformationAction = async (formdata: FormData) => {
   const data = Object.fromEntries(formdata.entries());
   const validated = BasicInformationSchema.safeParse(data);
@@ -101,29 +91,8 @@ export const SizesAction = async (prev: unknown, formdata: FormData) => {
 
 export const newProduct = async (formdata: FormData | object) => {
   void formdata;
-  // console.log("form information", data);
-  // const validatedForm = FormSchema.safeParse(data);
-  // if (!validatedForm.success) {
-  //   return {
-  //     errors: validatedForm.error.flatten().fieldErrors,
-  //   };
-  // }
-  // try {
-  //   const res = await fetchWithAuth(
-  //     "/vendor/product-create",
-  //     "post",
-  //     data,
-  //     "multipart/formdata"
-  //   );
-  //   console.log(res);
-  //   return { message: "New Product created Successfully" };
-  // } catch (error) {
-  //   console.log(error);
-  //   return {
-  //     call_errors: "There was an error while trying to create this product",
-  //   };
-  // }
 };
+
 export const deleteProduct = async (vendor_id: string, product_id: string) => {
   try {
     const res = await fetchWithAuth(
