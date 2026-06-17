@@ -2052,7 +2052,13 @@ export function VendorProductComposerView() {
     }
 
     // Draft commit owns creation. This parent only handles optional review submission and navigation.
-    if (values.publish_intent === "pending" && savedSlug) await publishProduct(savedSlug);
+    if (values.publish_intent === "pending" && savedSlug) {
+      try {
+        await publishProduct(savedSlug);
+      } catch (pubErr) {
+        console.warn("Non-fatal publish error during submit:", pubErr);
+      }
+    }
     void qc.invalidateQueries({ queryKey: productKeys.lists() });
     void qc.invalidateQueries({ queryKey: productKeys.vendorList() });
     router.push("/vendor/products/catalog");
