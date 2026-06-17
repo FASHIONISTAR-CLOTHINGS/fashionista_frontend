@@ -34,7 +34,6 @@ import {
   productKeys,
   ProductBuilder,
   ProductBuilderProvider,
-  FASHION_FAQS,
 } from "@/features/product";
 import type { ProductDetail } from "@/features/product";
 import type { ProductBuilderFormValues } from "@/features/product/builder/schemas/builder.schemas";
@@ -202,12 +201,15 @@ export default function VendorProductDetailPage({
       color_hex: g.color_hex || "",
       size_id: g.size?.id || undefined,
       sku: g.sku || "",
+      barcode: g.barcode || "",
+      video_thumbnail: g.video_thumbnail_url || "",
+      duration_sec: g.duration_sec ?? null,
     })) || [];
 
-    const faqs = p.faqs?.map((f) => {
-      const matched = FASHION_FAQS.find((item) => item.question === f.question);
-      return matched ? matched.id : "";
-    }).filter(Boolean) || [];
+    const faqs = p.faqs?.map((f) => ({
+      question: f.question,
+      answer: f.answer,
+    })) || [];
 
     return {
       title: p.title,
@@ -243,6 +245,17 @@ export default function VendorProductDetailPage({
 
       // Shipping profile
       weight_kg: p.shipping_profile?.weight_kg || "",
+      length_cm: Number(p.shipping_profile?.length_cm ?? 0),
+      width_cm: Number(p.shipping_profile?.width_cm ?? 0),
+      height_cm: Number(p.shipping_profile?.height_cm ?? 0),
+      dimensions_cm: null,
+      is_fragile: p.shipping_profile?.is_fragile ?? false,
+      requires_signature: p.shipping_profile?.requires_signature ?? false,
+      restricted_countries: p.shipping_profile?.restricted_countries ?? [],
+      free_shipping_threshold: p.shipping_profile?.free_shipping_threshold
+        ? String(p.shipping_profile.free_shipping_threshold)
+        : "",
+      processing_days: p.shipping_profile?.processing_days ?? 1,
       courier_id: null,
 
       // FAQs
@@ -287,16 +300,19 @@ export default function VendorProductDetailPage({
         } : null,
         shipping_profile: values.weight_kg ? {
           weight_kg: values.weight_kg,
-          length_cm: "0.0",
-          width_cm: "0.0",
-          height_cm: "0.0",
-          is_fragile: false,
-          requires_signature: false,
-          restricted_countries: [],
-          free_shipping_threshold: null,
-          processing_days: 1,
+          dimensions_cm: values.dimensions_cm ?? null,
+          length_cm: String(values.length_cm ?? 0),
+          width_cm: String(values.width_cm ?? 0),
+          height_cm: String(values.height_cm ?? 0),
+          is_fragile: values.is_fragile,
+          requires_signature: values.requires_signature,
+          restricted_countries: values.restricted_countries,
+          free_shipping_threshold: values.free_shipping_threshold || null,
+          processing_days: values.processing_days,
         } : null,
         measurement_guide: values.measurement_guide,
+        gallery: values.gallery,
+        faqs: values.faqs,
         status: values.publish_intent,
         featured: values.featured,
         hot_deal: values.hot_deal,

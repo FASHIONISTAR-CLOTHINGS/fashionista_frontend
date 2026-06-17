@@ -8,7 +8,7 @@
  * All step components consume form state via `useFormContext()` — no prop-drilling.
  *
  * Draft persistence: field changes are cached locally and synced to the
- * backend ProductDraftSession. Commit creates the canonical Product exactly once.
+ * backend ProductDraftSession. Final publication still flows through createProduct().
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * Architecture:
@@ -163,6 +163,15 @@ const DEFAULT_VALUES: Partial<ProductBuilderFormValues> = {
   gallery: [],
 
   weight_kg: "",
+  length_cm: 0,
+  width_cm: 0,
+  height_cm: 0,
+  dimensions_cm: null,
+  is_fragile: false,
+  requires_signature: false,
+  restricted_countries: [],
+  free_shipping_threshold: "",
+  processing_days: 1,
   shipping_amount: "2500.00",
   courier_id: null,
 

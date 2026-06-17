@@ -25,6 +25,8 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -32,7 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Truck, Package, DollarSign, Info } from "lucide-react";
+import { Truck, Package, DollarSign, Info, Ruler, ShieldCheck } from "lucide-react";
 import { apiAsync } from "@/core/api/client.async";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -106,6 +108,8 @@ export function Step4Shipping() {
   const weightKg      = form.watch("weight_kg")      ?? "";
   const shippingAmt   = form.watch("shipping_amount") ?? "";
   const selectedCourierId = form.watch("courier_id")  ?? null;
+  const isFragile = form.watch("is_fragile");
+  const requiresSignature = form.watch("requires_signature");
 
   // Fetch available couriers from the platform API
   const { data: couriers = [], isLoading: couriersLoading } = useQuery({
@@ -210,8 +214,174 @@ export function Step4Shipping() {
           />
         </div>
 
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-4">
+          {(["length_cm", "width_cm", "height_cm"] as const).map((fieldName) => (
+            <FormField
+              key={fieldName}
+              control={form.control}
+              name={fieldName}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[#1A1208] font-semibold text-sm capitalize">
+                    {fieldName.replace("_cm", "")} (cm)
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={0}
+                      step="0.1"
+                      value={field.value ?? 0}
+                      onChange={(event) => field.onChange(Number(event.target.value))}
+                      placeholder="0"
+                      className="bg-white border-[#D9D9D9] rounded-xl h-11 focus-visible:ring-[#01454A]"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ))}
+
+          <FormField
+            control={form.control}
+            name="processing_days"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-[#1A1208] font-semibold text-sm">
+                  Processing Days
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={90}
+                    value={field.value ?? 1}
+                    onChange={(event) => field.onChange(Number(event.target.value))}
+                    placeholder="1"
+                    className="bg-white border-[#D9D9D9] rounded-xl h-11 focus-visible:ring-[#01454A]"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="free_shipping_threshold"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-[#1A1208] font-semibold text-sm">
+                  Free Shipping Override (₦)
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    inputMode="decimal"
+                    placeholder="Leave blank for platform default"
+                    className="bg-white border-[#D9D9D9] rounded-xl h-11 focus-visible:ring-[#01454A]"
+                  />
+                </FormControl>
+                <FormDescription className="text-xs">
+                  Product-level value overrides the global platform threshold.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="restricted_countries"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-[#1A1208] font-semibold text-sm">
+                  Restricted Countries
+                </FormLabel>
+                <FormControl>
+                  <Textarea
+                    value={(field.value ?? []).join(", ")}
+                    onChange={(event) => {
+                      const countries = event.target.value
+                        .split(",")
+                        .map((item) => item.trim())
+                        .filter(Boolean);
+                      field.onChange(countries);
+                    }}
+                    placeholder="Optional: Ghana, United Kingdom"
+                    className="min-h-11 bg-white border-[#D9D9D9] rounded-xl focus-visible:ring-[#01454A]"
+                  />
+                </FormControl>
+                <FormDescription className="text-xs">
+                  Comma-separated countries this product cannot ship to.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="is_fragile"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between rounded-xl bg-white border border-[#D9D9D9] px-4 py-3">
+                <div className="flex items-start gap-2">
+                  <Ruler className="mt-0.5 h-4 w-4 text-[#01454A]" />
+                  <div>
+                    <FormLabel className="text-sm font-semibold text-[#1A1208] cursor-pointer">
+                      Fragile Package
+                    </FormLabel>
+                    <p className="text-[10px] text-[#7A6B44]">
+                      Adds handling context for delicate embellishments.
+                    </p>
+                  </div>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    className="data-[state=checked]:bg-[#01454A]"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="requires_signature"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between rounded-xl bg-white border border-[#D9D9D9] px-4 py-3">
+                <div className="flex items-start gap-2">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 text-[#01454A]" />
+                  <div>
+                    <FormLabel className="text-sm font-semibold text-[#1A1208] cursor-pointer">
+                      Signature Required
+                    </FormLabel>
+                    <p className="text-[10px] text-[#7A6B44]">
+                      Recommended for premium bespoke garments.
+                    </p>
+                  </div>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    className="data-[state=checked]:bg-[#FDA600]"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+
         {/* Summary pill */}
-        {(weightKg || shippingAmt) && (
+        {(weightKg || shippingAmt || isFragile || requiresSignature) && (
           <div className="flex flex-wrap gap-3 mt-2">
             {weightKg && (
               <div className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F3F1] border border-[#01454A]/20 px-3 py-1.5">
@@ -226,6 +396,22 @@ export function Step4Shipping() {
                 <DollarSign className="w-3 h-3 text-[#7A5500]" />
                 <span className="text-xs font-semibold text-[#7A5500]">
                   ₦{parseFloat(shippingAmt).toLocaleString()} fixed
+                </span>
+              </div>
+            )}
+            {isFragile && (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F8F5ED] border border-[#ECE6D6] px-3 py-1.5">
+                <Ruler className="w-3 h-3 text-[#7A6B44]" />
+                <span className="text-xs font-semibold text-[#7A6B44]">
+                  Fragile handling
+                </span>
+              </div>
+            )}
+            {requiresSignature && (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F3F1] border border-[#01454A]/20 px-3 py-1.5">
+                <ShieldCheck className="w-3 h-3 text-[#01454A]" />
+                <span className="text-xs font-semibold text-[#01454A]">
+                  Signature required
                 </span>
               </div>
             )}

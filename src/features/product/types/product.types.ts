@@ -538,6 +538,7 @@ export interface ProductDraftSession {
   current_step: number;
   status: "active" | "committed" | "discarded" | "expired";
   linked_product_id: string | null;
+  linked_product?: string | null;
   expires_at: string;
   last_synced_at: string;
 }

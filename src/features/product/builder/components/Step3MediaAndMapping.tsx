@@ -406,6 +406,9 @@ export function Step3MediaAndMapping() {
       color_hex: "",
       size_id: null,
       sku: "",
+      barcode: "",
+      video_thumbnail: "",
+      duration_sec: null,
     });
   };
 
@@ -872,6 +875,78 @@ export function Step3MediaAndMapping() {
                               )}
                             />
                           </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <FormField
+                              control={form.control}
+                              name={`gallery.${idx}.sku`}
+                              render={({ field }) => (
+                                <FormItem className="space-y-1.5">
+                                  <FormLabel className="text-[10px] font-bold uppercase text-zinc-500 tracking-wide">
+                                    Variant SKU
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      value={field.value ?? ""}
+                                      placeholder="e.g. ROY-AGB-BLUE-M"
+                                      className="h-8 rounded-lg border-[#D9D9D9] bg-white text-xs focus-visible:ring-[#01454A]"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name={`gallery.${idx}.barcode`}
+                              render={({ field }) => (
+                                <FormItem className="space-y-1.5">
+                                  <FormLabel className="text-[10px] font-bold uppercase text-zinc-500 tracking-wide">
+                                    Barcode
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      value={field.value ?? ""}
+                                      placeholder="Optional warehouse barcode"
+                                      className="h-8 rounded-lg border-[#D9D9D9] bg-white text-xs focus-visible:ring-[#01454A]"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          {mediaType === "video" && (
+                            <FormField
+                              control={form.control}
+                              name={`gallery.${idx}.duration_sec`}
+                              render={({ field }) => (
+                                <FormItem className="space-y-1.5">
+                                  <FormLabel className="text-[10px] font-bold uppercase text-zinc-500 tracking-wide">
+                                    Video Duration (seconds)
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      min={0}
+                                      value={field.value ?? ""}
+                                      onChange={(event) => {
+                                        const value = event.target.value;
+                                        field.onChange(value === "" ? null : Number(value));
+                                      }}
+                                      placeholder="Optional video length"
+                                      className="h-8 rounded-lg border-[#D9D9D9] bg-white text-xs focus-visible:ring-[#01454A]"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
                         </div>
                       </div>
                     )}
@@ -891,13 +966,13 @@ export function Step3MediaAndMapping() {
         size="md"
       >
         <div className="space-y-4">
-          <p className="text-xs text-slate-300">
+          <p className="text-xs text-[#7A6B44]">
             Define a sizing guide and measurements for this template. If the template name already exists, the size row will be appended/updated without losing other size rows.
           </p>
 
           <div className="space-y-3">
             <div>
-              <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wide block mb-1">
+              <label className="text-[10px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-1">
                 Template Name
               </label>
               <Input
@@ -905,7 +980,7 @@ export function Step3MediaAndMapping() {
                 onChange={(e) => setTemplateName(e.target.value)}
                 placeholder="e.g. Men Senator Fit"
                 list="template-names-list"
-                className="bg-white/5 border-white/10 text-white rounded-xl h-10 focus-visible:ring-amber-500"
+                className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-xl h-10 focus-visible:ring-[#01454A]"
               />
               <datalist id="template-names-list">
                 {templates.map((t) => (
@@ -915,11 +990,11 @@ export function Step3MediaAndMapping() {
             </div>
 
             <div>
-              <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wide block mb-1">
+              <label className="text-[10px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-1">
                 Size Label
               </label>
               <Select onValueChange={setSizeLabel} value={sizeLabel}>
-                <SelectTrigger className="bg-[#1e293b] border-white/10 text-white rounded-xl h-10">
+                <SelectTrigger className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-xl h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
@@ -934,102 +1009,102 @@ export function Step3MediaAndMapping() {
 
             <div className="grid grid-cols-2 gap-3 pt-2">
               <div>
-                <label className="text-[9px] font-bold uppercase text-slate-400 tracking-wide block mb-0.5">
+                <label className="text-[9px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-0.5">
                   Chest (cm)
                 </label>
                 <Input
                   value={chest}
                   onChange={(e) => setChest(e.target.value)}
                   placeholder="e.g. 96"
-                  className="bg-white/5 border-white/10 text-white rounded-lg h-9 text-xs"
+                  className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-lg h-9 text-xs focus-visible:ring-[#01454A]"
                 />
               </div>
               <div>
-                <label className="text-[9px] font-bold uppercase text-slate-400 tracking-wide block mb-0.5">
+                <label className="text-[9px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-0.5">
                   Waist (cm)
                 </label>
                 <Input
                   value={waist}
                   onChange={(e) => setWaist(e.target.value)}
                   placeholder="e.g. 84"
-                  className="bg-white/5 border-white/10 text-white rounded-lg h-9 text-xs"
+                  className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-lg h-9 text-xs focus-visible:ring-[#01454A]"
                 />
               </div>
               <div>
-                <label className="text-[9px] font-bold uppercase text-slate-400 tracking-wide block mb-0.5">
+                <label className="text-[9px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-0.5">
                   Hip (cm)
                 </label>
                 <Input
                   value={hip}
                   onChange={(e) => setHip(e.target.value)}
                   placeholder="e.g. 102"
-                  className="bg-white/5 border-white/10 text-white rounded-lg h-9 text-xs"
+                  className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-lg h-9 text-xs focus-visible:ring-[#01454A]"
                 />
               </div>
               <div>
-                <label className="text-[9px] font-bold uppercase text-slate-400 tracking-wide block mb-0.5">
+                <label className="text-[9px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-0.5">
                   Length (cm)
                 </label>
                 <Input
                   value={length}
                   onChange={(e) => setLength(e.target.value)}
                   placeholder="e.g. 78"
-                  className="bg-white/5 border-white/10 text-white rounded-lg h-9 text-xs"
+                  className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-lg h-9 text-xs focus-visible:ring-[#01454A]"
                 />
               </div>
               <div>
-                <label className="text-[9px] font-bold uppercase text-slate-400 tracking-wide block mb-0.5">
+                <label className="text-[9px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-0.5">
                   Shoulder (cm)
                 </label>
                 <Input
                   value={shoulder}
                   onChange={(e) => setShoulder(e.target.value)}
                   placeholder="e.g. 46"
-                  className="bg-white/5 border-white/10 text-white rounded-lg h-9 text-xs"
+                  className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-lg h-9 text-xs focus-visible:ring-[#01454A]"
                 />
               </div>
               <div>
-                <label className="text-[9px] font-bold uppercase text-slate-400 tracking-wide block mb-0.5">
+                <label className="text-[9px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-0.5">
                   Sleeve (cm)
                 </label>
                 <Input
                   value={sleeve}
                   onChange={(e) => setSleeve(e.target.value)}
                   placeholder="e.g. 64"
-                  className="bg-white/5 border-white/10 text-white rounded-lg h-9 text-xs"
+                  className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-lg h-9 text-xs focus-visible:ring-[#01454A]"
                 />
               </div>
               <div>
-                <label className="text-[9px] font-bold uppercase text-slate-400 tracking-wide block mb-0.5">
+                <label className="text-[9px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-0.5">
                   Inseam (cm)
                 </label>
                 <Input
                   value={inseam}
                   onChange={(e) => setInseam(e.target.value)}
                   placeholder="e.g. 80"
-                  className="bg-white/5 border-white/10 text-white rounded-lg h-9 text-xs"
+                  className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-lg h-9 text-xs focus-visible:ring-[#01454A]"
                 />
               </div>
               <div>
-                <label className="text-[9px] font-bold uppercase text-slate-400 tracking-wide block mb-0.5">
+                <label className="text-[9px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-0.5">
                   Foot Length (cm)
                 </label>
                 <Input
                   value={footLength}
                   onChange={(e) => setFootLength(e.target.value)}
                   placeholder="e.g. 27"
-                  className="bg-white/5 border-white/10 text-white rounded-lg h-9 text-xs"
+                  className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-lg h-9 text-xs focus-visible:ring-[#01454A]"
                 />
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-4 border-t border-white/10">
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-[#ECE6D6]">
             <Button
               type="button"
               variant="ghost"
               onClick={() => setIsModalOpen(false)}
-              className="text-slate-300 hover:text-white rounded-xl h-10 px-4"
+              className="text-[#7A6B44] hover:text-[#1A1208] rounded-xl h-10 px-4"
             >
               Cancel
             </Button>
@@ -1037,7 +1112,7 @@ export function Step3MediaAndMapping() {
               type="button"
               onClick={handleSaveSizeGuide}
               isLoading={isSavingTemplate}
-              className="bg-amber-500 hover:bg-amber-400 text-white rounded-xl h-10 px-4"
+              className="bg-[#FDA600] hover:bg-[#E89700] text-white rounded-xl h-10 px-4"
             >
               Save Template
             </Button>

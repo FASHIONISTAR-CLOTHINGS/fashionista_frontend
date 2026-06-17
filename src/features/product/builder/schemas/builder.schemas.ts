@@ -58,6 +58,9 @@ export const GalleryItemSchema = z.object({
   color_hex: z.string().max(7).optional().default(""),
   size_id: z.string().uuid().nullable().optional(),
   sku: z.string().optional().default(""),
+  barcode: z.string().max(100).optional().default(""),
+  video_thumbnail: z.string().optional().default(""),
+  duration_sec: z.number().int().min(0).nullable().optional(),
 });
 
 export type GalleryItem = z.infer<typeof GalleryItemSchema>;
@@ -156,6 +159,19 @@ export type Step3Values = z.infer<typeof Step3Schema>;
 // STEP 4: Shipping
 export const Step4BaseSchema = z.object({
   weight_kg: z.string().regex(/^(\d+(\.\d{1,3})?)?$/, "Enter a valid weight in kg (e.g. 1.5)").optional().or(z.literal("")),
+  length_cm: z.coerce.number().min(0).default(0),
+  width_cm: z.coerce.number().min(0).default(0),
+  height_cm: z.coerce.number().min(0).default(0),
+  dimensions_cm: z.record(z.string(), z.any()).nullable().optional(),
+  is_fragile: z.boolean().default(false),
+  requires_signature: z.boolean().default(false),
+  restricted_countries: z.array(z.string().min(2).max(80)).default([]),
+  free_shipping_threshold: z
+    .string()
+    .regex(/^(\d+(\.\d{1,2})?)?$/, "Enter a valid threshold or leave blank")
+    .optional()
+    .or(z.literal("")),
+  processing_days: z.coerce.number().int().min(1).max(90).default(1),
   shipping_amount: z
     .string()
     .regex(/^(\d+(\.\d{1,2})?)?$/, "Enter a valid price or leave blank")
@@ -169,7 +185,7 @@ export type Step4Values = z.infer<typeof Step4Schema>;
 
 // STEP 5: FAQs & Publish
 export const Step5Schema = z.object({
-  faqs: z.array(z.string()).max(5, "Maximum 5 FAQs allowed").default([]),
+  faqs: z.array(FaqRowSchema).max(5, "Maximum 5 FAQs allowed").default([]),
   publish_intent: z.enum(["draft", "pending"], { required_error: "Select a publish intent" }),
   featured: z.boolean().default(false),
   hot_deal: z.boolean().default(false),

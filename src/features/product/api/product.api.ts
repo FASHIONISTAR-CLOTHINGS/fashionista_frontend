@@ -597,16 +597,19 @@ export async function discardDraftSession(draftKey: string): Promise<void> {
 }
 
 /**
- * Commit a draft session to create/update a canonical Product (vendor only).
+ * Commit/save a draft session (vendor only).
  * Endpoint: POST /api/v1/products/vendor/drafts/<draft_key>/commit/
+ *
+ * The backend returns the persisted ProductDraftSession. Final product creation
+ * is still handled by createProduct() when the vendor submits for review.
  */
-export async function commitDraftSession(draftKey: string): Promise<ProductDetail> {
-  const { data } = await apiSync.post<ProductDetail>(
+export async function commitDraftSession(draftKey: string): Promise<ProductDraftSession> {
+  const { data } = await apiSync.post<ProductDraftSession>(
     `v1/products/vendor/drafts/${draftKey}/commit/`,
     undefined,
     { _suppressGlobalToast: true } as never,
   );
-  return parseApiResponse(ProductDetailSchema, data, "commitDraftSession") as ProductDetail;
+  return parseApiResponse(ProductDraftSessionSchema, data, "commitDraftSession") as ProductDraftSession;
 }
 
 /**
@@ -674,5 +677,4 @@ export async function createVendorMeasurementTemplate(
     "createVendorMeasurementTemplate",
   ) as VendorMeasurementTemplate;
 }
-
 

@@ -2,10 +2,10 @@
 
 /**
  * @file Step5FAQAndReview.tsx
- * @description Step 5 — FAQs (select up to 5 of 10), SEO Meta, Publish Settings & Review Summary
+ * @description Step 5 — FAQs, SEO Meta, Publish Settings & Review Summary
  *
  * Fields covered (aligned to ProductBuilderFormSchema Step5Schema):
- *   • faqs            — array of selected FAQ ids (max 5 of 10 static)
+ *   • faqs            — persisted question/answer rows (max 5)
  *   • meta_title      — SEO title override (max 160 chars)
  *   • meta_description — SEO description override (max 320 chars)
  *   • publish_intent  — "draft" | "pending"
@@ -130,6 +130,8 @@ export const FASHION_FAQS = [
   },
 ] as const;
 
+type BuilderFaqRow = ProductBuilderFormValues["faqs"][number];
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SECTION CARD
 // ─────────────────────────────────────────────────────────────────────────────
@@ -214,7 +216,10 @@ function ReviewItem({
 export function Step5FAQAndReview() {
   const form = useFormContext<ProductBuilderFormValues>();
 
-  const selectedFaqIds: string[] = (form.watch("faqs") as string[]) ?? [];
+  const selectedFaqs: BuilderFaqRow[] = form.watch("faqs") ?? [];
+  const selectedFaqQuestions = new Set(
+    selectedFaqs.map((faq) => faq.question),
+  );
   const publishIntent   = form.watch("publish_intent");
 
   // Data for Review Summary
@@ -229,21 +234,30 @@ export function Step5FAQAndReview() {
 
   // ── FAQ toggle helpers ────────────────────────────────────────────────────
   const toggleFaq = (id: string) => {
-    const current: string[] = form.getValues("faqs") as string[];
-    if (current.includes(id)) {
-      form.setValue("faqs", current.filter((f) => f !== id), {
+    const faq = FASHION_FAQS.find((item) => item.id === id);
+    if (!faq) return;
+
+    const current = form.getValues("faqs") ?? [];
+    const alreadySelected = current.some((item) => item.question === faq.question);
+
+    if (alreadySelected) {
+      form.setValue("faqs", current.filter((item) => item.question !== faq.question), {
         shouldValidate: true,
       });
     } else if (current.length < 5) {
-      form.setValue("faqs", [...current, id], { shouldValidate: true });
+      form.setValue(
+        "faqs",
+        [...current, { question: faq.question, answer: faq.answer }],
+        { shouldValidate: true },
+      );
     }
   };
 
-  const removeFaq = (id: string) => {
-    const current: string[] = form.getValues("faqs") as string[];
+  const removeFaq = (question: string) => {
+    const current = form.getValues("faqs") ?? [];
     form.setValue(
       "faqs",
-      current.filter((f) => f !== id),
+      current.filter((faq) => faq.question !== question),
       { shouldValidate: true }
     );
   };
@@ -259,9 +273,9 @@ export function Step5FAQAndReview() {
         headerRight={
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-[#01454A]">
-              {selectedFaqIds.length} / 5
+              {selectedFaqs.length} / 5
             </span>
-            {selectedFaqIds.length >= 5 && (
+            {selectedFaqs.length >= 5 && (
               <Badge className="bg-[#01454A] text-white text-[10px] px-2 py-0.5">
                 Max
               </Badge>
@@ -270,22 +284,22 @@ export function Step5FAQAndReview() {
         }
       >
         {/* Selected FAQ chips */}
-        {selectedFaqIds.length > 0 && (
+        {selectedFaqs.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {selectedFaqIds.map((faqId) => {
-              const faq = FASHION_FAQS.find((f) => f.id === faqId);
+            {selectedFaqs.map((faq) => {
+              const preset = FASHION_FAQS.find((item) => item.question === faq.question);
               return (
                 <Badge
-                  key={faqId}
+                  key={faq.question}
                   variant="secondary"
                   className="bg-[#E8F3F1] text-[#01454A] border border-[#01454A]/20 pl-2.5 pr-1.5 py-1 text-xs gap-1.5 max-w-[300px] h-auto"
                 >
-                  <span className="truncate">{faq?.icon} {faq?.question}</span>
+                  <span className="truncate">{preset?.icon ?? "•"} {faq.question}</span>
                   <button
                     type="button"
-                    onClick={() => removeFaq(faqId)}
+                    onClick={() => removeFaq(faq.question)}
                     className="ml-0.5 text-[#01454A]/60 hover:text-red-600 transition-colors flex-shrink-0"
-                    aria-label={`Remove FAQ: ${faq?.question}`}
+                    aria-label={`Remove FAQ: ${faq.question}`}
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -298,8 +312,8 @@ export function Step5FAQAndReview() {
         {/* FAQ selection list */}
         <div className="space-y-2.5">
           {FASHION_FAQS.map((faq) => {
-            const isSelected = selectedFaqIds.includes(faq.id);
-            const isDisabled = !isSelected && selectedFaqIds.length >= 5;
+            const isSelected = selectedFaqQuestions.has(faq.question);
+            const isDisabled = !isSelected && selectedFaqs.length >= 5;
 
             return (
               <button
@@ -590,11 +604,11 @@ export function Step5FAQAndReview() {
             icon={<BookOpen className="w-4 h-4" />}
             label="FAQs Selected"
             value={
-              selectedFaqIds.length > 0
-                ? `${selectedFaqIds.length} FAQ${selectedFaqIds.length !== 1 ? "s" : ""} selected`
+              selectedFaqs.length > 0
+                ? `${selectedFaqs.length} FAQ${selectedFaqs.length !== 1 ? "s" : ""} selected`
                 : "— No FAQs selected —"
             }
-            status={selectedFaqIds.length > 0 ? "ok" : "warn"}
+            status={selectedFaqs.length > 0 ? "ok" : "warn"}
           />
           <ReviewItem
             icon={<SendHorizontal className="w-4 h-4" />}
