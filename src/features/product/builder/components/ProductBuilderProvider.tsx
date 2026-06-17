@@ -38,9 +38,10 @@ import { useDraftStore } from "../store";
 import {
   createDraftSession,
   updateDraftSession,
-  commitDraftSession,
   fetchDraftSessionDetail,
+  createProduct,
 } from "../../api/product.api";
+
 
 import {
   ProductBuilderFormSchema,
@@ -425,33 +426,79 @@ export function ProductBuilderProvider({
   // ── Final submit ──────────────────────────────────────────────────────────
   const handleFinalSubmit = form.handleSubmit(async (values) => {
     setIsSubmitting(true);
+    const store = useDraftStore.getState();
+    const key = store.draft_key;
+    const publishIntent = values.publish_intent ?? "draft";
+
     try {
-      const store = useDraftStore.getState();
-      const key = store.draft_key;
-
-      if (key && !initialValues) {
-        // 1. Sync final values to backend draft session
-        store.setPayload(values);
-        store.setSyncStatus("saving");
-        await updateDraftSession(key, {
-          payload: values,
-          current_step: currentStep,
-          idempotency_key: store.idempotency_key || undefined,
-        });
-
-        // 2. Commit draft session on backend (creates product exactly once).
-        const committedProduct = await commitDraftSession(key);
-
-        // 3. Clear draft from localStorage IMMEDIATELY after successful commit
-        //    so that the next page load does not hit a ghost 404 for the deleted draft.
-        clearDraft();
-
-        // 4. Notify parent for post-commit navigation/cache refresh.
-        await onSubmit(values, committedProduct.slug || committedProduct.id);
-      } else {
-        await onSubmit(values, productId);
-        clearDraft();
+      // ══════════════════════════════════════════════════════════════════════
+      // PATH A — SAVE AS DRAFT
+      // publish_intent === "draft": persist payload to the backend draft
+      // session only. No Product row is created. Draft stays ACTIVE.
+      // ══════════════════════════════════════════════════════════════════════
+      if (publishIntent === "draft") {
+        if (key && !initialValues) {
+          // Sync final values to the backend draft session
+          store.setPayload(values);
+          store.setSyncStatus("saving");
+          await updateDraftSession(key, {
+            payload: values,
+            current_step: currentStep,
+            idempotency_key: store.idempotency_key || undefined,
+          });
+          store.setSyncStatus("synced");
+          toast.success("Draft saved", {
+            description: "Your product has been saved as a private draft.",
+          });
+        } else {
+          // Edit-mode or no draft key — just surface a success toast
+          toast.success("Progress saved.");
+        }
+        // Stay on the same page so the vendor can resume or publish later.
+        return;
       }
+
+      // ══════════════════════════════════════════════════════════════════════
+      // PATH B — SUBMIT FOR REVIEW (PUBLISH)
+      // publish_intent === "pending": call createProduct directly.
+      // The serializer's to_internal_value() maps publish_intent → status.
+      // Draft is cleared AFTER successful creation.
+      // ══════════════════════════════════════════════════════════════════════
+      if (publishIntent === "pending") {
+        // 1. Sync the latest values to draft before publishing (belt-and-braces)
+        if (key && !initialValues) {
+          store.setPayload(values);
+          store.setSyncStatus("saving");
+          try {
+            await updateDraftSession(key, {
+              payload: values,
+              current_step: currentStep,
+              idempotency_key: store.idempotency_key || undefined,
+            });
+          } catch (syncErr) {
+            // Non-fatal: draft sync failure must not block product creation
+            console.warn("Pre-publish draft sync failed (non-fatal):", syncErr);
+          }
+        }
+
+        // 2. Create the canonical Product via the dedicated endpoint
+        const createdProduct = await createProduct({
+          ...values,
+          // Pass the wizard's idempotency_key so the backend deduplicates on retry
+          idempotency_key: (store.idempotency_key as string | undefined) ?? undefined,
+        } as any);
+
+        // 3. Clear draft from local store IMMEDIATELY after successful creation
+        clearDraft();
+
+        // 4. Notify parent for post-commit navigation / cache refresh
+        await onSubmit(values, createdProduct.slug || createdProduct.id);
+        return;
+      }
+
+      // Fallback: unknown publish_intent → save as draft
+      toast.warning("Unknown publish action — saved as draft.");
+
     } catch (err: any) {
       console.error("Failed to commit draft:", err);
       // Surface backend validation errors if present (400 response body)
@@ -473,6 +520,7 @@ export function ProductBuilderProvider({
       setIsSubmitting(false);
     }
   });
+
 
   // ── Context value ─────────────────────────────────────────────────────────
   const contextValue: BuilderContextValue = {
