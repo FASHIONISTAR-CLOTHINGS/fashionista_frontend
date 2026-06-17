@@ -41,6 +41,19 @@ export type InventoryReason =
   | "damaged"
   | "reserved";
 
+/**
+ * Cash payment mode options — mirrors Product.CashPaymentMode on the backend.
+ *  - Note: 'both' has been removed; all real modes are now first-class choices.
+ */
+export type CashPaymentMode =
+  | "disabled"
+  | "cod"
+  | "pay_at_shop"
+  | "payment_on_delivery"
+  | "payment_before_delivery"
+  | "part_payment_before_delivery"
+  | "allow_all";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // NESTED REFERENCE TYPES
 // ─────────────────────────────────────────────────────────────────────────────
@@ -243,13 +256,14 @@ export interface ProductListItem {
   id: string;
   title: string;
   slug: string;
-  sku: string;
+  // NOTE: sku removed from Product — each variant carries its own SKU
   price: string;                   // Decimal string
   old_price: string | null;
   discount_percentage: number;
   is_discounted: boolean;
   discounted_price: string | null;
-  cash_payment_mode: boolean;
+  /** Cash payment mode string matching CashPaymentMode backend enum. */
+  cash_payment_mode: CashPaymentMode | string;
   currency: string;
   image_url: string | null;        // Cloudinary card-size URL
   in_stock: boolean;
@@ -287,14 +301,15 @@ export interface ProductDetail {
   id: string;
   title: string;
   slug: string;
-  sku: string;
+  // NOTE: sku removed from Product — each variant carries its own SKU
   description: string;
   price: string;
   old_price: string | null;
   discount_percentage: number;
   is_discounted: boolean;
   discounted_price: string | null;
-  cash_payment_mode: boolean;
+  /** Cash payment mode string matching CashPaymentMode backend enum. */
+  cash_payment_mode: CashPaymentMode | string;
   currency: string;
   shipping_amount: string;
   image_url: string | null;

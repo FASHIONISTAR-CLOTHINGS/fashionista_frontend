@@ -53,6 +53,20 @@ export const InventoryReasonSchema = z.enum([
   "reserved",
 ]);
 
+/**
+ * Cash payment mode enum — mirrors Product.CashPaymentMode on the backend.
+ * 'both' has been removed; all real modes are now first-class choices.
+ */
+export const CashPaymentModeSchema = z.enum([
+  "disabled",
+  "cod",
+  "pay_at_shop",
+  "payment_on_delivery",
+  "payment_before_delivery",
+  "part_payment_before_delivery",
+  "allow_all",
+]);
+
 // ─────────────────────────────────────────────────────────────────────────────
 // NESTED SCHEMAS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -291,7 +305,7 @@ export const ProductListItemSchema = z
     id: IdSchema,
     title: z.string(),
     slug: z.string(),
-    sku: z.string(),
+    // NOTE: sku removed from Product — each variant carries its own SKU
     price: DecimalStrSchema,
     old_price: DecimalStrSchema.nullable(),
     discount_percentage: z.coerce.number().min(0).max(100).nullable().transform((val) => val ?? 0).default(0),
@@ -299,8 +313,8 @@ export const ProductListItemSchema = z
     is_discounted: z.boolean().default(false),
     /** Computed discounted price string */
     discounted_price: DecimalStrSchema.nullable().optional(),
-    /** Whether cash payment is accepted for this product */
-    cash_payment_mode: z.union([z.boolean(), z.string()]).transform((val) => typeof val === "boolean" ? val : val !== "disabled").default(true),
+    /** Cash payment mode string — matches CashPaymentMode backend enum choices. */
+    cash_payment_mode: z.string().default("disabled"),
     currency: z.string().default("NGN"),
     image_url: NullableUrlSchema,
     in_stock: z.boolean(),
@@ -351,7 +365,7 @@ export const ProductDetailSchema = z
     id: IdSchema,
     title: z.string(),
     slug: z.string(),
-    sku: z.string(),
+    // NOTE: sku removed from Product — each variant carries its own SKU
     description: z.string(),
     price: DecimalStrSchema,
     old_price: DecimalStrSchema.nullable(),
@@ -360,8 +374,8 @@ export const ProductDetailSchema = z
     is_discounted: z.boolean().default(false),
     /** Computed discounted price string */
     discounted_price: DecimalStrSchema.nullable().optional(),
-    /** Whether cash payment is accepted for this product */
-    cash_payment_mode: z.union([z.boolean(), z.string()]).transform((val) => typeof val === "boolean" ? val : val !== "disabled").default(true),
+    /** Cash payment mode string — matches CashPaymentMode backend enum choices. */
+    cash_payment_mode: z.string().default("disabled"),
     currency: z.string().default("NGN"),
     shipping_amount: DecimalStrSchema.default("0.00"),
     image_url: NullableUrlSchema,

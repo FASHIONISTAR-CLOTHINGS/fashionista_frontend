@@ -14,6 +14,7 @@ export type {
   // Enums
   ProductStatus,
   ProductCondition,
+  CashPaymentMode,
   CouponDiscountType,
   MediaType,
   InventoryReason,
@@ -66,6 +67,7 @@ export type {
 // ── Schemas (Zod) ──────────────────────────────────────────────────────────
 export {
   ProductStatusSchema,
+  CashPaymentModeSchema,
   ProductListItemSchema,
   ProductDetailSchema,
   ProductDetailBundleSchema,
