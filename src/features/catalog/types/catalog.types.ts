@@ -152,8 +152,8 @@ export interface HomepageProductCard {
   computed_avg_rating: number;
   category_name: string | null;
   category_slug: string | null;
-  vendor_name: string;
-  vendor_slug: string | null;
+  store_name: string;
+  store_slug: string | null;
   requires_measurement: boolean;
   is_customisable: boolean;
   sizes: { id: string; name: string }[];
