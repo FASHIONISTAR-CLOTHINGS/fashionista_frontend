@@ -440,6 +440,13 @@ export function ProductBuilderProvider({
     const publishIntent = values.publish_intent ?? "draft";
 
     try {
+      // Edit mode owns persistence in the parent page so existing products are
+      // updated through PATCH instead of accidentally replaying product create.
+      if (initialValues) {
+        await onSubmit(values, productId);
+        return;
+      }
+
       // ══════════════════════════════════════════════════════════════════════
       // PATH A — SAVE AS DRAFT
       // publish_intent === "draft": persist payload to the backend draft

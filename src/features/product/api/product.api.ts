@@ -38,6 +38,7 @@
  *     /api/v1/ninja/products/wishlist/bulk-check/ → bulk wishlist status
  *     /api/v1/ninja/products/coupon/validate/   → coupon validation
  *     /api/v1/ninja/products/vendor/            → vendor product list
+ *     /api/v1/ninja/products/vendor/<slug>/     → vendor-owned product detail
  *     /api/v1/ninja/products/vendor/<slug>/inventory/ → inventory logs
  * ────────────────────────────────────────────────────────────────────────────
  */
@@ -183,6 +184,19 @@ export async function fetchProductDetail(slug: string): Promise<ProductDetail> {
     ProductDetailSchema,
     unwrapApiData(raw),
     "fetchProductDetail",
+  ) as ProductDetail;
+}
+
+/**
+ * Fetch authenticated vendor-owned product detail by slug.
+ * Endpoint: GET /api/v1/ninja/products/vendor/<slug>/
+ */
+export async function fetchVendorProductDetail(slug: string): Promise<ProductDetail> {
+  const raw = await apiAsync.get(`products/vendor/${slug}/`).json();
+  return parseApiResponse(
+    ProductDetailSchema,
+    unwrapApiData(raw),
+    "fetchVendorProductDetail",
   ) as ProductDetail;
 }
 
@@ -677,4 +691,3 @@ export async function createVendorMeasurementTemplate(
     "createVendorMeasurementTemplate",
   ) as VendorMeasurementTemplate;
 }
-

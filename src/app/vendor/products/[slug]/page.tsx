@@ -27,7 +27,7 @@ import {
 
 import { useVendorProfile } from "@/features/vendor/hooks/use-vendor-setup";
 import {
-  useProductDetail,
+  useVendorProductDetail,
   useUpdateProduct,
   useDeleteProduct,
   usePublishProduct,
@@ -100,7 +100,7 @@ export default function VendorProductDetailPage({
   const { data: vendor } = useVendorProfile();
   const vendorId = vendor?.id ?? "unknown";
 
-  const { data: product, isLoading, isError, error } = useProductDetail(slug);
+  const { data: product, isLoading, isError, error } = useVendorProductDetail(slug);
   const updateMutation = useUpdateProduct(slug);
   const deleteMutation = useDeleteProduct();
   const publishMutation = usePublishProduct(slug);
@@ -176,6 +176,12 @@ export default function VendorProductDetailPage({
   const mapProductToFormValues = (p: ProductDetail): Partial<ProductBuilderFormValues> => {
     const category_ids = p.categories?.map((c) => c.id) || [];
     const sub_category_ids = p.sub_categories?.map((c) => c.id) || [];
+    const primaryGallery =
+      p.gallery?.find((item) => item.is_primary) ??
+      p.gallery?.find((item) => item.media_type === "image") ??
+      p.gallery?.[0] ??
+      null;
+    const coverUrl = p.cover_image_url || primaryGallery?.media_url || null;
 
     const measurement_guide = p.measurement_guide?.map((m) => ({
       size_id: m.id || undefined,
@@ -192,7 +198,10 @@ export default function VendorProductDetailPage({
     })) || [];
 
     const gallery = p.gallery?.map((g) => ({
-      public_id: g.id || "",
+      // Product detail reads expose the unified gallery row id and media URL.
+      // Reusing the row id keeps edit-mode validation stable without requiring
+      // a second Cloudinary public-id read field from the backend.
+      public_id: g.id || g.media_url || "",
       secure_url: g.media_url || "",
       media_type: g.media_type || "image",
       alt_text: g.alt_text || "",
@@ -239,8 +248,8 @@ export default function VendorProductDetailPage({
       measurement_guide,
 
       // Media
-      cover_image_public_id: p.cover_image_url || "",
-      cover_image_url: p.cover_image_url,
+      cover_image_public_id: primaryGallery?.id || coverUrl || "",
+      cover_image_url: coverUrl,
       gallery,
 
       // Shipping profile
@@ -324,10 +333,11 @@ export default function VendorProductDetailPage({
 
       await updateMutation.mutateAsync(payload);
       void qc.invalidateQueries({ queryKey: productKeys.detail(slug) });
+      void qc.invalidateQueries({ queryKey: productKeys.vendorDetail(slug) });
       setIsEditing(false);
-      toast.success("Product updated successfully!");
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to update product.");
+    } catch {
+      // The shared mutation hook owns the visible toast so update failures do
+      // not stack duplicate messages in the product studio.
     }
   };
 

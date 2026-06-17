@@ -30,6 +30,7 @@ import {
   fetchProducts,
   fetchVendorProducts,
   fetchProductDetail,
+  fetchVendorProductDetail,
   fetchProductBundle,
   fetchFeaturedProducts,
   fetchProductReviews,
@@ -85,6 +86,7 @@ export const productKeys = {
   // Product detail
   details: () => [...productKeys.all, "detail"] as const,
   detail: (slug: string) => [...productKeys.details(), slug] as const,
+  vendorDetail: (slug: string) => [...productKeys.all, "vendor-detail", slug] as const,
   // Bundle (product + reviews + wishlist in one)
   bundle: (slug: string) => [...productKeys.all, "bundle", slug] as const,
   // Featured
@@ -147,6 +149,20 @@ export function useProductDetail(
     queryKey: productKeys.detail(slug),
     queryFn: () => fetchProductDetail(slug),
     staleTime: 120_000,        // 2 minutes
+    enabled: !!slug,
+    ...options,
+  });
+}
+
+/** Single authenticated vendor-owned product detail by slug. */
+export function useVendorProductDetail(
+  slug: string,
+  options?: Partial<UseQueryOptions<ProductDetail>>,
+) {
+  return useQuery<ProductDetail>({
+    queryKey: productKeys.vendorDetail(slug),
+    queryFn: () => fetchVendorProductDetail(slug),
+    staleTime: 30_000,
     enabled: !!slug,
     ...options,
   });
