@@ -205,6 +205,7 @@ export const VendorMeasurementTemplateSchema = z
 export const ProductVariantGalleryMediaSchema = z
   .object({
     id: IdSchema,
+    public_id: z.string().nullable().optional(),
     sku: z.string(),
     size: ProductMeasurementGuideSchema.nullable().optional(),
     /** Direct text field — no FK. e.g. "Midnight Blue" */

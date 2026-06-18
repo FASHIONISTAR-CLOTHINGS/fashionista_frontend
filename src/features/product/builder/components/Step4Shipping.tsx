@@ -25,7 +25,6 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -200,13 +199,13 @@ export function Step4Shipping() {
                       step="0.01"
                       min="0"
                       value={field.value ?? ""}
-                      placeholder="e.g. 2500.00"
+                  placeholder="e.g. 2500.00"
                       className="bg-white border-[#D9D9D9] rounded-xl h-11 pl-8 focus-visible:ring-[#01454A]"
                     />
                   </div>
                 </FormControl>
                 <FormDescription className="text-xs">
-                  Leave blank for free shipping or platform-calculated rates.
+                  Minimum vendor-defined fixed shipping cost is ₦2,500. Leave blank to use platform rules.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -274,7 +273,7 @@ export function Step4Shipping() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                  Free Shipping Override (₦)
+                  Free Shipping Threshold (₦)
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -286,37 +285,7 @@ export function Step4Shipping() {
                   />
                 </FormControl>
                 <FormDescription className="text-xs">
-                  Product-level value overrides the global platform threshold.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="restricted_countries"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                  Restricted Countries
-                </FormLabel>
-                <FormControl>
-                  <Textarea
-                    value={(field.value ?? []).join(", ")}
-                    onChange={(event) => {
-                      const countries = event.target.value
-                        .split(",")
-                        .map((item) => item.trim())
-                        .filter(Boolean);
-                      field.onChange(countries);
-                    }}
-                    placeholder="Optional: Ghana, United Kingdom"
-                    className="min-h-11 bg-white border-[#D9D9D9] rounded-xl focus-visible:ring-[#01454A]"
-                  />
-                </FormControl>
-                <FormDescription className="text-xs">
-                  Comma-separated countries this product cannot ship to.
+                  Optional product-level threshold. When blank, the global platform threshold applies.
                 </FormDescription>
                 <FormMessage />
               </FormItem>

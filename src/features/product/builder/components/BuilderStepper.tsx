@@ -18,7 +18,7 @@ import { BUILDER_STEPS } from "../schemas/builder.schemas";
 import { useBuilderContext } from "./ProductBuilderProvider";
 
 export function BuilderStepper() {
-  const { currentStep, goToStep, progress } = useBuilderContext();
+  const { currentStep, goToStep, progress, isEditMode } = useBuilderContext();
 
   return (
     <nav
@@ -53,14 +53,14 @@ export function BuilderStepper() {
                 type="button"
                 title={description}
                 aria-current={isActive ? "step" : undefined}
-                onClick={() => isCompleted && goToStep(step)}
-                disabled={!isCompleted && !isActive}
+                onClick={() => (isEditMode || isCompleted) && goToStep(step)}
+                disabled={!isEditMode && !isCompleted && !isActive}
                 className={cn(
                   "w-full flex flex-col items-center gap-1.5 px-1.5 py-2 rounded-xl transition-all duration-200",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#01454A] focus-visible:ring-offset-1",
                   isActive && "bg-[#FFF6E3]",
-                  isCompleted && "cursor-pointer hover:bg-[#F8F5ED]",
-                  !isCompleted && !isActive && "opacity-45 cursor-not-allowed",
+                  (isEditMode || isCompleted) && "cursor-pointer hover:bg-[#F8F5ED]",
+                  !isEditMode && !isCompleted && !isActive && "opacity-45 cursor-not-allowed",
                 )}
               >
                 {/* Step circle */}

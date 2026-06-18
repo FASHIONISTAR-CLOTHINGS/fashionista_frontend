@@ -7,7 +7,7 @@
  * with edit toggle routing to ProductBuilder.
  */
 
-import { use, useState, useEffect } from "react";
+import { use, useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -23,6 +23,9 @@ import {
   HelpCircle,
   FileText,
   Clock,
+  ChevronLeft,
+  ChevronRight,
+  Video,
 } from "lucide-react";
 
 import { useVendorProfile } from "@/features/vendor/hooks/use-vendor-setup";
@@ -49,6 +52,98 @@ function isVideoUrl(url: string | null): boolean {
 
 function formatPrice(v: number) {
   return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(v);
+}
+
+type VendorDetailMedia = {
+  id: string;
+  public_id?: string | null;
+  media_url: string;
+  thumbnail_url?: string | null;
+  video_thumbnail_url?: string | null;
+  media_type: "image" | "video";
+  duration_sec?: number | null;
+  alt_text?: string;
+  ordering?: number;
+  is_primary?: boolean;
+  sku?: string;
+  barcode?: string;
+  color_name?: string;
+  color_hex?: string;
+  size?: { id?: string; size_label?: string } | null;
+};
+
+function mediaUrlOf(item: any): string {
+  return item?.media_url || item?.image_url || item?.thumbnail_url || "";
+}
+
+function normalizeVendorProductMedia(product?: ProductDetail): VendorDetailMedia[] {
+  if (!product) return [];
+
+  const byKey = new Map<string, VendorDetailMedia>();
+  const add = (item: any, fallbackUrl?: string | null, forcePrimary = false) => {
+    const url = mediaUrlOf(item) || fallbackUrl || "";
+    if (!url) return;
+    const key = item?.id || url;
+    if (byKey.has(key)) {
+      const existing = byKey.get(key)!;
+      byKey.set(key, {
+        ...existing,
+        ...item,
+        media_url: existing.media_url || url,
+        is_primary: existing.is_primary || item?.is_primary || forcePrimary,
+      });
+      return;
+    }
+    byKey.set(key, {
+      id: String(item?.id || key),
+      public_id: item?.public_id ?? null,
+      media_url: url,
+      thumbnail_url: item?.thumbnail_url ?? null,
+      video_thumbnail_url: item?.video_thumbnail_url ?? null,
+      media_type: (item?.media_type || (isVideoUrl(url) ? "video" : "image")) as "image" | "video",
+      alt_text: item?.alt_text || product.title,
+      ordering: Number(item?.ordering ?? byKey.size),
+      is_primary: Boolean(item?.is_primary || forcePrimary),
+      sku: item?.sku || "",
+      barcode: item?.barcode || "",
+      color_name: item?.color_name || "",
+      color_hex: item?.color_hex || "",
+      size: item?.size ?? null,
+    });
+  };
+
+  const gallery = product.gallery ?? [];
+  const variants = product.variants ?? [];
+  const primaryRow =
+    gallery.find((item) => item.is_primary) ??
+    variants.find((item) => item.is_primary) ??
+    gallery.find((item) => mediaUrlOf(item)) ??
+    variants.find((item) => mediaUrlOf(item));
+
+  add(primaryRow ?? {}, product.cover_image_url || product.image_url, true);
+  gallery.forEach((item) => add(item));
+  variants.forEach((item) => add(item));
+
+  return [...byKey.values()].sort((a, b) => {
+    if (a.is_primary && !b.is_primary) return -1;
+    if (!a.is_primary && b.is_primary) return 1;
+    return (a.ordering ?? 0) - (b.ordering ?? 0);
+  });
+}
+
+function ColorMeta({ name, hex }: { name?: string; hex?: string }) {
+  if (!name && !hex) return <span className="text-[#7A6B44]/70">No colour link</span>;
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span
+        className="h-3.5 w-3.5 rounded-full border border-[#ECE6D6] shadow-inner"
+        style={{ backgroundColor: hex || "#F8F5ED" }}
+        aria-hidden="true"
+      />
+      <span>{name || hex}</span>
+      {hex && <span className="font-mono text-[9px] text-[#7A6B44]/70">{hex}</span>}
+    </span>
+  );
 }
 
 // Custom Accordion Component to avoid Shadcn accordion dependency compilation issues
@@ -107,6 +202,9 @@ export default function VendorProductDetailPage({
 
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+  const productMedia = useMemo(() => normalizeVendorProductMedia(product), [product]);
+  const activeMedia = productMedia[Math.min(selectedMediaIndex, Math.max(productMedia.length - 1, 0))] ?? null;
 
   // Auto-redirect if unauthenticated vendor loading
   useEffect(() => {
@@ -115,6 +213,16 @@ export default function VendorProductDetailPage({
       router.push("/vendor/products/catalog");
     }
   }, [product, vendorId, isLoading, isError, router]);
+
+  useEffect(() => {
+    setSelectedMediaIndex(0);
+  }, [product?.id]);
+
+  useEffect(() => {
+    if (selectedMediaIndex >= productMedia.length) {
+      setSelectedMediaIndex(Math.max(productMedia.length - 1, 0));
+    }
+  }, [productMedia.length, selectedMediaIndex]);
 
   if (isLoading) {
     return (
@@ -176,12 +284,13 @@ export default function VendorProductDetailPage({
   const mapProductToFormValues = (p: ProductDetail): Partial<ProductBuilderFormValues> => {
     const category_ids = p.categories?.map((c) => c.id) || [];
     const sub_category_ids = p.sub_categories?.map((c) => c.id) || [];
+    const normalizedMedia = normalizeVendorProductMedia(p);
     const primaryGallery =
-      p.gallery?.find((item) => item.is_primary) ??
-      p.gallery?.find((item) => item.media_type === "image") ??
-      p.gallery?.[0] ??
+      normalizedMedia.find((item) => item.is_primary) ??
+      normalizedMedia.find((item) => item.media_type === "image") ??
+      normalizedMedia[0] ??
       null;
-    const coverUrl = p.cover_image_url || primaryGallery?.media_url || null;
+    const coverUrl = primaryGallery?.media_url || p.cover_image_url || p.image_url || null;
 
     const measurement_guide = p.measurement_guide?.map((m) => ({
       size_id: m.id || undefined,
@@ -197,11 +306,14 @@ export default function VendorProductDetailPage({
       sort_order: m.sort_order || 0,
     })) || [];
 
-    const gallery = p.gallery?.map((g) => ({
+    const gallery = normalizedMedia
+      .filter((g) => !g.is_primary && g.media_url)
+      .slice(0, 3)
+      .map((g) => ({
       // Product detail reads expose the unified gallery row id and media URL.
       // Reusing the row id keeps edit-mode validation stable without requiring
       // a second Cloudinary public-id read field from the backend.
-      public_id: g.id || g.media_url || "",
+      public_id: g.public_id || g.id || g.media_url || "",
       secure_url: g.media_url || "",
       media_type: g.media_type || "image",
       alt_text: g.alt_text || "",
@@ -209,11 +321,11 @@ export default function VendorProductDetailPage({
       color_name: g.color_name || "",
       color_hex: g.color_hex || "",
       size_id: g.size?.id || undefined,
-      sku: g.sku || "",
-      barcode: g.barcode || "",
+      sku: "",
+      barcode: "",
       video_thumbnail: g.video_thumbnail_url || "",
       duration_sec: g.duration_sec ?? null,
-    })) || [];
+    }));
 
     const faqs = p.faqs?.map((f) => ({
       question: f.question,
@@ -248,8 +360,11 @@ export default function VendorProductDetailPage({
       measurement_guide,
 
       // Media
-      cover_image_public_id: primaryGallery?.id || coverUrl || "",
+      cover_image_public_id: primaryGallery?.public_id || primaryGallery?.id || coverUrl || "",
       cover_image_url: coverUrl,
+      cover_image_color_name: primaryGallery?.color_name || "",
+      cover_image_color_hex: primaryGallery?.color_hex || "",
+      cover_image_size_id: primaryGallery?.size?.id || null,
       gallery,
 
       // Shipping profile
@@ -445,30 +560,139 @@ export default function VendorProductDetailPage({
                 </div>
               </div>
 
-              {/* Cover Media Display */}
-              <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden border border-[#ECE6D6] bg-[#FAFAF8] flex items-center justify-center">
-                {product.cover_image_url ? (
-                  isVideoUrl(product.cover_image_url) ? (
-                    <FashionistarVideo
-                      src={product.cover_image_url}
-                      autoPlay={false}
-                      muted={true}
-                      showControls={true}
-                      className="w-full h-full object-cover"
-                    />
+              {/* Product Gallery */}
+              <div className="space-y-4">
+                <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden border border-[#ECE6D6] bg-[#FAFAF8] flex items-center justify-center">
+                  {activeMedia ? (
+                    <>
+                      {activeMedia.media_type === "video" || isVideoUrl(activeMedia.media_url) ? (
+                        <FashionistarVideo
+                          src={activeMedia.media_url}
+                          autoPlay={false}
+                          muted={true}
+                          showControls={true}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <FashionistarImage
+                          src={activeMedia.media_url}
+                          alt={activeMedia.alt_text || product.title}
+                          fill={true}
+                          objectFit="contain"
+                          imgClassName="p-2"
+                          priority={selectedMediaIndex === 0}
+                        />
+                      )}
+
+                      {productMedia.length > 1 && (
+                        <>
+                          <button
+                            type="button"
+                            aria-label="Previous product media"
+                            onClick={() =>
+                              setSelectedMediaIndex((index) =>
+                                index === 0 ? productMedia.length - 1 : index - 1,
+                              )
+                            }
+                            className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-white/70 bg-white/90 p-2 text-[#01454A] shadow-lg transition hover:bg-[#FDA600] hover:text-black"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Next product media"
+                            onClick={() =>
+                              setSelectedMediaIndex((index) =>
+                                index === productMedia.length - 1 ? 0 : index + 1,
+                              )
+                            }
+                            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-white/70 bg-white/90 p-2 text-[#01454A] shadow-lg transition hover:bg-[#FDA600] hover:text-black"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
+                        </>
+                      )}
+                    </>
                   ) : (
-                    <FashionistarImage
-                      src={product.cover_image_url}
-                      alt={product.title}
-                      fill={true}
-                      objectFit="contain"
-                      imgClassName="p-2"
-                    />
-                  )
-                ) : (
-                  <div className="flex flex-col items-center gap-2 text-[#7A6B44]/40">
-                    <ShoppingBag className="w-12 h-12" />
-                    <span className="text-xs">No cover media uploaded</span>
+                    <div className="flex flex-col items-center gap-2 text-[#7A6B44]/40">
+                      <ShoppingBag className="w-12 h-12" />
+                      <span className="text-xs">No cover media uploaded</span>
+                    </div>
+                  )}
+                </div>
+
+                {activeMedia && (
+                  <div className="rounded-2xl border border-[#ECE6D6] bg-[#F8F5ED]/70 p-4">
+                    <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-3">
+                      <div>
+                        <span className="block text-[10px] font-extrabold uppercase tracking-widest text-[#7A6B44]/70">
+                          Size
+                        </span>
+                        <span className="font-bold text-[#1A1208]">
+                          {activeMedia.size?.size_label || "Standard Size"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-extrabold uppercase tracking-widest text-[#7A6B44]/70">
+                          Colour
+                        </span>
+                        <span className="font-bold text-[#1A1208]">
+                          <ColorMeta name={activeMedia.color_name} hex={activeMedia.color_hex} />
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-extrabold uppercase tracking-widest text-[#7A6B44]/70">
+                          SKU
+                        </span>
+                        <span className="font-mono font-bold text-[#01454A]">
+                          {activeMedia.sku || "Not assigned"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {productMedia.length > 1 && (
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {productMedia.map((item, index) => (
+                      <button
+                        key={`${item.id}-${item.media_url}`}
+                        type="button"
+                        onClick={() => setSelectedMediaIndex(index)}
+                        className={`group overflow-hidden rounded-2xl border bg-white text-left transition ${
+                          selectedMediaIndex === index
+                            ? "border-[#FDA600] shadow-lg shadow-[#FDA600]/20"
+                            : "border-[#ECE6D6] hover:border-[#01454A]/40"
+                        }`}
+                      >
+                        <div className="relative aspect-[4/3] bg-[#FAFAF8]">
+                          {item.media_type === "video" || isVideoUrl(item.media_url) ? (
+                            <div className="flex h-full items-center justify-center bg-black text-white">
+                              <Video className="h-6 w-6 opacity-80" />
+                            </div>
+                          ) : (
+                            <FashionistarImage
+                              src={item.thumbnail_url || item.media_url}
+                              alt={item.alt_text || product.title}
+                              fill={true}
+                              objectFit="cover"
+                              transformation="thumbnail"
+                            />
+                          )}
+                        </div>
+                        <div className="space-y-1 p-2 text-[10px]">
+                          <div className="font-bold text-[#1A1208]">
+                            {item.is_primary ? "Cover media" : `Gallery ${index + 1}`}
+                          </div>
+                          <div className="truncate text-[#7A6B44]">
+                            <ColorMeta name={item.color_name} hex={item.color_hex} />
+                          </div>
+                          <div className="truncate font-mono text-[#01454A]">
+                            {item.sku || item.size?.size_label || "Unmapped variant"}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -706,13 +930,13 @@ export default function VendorProductDetailPage({
             </div>
 
             {/* Variants List Card */}
-            {product.variants && product.variants.length > 0 && (
+            {productMedia.length > 0 && (
               <div className="rounded-3xl bg-white border border-[#ECE6D6] p-6 shadow-sm space-y-4">
                 <h3 className="text-sm font-bold text-[#1A1208] flex items-center gap-1.5 border-b border-[#ECE6D6] pb-2">
                   <Scissors className="w-4 h-4 text-[#01454A]" /> Multi-Variant Options
                 </h3>
                 <div className="space-y-2 max-h-[250px] overflow-y-auto pr-1">
-                  {product.variants.map((v) => (
+                  {productMedia.map((v) => (
                     <div
                       key={v.id}
                       className="flex items-center justify-between p-2.5 rounded-xl border border-[#ECE6D6]/60 bg-[#FAFAF8] text-xs"
@@ -721,11 +945,9 @@ export default function VendorProductDetailPage({
                         <span className="font-bold text-[#1A1208] block">
                           {v.size?.size_label || "Standard Size"}
                         </span>
-                        {v.color_name && (
-                          <span className="text-[10px] text-[#7A6B44] block mt-0.5">
-                            Color: {v.color_name} {v.color_hex ? `(${v.color_hex})` : ""}
-                          </span>
-                        )}
+                        <span className="text-[10px] text-[#7A6B44] block mt-0.5">
+                          <ColorMeta name={v.color_name} hex={v.color_hex} />
+                        </span>
                         {v.sku && (
                           <span className="text-[9px] text-[#7A6B44]/70 block font-mono">
                             SKU: {v.sku}

@@ -56,6 +56,7 @@ interface BuilderContextValue {
   draftLoaded: boolean;
   clearDraft: () => void;
   form: UseFormReturn<ProductBuilderFormValues>;
+  isEditMode: boolean;
 }
 
 const BuilderContext = createContext<BuilderContextValue | null>(null);
@@ -75,7 +76,18 @@ const STEP_FIELDS: Record<number, Array<Path<ProductBuilderFormValues>>> = {
     "fabric_type", "fabric_care_instructions", "fabric_is_organic", "fabric_is_vegan", "fabric_country_of_origin",
   ],
   3: ["cover_image_public_id", "cover_image_url", "gallery"],
-  4: ["weight_kg", "shipping_amount", "courier_id"],
+  4: [
+    "weight_kg",
+    "length_cm",
+    "width_cm",
+    "height_cm",
+    "is_fragile",
+    "requires_signature",
+    "free_shipping_threshold",
+    "processing_days",
+    "shipping_amount",
+    "courier_id",
+  ],
   5: ["faqs", "publish_intent", "featured", "hot_deal", "meta_title", "meta_description"],
 };
 
@@ -162,6 +174,7 @@ export function ProductBuilderProvider({
   onSubmit,
   children,
 }: ProductBuilderProviderProps) {
+  const isEditMode = Boolean(initialValues);
   const form = useForm<ProductBuilderFormValues>({
     resolver: zodResolver(ProductBuilderFormSchema),
     defaultValues: sanitizePayload(initialValues),
@@ -177,7 +190,7 @@ export function ProductBuilderProvider({
   const localDraftKey = useDraftStore((s) => s.localDraftKey);
 
   const saveDraft = useCallback(() => {
-    if (initialValues) return;
+    if (isEditMode) return;
     const store = useDraftStore.getState();
 
     try {
@@ -189,11 +202,11 @@ export function ProductBuilderProvider({
       console.error("Local product builder save failed:", error);
       store.setSaveStatus("failed");
     }
-  }, [currentStep, form, initialValues]);
+  }, [currentStep, form, isEditMode]);
 
   const saveDraftStep = useCallback((step: number) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (initialValues) return;
+    if (isEditMode) return;
 
     const store = useDraftStore.getState();
     try {
@@ -205,7 +218,7 @@ export function ProductBuilderProvider({
       console.error(`Local product builder step ${step} save failed:`, error);
       store.setSaveStatus("failed");
     }
-  }, [form, initialValues]);
+  }, [form, isEditMode]);
 
   const clearDraft = useCallback(() => {
     useDraftStore.getState().resetStore();
@@ -214,7 +227,7 @@ export function ProductBuilderProvider({
   useEffect(() => {
     const store = useDraftStore.getState();
 
-    if (initialValues) {
+    if (isEditMode) {
       setDraftLoaded(true);
       return;
     }
@@ -234,7 +247,7 @@ export function ProductBuilderProvider({
     form.reset(sanitizePayload(store.payload));
     setCurrentStep(store.currentStep || 1);
     setDraftLoaded(true);
-  }, [form, initialValues, localDraftKey]);
+  }, [form, isEditMode, localDraftKey]);
 
   useEffect(() => {
     const sub = form.watch(() => {
@@ -283,7 +296,7 @@ export function ProductBuilderProvider({
     const publishIntent = values.publish_intent ?? "draft";
 
     try {
-      if (initialValues) {
+      if (isEditMode) {
         await onSubmit(values, productId);
         return;
       }
@@ -345,6 +358,7 @@ export function ProductBuilderProvider({
     draftLoaded,
     clearDraft,
     form,
+    isEditMode,
   };
 
   return (

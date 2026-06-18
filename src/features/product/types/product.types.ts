@@ -97,6 +97,7 @@ export interface ProductFaq {
 
 export interface ProductVariantGalleryMedia {
   id: string;
+  public_id?: string | null;
   sku: string;
   size?: ProductMeasurementGuideRow | null;
   /** Direct text field — no FK. e.g. "Midnight Blue" */

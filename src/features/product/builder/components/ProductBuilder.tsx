@@ -61,7 +61,7 @@ const isStepComplete = (step: number, values: any): boolean => {
 };
 
 function BuilderNavigation() {
-  const { currentStep, nextStep, prevStep, isSubmitting, form } = useBuilderContext();
+  const { currentStep, nextStep, prevStep, isSubmitting, form, isEditMode } = useBuilderContext();
   const isFirst = currentStep === 1;
   const isLast = currentStep === BUILDER_STEPS.length;
   const publishIntent = form.watch("publish_intent");
@@ -115,13 +115,17 @@ function BuilderNavigation() {
           disabled={isSubmitting}
           className={cn(
             "gap-2 px-6 font-semibold",
-            publishIntent === "pending"
+            isEditMode
+              ? "bg-[#01454A] hover:bg-[#01454A]/90 text-white shadow-lg shadow-[#01454A]/25"
+              : publishIntent === "pending"
               ? "bg-[#FDA600] hover:bg-[#E8960A] text-black shadow-lg shadow-[#FDA600]/30"
               : "bg-[#01454A] hover:bg-[#01454A]/90 text-white shadow-lg shadow-[#01454A]/25",
           )}
         >
           {isSubmitting ? (
             <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
+          ) : isEditMode ? (
+            <><Save className="w-4 h-4" /> Update your product</>
           ) : publishIntent === "pending" ? (
             <><SendHorizontal className="w-4 h-4" /> Submit for Review</>
           ) : (

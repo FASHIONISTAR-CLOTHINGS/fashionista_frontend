@@ -151,7 +151,10 @@ export const Step3Schema = z.object({
   cover_image_color_name: z.string().optional().default(""),
   cover_image_color_hex: z.string().optional().default(""),
   cover_image_size_id: z.string().uuid().nullable().optional(),
-  gallery: z.array(GalleryItemSchema).max(12, "Maximum 12 gallery items allowed").default([]),
+  gallery: z
+    .array(GalleryItemSchema)
+    .max(3, "Maximum 3 gallery items allowed in addition to the cover image")
+    .default([]),
 });
 
 export type Step3Values = z.infer<typeof Step3Schema>;
@@ -176,7 +179,14 @@ export const Step4BaseSchema = z.object({
     .string()
     .regex(/^(\d+(\.\d{1,2})?)?$/, "Enter a valid price or leave blank")
     .optional()
-    .or(z.literal("")),
+    .or(z.literal(""))
+    .refine((val) => {
+      if (!val || val === "") return true;
+      const parsed = parseFloat(val);
+      return !isNaN(parsed) && parsed >= 2500;
+    }, {
+      message: "Fixed shipping cost must be at least ₦2,500.00",
+    }),
   courier_id: FKIdSchema,
 });
 

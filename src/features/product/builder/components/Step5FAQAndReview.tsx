@@ -42,7 +42,6 @@ import {
   SendHorizontal,
   Settings,
   X,
-  Check,
   ClipboardList,
   Package,
   Palette,
@@ -52,6 +51,7 @@ import {
   AlertCircle,
   Tag,
 } from "lucide-react";
+import { useBuilderContext } from "./ProductBuilderProvider";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STATIC FAQ LIBRARY (10 expertly-crafted fashion FAQs)
@@ -215,6 +215,7 @@ function ReviewItem({
 
 export function Step5FAQAndReview() {
   const form = useFormContext<ProductBuilderFormValues>();
+  const { isEditMode } = useBuilderContext();
 
   const selectedFaqs: BuilderFaqRow[] = form.watch("faqs") ?? [];
   const selectedFaqQuestions = new Set(
@@ -253,6 +254,11 @@ export function Step5FAQAndReview() {
     }
   };
 
+  const addFaqFromSelect = (id: string) => {
+    if (id === "__none__") return;
+    toggleFaq(id);
+  };
+
   const removeFaq = (question: string) => {
     const current = form.getValues("faqs") ?? [];
     form.setValue(
@@ -269,7 +275,7 @@ export function Step5FAQAndReview() {
       <SectionCard
         icon={<BookOpen className="w-4 h-4" />}
         title="Frequently Asked Questions"
-        subtitle="Select up to 5 FAQs from our curated fashion library to display on your product page."
+        subtitle="Select up to 5 FAQs from the curated fashion library to display on your product page."
         headerRight={
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-[#01454A]">
@@ -309,57 +315,67 @@ export function Step5FAQAndReview() {
           </div>
         )}
 
-        {/* FAQ selection list */}
-        <div className="space-y-2.5">
-          {FASHION_FAQS.map((faq) => {
-            const isSelected = selectedFaqQuestions.has(faq.question);
-            const isDisabled = !isSelected && selectedFaqs.length >= 5;
-
-            return (
-              <button
-                key={faq.id}
-                type="button"
-                disabled={isDisabled}
-                onClick={() => toggleFaq(faq.id)}
-                className={`w-full text-left rounded-xl border p-4 transition-all duration-200 flex items-start gap-3 ${
-                  isSelected
-                    ? "border-[#01454A] bg-[#E8F3F1] shadow-sm"
-                    : isDisabled
-                    ? "border-[#D9D9D9] bg-zinc-50 opacity-40 cursor-not-allowed"
-                    : "border-[#D9D9D9] bg-white hover:border-[#01454A]/40 hover:bg-[#F5FAF9]"
-                }`}
-              >
-                {/* Checkbox indicator */}
-                <span
-                  className={`flex-shrink-0 mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${
-                    isSelected
-                      ? "border-[#01454A] bg-[#01454A]"
-                      : "border-[#D9D9D9]"
-                  }`}
-                >
-                  {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
-                </span>
-
-                {/* FAQ content */}
-                <div className="flex-1 min-w-0">
-                  <p
-                    className={`text-sm font-semibold leading-snug ${
-                      isSelected ? "text-[#01454A]" : "text-[#1A1208]"
-                    }`}
+        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+          <div className="space-y-2">
+            <FormLabel className="text-[#1A1208] font-semibold text-sm">
+              Add FAQ from library
+            </FormLabel>
+            <Select onValueChange={addFaqFromSelect} value="__none__">
+              <SelectTrigger className="h-11 rounded-xl border-[#D9D9D9] bg-white focus:ring-[#01454A]">
+                <SelectValue placeholder="Choose a fashion FAQ..." />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl bg-white">
+                <SelectItem value="__none__">Choose a fashion FAQ...</SelectItem>
+                {FASHION_FAQS.filter((faq) => !selectedFaqQuestions.has(faq.question)).map((faq) => (
+                  <SelectItem
+                    key={faq.id}
+                    value={faq.id}
                   >
                     {faq.icon} {faq.question}
-                  </p>
-                  <p className="text-xs text-[#7A6B44] mt-1 leading-relaxed line-clamp-2">
-                    {faq.answer}
-                  </p>
-                </div>
-              </button>
-            );
-          })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Badge className="h-9 justify-center rounded-full bg-[#01454A] px-4 text-white">
+            {selectedFaqs.length} selected
+          </Badge>
+        </div>
+
+        <div className="space-y-2.5">
+          {selectedFaqs.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-[#D9D9D9] bg-white p-5 text-center text-xs text-[#7A6B44]">
+              No FAQ selected yet. Vendors can leave this empty or add up to 5 concise answers.
+            </div>
+          ) : (
+            selectedFaqs.map((faq, index) => (
+              <details
+                key={`${faq.question}-${index}`}
+                className="group rounded-xl border border-[#ECE6D6] bg-white p-4"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-bold text-[#1A1208]">
+                  <span>{faq.question}</span>
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      removeFaq(faq.question);
+                    }}
+                    className="rounded-full p-1 text-[#7A6B44] hover:bg-red-50 hover:text-red-600"
+                    aria-label={`Remove FAQ: ${faq.question}`}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </summary>
+                <p className="mt-3 text-xs leading-relaxed text-[#7A6B44]">{faq.answer}</p>
+              </details>
+            ))
+          )}
         </div>
       </SectionCard>
 
       {/* ── SECTION B: SEO & DISCOVERY ────────────────────────────────────── */}
+      {!isEditMode && (
       <SectionCard
         icon={<Settings className="w-4 h-4" />}
         title="SEO & Discovery"
@@ -438,8 +454,10 @@ export function Step5FAQAndReview() {
           />
         </div>
       </SectionCard>
+      )}
 
       {/* ── SECTION C: PUBLISH SETTINGS ───────────────────────────────────── */}
+      {!isEditMode && (
       <SectionCard
         icon={<SendHorizontal className="w-4 h-4" />}
         title="Publish Settings"
@@ -536,6 +554,7 @@ export function Step5FAQAndReview() {
           </div>
         </div>
       </SectionCard>
+      )}
 
       {/* ── SECTION D: REVIEW SUMMARY ─────────────────────────────────────── */}
       <SectionCard
@@ -612,9 +631,11 @@ export function Step5FAQAndReview() {
           />
           <ReviewItem
             icon={<SendHorizontal className="w-4 h-4" />}
-            label="Publish Action"
+            label={isEditMode ? "Update Action" : "Publish Action"}
             value={
-              publishIntent === "pending"
+              isEditMode
+                ? "Update your product"
+                : publishIntent === "pending"
                 ? "🚀 Submit for Review"
                 : publishIntent === "draft"
                 ? "💾 Save as Draft"
@@ -625,7 +646,7 @@ export function Step5FAQAndReview() {
         </div>
 
         {/* Final warning if critical fields missing */}
-        {(!title || !price || !coverPublicId || !publishIntent) && (
+        {(!title || !price || !coverPublicId || (!isEditMode && !publishIntent)) && (
           <div className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-4 mt-2">
             <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
             <p className="text-xs text-red-600 font-medium">

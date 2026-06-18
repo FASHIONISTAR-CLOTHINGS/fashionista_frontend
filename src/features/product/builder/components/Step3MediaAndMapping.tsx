@@ -44,12 +44,15 @@ import type { SelectedColor } from "./ColorSwatchPicker";
 import { uploadFile } from "@/features/uploads/services/upload.service";
 import { fetchVendorMeasurementTemplates, createVendorMeasurementTemplate } from "@/features/product";
 import { toast } from "sonner";
+import { FashionistarImage, FashionistarVideo } from "@/components/media";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES & SCHEMAS
 // ─────────────────────────────────────────────────────────────────────────────
 
 type MediaType = "image" | "video";
+const MAX_GALLERY_ITEMS = 3;
+const MAX_GALLERY_VIDEOS = 1;
 
 interface SizingTemplateOption {
   size_id: string;
@@ -129,11 +132,12 @@ function MediaPreview({
   if (mediaType === "video") {
     return (
       <div className="relative w-full h-36 rounded-xl overflow-hidden bg-black">
-        <video
+        <FashionistarVideo
           src={url}
-          className="w-full h-full object-cover"
-          muted
-          preload="metadata"
+          muted={true}
+          autoPlay={false}
+          showControls={false}
+          className="w-full h-full"
         />
         <div className="absolute inset-0 flex items-center justify-center">
           <VideoIcon className="w-8 h-8 text-white/80" />
@@ -144,15 +148,12 @@ function MediaPreview({
 
   return (
     <div className="relative w-full h-36 rounded-xl overflow-hidden bg-zinc-100 border border-zinc-200">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <FashionistarImage
         src={url}
         alt={altText || "Product image preview"}
-        className="w-full h-full object-cover"
-        loading="lazy"
-        onError={(e) => {
-          (e.target as HTMLImageElement).style.display = "none";
-        }}
+        fill={true}
+        objectFit="cover"
+        transformation="thumbnail"
       />
       {isCover && (
         <div className="absolute top-2 left-2">
@@ -250,6 +251,10 @@ export function Step3MediaAndMapping() {
     control: form.control,
     name: "gallery",
   });
+  const galleryItems = form.watch("gallery") ?? [];
+  const galleryVideoCount = galleryItems.filter((item) => item.media_type === "video").length;
+  const canAddGalleryItem = galleryFields.length < MAX_GALLERY_ITEMS;
+  const canAddVideo = canAddGalleryItem && galleryVideoCount < MAX_GALLERY_VIDEOS;
 
   // ── Sizing guide templates query ───────────────────────────────────────────
   const { data: templates = [], refetch: refetchTemplates } = useQuery({
@@ -396,6 +401,16 @@ export function Step3MediaAndMapping() {
   };
 
   const addGalleryItem = (type: MediaType = "image") => {
+    if (galleryFields.length >= MAX_GALLERY_ITEMS) {
+      toast.error("Maximum gallery reached", {
+        description: "Use one cover image plus up to 3 gallery items.",
+      });
+      return;
+    }
+    if (type === "video" && galleryVideoCount >= MAX_GALLERY_VIDEOS) {
+      toast.error("Only one video is allowed per product gallery.");
+      return;
+    }
     appendGallery({
       public_id: "",
       secure_url: "",
@@ -661,13 +676,13 @@ export function Step3MediaAndMapping() {
       <SectionCard
         icon={<ImageIcon className="w-4 h-4" />}
         title="Gallery & Variant Mappings"
-        subtitle="Upload up to 12 images/videos. Map each media to a colour and/or size variant for the storefront gallery filter."
+        subtitle="Use one cover image plus up to 3 gallery items. One optional video is allowed per product."
         badge={
           <Badge
             variant="secondary"
             className="bg-[#E8F3F1] text-[#01454A] border border-[#01454A]/20 text-xs"
           >
-            {galleryFields.length} / 12
+            {galleryFields.length} / {MAX_GALLERY_ITEMS}
           </Badge>
         }
       >
@@ -677,7 +692,7 @@ export function Step3MediaAndMapping() {
             type="button"
             variant="outline"
             size="sm"
-            disabled={galleryFields.length >= 12}
+            disabled={!canAddGalleryItem}
             onClick={() => addGalleryItem("image")}
             className="border-[#01454A] text-[#01454A] hover:bg-[#E8F3F1] rounded-xl"
           >
@@ -688,7 +703,7 @@ export function Step3MediaAndMapping() {
             type="button"
             variant="outline"
             size="sm"
-            disabled={galleryFields.length >= 12}
+            disabled={!canAddVideo}
             onClick={() => addGalleryItem("video")}
             className="border-[#FDA600] text-[#7A5500] hover:bg-[#FFF6E3] rounded-xl"
           >
@@ -696,7 +711,7 @@ export function Step3MediaAndMapping() {
             Add Video
           </Button>
           <p className="text-xs text-zinc-400 ml-auto">
-            Maximum 12 gallery items allowed.
+            Maximum 3 gallery items and 1 video allowed.
           </p>
         </div>
 
@@ -711,7 +726,7 @@ export function Step3MediaAndMapping() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             {galleryFields.map((galleryField, idx) => {
               const mediaType: MediaType =
                 (form.watch(`gallery.${idx}.media_type`) as MediaType) ?? "image";
@@ -734,7 +749,7 @@ export function Step3MediaAndMapping() {
               return (
                 <div
                   key={galleryField.id}
-                  className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 bg-white border border-zinc-200 rounded-2xl p-4 hover:border-[#D9D9D9] transition-colors"
+                  className="grid grid-cols-1 gap-4 bg-white border border-zinc-200 rounded-2xl p-4 hover:border-[#D9D9D9] transition-colors"
                 >
                   {/* Left: Preview + ordering handle */}
                   <div className="flex flex-col gap-2">
@@ -807,7 +822,7 @@ export function Step3MediaAndMapping() {
                             Variant Mapping
                           </p>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 gap-3">
                             {/* Color Link */}
                             <div className="space-y-1.5">
                               <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-wide">
@@ -875,51 +890,6 @@ export function Step3MediaAndMapping() {
                               )}
                             />
                           </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <FormField
-                              control={form.control}
-                              name={`gallery.${idx}.sku`}
-                              render={({ field }) => (
-                                <FormItem className="space-y-1.5">
-                                  <FormLabel className="text-[10px] font-bold uppercase text-zinc-500 tracking-wide">
-                                    Variant SKU
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      value={field.value ?? ""}
-                                      placeholder="e.g. ROY-AGB-BLUE-M"
-                                      className="h-8 rounded-lg border-[#D9D9D9] bg-white text-xs focus-visible:ring-[#01454A]"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name={`gallery.${idx}.barcode`}
-                              render={({ field }) => (
-                                <FormItem className="space-y-1.5">
-                                  <FormLabel className="text-[10px] font-bold uppercase text-zinc-500 tracking-wide">
-                                    Barcode
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      value={field.value ?? ""}
-                                      placeholder="Optional warehouse barcode"
-                                      className="h-8 rounded-lg border-[#D9D9D9] bg-white text-xs focus-visible:ring-[#01454A]"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-
                           {mediaType === "video" && (
                             <FormField
                               control={form.control}
