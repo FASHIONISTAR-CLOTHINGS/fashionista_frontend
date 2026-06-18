@@ -60,7 +60,6 @@ export type {
   ApiErrorResponse,
 } from "./types/product.types";
 export type {
-  ProductDraftSession,
   VendorMeasurementTemplate,
 } from "./types/product.types";
 
@@ -121,13 +120,6 @@ export {
   replyToReview,
   // Admin
   updateProductStatus,
-  // Draft sessions
-  createDraftSession,
-  updateDraftSession,
-  discardDraftSession,
-  commitDraftSession,
-  fetchActiveDraftSessions,
-  fetchDraftSessionDetail,
   // Measurement templates
   fetchVendorMeasurementTemplates,
   createVendorMeasurementTemplate,

@@ -126,7 +126,10 @@ describe("Product Builder Schemas", () => {
   describe("Step 5: FAQs & Publish Schema", () => {
     it("validates FAQs and publishing flags", () => {
       const payload = {
-        faqs: ["Question 1", "Question 2"],
+        faqs: [
+          { question: "Question 1", answer: "Answer 1 detailed response" },
+          { question: "Question 2", answer: "Answer 2 detailed response" }
+        ],
         publish_intent: "pending",
         featured: false,
         hot_deal: true,

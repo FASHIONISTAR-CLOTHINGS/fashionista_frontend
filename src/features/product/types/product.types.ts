@@ -526,19 +526,4 @@ export interface ApiErrorResponse {
 
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DRAFT SESSIONS
-// ─────────────────────────────────────────────────────────────────────────────
 
-export interface ProductDraftSession {
-  id: string;
-  draft_key: string;
-  idempotency_key: string | null;
-  payload: Record<string, any>;
-  current_step: number;
-  status: "active" | "committed" | "discarded" | "expired";
-  linked_product_id: string | null;
-  linked_product?: string | null;
-  expires_at: string;
-  last_synced_at: string;
-}
