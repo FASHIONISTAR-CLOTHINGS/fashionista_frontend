@@ -2,7 +2,8 @@
 
 /**
  * @file Step2PricingAndMeasurements.tsx
- * @description Step 2 — Pricing & Inventory, Fabric Specification, Size & Measurement Guide
+ * @description Pricing & Inventory, Fabric Specification, Size & Measurement Guide.
+ * Rendered as Step 3 in the vendor product builder.
  *
  * Fields covered (aligned to ProductBuilderFormSchema Step2BaseSchema):
  *   PRICING & INVENTORY:

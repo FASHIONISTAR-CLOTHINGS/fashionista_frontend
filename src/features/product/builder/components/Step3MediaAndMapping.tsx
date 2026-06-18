@@ -2,7 +2,8 @@
 
 /**
  * @file Step3MediaAndMapping.tsx
- * @description Step 3 — Media Uploads with Direct Cloudinary Integration and Dynamic Size Link Creation
+ * @description Media Uploads with Direct Cloudinary Integration and Dynamic Size Link Creation.
+ * Rendered as Step 2 in the vendor product builder.
  */
 
 import React, { useState, useRef } from "react";

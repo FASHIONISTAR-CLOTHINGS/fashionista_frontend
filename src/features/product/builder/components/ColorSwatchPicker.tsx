@@ -9,8 +9,8 @@
  *  - 150+ fashion colors (2026 Pantone + Heritage + Textile standards)
  *  - Real-time search by color name
  *  - Each row shows: [Left] Color name | [Right] Color swatch circle
- *  - Multiple-selection mode (for Step 2 color catalog)
- *  - Single-selection mode (for Step 3 gallery media mapping)
+ *  - Multiple-selection mode (for product colour catalogs)
+ *  - Single-selection mode (for Step 2 gallery media mapping)
  *  - Returns { color_name, color_hex } — no FK, no API call
  *  - Beautiful swatch chips for selected colors
  *  - Zero runtime API dependency — all data is pre-compiled static
@@ -41,7 +41,7 @@ export interface SelectedColor {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MULTI-SELECT: Step 2 — Color Catalog picker (vendor picks all product colors)
+// MULTI-SELECT: Product color catalog picker (vendor picks all product colors)
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface MultiColorSwatchPickerProps {
@@ -257,13 +257,13 @@ export function MultiColorSwatchPicker({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SINGLE-SELECT: Step 3 Gallery — Inline color association per media item
+// SINGLE-SELECT: Step 2 Gallery — Inline color association per media item
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface SingleColorSwatchPickerProps {
   /** Currently selected color (null = no link). */
   value: SelectedColor | null;
-  /** Available colors to restrict choice to (from Step 2 selection). */
+  /** Available colors to restrict choice to (from a product colour selection). */
   availableColors?: SelectedColor[];
   /** Called when color changes. */
   onChange: (color: SelectedColor | null) => void;

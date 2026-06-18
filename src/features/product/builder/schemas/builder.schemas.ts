@@ -89,7 +89,7 @@ export const Step1Schema = z.object({
 
 export type Step1Values = z.infer<typeof Step1Schema>;
 
-// STEP 2: Pricing & Measurements
+// Pricing & Measurements page, rendered as Step 3 in the vendor builder.
 export const Step2BaseSchema = z.object({
   price: MoneySchema,
   old_price: OptionalMoneySchema,
@@ -143,7 +143,7 @@ export const Step2Schema = Step2BaseSchema.superRefine((data, ctx) => {
 
 export type Step2Values = z.infer<typeof Step2Schema>;
 
-// STEP 3: Media & Mapping
+// Media & Mapping page, rendered as Step 2 in the vendor builder.
 export const Step3Schema = z.object({
   cover_image_public_id: z.string().min(1, "A cover image is required"),
   cover_image_url: z.string().url().nullable().optional(),
@@ -222,8 +222,8 @@ export interface StepMeta {
 
 export const BUILDER_STEPS: StepMeta[] = [
   { step: 1, label: "Info & Specs",     icon: "Info",           description: "Basic details and categories" },
-  { step: 2, label: "Pricing & Measurements",  icon: "DollarSign",        description: "Prices, fabric, and measurements" },
-  { step: 3, label: "Media & Mapping",  icon: "Image",          description: "Upload cover and gallery media with mappings" },
+  { step: 2, label: "Media & Mapping",  icon: "Image",          description: "Upload cover and gallery media with mappings" },
+  { step: 3, label: "Pricing & Measurements",  icon: "DollarSign",        description: "Prices, fabric, and measurements" },
   { step: 4, label: "Shipping",   icon: "Truck",     description: "Shipping profile" },
   { step: 5, label: "FAQs & Publish",   icon: "SendHorizontal", description: "FAQs and publish settings" },
 ] as const;

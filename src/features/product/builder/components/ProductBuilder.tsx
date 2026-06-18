@@ -31,8 +31,8 @@ import { ChevronLeft, ChevronRight, Loader2, SendHorizontal, Save } from "lucide
 
 const STEP_COMPONENTS: Record<number, React.ComponentType> = {
   1: Step1InfoAndSpecs,
-  2: Step2PricingAndMeasurements,
-  3: Step3MediaAndMapping,
+  2: Step3MediaAndMapping,
+  3: Step2PricingAndMeasurements,
   4: Step4Shipping,
   5: Step5FAQAndReview,
 };
@@ -49,13 +49,13 @@ const isStepComplete = (step: number, values: any): boolean => {
     return title.length >= 5 && description.length >= 30 && categoryIds.length >= 1;
   }
   if (step === 2) {
+    const coverImage = (values.cover_image_public_id || "").trim();
+    return coverImage.length > 0;
+  }
+  if (step === 3) {
     const price = (values.price || "").trim();
     const stockQty = Number(values.stock_qty);
     return price.length > 0 && !isNaN(stockQty) && stockQty >= 1;
-  }
-  if (step === 3) {
-    const coverImage = (values.cover_image_public_id || "").trim();
-    return coverImage.length > 0;
   }
   return true;
 };

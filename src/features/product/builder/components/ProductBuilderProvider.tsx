@@ -75,12 +75,16 @@ export function useBuilderContext(): BuilderContextValue {
 const STEP_FIELDS: Record<number, Array<Path<ProductBuilderFormValues>>> = {
   1: ["title", "description", "condition", "category_ids", "sub_category_ids", "gender_target", "age_group"],
   2: [
+    "cover_image_public_id",
+    "cover_image_url",
+    "gallery",
+  ],
+  3: [
     "price", "old_price", "is_discounted", "discount_percentage", "discounted_price",
     "currency", "stock_qty", "max_stock", "cash_payment_mode", "is_pre_order", "pre_order_date",
     "requires_measurement", "is_customisable", "measurement_guide",
     "fabric_type", "fabric_care_instructions", "fabric_is_organic", "fabric_is_vegan", "fabric_country_of_origin",
   ],
-  3: ["cover_image_public_id", "cover_image_url", "gallery"],
   4: [
     "weight_kg",
     "length_cm",
@@ -98,8 +102,8 @@ const STEP_FIELDS: Record<number, Array<Path<ProductBuilderFormValues>>> = {
 
 const STEP_SCHEMAS = {
   1: Step1Schema,
-  2: Step2Schema,
-  3: Step3Schema,
+  2: Step3Schema,
+  3: Step2Schema,
   4: Step4Schema,
   5: Step5Schema,
 } as const;
