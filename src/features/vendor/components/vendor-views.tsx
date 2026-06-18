@@ -1740,8 +1740,8 @@ export function VendorOrderDetailView({ orderOid }: { orderOid: string }) {
 
 const STEP_LABELS: Record<number, string> = {
   1: "Info & Specs",
-  2: "Pricing & Measurements",
-  3: "Media & Variants",
+  2: "Media & Mapping",
+  3: "Pricing & Measurements",
   4: "Shipping Profile",
   5: "FAQs & Review",
 };

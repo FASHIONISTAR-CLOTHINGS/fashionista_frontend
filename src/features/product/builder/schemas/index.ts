@@ -4,7 +4,7 @@
  */
 export {
   Step1Schema as BasicInformationSchema,
-  Step1Schema as PricesSchema,
+  Step3Schema as PricesSchema,
   Step1Schema as CategorySchema,
   Step2Schema as GallerySchema,
   Step3Schema as SizesSchema,

@@ -89,8 +89,27 @@ export const Step1Schema = z.object({
 
 export type Step1Values = z.infer<typeof Step1Schema>;
 
-// Pricing & Measurements page, rendered as Step 3 in the vendor builder.
-export const Step2BaseSchema = z.object({
+// STEP 2: Media & Mapping
+export const Step2MediaAndMappingSchema = z.object({
+  cover_image_public_id: z.string().min(1, "A cover image is required"),
+  cover_image_url: z.string().url().nullable().optional(),
+  cover_image_sku: z.string().optional().default(""),
+  cover_image_color_name: z.string().optional().default(""),
+  cover_image_color_hex: z.string().optional().default(""),
+  cover_image_size_id: z.string().uuid().nullable().optional(),
+  gallery: z
+    .array(GalleryItemSchema)
+    .max(3, "Maximum 3 gallery items allowed in addition to the cover image")
+    .default([]),
+});
+
+export type Step2MediaAndMappingValues = z.infer<typeof Step2MediaAndMappingSchema>;
+
+export const Step2Schema = Step2MediaAndMappingSchema;
+export type Step2Values = Step2MediaAndMappingValues;
+
+// STEP 3: Pricing & Measurements
+export const Step3PricingAndMeasurementsBaseSchema = z.object({
   price: MoneySchema,
   old_price: OptionalMoneySchema,
   is_discounted: z.boolean().default(false),
@@ -131,7 +150,7 @@ export const Step2BaseSchema = z.object({
   fabric_country_of_origin: z.string().max(80).optional().default(""),
 });
 
-export const Step2Schema = Step2BaseSchema.superRefine((data, ctx) => {
+export const Step3PricingAndMeasurementsSchema = Step3PricingAndMeasurementsBaseSchema.superRefine((data, ctx) => {
   if (data.old_price && data.old_price !== "") {
     const oldP = parseFloat(data.old_price);
     const current = parseFloat(data.price);
@@ -141,23 +160,10 @@ export const Step2Schema = Step2BaseSchema.superRefine((data, ctx) => {
   }
 });
 
-export type Step2Values = z.infer<typeof Step2Schema>;
+export type Step3PricingAndMeasurementsValues = z.infer<typeof Step3PricingAndMeasurementsSchema>;
 
-// Media & Mapping page, rendered as Step 2 in the vendor builder.
-export const Step3Schema = z.object({
-  cover_image_public_id: z.string().min(1, "A cover image is required"),
-  cover_image_url: z.string().url().nullable().optional(),
-  cover_image_sku: z.string().optional().default(""),
-  cover_image_color_name: z.string().optional().default(""),
-  cover_image_color_hex: z.string().optional().default(""),
-  cover_image_size_id: z.string().uuid().nullable().optional(),
-  gallery: z
-    .array(GalleryItemSchema)
-    .max(3, "Maximum 3 gallery items allowed in addition to the cover image")
-    .default([]),
-});
-
-export type Step3Values = z.infer<typeof Step3Schema>;
+export const Step3Schema = Step3PricingAndMeasurementsSchema;
+export type Step3Values = Step3PricingAndMeasurementsValues;
 
 // STEP 4: Shipping
 export const Step4BaseSchema = z.object({
@@ -206,8 +212,8 @@ export const Step5Schema = z.object({
 export type Step5Values = z.infer<typeof Step5Schema>;
 
 export const ProductBuilderFormSchema = Step1Schema
-  .merge(Step2BaseSchema)
-  .merge(Step3Schema)
+  .merge(Step2MediaAndMappingSchema)
+  .merge(Step3PricingAndMeasurementsBaseSchema)
   .merge(Step4BaseSchema)
   .merge(Step5Schema);
 

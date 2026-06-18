@@ -102,8 +102,8 @@ const STEP_FIELDS: Record<number, Array<Path<ProductBuilderFormValues>>> = {
 
 const STEP_SCHEMAS = {
   1: Step1Schema,
-  2: Step3Schema,
-  3: Step2Schema,
+  2: Step2Schema,
+  3: Step3Schema,
   4: Step4Schema,
   5: Step5Schema,
 } as const;

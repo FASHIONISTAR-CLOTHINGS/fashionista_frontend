@@ -1,11 +1,11 @@
 "use client";
 
 /**
- * @file Step2PricingAndMeasurements.tsx
+ * @file Step3PricingAndMeasurements.tsx
  * @description Pricing & Inventory, Fabric Specification, Size & Measurement Guide.
  * Rendered as Step 3 in the vendor product builder.
  *
- * Fields covered (aligned to ProductBuilderFormSchema Step2BaseSchema):
+ * Fields covered (aligned to ProductBuilderFormSchema Step3PricingAndMeasurementsBaseSchema):
  *   PRICING & INVENTORY:
  *     price, old_price, is_discounted, discount_percentage, discounted_price,
  *     currency, stock_qty, max_stock, cash_payment_mode, is_pre_order, pre_order_date
@@ -117,10 +117,10 @@ function SectionCard({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MAIN STEP 2 COMPONENT
+// MAIN STEP 3 COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function Step2PricingAndMeasurements() {
+export function Step3PricingAndMeasurements() {
   const form = useFormContext<ProductBuilderFormValues>();
 
   const isDiscounted = form.watch("is_discounted");

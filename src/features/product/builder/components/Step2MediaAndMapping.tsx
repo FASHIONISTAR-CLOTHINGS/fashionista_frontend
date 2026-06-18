@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * @file Step3MediaAndMapping.tsx
+ * @file Step2MediaAndMapping.tsx
  * @description Media Uploads with Direct Cloudinary Integration and Dynamic Size Link Creation.
  * Rendered as Step 2 in the vendor product builder.
  */
@@ -231,10 +231,10 @@ function UploadProgressArea({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// COMPONENT: Step3MediaAndMapping
+// COMPONENT: Step2MediaAndMapping
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function Step3MediaAndMapping() {
+export function Step2MediaAndMapping() {
   const form = useFormContext<ProductBuilderFormValues>();
 
 

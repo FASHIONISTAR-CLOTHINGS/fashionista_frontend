@@ -6,6 +6,7 @@ import {
   Step4Schema,
   Step5Schema,
   ProductBuilderFormSchema,
+  BUILDER_STEPS,
 } from "@/features/product/builder/schemas/builder.schemas";
 
 describe("Product Builder Schemas", () => {
@@ -43,7 +44,42 @@ describe("Product Builder Schemas", () => {
     });
   });
 
-  describe("Step 2: Pricing, Sizing & Fabric Schema", () => {
+  describe("Step 2: Media & Mapping Schema", () => {
+    it("validates cover image and gallery uploads", () => {
+      const payload = {
+        cover_image_public_id: "cloudinary_public_id_123",
+        cover_image_url: "https://res.cloudinary.com/test/image/upload/v1234/test.jpg",
+        gallery: [
+          {
+            public_id: "gallery_id_1",
+            secure_url: "https://res.cloudinary.com/test/image/upload/v1234/gallery1.jpg",
+            media_type: "image",
+            ordering: 0,
+          }
+        ]
+      };
+
+      const parsed = Step2Schema.parse(payload);
+      expect(parsed.cover_image_public_id).toBe("cloudinary_public_id_123");
+      expect(parsed.gallery).toHaveLength(1);
+    });
+
+    it("fails without a cover image", () => {
+      const payload = {
+        cover_image_public_id: "",
+        cover_image_url: "https://res.cloudinary.com/test/image/upload/v1234/test.jpg",
+        gallery: [],
+      };
+
+      const result = Step2Schema.safeParse(payload);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toContain("cover image is required");
+      }
+    });
+  });
+
+  describe("Step 3: Pricing, Sizing & Fabric Schema", () => {
     it("validates valid sizing parameters, fabric details, price and stock", () => {
       const payload = {
         price: "15000.00",
@@ -65,7 +101,7 @@ describe("Product Builder Schemas", () => {
         fabric_country_of_origin: "Nigeria",
       };
 
-      const parsed = Step2Schema.parse(payload);
+      const parsed = Step3Schema.parse(payload);
       expect(parsed.requires_measurement).toBe(true);
       expect(parsed.fabric_type).toBe("Damask");
       expect(parsed.price).toBe("15000.00");
@@ -80,7 +116,7 @@ describe("Product Builder Schemas", () => {
         fabric_type: "",
       };
 
-      const result = Step2Schema.safeParse(payload);
+      const result = Step3Schema.safeParse(payload);
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.issues[0].message).toContain("Original price must be higher");
@@ -88,38 +124,17 @@ describe("Product Builder Schemas", () => {
     });
   });
 
-  describe("Step 3: Media & Gallery Schema", () => {
-    it("validates cover image and gallery uploads", () => {
-      const payload = {
-        cover_image_public_id: "cloudinary_public_id_123",
-        cover_image_url: "https://res.cloudinary.com/test/image/upload/v1234/test.jpg",
-        gallery: [
-          {
-            public_id: "gallery_id_1",
-            secure_url: "https://res.cloudinary.com/test/image/upload/v1234/gallery1.jpg",
-            media_type: "image",
-            ordering: 0,
-          }
-        ]
-      };
-
-      const parsed = Step3Schema.parse(payload);
-      expect(parsed.cover_image_public_id).toBe("cloudinary_public_id_123");
-      expect(parsed.gallery).toHaveLength(1);
-    });
-  });
-
   describe("Step 4: Shipping Schema", () => {
     it("validates shipping details", () => {
       const payload = {
         weight_kg: "1.5",
-        shipping_amount: "2000.00",
+        shipping_amount: "2500.00",
         courier_id: "019ec340-cfc0-7383-b75e-350d09e7b807",
       };
 
       const parsed = Step4Schema.parse(payload);
       expect(parsed.weight_kg).toBe("1.5");
-      expect(parsed.shipping_amount).toBe("2000.00");
+      expect(parsed.shipping_amount).toBe("2500.00");
     });
   });
 
@@ -191,6 +206,19 @@ describe("Product Builder Schemas", () => {
 
       const result = ProductBuilderFormSchema.safeParse(payload);
       expect(result.success).toBe(true);
+    });
+  });
+
+  describe("Builder step metadata", () => {
+    it("keeps Step 2 as media and Step 3 as pricing", () => {
+      expect(BUILDER_STEPS[1]).toMatchObject({
+        step: 2,
+        label: "Media & Mapping",
+      });
+      expect(BUILDER_STEPS[2]).toMatchObject({
+        step: 3,
+        label: "Pricing & Measurements",
+      });
     });
   });
 });

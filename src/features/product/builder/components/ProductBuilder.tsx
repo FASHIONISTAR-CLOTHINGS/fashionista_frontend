@@ -16,8 +16,8 @@ import { useBuilderContext } from "./ProductBuilderProvider";
 import { useDraftStore } from "../store";
 import { BuilderStepper } from "./BuilderStepper";
 import { Step1InfoAndSpecs } from "./Step1InfoAndSpecs";
-import { Step2PricingAndMeasurements } from "./Step2PricingAndMeasurements";
-import { Step3MediaAndMapping } from "./Step3MediaAndMapping";
+import { Step2MediaAndMapping } from "./Step2MediaAndMapping";
+import { Step3PricingAndMeasurements } from "./Step3PricingAndMeasurements";
 import { Step4Shipping } from "./Step4Shipping";
 import { Step5FAQAndReview } from "./Step5FAQAndReview";
 import { BUILDER_STEPS } from "../schemas/builder.schemas";
@@ -31,8 +31,8 @@ import { ChevronLeft, ChevronRight, Loader2, SendHorizontal, Save } from "lucide
 
 const STEP_COMPONENTS: Record<number, React.ComponentType> = {
   1: Step1InfoAndSpecs,
-  2: Step3MediaAndMapping,
-  3: Step2PricingAndMeasurements,
+  2: Step2MediaAndMapping,
+  3: Step3PricingAndMeasurements,
   4: Step4Shipping,
   5: Step5FAQAndReview,
 };

@@ -188,8 +188,8 @@ export {
   useBuilderContext,
   // Individual step components
   Step1InfoAndSpecs,
-  Step2PricingAndMeasurements,
-  Step3MediaAndMapping,
+  Step2MediaAndMapping,
+  Step3PricingAndMeasurements,
   Step4Shipping,
   Step5FAQAndReview,
   FASHION_FAQS,

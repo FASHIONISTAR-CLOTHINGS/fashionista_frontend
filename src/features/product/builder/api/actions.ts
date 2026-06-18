@@ -25,7 +25,7 @@ export const BasicInformationAction = async (formdata: FormData) => {
       errors: validated.error.flatten().fieldErrors,
     };
   }
-  redirect("/vendor/products?step=prices");
+  redirect("/vendor/products?step=media");
 };
 export const PricesAction = async (formdata: FormData) => {
   const data = Object.fromEntries(formdata.entries());
@@ -36,7 +36,7 @@ export const PricesAction = async (formdata: FormData) => {
       errors: validated.error.flatten().fieldErrors,
     };
   }
-  redirect("/vendor/products?step=category");
+  redirect("/vendor/products?step=shipping");
 };
 export const CategoryAction = async (formdata: FormData) => {
   const data = Object.fromEntries(formdata.entries());
@@ -46,7 +46,7 @@ export const CategoryAction = async (formdata: FormData) => {
       errors: validated.error.flatten().fieldErrors,
     };
   }
-  redirect("/vendor/products?step=gallery");
+  redirect("/vendor/products?step=media");
 };
 export const GalleryAction = async (formdata: FormData) => {
   const data = Object.fromEntries(formdata.entries());
@@ -56,7 +56,7 @@ export const GalleryAction = async (formdata: FormData) => {
       errors: validated.error.flatten().fieldErrors,
     };
   }
-  redirect("/vendor/products?step=specification");
+  redirect("/vendor/products?step=pricing");
 };
 export const SpecificationAction = async (prev: unknown, formdata: FormData) => {
   void prev;
@@ -69,7 +69,7 @@ export const SpecificationAction = async (prev: unknown, formdata: FormData) => 
       errors: validated.error.flatten().fieldErrors,
     };
   }
-  redirect("/vendor/products?step=sizes");
+  redirect("/vendor/products?step=pricing");
 };
 export const SizesAction = async (prev: unknown, formdata: FormData) => {
   void prev;
@@ -86,7 +86,7 @@ export const SizesAction = async (prev: unknown, formdata: FormData) => {
       errors: validated.error.flatten().fieldErrors,
     };
   }
-  redirect("/vendor/products?step=color");
+  redirect("/vendor/products?step=shipping");
 };
 
 export const newProduct = async (formdata: FormData | object) => {

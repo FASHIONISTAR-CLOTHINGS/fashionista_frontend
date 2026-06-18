@@ -12,8 +12,8 @@ export { ProductBuilderProvider, useBuilderContext } from "./ProductBuilderProvi
 
 // ── Individual step components ───────────────────────────────────────────────
 export * from "./Step1InfoAndSpecs";
-export * from "./Step2PricingAndMeasurements";
-export * from "./Step3MediaAndMapping";
+export * from "./Step2MediaAndMapping";
+export * from "./Step3PricingAndMeasurements";
 export * from "./Step4Shipping";
 export * from "./Step5FAQAndReview";
 export * from "./ProductBuilder";

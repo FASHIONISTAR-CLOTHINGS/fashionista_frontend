@@ -27,8 +27,8 @@ export { ProductBuilder } from "./components/ProductBuilder";
 
 // ── Step Components ──────────────────────────────────────────────────────────
 export { Step1InfoAndSpecs } from "./components/Step1InfoAndSpecs";
-export { Step2PricingAndMeasurements } from "./components/Step2PricingAndMeasurements";
-export { Step3MediaAndMapping } from "./components/Step3MediaAndMapping";
+export { Step2MediaAndMapping } from "./components/Step2MediaAndMapping";
+export { Step3PricingAndMeasurements } from "./components/Step3PricingAndMeasurements";
 export { Step4Shipping } from "./components/Step4Shipping";
 export { Step5FAQAndReview, FASHION_FAQS } from "./components/Step5FAQAndReview";
 
