@@ -1,113 +1,131 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
+
+type LocalSaveStatus = "idle" | "saving" | "saved" | "failed";
+
+const LOCAL_SNAPSHOT_KEY = "fashionistar_product_builder_local_snapshot";
+
+function browserSessionStorage() {
+  if (typeof window === "undefined") {
+    return {
+      getItem: () => null,
+      setItem: () => undefined,
+      removeItem: () => undefined,
+    };
+  }
+  return window.sessionStorage;
+}
 
 export interface DraftState {
-  draft_key: string | null;
-  idempotency_key: string | null;
-  current_step: number;
+  localDraftKey: string | null;
+  idempotencyKey: string | null;
+  currentStep: number;
   payload: Record<string, any>;
-  syncStatus: "idle" | "saving" | "synced" | "failed";
-  lastSyncedAt: string | null;
+  saveStatus: LocalSaveStatus;
+  lastSavedAt: string | null;
 
-  // Actions
-  setDraftKey: (key: string | null) => void;
+  setLocalDraftKey: (key: string | null) => void;
   setIdempotencyKey: (key: string | null) => void;
   setCurrentStep: (step: number) => void;
   setPayload: (payload: Record<string, any>) => void;
-  setSyncStatus: (status: "idle" | "saving" | "synced" | "failed") => void;
-  setLastSyncedAt: (time: string | null) => void;
+  setSaveStatus: (status: LocalSaveStatus) => void;
+  setLastSavedAt: (time: string | null) => void;
   resetStore: () => void;
-  saveBackup: () => void;
-  loadBackup: () => boolean;
-  clearBackup: () => void;
+  saveSnapshot: () => void;
+  loadSnapshot: () => boolean;
+  clearSnapshot: () => void;
 }
 
+/**
+ * Browser-only recovery store for unfinished product creation.
+ *
+ * Session storage keeps the active wizard fast inside the current tab, while the
+ * localStorage snapshot survives browser closes. Nothing in this store sends
+ * product draft state to the backend; only final product create/update APIs do.
+ */
 export const useDraftStore = create<DraftState>()(
   persist(
     (set, get) => ({
-      draft_key: null,
-      idempotency_key: null,
-      current_step: 1,
+      localDraftKey: null,
+      idempotencyKey: null,
+      currentStep: 1,
       payload: {},
-      syncStatus: "idle",
-      lastSyncedAt: null,
+      saveStatus: "idle",
+      lastSavedAt: null,
 
-      setDraftKey: (key) => set({ draft_key: key }),
-      setIdempotencyKey: (key) => set({ idempotency_key: key }),
+      setLocalDraftKey: (key) => set({ localDraftKey: key }),
+      setIdempotencyKey: (key) => set({ idempotencyKey: key }),
       setCurrentStep: (step) => {
-        set({ current_step: step });
-        get().saveBackup();
+        set({ currentStep: step });
+        get().saveSnapshot();
       },
       setPayload: (payload) => {
-        set((state) => ({ payload: { ...state.payload, ...payload } }));
-        get().saveBackup();
+        set({ payload: { ...payload } });
+        get().saveSnapshot();
       },
-      setSyncStatus: (status) => set({ syncStatus: status }),
-      setLastSyncedAt: (time) => set({ lastSyncedAt: time }),
+      setSaveStatus: (status) => set({ saveStatus: status }),
+      setLastSavedAt: (time) => set({ lastSavedAt: time }),
       resetStore: () => {
-        get().clearBackup();
+        get().clearSnapshot();
         set({
-          draft_key: null,
-          idempotency_key: null,
-          current_step: 1,
+          localDraftKey: null,
+          idempotencyKey: null,
+          currentStep: 1,
           payload: {},
-          syncStatus: "idle",
-          lastSyncedAt: null,
+          saveStatus: "idle",
+          lastSavedAt: null,
         });
       },
-
-      // Backup to localStorage for tab close recovery
-      saveBackup: () => {
+      saveSnapshot: () => {
         if (typeof window === "undefined") return;
-        const { draft_key, idempotency_key, current_step, payload } = get();
-        if (!draft_key) return;
+        const { localDraftKey, idempotencyKey, currentStep, payload } = get();
+        if (!localDraftKey) return;
 
-        const backupData = {
-          draft_key,
-          idempotency_key,
-          current_step,
-          payload,
-          savedAt: new Date().toISOString(),
-        };
-        localStorage.setItem(
-          "fashionistar_product_builder_draft_backup",
-          JSON.stringify(backupData)
+        const savedAt = new Date().toISOString();
+        set({ lastSavedAt: savedAt, saveStatus: "saved" });
+
+        window.localStorage.setItem(
+          LOCAL_SNAPSHOT_KEY,
+          JSON.stringify({
+            localDraftKey,
+            idempotencyKey,
+            currentStep,
+            payload,
+            savedAt,
+          }),
         );
       },
-
-      loadBackup: () => {
+      loadSnapshot: () => {
         if (typeof window === "undefined") return false;
         try {
-          const raw = localStorage.getItem("fashionistar_product_builder_draft_backup");
+          const raw = window.localStorage.getItem(LOCAL_SNAPSHOT_KEY);
           if (!raw) return false;
           const parsed = JSON.parse(raw);
-          if (parsed && parsed.draft_key) {
-            set({
-              draft_key: parsed.draft_key,
-              idempotency_key: parsed.idempotency_key,
-              current_step: parsed.current_step,
-              payload: parsed.payload || {},
-              syncStatus: "idle",
-              lastSyncedAt: parsed.savedAt || null,
-            });
-            return true;
-          }
-        } catch (e) {
-          console.error("Failed to load local storage draft backup", e);
-        }
-        return false;
-      },
+          if (!parsed?.localDraftKey) return false;
 
-      clearBackup: () => {
+          set({
+            localDraftKey: parsed.localDraftKey,
+            idempotencyKey: parsed.idempotencyKey ?? null,
+            currentStep: parsed.currentStep ?? 1,
+            payload: parsed.payload || {},
+            saveStatus: "idle",
+            lastSavedAt: parsed.savedAt || null,
+          });
+          return true;
+        } catch (error) {
+          console.error("Failed to load local product builder snapshot", error);
+          set({ saveStatus: "failed" });
+          return false;
+        }
+      },
+      clearSnapshot: () => {
         if (typeof window === "undefined") return;
-        localStorage.removeItem("fashionistar_product_builder_draft_backup");
+        window.localStorage.removeItem(LOCAL_SNAPSHOT_KEY);
       },
     }),
     {
-      name: "fashionistar-product-builder-draft-active",
-      storage: createJSONStorage(() =>
-        typeof window !== "undefined" ? sessionStorage : localStorage
-      ),
-    }
-  )
+      name: "fashionistar-product-builder-local-session",
+      storage: createJSONStorage(browserSessionStorage),
+    },
+  ),
 );

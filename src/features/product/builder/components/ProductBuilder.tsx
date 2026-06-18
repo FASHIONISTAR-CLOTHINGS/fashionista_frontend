@@ -65,19 +65,19 @@ function BuilderNavigation() {
   const isFirst = currentStep === 1;
   const isLast = currentStep === BUILDER_STEPS.length;
   const publishIntent = form.watch("publish_intent");
-  const syncStatus = useDraftStore((state) => state.syncStatus);
+  const saveStatus = useDraftStore((state) => state.saveStatus);
 
   const values = form.watch();
   const stepComplete = isStepComplete(currentStep, values);
 
   const renderSyncStatus = () => {
-    switch (syncStatus) {
+    switch (saveStatus) {
       case "saving":
-        return <span className="text-[#7A6B44] text-xs animate-pulse">Syncing…</span>;
-      case "synced":
-        return <span className="text-[#01454A] text-xs font-semibold">✓ Synced to cloud</span>;
+        return <span className="text-[#7A6B44] text-xs animate-pulse">Saving in browser…</span>;
+      case "saved":
+        return <span className="text-[#01454A] text-xs font-semibold">Saved in browser</span>;
       case "failed":
-        return <span className="text-red-500 text-xs font-semibold">Sync failed</span>;
+        return <span className="text-red-500 text-xs font-semibold">Local save failed</span>;
       default:
         return <span className="text-[#7A6B44] text-xs">Saved locally</span>;
     }

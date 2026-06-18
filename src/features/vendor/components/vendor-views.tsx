@@ -58,10 +58,7 @@ import {
   useUpdateProduct,
   useDeleteProduct,
   productKeys,
-  fetchActiveDraftSessions,
-  discardDraftSession,
 } from "@/features/product";
-import type { ProductDraftSession } from "@/features/product";
 import type { ProductBuilderFormValues } from "@/features/product";
 import {
   useSubmitVendorSetup,
@@ -1778,31 +1775,34 @@ function DraftStepProgress({ step }: { step: number }) {
   );
 }
 
-interface DraftCardProps {
-  draft: ProductDraftSession;
-  isLocal: boolean;
-  localStep: number;
-  onResume: (draft: ProductDraftSession) => void;
-  onDiscard: (draft: ProductDraftSession) => void;
-  isDiscarding: boolean;
+interface LocalDraftSnapshot {
+  localDraftKey: string;
+  currentStep: number;
+  payload: Record<string, any>;
+  lastSavedAt: string | null;
 }
 
-function DraftSessionCard({ draft, isLocal, localStep, onResume, onDiscard, isDiscarding }: DraftCardProps) {
-  const step = isLocal ? localStep : (draft.current_step ?? 1);
+function LocalDraftCard({
+  draft,
+  onResume,
+  onDiscard,
+}: {
+  draft: LocalDraftSnapshot;
+  onResume: () => void;
+  onDiscard: () => void;
+}) {
+  const step = draft.currentStep ?? 1;
   const stepLabel = STEP_LABELS[step] ?? `Step ${step}`;
   const progress = Math.round((step / 5) * 100);
-  const syncTime = formatRelativeTime(draft.last_synced_at);
+  const syncTime = formatRelativeTime(draft.lastSavedAt);
   const title = (draft.payload as any)?.title;
 
   return (
     <div className="group relative flex flex-col gap-3 sm:gap-4 rounded-xl sm:rounded-2xl border border-[#ECE6D6] bg-white p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-[#FDA600]/30 transition-all duration-200">
-      {/* Live badge */}
-      {isLocal && (
-        <span className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-1.5 rounded-full bg-[#01454A]/8 border border-[#01454A]/20 px-2.5 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#01454A]">
-          <span className="h-1 sm:h-1.5 w-1 sm:w-1.5 rounded-full bg-[#01454A] animate-pulse" />
-          Active
-        </span>
-      )}
+      <span className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-1.5 rounded-full bg-[#01454A]/8 border border-[#01454A]/20 px-2.5 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#01454A]">
+        <span className="h-1 sm:h-1.5 w-1 sm:w-1.5 rounded-full bg-[#01454A] animate-pulse" />
+        Browser
+      </span>
 
       {/* Header */}
       <div className="flex items-start gap-2.5 sm:gap-3 pr-14 sm:pr-16">
@@ -1815,7 +1815,7 @@ function DraftSessionCard({ draft, isLocal, localStep, onResume, onDiscard, isDi
             {title ? `"${title}"` : "Untitled product"}
           </h3>
           <p className="mt-0.5 text-[10px] sm:text-[11px] text-[#7A6B44]/75">
-            Draft key: <span className="font-mono">{String(draft.draft_key).slice(0, 8)}…</span>
+            Local key: <span className="font-mono">{draft.localDraftKey.slice(0, 8)}...</span>
           </p>
         </div>
       </div>
@@ -1842,7 +1842,7 @@ function DraftSessionCard({ draft, isLocal, localStep, onResume, onDiscard, isDi
       <div className="flex gap-2 mt-0.5 sm:mt-1">
         <Button
           type="button"
-          onClick={() => onResume(draft)}
+          onClick={onResume}
           className="flex-1 h-8 sm:h-9 rounded-lg sm:rounded-xl bg-[#FDA600] text-black text-[11px] sm:text-xs font-bold hover:bg-[#E8960A] transition shadow-sm shadow-[#FDA600]/20 border-none cursor-pointer min-h-0"
         >
           <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
@@ -1850,83 +1850,39 @@ function DraftSessionCard({ draft, isLocal, localStep, onResume, onDiscard, isDi
         </Button>
         <Button
           type="button"
-          onClick={() => onDiscard(draft)}
-          disabled={isDiscarding}
+          onClick={onDiscard}
           className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-lg sm:rounded-xl border border-[#F2C9C9] bg-white text-[#8A3B3B] text-[11px] sm:text-xs font-semibold hover:bg-[#FFF7F7] transition border-solid cursor-pointer min-h-0 disabled:opacity-40"
         >
-          {isDiscarding ? <RefreshCw className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" /> : <X className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
+          <X className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
         </Button>
       </div>
     </div>
   );
 }
 
-function VendorDraftSessionPanel({ onResumeDraft }: { onResumeDraft: (draft: ProductDraftSession) => void }) {
-  const localDraftKey  = useDraftStore((s) => s.draft_key);
-  const localStep      = useDraftStore((s) => s.current_step);
+function VendorLocalDraftPanel({ onResumeDraft }: { onResumeDraft: () => void }) {
+  const localDraftKey  = useDraftStore((s) => s.localDraftKey);
+  const localStep      = useDraftStore((s) => s.currentStep);
+  const localPayload   = useDraftStore((s) => s.payload);
+  const lastSavedAt    = useDraftStore((s) => s.lastSavedAt);
   const resetStore     = useDraftStore((s) => s.resetStore);
-
-  const [remoteDrafts, setRemoteDrafts] = useState<ProductDraftSession[]>([]);
-  const [loadingRemote, setLoadingRemote] = useState(false);
-  const [discardingKey, setDiscardingKey] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(true);
 
-  // Fetch remote drafts on mount
-  useEffect(() => {
-    let cancelled = false;
-    setLoadingRemote(true);
-    fetchActiveDraftSessions()
-      .then((drafts) => { if (!cancelled) setRemoteDrafts(drafts); })
-      .catch(() => { /* fail silently — local draft still shown */ })
-      .finally(() => { if (!cancelled) setLoadingRemote(false); });
-    return () => { cancelled = true; };
-  }, []);
+  const hasMeaningfulDraft = Boolean(
+    localDraftKey && Object.keys(localPayload || {}).length > 0,
+  );
+  if (!hasMeaningfulDraft || !localDraftKey) return null;
 
-  // Merge remote list with local store (dedupe by draft_key)
-  const allDrafts = React.useMemo(() => {
-    const map = new Map<string, { draft: ProductDraftSession; isLocal: boolean }>();
-    remoteDrafts.forEach((d) => map.set(String(d.draft_key), { draft: d, isLocal: false }));
-    // Overlay local store state onto matching remote entry, or synthesise a ghost
-    if (localDraftKey) {
-      const existing = map.get(localDraftKey);
-      if (existing) {
-        map.set(localDraftKey, { draft: existing.draft, isLocal: true });
-      } else {
-        // Local-only (not yet synced or freshly created)
-        map.set(localDraftKey, {
-          isLocal: true,
-          draft: {
-            id: localDraftKey,
-            draft_key: localDraftKey,
-            idempotency_key: null,
-            status: "active",
-            current_step: localStep,
-            payload: {},
-            linked_product_id: null,
-            expires_at: "",
-            last_synced_at: "",
-          } as unknown as ProductDraftSession,
-        });
-      }
-    }
-    return Array.from(map.values());
-  }, [remoteDrafts, localDraftKey, localStep]);
+  const localDraft: LocalDraftSnapshot = {
+    localDraftKey,
+    currentStep: localStep,
+    payload: localPayload,
+    lastSavedAt,
+  };
 
-  if (allDrafts.length === 0 && !loadingRemote) return null;
-
-  const handleDiscard = async (draft: ProductDraftSession) => {
-    const key = String(draft.draft_key);
-    setDiscardingKey(key);
-    try {
-      await discardDraftSession(key);
-      if (localDraftKey === key) resetStore();
-      setRemoteDrafts((prev) => prev.filter((d) => String(d.draft_key) !== key));
-      toast.success("Draft discarded.");
-    } catch {
-      toast.error("Could not discard draft — try again.");
-    } finally {
-      setDiscardingKey(null);
-    }
+  const handleDiscard = () => {
+    resetStore();
+    toast.success("Local draft discarded.");
   };
 
   return (
@@ -1939,13 +1895,13 @@ function VendorDraftSessionPanel({ onResumeDraft }: { onResumeDraft: (draft: Pro
           </div>
           <div>
             <p className="text-xs sm:text-sm font-bold text-[#1A1208]">
-              In-Progress Drafts
+              In-Progress Browser Draft
               <span className="ml-1.5 sm:ml-2 inline-flex items-center justify-center h-4.5 w-4.5 sm:h-5 sm:w-5 rounded-full bg-[#FDA600] text-[9px] sm:text-[10px] font-black text-black">
-                {allDrafts.length}
+                1
               </span>
             </p>
             <p className="text-[10px] sm:text-[11px] text-[#7A6B44] mt-0.5">
-              You have unfinished product drafts. Resume or discard below.
+              Your unfinished product is stored in this browser only.
             </p>
           </div>
         </div>
@@ -1960,27 +1916,15 @@ function VendorDraftSessionPanel({ onResumeDraft }: { onResumeDraft: (draft: Pro
 
       {isExpanded && (
         <>
-          {loadingRemote && (
-            <div className="flex items-center gap-2 text-xs text-[#7A6B44] py-2">
-              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-              Loading saved drafts…
-            </div>
-          )}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {allDrafts.map(({ draft, isLocal }) => (
-              <DraftSessionCard
-                key={String(draft.draft_key)}
-                draft={draft}
-                isLocal={isLocal}
-                localStep={localStep}
-                onResume={onResumeDraft}
-                onDiscard={handleDiscard}
-                isDiscarding={discardingKey === String(draft.draft_key)}
-              />
-            ))}
+            <LocalDraftCard
+              draft={localDraft}
+              onResume={onResumeDraft}
+              onDiscard={handleDiscard}
+            />
           </div>
           <p className="mt-4 text-[10px] text-[#7A6B44]/70 text-center">
-            Drafts are auto-saved every 1.5 seconds while you type. Committed drafts become live products.
+            Drafts are auto-saved in your browser. Only final product creation reaches the backend.
           </p>
         </>
       )}
@@ -1996,12 +1940,10 @@ export function VendorProductComposerView() {
   const productSlugRef = useRef<string | null>(null);
   const updateMutation = useUpdateProduct(productSlugRef.current ?? "");
 
-  // Draft resume handler — loads selected draft's payload into the local store
-  const localDraftKey    = useDraftStore((s) => s.draft_key);
-  const setDraftKey      = useDraftStore((s) => s.setDraftKey);
-  const setCurrentStep   = useDraftStore((s) => s.setCurrentStep);
-  const setPayload       = useDraftStore((s) => s.setPayload);
-  const setIdempotency   = useDraftStore((s) => s.setIdempotencyKey);
+  // Local browser draft resume handler. The provider hydrates the form from
+  // Zustand/sessionStorage, so this only returns focus to the builder.
+  const localDraftKey = useDraftStore((s) => s.localDraftKey);
+  const localStep = useDraftStore((s) => s.currentStep);
 
   const [showDraftPanel, setShowDraftPanel] = useState(true);
 
@@ -2012,15 +1954,9 @@ export function VendorProductComposerView() {
     }
   }, [localDraftKey]);
 
-  const handleResumeDraft = (draft: ProductDraftSession) => {
-    setDraftKey(String(draft.draft_key));
-    setIdempotency(draft.idempotency_key ?? null);
-    setCurrentStep(draft.current_step ?? 1);
-    setPayload((draft.payload as Record<string, any>) ?? {});
-    toast.success(`Resuming draft — step ${draft.current_step ?? 1} of 5`);
-    // Close the draft panel immediately
+  const handleResumeDraft = () => {
+    toast.success(`Resuming local draft - step ${localStep ?? 1} of 5`);
     setShowDraftPanel(false);
-    // Scroll builder into view
     document.getElementById("product-builder-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -2051,7 +1987,8 @@ export function VendorProductComposerView() {
       productSlugRef.current = productId;
     }
 
-    // Draft commit owns creation. This parent only handles optional review submission and navigation.
+    // Product creation happens through the canonical product endpoint. Local
+    // browser drafts are cleared by the builder only after successful create.
     if (values.publish_intent === "pending" && savedSlug) {
       try {
         await publishProduct(savedSlug);
@@ -2066,8 +2003,8 @@ export function VendorProductComposerView() {
 
   return (
     <div className="space-y-6">
-      {/* ── Draft Session Panel — shows all active/pending drafts ── */}
-      {showDraftPanel && <VendorDraftSessionPanel onResumeDraft={handleResumeDraft} />}
+      {/* ── Browser Draft Panel — local recovery only, no backend draft API ── */}
+      {showDraftPanel && <VendorLocalDraftPanel onResumeDraft={handleResumeDraft} />}
 
       {/* ── Page header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl bg-white border border-[#ECE6D6] px-8 py-6 shadow-sm">

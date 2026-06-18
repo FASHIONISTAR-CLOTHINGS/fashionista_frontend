@@ -28,7 +28,7 @@ export function VendorProductBuilderWrapper({
   ): Promise<void> => {
     // The actual submit logic is handled at the step level (Step5ReviewSubmit).
     // This top-level handler is called only if Step5 bubbles up a final confirm.
-    toast.info("Finalising product draft…");
+    toast.info("Finalising product…");
   };
 
   return (

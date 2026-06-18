@@ -4,23 +4,9 @@
  * @file ProductBuilderProvider.tsx
  * @description Root context and form provider for the 5-step product builder.
  *
- * Uses react-hook-form with zodResolver over the composite ProductBuilderFormSchema.
- * All step components consume form state via `useFormContext()` — no prop-drilling.
- *
- * Draft persistence: field changes are cached locally and synced to the
- * backend ProductDraftSession. Final publication still flows through createProduct().
- *
- * ─────────────────────────────────────────────────────────────────────────────
- * Architecture:
- *   ProductBuilderProvider (FormProvider)
- *     └─ BuilderStepper                  ← step navigation bar
- *        └─ StepContent                  ← renders active step component
- *           ├─ Step1InfoAndSpecs         ← title, description, condition, gender, age, categories
- *           ├─ Step2PricingAndMeasurements ← pricing, fabric spec, measurement guide
- *           ├─ Step3MediaAndMapping      ← cover image, gallery, color/size mappings
- *           ├─ Step4Shipping             ← weight, shipping cost, preferred courier
- *           └─ Step5FAQAndReview         ← FAQs, SEO, publish settings, review summary
- * ─────────────────────────────────────────────────────────────────────────────
+ * Draft persistence is browser-only. The active session is kept in
+ * sessionStorage through Zustand persist, and a localStorage snapshot is written
+ * for browser-close recovery. No draft payload is synced to the backend.
  */
 
 import React, {
@@ -31,23 +17,17 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useForm, FormProvider, UseFormReturn } from "react-hook-form";
+import { FormProvider, useForm, UseFormReturn } from "react-hook-form";
+import type { Path } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useDraftStore } from "../store";
+import { createProduct } from "../../api/product.api";
 import {
-  createDraftSession,
-  updateDraftSession,
-  fetchDraftSessionDetail,
-  createProduct,
-} from "../../api/product.api";
-
-
-import {
+  builderProgress,
   ProductBuilderFormSchema,
   ProductBuilderFormValues,
   TOTAL_STEPS,
-  builderProgress,
 } from "../schemas/builder.schemas";
 
 function generateUUID(): string {
@@ -61,38 +41,20 @@ function generateUUID(): string {
   });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CONTEXT SHAPE
-// ─────────────────────────────────────────────────────────────────────────────
-
 interface BuilderContextValue {
-  /** Current active step (1-indexed). */
   currentStep: number;
-  /** Navigate to the next step — runs step-scoped validation first. */
   nextStep: () => Promise<boolean>;
-  /** Navigate back without validation. */
   prevStep: () => void;
-  /** Jump directly to a specific step number. */
   goToStep: (step: number) => void;
-  /** 0–100 progress percentage. */
   progress: number;
-  /** True when the builder is submitting to the backend. */
   isSubmitting: boolean;
-  /** Set submitting state from hook. */
   setIsSubmitting: (v: boolean) => void;
-  /** Product UUID/slug populated after final commit or edit-mode save. */
   productId: string | null;
-  /** Set productId after create-draft response. */
   setProductId: (id: string) => void;
-  /** Vendor ID used for localStorage draft key. */
   vendorId: string;
-  /** Manually trigger a draft save. */
   saveDraft: () => void;
-  /** True when a draft has been loaded from localStorage. */
   draftLoaded: boolean;
-  /** Clear localStorage draft (called after successful publish). */
   clearDraft: () => void;
-  /** The underlying react-hook-form methods. */
   form: UseFormReturn<ProductBuilderFormValues>;
 }
 
@@ -104,28 +66,18 @@ export function useBuilderContext(): BuilderContextValue {
   return ctx;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP-SCOPED FIELD GROUPS (for per-step validation trigger)
-// ─────────────────────────────────────────────────────────────────────────────
-
-import type { Path } from "react-hook-form";
-
 const STEP_FIELDS: Record<number, Array<Path<ProductBuilderFormValues>>> = {
   1: ["title", "description", "condition", "category_ids", "sub_category_ids", "gender_target", "age_group"],
   2: [
     "price", "old_price", "is_discounted", "discount_percentage", "discounted_price",
     "currency", "stock_qty", "max_stock", "cash_payment_mode", "is_pre_order", "pre_order_date",
     "requires_measurement", "is_customisable", "measurement_guide",
-    "fabric_type", "fabric_care_instructions", "fabric_is_organic", "fabric_is_vegan", "fabric_country_of_origin"
+    "fabric_type", "fabric_care_instructions", "fabric_is_organic", "fabric_is_vegan", "fabric_country_of_origin",
   ],
   3: ["cover_image_public_id", "cover_image_url", "gallery"],
   4: ["weight_kg", "shipping_amount", "courier_id"],
   5: ["faqs", "publish_intent", "featured", "hot_deal", "meta_title", "meta_description"],
 };
-
-// ─────────────────────────────────────────────────────────────────────────────
-// DEFAULT FORM VALUES
-// ─────────────────────────────────────────────────────────────────────────────
 
 const DEFAULT_VALUES: Partial<ProductBuilderFormValues> = {
   title: "",
@@ -151,7 +103,6 @@ const DEFAULT_VALUES: Partial<ProductBuilderFormValues> = {
   requires_measurement: false,
   is_customisable: false,
   measurement_guide: [],
-  
   fabric_type: "",
   fabric_care_instructions: "machine_wash",
   fabric_is_organic: false,
@@ -196,21 +147,14 @@ function sanitizePayload(payload: any): ProductBuilderFormValues {
   return sanitized;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PROVIDER COMPONENT
-// ─────────────────────────────────────────────────────────────────────────────
-
 interface ProductBuilderProviderProps {
-  /** Vendor ID — used to namespace the localStorage draft key. */
   vendorId: string;
-  /** Optional initial values (for edit mode). */
   initialValues?: Partial<ProductBuilderFormValues>;
-  /** Called with final form values when vendor confirms publish. */
   onSubmit: (values: ProductBuilderFormValues, productId: string | null) => Promise<void>;
   children: React.ReactNode;
 }
 
-const DRAFT_DEBOUNCE_MS = 1500;
+const LOCAL_SAVE_DEBOUNCE_MS = 800;
 
 export function ProductBuilderProvider({
   vendorId,
@@ -218,68 +162,48 @@ export function ProductBuilderProvider({
   onSubmit,
   children,
 }: ProductBuilderProviderProps) {
-  // ── Form ──────────────────────────────────────────────────────────────────
   const form = useForm<ProductBuilderFormValues>({
     resolver: zodResolver(ProductBuilderFormSchema),
     defaultValues: sanitizePayload(initialValues),
-    mode: "onTouched",          // Validate on blur — lower cognitive load
-    reValidateMode: "onChange", // Re-validate on change after first touch
+    mode: "onTouched",
+    reValidateMode: "onChange",
   });
 
-  // ── State ─────────────────────────────────────────────────────────────────
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [productId, setProductId] = useState<string | null>(null);
   const [draftLoaded, setDraftLoaded] = useState(false);
-
-  // ── Draft persistence ─────────────────────────────────────────────────────
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const localDraftKey = useDraftStore((s) => s.localDraftKey);
 
-  const saveDraft = useCallback(async () => {
+  const saveDraft = useCallback(() => {
+    if (initialValues) return;
     const store = useDraftStore.getState();
-    const key = store.draft_key;
-    if (!key || initialValues) return;
 
     try {
-      const values = form.getValues();
-      store.setPayload(values);
+      store.setSaveStatus("saving");
+      store.setPayload(form.getValues());
       store.setCurrentStep(currentStep);
-      store.setSyncStatus("saving");
-
-      const updated = await updateDraftSession(key, {
-        payload: values,
-        current_step: currentStep,
-        idempotency_key: store.idempotency_key || undefined,
-      });
-      store.setLastSyncedAt(updated.last_synced_at);
-      store.setSyncStatus("synced");
-    } catch (err) {
-      console.error("Auto-syncing draft to backend failed:", err);
-      store.setSyncStatus("failed");
+      store.saveSnapshot();
+    } catch (error) {
+      console.error("Local product builder save failed:", error);
+      store.setSaveStatus("failed");
     }
-  }, [form, currentStep, initialValues]);
+  }, [currentStep, form, initialValues]);
 
-  const saveDraftStep = useCallback(async (step: number) => {
+  const saveDraftStep = useCallback((step: number) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    const store = useDraftStore.getState();
-    const key = store.draft_key;
-    if (!key || initialValues) return;
+    if (initialValues) return;
 
+    const store = useDraftStore.getState();
     try {
-      const values = form.getValues();
-      store.setPayload(values);
+      store.setSaveStatus("saving");
+      store.setPayload(form.getValues());
       store.setCurrentStep(step);
-      store.setSyncStatus("saving");
-      const updated = await updateDraftSession(key, {
-        payload: values,
-        current_step: step,
-        idempotency_key: store.idempotency_key || undefined,
-      });
-      store.setLastSyncedAt(updated.last_synced_at);
-      store.setSyncStatus("synced");
-    } catch (err) {
-      console.error(`Draft step ${step} sync failed:`, err);
-      store.setSyncStatus("failed");
+      store.saveSnapshot();
+    } catch (error) {
+      console.error(`Local product builder step ${step} save failed:`, error);
+      store.setSaveStatus("failed");
     }
   }, [form, initialValues]);
 
@@ -287,237 +211,106 @@ export function ProductBuilderProvider({
     useDraftStore.getState().resetStore();
   }, []);
 
-  const draftKey = useDraftStore((s) => s.draft_key);
-
-  // Load and reconcile draft reactively (handles mount AND resume events)
   useEffect(() => {
+    const store = useDraftStore.getState();
+
     if (initialValues) {
       setDraftLoaded(true);
       return;
     }
 
-    if (!draftKey) {
-      const store = useDraftStore.getState();
-      const loadedBackup = store.loadBackup();
-      if (loadedBackup) {
-        // loadBackup updates draft_key, which will trigger this useEffect again.
-        return;
-      }
-      // If still no key, generate new ones
-      const newKey = generateUUID();
-      const newIdempotency = generateUUID();
-      store.setDraftKey(newKey);
-      store.setIdempotencyKey(newIdempotency);
+    if (!localDraftKey) {
+      const restored = store.loadSnapshot();
+      if (restored) return;
+
+      store.setLocalDraftKey(generateUUID());
+      store.setIdempotencyKey(generateUUID());
       store.setCurrentStep(1);
       store.setPayload({});
+      setDraftLoaded(true);
       return;
     }
 
-    async function syncAndReconcile(keyToSync: string) {
-      const store = useDraftStore.getState();
+    form.reset(sanitizePayload(store.payload));
+    setCurrentStep(store.currentStep || 1);
+    setDraftLoaded(true);
+  }, [form, initialValues, localDraftKey]);
 
-      // ── 1. IMMEDIATELY load from local storage / sessionStorage state ──
-      const localPayload = store.payload || {};
-      const localStep = store.current_step || 1;
-
-      // Reset form fields immediately with local values to provide instant UI hydration
-      form.reset(sanitizePayload(localPayload));
-      setCurrentStep(localStep);
-      setDraftLoaded(true);
-
-      // ── 2. Correlate identities and reconcile with backend ──
-      try {
-        store.setSyncStatus("saving");
-        let remote = null;
-        try {
-          remote = await fetchDraftSessionDetail(keyToSync);
-        } catch (e: any) {
-          const is404 = e?.status === 404 || e?.response?.status === 404 || String(e).includes("404");
-          if (is404) {
-            console.warn("Draft key not found on backend (404). Will create new session on backend.");
-            remote = null;
-          } else {
-            throw e;
-          }
-        }
-
-        if (remote && remote.status === "active") {
-          // Reconcile: update local store and form with remote data
-          store.setDraftKey(remote.draft_key);
-          store.setIdempotencyKey(remote.idempotency_key);
-          store.setCurrentStep(remote.current_step ?? 1);
-          store.setPayload(remote.payload || {});
-          store.setSyncStatus("synced");
-          store.setLastSyncedAt(remote.last_synced_at);
-
-          form.reset(sanitizePayload(remote.payload));
-          setCurrentStep(remote.current_step ?? 1);
-        } else if (remote && remote.status !== "active") {
-          // Stale draft: status is committed, expired, discarded etc.
-          console.warn(`Draft session ${keyToSync} status is ${remote.status}, not active. Clearing.`);
-          const newKey = generateUUID();
-          const newIdempotency = generateUUID();
-          store.setDraftKey(newKey);
-          store.setIdempotencyKey(newIdempotency);
-          store.setCurrentStep(1);
-          store.setPayload({});
-        } else {
-          // Does not exist on backend yet (remote is null) -> create draft on backend
-          try {
-            const created = await createDraftSession({
-              draft_key: keyToSync,
-              idempotency_key: store.idempotency_key || undefined,
-              payload: localPayload,
-              current_step: localStep,
-            });
-            store.setLastSyncedAt(created.last_synced_at);
-            store.setSyncStatus("synced");
-          } catch (createErr) {
-            console.warn("Draft key conflict or creation failure, regenerating key:", createErr);
-            const newKey = generateUUID();
-            const newIdempotency = generateUUID();
-            store.setDraftKey(newKey);
-            store.setIdempotencyKey(newIdempotency);
-          }
-        }
-      } catch (err) {
-        console.error("Backend draft reconciliation failed, using offline values:", err);
-        store.setSyncStatus("failed");
-      }
-    }
-
-    syncAndReconcile(draftKey);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftKey, initialValues]);
-
-  // Watch all fields → debounced draft save
   useEffect(() => {
     const sub = form.watch(() => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(saveDraft, DRAFT_DEBOUNCE_MS);
+      debounceRef.current = setTimeout(saveDraft, LOCAL_SAVE_DEBOUNCE_MS);
     });
+
     return () => {
       sub.unsubscribe();
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [form, saveDraft]);
 
-  // ── Navigation ────────────────────────────────────────────────────────────
   const nextStep = useCallback(async (): Promise<boolean> => {
     const fields = STEP_FIELDS[currentStep] ?? [];
     const valid = await form.trigger(fields);
     if (!valid) return false;
     const nextS = Math.min(currentStep + 1, TOTAL_STEPS);
     setCurrentStep(nextS);
-    await saveDraftStep(nextS);
+    saveDraftStep(nextS);
     window.scrollTo({ top: 0, behavior: "smooth" });
     return true;
   }, [currentStep, form, saveDraftStep]);
 
-  const prevStep = useCallback(async () => {
+  const prevStep = useCallback(() => {
     const prevS = Math.max(currentStep - 1, 1);
     setCurrentStep(prevS);
-    await saveDraftStep(prevS);
+    saveDraftStep(prevS);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentStep, saveDraftStep]);
 
   const goToStep = useCallback(
-    async (step: number) => {
+    (step: number) => {
       if (step >= 1 && step <= TOTAL_STEPS) {
         setCurrentStep(step);
-        await saveDraftStep(step);
+        saveDraftStep(step);
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     },
     [saveDraftStep],
   );
 
-  // ── Final submit ──────────────────────────────────────────────────────────
   const handleFinalSubmit = form.handleSubmit(async (values) => {
     setIsSubmitting(true);
     const store = useDraftStore.getState();
-    const key = store.draft_key;
     const publishIntent = values.publish_intent ?? "draft";
 
     try {
-      // Edit mode owns persistence in the parent page so existing products are
-      // updated through PATCH instead of accidentally replaying product create.
       if (initialValues) {
         await onSubmit(values, productId);
         return;
       }
 
-      // ══════════════════════════════════════════════════════════════════════
-      // PATH A — SAVE AS DRAFT
-      // publish_intent === "draft": persist payload to the backend draft
-      // session only. No Product row is created. Draft stays ACTIVE.
-      // ══════════════════════════════════════════════════════════════════════
       if (publishIntent === "draft") {
-        if (key && !initialValues) {
-          // Sync final values to the backend draft session
-          store.setPayload(values);
-          store.setSyncStatus("saving");
-          await updateDraftSession(key, {
-            payload: values,
-            current_step: currentStep,
-            idempotency_key: store.idempotency_key || undefined,
-          });
-          store.setSyncStatus("synced");
-          toast.success("Draft saved", {
-            description: "Your product has been saved as a private draft.",
-          });
-        } else {
-          // Edit-mode or no draft key — just surface a success toast
-          toast.success("Progress saved.");
-        }
-        // Stay on the same page so the vendor can resume or publish later.
+        saveDraft();
+        toast.success("Draft saved locally", {
+          description: "This product draft is stored in this browser only.",
+        });
         return;
       }
 
-      // ══════════════════════════════════════════════════════════════════════
-      // PATH B — SUBMIT FOR REVIEW (PUBLISH)
-      // publish_intent === "pending": call createProduct directly.
-      // The serializer's to_internal_value() maps publish_intent → status.
-      // Draft is cleared AFTER successful creation.
-      // ══════════════════════════════════════════════════════════════════════
       if (publishIntent === "pending") {
-        // 1. Sync the latest values to draft before publishing (belt-and-braces)
-        if (key && !initialValues) {
-          store.setPayload(values);
-          store.setSyncStatus("saving");
-          try {
-            await updateDraftSession(key, {
-              payload: values,
-              current_step: currentStep,
-              idempotency_key: store.idempotency_key || undefined,
-            });
-          } catch (syncErr) {
-            // Non-fatal: draft sync failure must not block product creation
-            console.warn("Pre-publish draft sync failed (non-fatal):", syncErr);
-          }
-        }
-
-        // 2. Create the canonical Product via the dedicated endpoint
         const createdProduct = await createProduct({
           ...values,
-          // Pass the wizard's idempotency_key so the backend deduplicates on retry
-          idempotency_key: (store.idempotency_key as string | undefined) ?? undefined,
+          idempotency_key: store.idempotencyKey ?? undefined,
         } as any);
 
-        // 3. Clear draft from local store IMMEDIATELY after successful creation
         clearDraft();
-
-        // 4. Notify parent for post-commit navigation / cache refresh
         await onSubmit(values, createdProduct.slug || createdProduct.id);
         return;
       }
 
-      // Fallback: unknown publish_intent → save as draft
-      toast.warning("Unknown publish action — saved as draft.");
-
+      saveDraft();
+      toast.warning("Unknown publish action - saved locally.");
     } catch (err: any) {
-      console.error("Failed to commit draft:", err);
-      // Surface backend validation errors if present (400 response body)
+      console.error("Failed to submit product:", err);
       let errMessage = "Could not save product. Please review your form and try again.";
       const responseData = err?.response?.data || err?.data;
       if (responseData?.errors && typeof responseData.errors === "object") {
@@ -537,8 +330,6 @@ export function ProductBuilderProvider({
     }
   });
 
-
-  // ── Context value ─────────────────────────────────────────────────────────
   const contextValue: BuilderContextValue = {
     currentStep,
     nextStep,
