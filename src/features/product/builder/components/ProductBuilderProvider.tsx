@@ -27,6 +27,11 @@ import {
   builderProgress,
   ProductBuilderFormSchema,
   ProductBuilderFormValues,
+  Step1Schema,
+  Step2Schema,
+  Step3Schema,
+  Step4Schema,
+  Step5Schema,
   TOTAL_STEPS,
 } from "../schemas/builder.schemas";
 
@@ -91,14 +96,22 @@ const STEP_FIELDS: Record<number, Array<Path<ProductBuilderFormValues>>> = {
   5: ["faqs", "publish_intent", "featured", "hot_deal", "meta_title", "meta_description"],
 };
 
+const STEP_SCHEMAS = {
+  1: Step1Schema,
+  2: Step2Schema,
+  3: Step3Schema,
+  4: Step4Schema,
+  5: Step5Schema,
+} as const;
+
 const DEFAULT_VALUES: Partial<ProductBuilderFormValues> = {
   title: "",
   description: "",
   condition: "new",
   category_ids: [],
   sub_category_ids: [],
-  gender_target: "",
-  age_group: "",
+  gender_target: "men",
+  age_group: "adult",
 
   price: "",
   old_price: "",
@@ -263,8 +276,23 @@ export function ProductBuilderProvider({
 
   const nextStep = useCallback(async (): Promise<boolean> => {
     const fields = STEP_FIELDS[currentStep] ?? [];
-    const valid = await form.trigger(fields);
-    if (!valid) return false;
+    const stepSchema = STEP_SCHEMAS[currentStep as keyof typeof STEP_SCHEMAS];
+
+    const result = stepSchema.safeParse(form.getValues());
+    form.clearErrors(fields);
+    if (!result.success) {
+      result.error.issues.forEach((issue) => {
+        const fieldPath = issue.path.join(".") as Path<ProductBuilderFormValues>;
+        if (fieldPath) {
+          form.setError(fieldPath, {
+            type: "manual",
+            message: issue.message,
+          });
+        }
+      });
+      return false;
+    }
+
     const nextS = Math.min(currentStep + 1, TOTAL_STEPS);
     setCurrentStep(nextS);
     saveDraftStep(nextS);
