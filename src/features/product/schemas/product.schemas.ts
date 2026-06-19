@@ -429,7 +429,6 @@ export const ProductDetailSchema = z
     ai_trend_score: z.coerce.number().default(0),
     category_name: z.string().nullable().optional(),
     category_slug: z.string().nullable().optional(),
-    sub_category_name: z.string().nullable().optional(),
     brand_name: z.string().nullable().optional(),
     brand_slug: z.string().nullable().optional(),
     vendor_id: IdSchema.nullable().optional(),

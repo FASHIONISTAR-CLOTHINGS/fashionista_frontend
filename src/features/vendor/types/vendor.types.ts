@@ -237,7 +237,6 @@ export interface VendorProductListItem {
  *   - size_ids: string[]      (was: sizes: {name,price}[] — embedded objects)
  *   - color_ids: string[]     (was: colors: {name,hex}[] — embedded objects)
  *   - price: string           (decimal string, not number, to match DRF DecimalField)
- *   - shipping_amount: string (decimal string)
  *   - variants: handled separately via ProductBuilderProvider
  */
 export interface VendorProductCreatePayload {
@@ -246,16 +245,13 @@ export interface VendorProductCreatePayload {
   price:                 string;         // Decimal string e.g. "25000.00"
   old_price?:            string | null;  // Decimal string or null
   currency?:             string;         // default "NGN"
-  shipping_amount?:      string;         // Decimal string
   stock_qty:             number;
-  max_stock?:            number | null;
   // Relations — all sent as arrays of UUID strings (PrimaryKeyRelatedField many=True)
   weight_kg?:            string | null;
   condition?:            "new" | "used" | "refurbished";
   is_pre_order?:         boolean;
   pre_order_date?:       string | null;
   category_ids:          string[];       // 1–15 category IDs, min 1 required
-  sub_category_ids?:     string[];       // optional sub-category IDs
   size_ids?:             string[];       // pre-existing Size object IDs
   color_ids?:            string[];       // pre-existing Color object IDs
   tag_ids?:              string[];       // pre-existing Tag object IDs
@@ -266,8 +262,6 @@ export interface VendorProductCreatePayload {
   featured?:             boolean;
   commission_rate?:      string;         // Decimal string
   status?:               ProductStatus;
-  meta_title?:           string;
-  meta_description?:     string;
   age_group?:            string;
   gender_target?:        string;
   idempotency_key?:      string;         // UUID v4
@@ -548,4 +542,3 @@ export interface VendorCard {
   isVerified: boolean;
   specialties: string[];
 }
-

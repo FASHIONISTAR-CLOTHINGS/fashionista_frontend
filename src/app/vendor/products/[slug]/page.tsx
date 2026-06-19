@@ -40,6 +40,7 @@ import {
 } from "@/features/product";
 import type { ProductDetail } from "@/features/product";
 import type { ProductBuilderFormValues } from "@/features/product/builder/schemas/builder.schemas";
+import { buildProductWritePayload } from "@/features/product/builder/utils/product-builder-payload";
 import { FashionistarImage, FashionistarVideo } from "@/components/media";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -283,7 +284,6 @@ export default function VendorProductDetailPage({
   // Convert API detail into matching initial values for ProductBuilder
   const mapProductToFormValues = (p: ProductDetail): Partial<ProductBuilderFormValues> => {
     const category_ids = p.categories?.map((c) => c.id) || [];
-    const sub_category_ids = p.sub_categories?.map((c) => c.id) || [];
     const normalizedMedia = normalizeVendorProductMedia(p);
     const primaryGallery =
       normalizedMedia.find((item) => item.is_primary) ??
@@ -291,20 +291,6 @@ export default function VendorProductDetailPage({
       normalizedMedia[0] ??
       null;
     const coverUrl = primaryGallery?.media_url || p.cover_image_url || p.image_url || null;
-
-    const measurement_guide = p.measurement_guide?.map((m) => ({
-      size_id: m.id || undefined,
-      size_label: m.size_label as any,
-      chest_cm: m.chest_cm || "",
-      waist_cm: m.waist_cm || "",
-      hip_cm: m.hip_cm || "",
-      shoulder_cm: m.shoulder_cm || "",
-      sleeve_cm: m.sleeve_cm || "",
-      length_cm: m.length_cm || "",
-      inseam_cm: m.inseam_cm || "",
-      foot_length_cm: m.foot_length_cm || "",
-      sort_order: m.sort_order || 0,
-    })) || [];
 
     const gallery = normalizedMedia
       .filter((g) => !g.is_primary && g.media_url)
@@ -338,16 +324,13 @@ export default function VendorProductDetailPage({
       price: String(p.price),
       old_price: p.old_price ? String(p.old_price) : "",
       currency: p.currency || "NGN",
-      shipping_amount: p.shipping_amount ? String(p.shipping_amount) : "2500.00",
       stock_qty: p.stock_qty || 1,
-      max_stock: p.max_stock,
       requires_measurement: p.requires_measurement ?? false,
       is_customisable: p.is_customisable ?? false,
       condition: p.condition || "new",
       is_pre_order: p.is_pre_order ?? false,
       pre_order_date: p.pre_order_date || null,
       category_ids,
-      sub_category_ids,
       
       // Fabric
       fabric_type: p.fabric?.fabric_type || "",
@@ -355,9 +338,6 @@ export default function VendorProductDetailPage({
       fabric_is_organic: p.fabric?.is_organic ?? false,
       fabric_is_vegan: p.fabric?.is_vegan ?? false,
       fabric_country_of_origin: p.fabric?.country_of_origin || "",
-
-      // Sizing
-      measurement_guide,
 
       // Media
       cover_image_public_id: primaryGallery?.public_id || primaryGallery?.id || coverUrl || "",
@@ -375,10 +355,6 @@ export default function VendorProductDetailPage({
       dimensions_cm: null,
       is_fragile: p.shipping_profile?.is_fragile ?? false,
       requires_signature: p.shipping_profile?.requires_signature ?? false,
-      restricted_countries: p.shipping_profile?.restricted_countries ?? [],
-      free_shipping_threshold: p.shipping_profile?.free_shipping_threshold
-        ? String(p.shipping_profile.free_shipping_threshold)
-        : "",
       processing_days: p.shipping_profile?.processing_days ?? 1,
       courier_id: null,
 
@@ -387,8 +363,6 @@ export default function VendorProductDetailPage({
       publish_intent: p.status === "published" || p.status === "pending" ? "pending" : "draft",
       featured: p.featured ?? false,
       hot_deal: p.hot_deal ?? false,
-      meta_title: p.meta_title || "",
-      meta_description: p.meta_description || "",
       age_group: p.age_group || "",
       gender_target: p.gender_target || "",
     };
@@ -396,55 +370,7 @@ export default function VendorProductDetailPage({
 
   const handleEditSubmit = async (values: ProductBuilderFormValues) => {
     try {
-      const category_ids = values.category_ids;
-      const sub_category_ids = values.sub_category_ids ?? [];
-
-      const payload = {
-        title: values.title,
-        description: values.description,
-        price: values.price,
-        old_price: values.old_price || undefined,
-        currency: values.currency,
-        shipping_amount: values.shipping_amount || "2500.00",
-        stock_qty: values.stock_qty,
-        max_stock: values.max_stock,
-        requires_measurement: values.requires_measurement,
-        is_customisable: values.is_customisable,
-        condition: values.condition,
-        is_pre_order: values.is_pre_order,
-        pre_order_date: values.pre_order_date || null,
-        category_ids,
-        sub_category_ids,
-        fabric: values.fabric_type ? {
-          fabric_type: values.fabric_type,
-          care_instructions: values.fabric_care_instructions,
-          is_organic: values.fabric_is_organic,
-          is_vegan: values.fabric_is_vegan,
-          country_of_origin: values.fabric_country_of_origin,
-        } : null,
-        shipping_profile: values.weight_kg ? {
-          weight_kg: values.weight_kg,
-          dimensions_cm: values.dimensions_cm ?? null,
-          length_cm: String(values.length_cm ?? 0),
-          width_cm: String(values.width_cm ?? 0),
-          height_cm: String(values.height_cm ?? 0),
-          is_fragile: values.is_fragile,
-          requires_signature: values.requires_signature,
-          restricted_countries: values.restricted_countries,
-          free_shipping_threshold: values.free_shipping_threshold || null,
-          processing_days: values.processing_days,
-        } : null,
-        measurement_guide: values.measurement_guide,
-        gallery: values.gallery,
-        faqs: values.faqs,
-        status: values.publish_intent,
-        featured: values.featured,
-        hot_deal: values.hot_deal,
-        meta_title: values.meta_title,
-        meta_description: values.meta_description,
-        age_group: values.age_group,
-        gender_target: values.gender_target,
-      };
+      const payload = buildProductWritePayload(values);
 
       await updateMutation.mutateAsync(payload);
       void qc.invalidateQueries({ queryKey: productKeys.detail(slug) });
@@ -863,12 +789,6 @@ export default function VendorProductDetailPage({
                   <span className="text-xs font-bold text-[#1A1208]">{product.stock_qty} units</span>
                 </div>
 
-                {product.max_stock && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-[#7A6B44]">Oversell Threshold</span>
-                    <span className="text-xs font-bold text-[#1A1208]">{product.max_stock} units</span>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -915,14 +835,6 @@ export default function VendorProductDetailPage({
                     </span>
                   </div>
 
-                  {product.shipping_profile.free_shipping_threshold && (
-                    <div className="pt-2 border-t border-[#ECE6D6]/50 flex justify-between items-center">
-                      <span className="text-[#01454A] font-bold">Free Shipping</span>
-                      <span className="font-extrabold text-[#01454A]">
-                        {formatPrice(parseFloat(product.shipping_profile.free_shipping_threshold))}
-                      </span>
-                    </div>
-                  )}
                 </div>
               ) : (
                 <p className="text-xs text-muted-foreground italic">Using standard system-default shipping rates.</p>

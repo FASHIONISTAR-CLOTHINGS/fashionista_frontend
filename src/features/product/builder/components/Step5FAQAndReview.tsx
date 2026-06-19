@@ -2,12 +2,10 @@
 
 /**
  * @file Step5FAQAndReview.tsx
- * @description Step 5 — FAQs, SEO Meta, Publish Settings & Review Summary
+ * @description Step 5 — FAQs, Publish Settings & Review Summary
  *
  * Fields covered (aligned to ProductBuilderFormSchema Step5Schema):
  *   • faqs            — persisted question/answer rows (max 5)
- *   • meta_title      — SEO title override (max 160 chars)
- *   • meta_description — SEO description override (max 320 chars)
  *   • publish_intent  — "draft" | "pending"
  *   • featured        — boolean, request featured placement
  *   • hot_deal        — boolean, mark as Hot Deal
@@ -26,8 +24,6 @@ import {
   FormMessage,
   FormDescription,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -40,7 +36,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   BookOpen,
   SendHorizontal,
-  Settings,
   X,
   ClipboardList,
   Package,
@@ -230,8 +225,10 @@ export function Step5FAQAndReview() {
   const fabricType    = form.watch("fabric_type")   ?? "";
   const weightKg      = form.watch("weight_kg")     ?? "";
   const coverPublicId = form.watch("cover_image_public_id") ?? "";
-  const galleryCount  = (form.watch("gallery") ?? []).length;
-  const guideCount    = (form.watch("measurement_guide") ?? []).length;
+  const coverSizeId   = form.watch("cover_image_size_id");
+  const gallery       = form.watch("gallery") ?? [];
+  const galleryCount  = gallery.length;
+  const sizeLinkCount = [coverSizeId, ...gallery.map((item) => item.size_id)].filter(Boolean).length;
 
   // ── FAQ toggle helpers ────────────────────────────────────────────────────
   const toggleFaq = (id: string) => {
@@ -374,89 +371,7 @@ export function Step5FAQAndReview() {
         </div>
       </SectionCard>
 
-      {/* ── SECTION B: SEO & DISCOVERY ────────────────────────────────────── */}
-      {!isEditMode && (
-      <SectionCard
-        icon={<Settings className="w-4 h-4" />}
-        title="SEO & Discovery"
-        subtitle="Custom meta title and description for search engines. Falls back to product title when blank."
-      >
-        <div className="space-y-4">
-          <FormField
-            control={form.control}
-            name="meta_title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                  Meta Title
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    id="meta-title"
-                    value={field.value ?? ""}
-                    placeholder="Custom SEO title (max 160 characters)"
-                    className="bg-white border-[#D9D9D9] rounded-xl h-11 focus-visible:ring-[#01454A]"
-                    maxLength={160}
-                  />
-                </FormControl>
-                <div className="flex justify-end">
-                  <span
-                    className={`text-xs font-mono ${
-                      (field.value?.length ?? 0) > 140
-                        ? "text-orange-500"
-                        : "text-zinc-400"
-                    }`}
-                  >
-                    {field.value?.length ?? 0} / 160
-                  </span>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="meta_description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                  Meta Description
-                </FormLabel>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    id="meta-description"
-                    value={field.value ?? ""}
-                    placeholder="Custom SEO description (max 320 characters) — appears in Google search snippets."
-                    className="bg-white border-[#D9D9D9] rounded-xl h-24 resize-none focus-visible:ring-[#01454A]"
-                    maxLength={320}
-                  />
-                </FormControl>
-                <div className="flex items-center justify-between">
-                  <FormDescription className="text-xs">
-                    Aim for 120–160 characters for optimal search snippet display.
-                  </FormDescription>
-                  <span
-                    className={`text-xs font-mono ${
-                      (field.value?.length ?? 0) > 280
-                        ? "text-orange-500"
-                        : "text-zinc-400"
-                    }`}
-                  >
-                    {field.value?.length ?? 0} / 320
-                  </span>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-      </SectionCard>
-      )}
-
-      {/* ── SECTION C: PUBLISH SETTINGS ───────────────────────────────────── */}
+      {/* ── SECTION B: PUBLISH SETTINGS ───────────────────────────────────── */}
       {!isEditMode && (
       <SectionCard
         icon={<SendHorizontal className="w-4 h-4" />}
@@ -589,13 +504,13 @@ export function Step5FAQAndReview() {
           />
           <ReviewItem
             icon={<Ruler className="w-4 h-4" />}
-            label="Measurement Guide"
+            label="Size Links"
             value={
-              guideCount > 0
-                ? `${guideCount} size row${guideCount !== 1 ? "s" : ""} defined`
+              sizeLinkCount > 0
+                ? `${sizeLinkCount} media size link${sizeLinkCount !== 1 ? "s" : ""} set`
                 : "— No size guide —"
             }
-            status={guideCount > 0 ? "ok" : "warn"}
+            status={sizeLinkCount > 0 ? "ok" : "warn"}
           />
           <ReviewItem
             icon={<ImageIcon className="w-4 h-4" />}

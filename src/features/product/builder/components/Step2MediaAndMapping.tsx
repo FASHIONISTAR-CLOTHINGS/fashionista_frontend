@@ -2,13 +2,12 @@
 
 /**
  * @file Step2MediaAndMapping.tsx
- * @description Media Uploads with Direct Cloudinary Integration and Dynamic Size Link Creation.
+ * @description Media Uploads with Direct Cloudinary Integration and Color Mapping.
  * Rendered as Step 2 in the vendor product builder.
  */
 
 import React, { useState, useRef } from "react";
 import { useFormContext, useFieldArray } from "react-hook-form";
-import { useQuery } from "@tanstack/react-query";
 import type { ProductBuilderFormValues } from "../schemas/builder.schemas";
 import {
   FormField,
@@ -20,14 +19,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Modal } from "@/components/ui/common";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Image as ImageIcon,
   Video as VideoIcon,
@@ -43,7 +34,6 @@ import { Badge } from "@/components/ui/badge";
 import { SingleColorSwatchPicker } from "./ColorSwatchPicker";
 import type { SelectedColor } from "./ColorSwatchPicker";
 import { uploadFile } from "@/features/uploads/services/upload.service";
-import { fetchVendorMeasurementTemplates, createVendorMeasurementTemplate } from "@/features/product";
 import { toast } from "sonner";
 import { FashionistarImage, FashionistarVideo } from "@/components/media";
 
@@ -54,13 +44,6 @@ import { FashionistarImage, FashionistarVideo } from "@/components/media";
 type MediaType = "image" | "video";
 const MAX_GALLERY_ITEMS = 3;
 const MAX_GALLERY_VIDEOS = 1;
-
-interface SizingTemplateOption {
-  size_id: string;
-  label: string;
-  templateName: string;
-  size_label: string;
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT: SectionCard
@@ -257,46 +240,6 @@ export function Step2MediaAndMapping() {
   const canAddGalleryItem = galleryFields.length < MAX_GALLERY_ITEMS;
   const canAddVideo = canAddGalleryItem && galleryVideoCount < MAX_GALLERY_VIDEOS;
 
-  // ── Sizing guide templates query ───────────────────────────────────────────
-  const { data: templates = [], refetch: refetchTemplates } = useQuery({
-    queryKey: ["vendor", "measurement-templates"],
-    queryFn: fetchVendorMeasurementTemplates,
-  });
-
-  const sizeOptions = React.useMemo(() => {
-    const options: SizingTemplateOption[] = [];
-    templates.forEach((tpl) => {
-      (tpl.template_rows || []).forEach((row) => {
-        if (row.size_id) {
-          options.push({
-            size_id: row.size_id,
-            label: `${tpl.name} — ${row.size_label}`,
-            templateName: tpl.name,
-            size_label: row.size_label,
-          });
-        }
-      });
-    });
-    return options;
-  }, [templates]);
-
-  // ── Dialog template creation state ──────────────────────────────────────────
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [targetFieldName, setTargetFieldName] = useState<string | null>(null);
-  const [templateName, setTemplateName] = useState("");
-  const [sizeLabel, setSizeLabel] = useState<string>("M");
-  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
-
-  // Guide values
-  const [chest, setChest] = useState("");
-  const [waist, setWaist] = useState("");
-  const [hip, setHip] = useState("");
-  const [length, setLength] = useState("");
-  const [shoulder, setShoulder] = useState("");
-  const [sleeve, setSleeve] = useState("");
-  const [inseam, setInseam] = useState("");
-  const [footLength, setFootLength] = useState("");
-
   // ── Upload handlers ────────────────────────────────────────────────────────
   const [coverUploading, setCoverUploading] = useState(false);
   const [coverProgress, setCoverProgress] = useState(0);
@@ -420,111 +363,11 @@ export function Step2MediaAndMapping() {
       ordering: galleryFields.length,
       color_name: "",
       color_hex: "",
-      size_id: null,
       sku: "",
       barcode: "",
       video_thumbnail: "",
       duration_sec: null,
     });
-  };
-
-  // ── Size Guide Modal Submission ────────────────────────────────────────────
-  const handleOpenAddSizeModal = (fieldName: string) => {
-    setTargetFieldName(fieldName);
-    setTemplateName("");
-    setChest("");
-    setWaist("");
-    setHip("");
-    setLength("");
-    setShoulder("");
-    setSleeve("");
-    setInseam("");
-    setFootLength("");
-    setIsModalOpen(true);
-  };
-
-  const handleSaveSizeGuide = async () => {
-    if (!templateName.trim()) {
-      toast.error("Please enter a template name.");
-      return;
-    }
-    if (!sizeLabel) {
-      toast.error("Please select a size label.");
-      return;
-    }
-
-    setIsSavingTemplate(true);
-
-    try {
-      const matchingTemplate = templates.find(
-        (t) => t.name.toLowerCase() === templateName.trim().toLowerCase(),
-      );
-
-      // Build the new row payload
-      const newRow = {
-        size_label: sizeLabel,
-        chest_cm: chest,
-        waist_cm: waist,
-        hip_cm: hip,
-        length_cm: length,
-        shoulder_cm: shoulder,
-        sleeve_cm: sleeve,
-        inseam_cm: inseam,
-        foot_length_cm: footLength,
-        sort_order: matchingTemplate ? matchingTemplate.template_rows.length + 1 : 1,
-      };
-
-      let finalRows = [newRow];
-
-      if (matchingTemplate) {
-        // Retrieve existing rows and filter out the one we are replacing/updating
-        const existingRows = (matchingTemplate.template_rows || []).map((r) => ({
-          size_label: r.size_label,
-          chest_cm: r.chest_cm ?? "",
-          waist_cm: r.waist_cm ?? "",
-          hip_cm: r.hip_cm ?? "",
-          length_cm: r.length_cm ?? "",
-          shoulder_cm: r.shoulder_cm ?? "",
-          sleeve_cm: r.sleeve_cm ?? "",
-          inseam_cm: r.inseam_cm ?? "",
-          foot_length_cm: r.foot_length_cm ?? "",
-          sort_order: r.sort_order ?? 0,
-        }));
-
-        const filtered = existingRows.filter((r) => r.size_label !== sizeLabel);
-        finalRows = [...filtered, newRow];
-      }
-
-      // Save template to backend
-      await createVendorMeasurementTemplate({
-        name: templateName.trim(),
-        description: "Measurement template rows",
-        template_rows: finalRows as any,
-      });
-
-      toast.success("Size guide template saved.");
-
-      // Refetch from backend so sizeOptions gets updated
-      const refetched = await refetchTemplates();
-
-      // Find the saved size_id row
-      const savedRows = (refetched.data || []).find(
-        (t) => t.name.toLowerCase() === templateName.trim().toLowerCase(),
-      )?.template_rows;
-
-      const createdRow = (savedRows || []).find((r) => r.size_label === sizeLabel);
-
-      if (createdRow?.size_id && targetFieldName) {
-        form.setValue(targetFieldName as any, createdRow.size_id, { shouldValidate: true });
-      }
-
-      setIsModalOpen(false);
-    } catch (err: any) {
-      console.error("Failed to create size template:", err);
-      toast.error(err?.message || "Failed to create measurement template.");
-    } finally {
-      setIsSavingTemplate(false);
-    }
   };
 
   return (
@@ -585,7 +428,7 @@ export function Step2MediaAndMapping() {
                   <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest">
                     Variant Mapping
                   </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     {/* Swatch picker */}
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-wide">
@@ -605,57 +448,6 @@ export function Step2MediaAndMapping() {
                       />
                     </div>
 
-                    {/* Size Link */}
-                    <FormField
-                      control={form.control}
-                      name="cover_image_size_id"
-                      render={({ field }) => (
-                        <FormItem className="space-y-1.5">
-                          <FormLabel className="text-[10px] font-bold uppercase text-zinc-500 tracking-wide">
-                            Size Link
-                          </FormLabel>
-                          <div className="flex items-center gap-2">
-                            <Select
-                              onValueChange={(val) =>
-                                field.onChange(val === "__none__" ? null : val)
-                              }
-                              value={field.value ?? "__none__"}
-                            >
-                              <FormControl>
-                                <SelectTrigger className="h-9 text-xs border-[#D9D9D9] rounded-lg bg-white">
-                                  <SelectValue placeholder="No size link" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="rounded-xl">
-                                <SelectItem value="__none__" className="text-xs">
-                                  — No size link
-                                </SelectItem>
-                                {sizeOptions.map((opt) => (
-                                  <SelectItem
-                                    key={opt.size_id}
-                                    value={opt.size_id}
-                                    className="text-xs"
-                                  >
-                                    {opt.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handleOpenAddSizeModal("cover_image_size_id")}
-                              className="h-9 w-9 flex-shrink-0 border-[#D9D9D9] rounded-lg hover:bg-zinc-50 hover:text-[#01454A]"
-                              aria-label="Add new size template"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   </div>
                 </div>
               </div>
@@ -839,57 +631,6 @@ export function Step2MediaAndMapping() {
                               />
                             </div>
 
-                            {/* Size Link */}
-                            <FormField
-                              control={form.control}
-                              name={`gallery.${idx}.size_id`}
-                              render={({ field }) => (
-                                <FormItem className="space-y-1.5">
-                                  <FormLabel className="text-[10px] font-bold uppercase text-zinc-500 tracking-wide">
-                                    Size Link
-                                  </FormLabel>
-                                  <div className="flex items-center gap-2">
-                                    <Select
-                                      onValueChange={(val) =>
-                                        field.onChange(val === "__none__" ? null : val)
-                                      }
-                                      value={field.value ?? "__none__"}
-                                    >
-                                      <FormControl>
-                                        <SelectTrigger className="h-8 text-xs border-[#D9D9D9] rounded-lg bg-white">
-                                          <SelectValue placeholder="No size link" />
-                                        </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent className="rounded-xl">
-                                        <SelectItem value="__none__" className="text-xs">
-                                          — No size link
-                                        </SelectItem>
-                                        {sizeOptions.map((opt) => (
-                                          <SelectItem
-                                            key={opt.size_id}
-                                            value={opt.size_id}
-                                            className="text-xs"
-                                          >
-                                            {opt.label}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="icon"
-                                      onClick={() => handleOpenAddSizeModal(`gallery.${idx}.size_id`)}
-                                      className="h-8 w-8 flex-shrink-0 border-[#D9D9D9] rounded-lg hover:bg-zinc-50 hover:text-[#01454A]"
-                                      aria-label="Add new size template"
-                                    >
-                                      <Plus className="w-3.5 h-3.5" />
-                                    </Button>
-                                  </div>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
                           </div>
                           {mediaType === "video" && (
                             <FormField
@@ -928,168 +669,6 @@ export function Step2MediaAndMapping() {
           </div>
         )}
       </SectionCard>
-
-      {/* ── SIZE GUIDE MODAL ────────────────────────────────────────────────── */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Add Measurement Size"
-        size="md"
-      >
-        <div className="space-y-4">
-          <p className="text-xs text-[#7A6B44]">
-            Define a sizing guide and measurements for this template. If the template name already exists, the size row will be appended/updated without losing other size rows.
-          </p>
-
-          <div className="space-y-3">
-            <div>
-              <label className="text-[10px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-1">
-                Template Name
-              </label>
-              <Input
-                value={templateName}
-                onChange={(e) => setTemplateName(e.target.value)}
-                placeholder="e.g. Men Senator Fit"
-                list="template-names-list"
-                className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-xl h-10 focus-visible:ring-[#01454A]"
-              />
-              <datalist id="template-names-list">
-                {templates.map((t) => (
-                  <option key={t.id} value={t.name} />
-                ))}
-              </datalist>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-1">
-                Size Label
-              </label>
-              <Select onValueChange={setSizeLabel} value={sizeLabel}>
-                <SelectTrigger className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-xl h-10">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {["XS", "S", "M", "L", "XL", "XXL", "Custom"].map((lbl) => (
-                    <SelectItem key={lbl} value={lbl} className="text-xs">
-                      {lbl}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div>
-                <label className="text-[9px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-0.5">
-                  Chest (cm)
-                </label>
-                <Input
-                  value={chest}
-                  onChange={(e) => setChest(e.target.value)}
-                  placeholder="e.g. 96"
-                  className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-lg h-9 text-xs focus-visible:ring-[#01454A]"
-                />
-              </div>
-              <div>
-                <label className="text-[9px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-0.5">
-                  Waist (cm)
-                </label>
-                <Input
-                  value={waist}
-                  onChange={(e) => setWaist(e.target.value)}
-                  placeholder="e.g. 84"
-                  className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-lg h-9 text-xs focus-visible:ring-[#01454A]"
-                />
-              </div>
-              <div>
-                <label className="text-[9px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-0.5">
-                  Hip (cm)
-                </label>
-                <Input
-                  value={hip}
-                  onChange={(e) => setHip(e.target.value)}
-                  placeholder="e.g. 102"
-                  className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-lg h-9 text-xs focus-visible:ring-[#01454A]"
-                />
-              </div>
-              <div>
-                <label className="text-[9px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-0.5">
-                  Length (cm)
-                </label>
-                <Input
-                  value={length}
-                  onChange={(e) => setLength(e.target.value)}
-                  placeholder="e.g. 78"
-                  className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-lg h-9 text-xs focus-visible:ring-[#01454A]"
-                />
-              </div>
-              <div>
-                <label className="text-[9px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-0.5">
-                  Shoulder (cm)
-                </label>
-                <Input
-                  value={shoulder}
-                  onChange={(e) => setShoulder(e.target.value)}
-                  placeholder="e.g. 46"
-                  className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-lg h-9 text-xs focus-visible:ring-[#01454A]"
-                />
-              </div>
-              <div>
-                <label className="text-[9px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-0.5">
-                  Sleeve (cm)
-                </label>
-                <Input
-                  value={sleeve}
-                  onChange={(e) => setSleeve(e.target.value)}
-                  placeholder="e.g. 64"
-                  className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-lg h-9 text-xs focus-visible:ring-[#01454A]"
-                />
-              </div>
-              <div>
-                <label className="text-[9px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-0.5">
-                  Inseam (cm)
-                </label>
-                <Input
-                  value={inseam}
-                  onChange={(e) => setInseam(e.target.value)}
-                  placeholder="e.g. 80"
-                  className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-lg h-9 text-xs focus-visible:ring-[#01454A]"
-                />
-              </div>
-              <div>
-                <label className="text-[9px] font-bold uppercase text-[#7A6B44] tracking-wide block mb-0.5">
-                  Foot Length (cm)
-                </label>
-                <Input
-                  value={footLength}
-                  onChange={(e) => setFootLength(e.target.value)}
-                  placeholder="e.g. 27"
-                  className="bg-white border-[#D9D9D9] text-[#1A1208] rounded-lg h-9 text-xs focus-visible:ring-[#01454A]"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-4 border-t border-[#ECE6D6]">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setIsModalOpen(false)}
-              className="text-[#7A6B44] hover:text-[#1A1208] rounded-xl h-10 px-4"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={handleSaveSizeGuide}
-              isLoading={isSavingTemplate}
-              className="bg-[#FDA600] hover:bg-[#E89700] text-white rounded-xl h-10 px-4"
-            >
-              Save Template
-            </Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 }

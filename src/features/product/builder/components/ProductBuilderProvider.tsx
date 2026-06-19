@@ -23,6 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useDraftStore } from "../store";
 import { createProduct } from "../../api/product.api";
+import { buildProductWritePayload } from "../utils/product-builder-payload";
 import {
   builderProgress,
   ProductBuilderFormSchema,
@@ -73,7 +74,7 @@ export function useBuilderContext(): BuilderContextValue {
 }
 
 const STEP_FIELDS: Record<number, Array<Path<ProductBuilderFormValues>>> = {
-  1: ["title", "description", "condition", "category_ids", "sub_category_ids", "gender_target", "age_group"],
+  1: ["title", "description", "condition", "category_ids", "gender_target", "age_group"],
   2: [
     "cover_image_public_id",
     "cover_image_url",
@@ -81,8 +82,9 @@ const STEP_FIELDS: Record<number, Array<Path<ProductBuilderFormValues>>> = {
   ],
   3: [
     "price", "old_price", "is_discounted", "discount_percentage", "discounted_price",
-    "currency", "stock_qty", "max_stock", "cash_payment_mode", "is_pre_order", "pre_order_date",
-    "requires_measurement", "is_customisable", "measurement_guide",
+    "currency", "stock_qty", "cash_payment_mode", "is_pre_order", "pre_order_date",
+    "cover_image_size_id", "gallery",
+    "requires_measurement", "is_customisable",
     "fabric_type", "fabric_care_instructions", "fabric_is_organic", "fabric_is_vegan", "fabric_country_of_origin",
   ],
   4: [
@@ -92,12 +94,10 @@ const STEP_FIELDS: Record<number, Array<Path<ProductBuilderFormValues>>> = {
     "height_cm",
     "is_fragile",
     "requires_signature",
-    "free_shipping_threshold",
     "processing_days",
-    "shipping_amount",
     "courier_id",
   ],
-  5: ["faqs", "publish_intent", "featured", "hot_deal", "meta_title", "meta_description"],
+  5: ["faqs", "publish_intent", "featured", "hot_deal"],
 };
 
 const STEP_SCHEMAS = {
@@ -113,7 +113,6 @@ const DEFAULT_VALUES: Partial<ProductBuilderFormValues> = {
   description: "",
   condition: "new",
   category_ids: [],
-  sub_category_ids: [],
   gender_target: "men",
   age_group: "adult",
 
@@ -124,14 +123,13 @@ const DEFAULT_VALUES: Partial<ProductBuilderFormValues> = {
   discounted_price: "",
   currency: "NGN",
   stock_qty: 1,
-  max_stock: null,
   cash_payment_mode: "disabled",
   is_pre_order: false,
   pre_order_date: null,
+  cover_image_size_id: null,
 
   requires_measurement: false,
   is_customisable: false,
-  measurement_guide: [],
   fabric_type: "",
   fabric_care_instructions: "machine_wash",
   fabric_is_organic: false,
@@ -149,18 +147,13 @@ const DEFAULT_VALUES: Partial<ProductBuilderFormValues> = {
   dimensions_cm: null,
   is_fragile: false,
   requires_signature: false,
-  restricted_countries: [],
-  free_shipping_threshold: "",
   processing_days: 1,
-  shipping_amount: "2500.00",
   courier_id: null,
 
   faqs: [],
   publish_intent: "draft",
   featured: false,
   hot_deal: false,
-  meta_title: "",
-  meta_description: "",
 };
 
 function sanitizePayload(payload: any): ProductBuilderFormValues {
@@ -342,10 +335,8 @@ export function ProductBuilderProvider({
       }
 
       if (publishIntent === "pending") {
-        const createdProduct = await createProduct({
-          ...values,
-          idempotency_key: store.idempotencyKey ?? undefined,
-        } as any);
+        const productPayload = buildProductWritePayload(values, store.idempotencyKey);
+        const createdProduct = await createProduct(productPayload);
 
         clearDraft();
         await onSubmit(values, createdProduct.slug || createdProduct.id);
@@ -359,8 +350,17 @@ export function ProductBuilderProvider({
       let errMessage = "Could not save product. Please review your form and try again.";
       const responseData = err?.response?.data || err?.data;
       if (responseData?.errors && typeof responseData.errors === "object") {
+        const labels: Record<string, string> = {
+          stock_qty: "Stock quantity",
+          price: "New price",
+          old_price: "Old price",
+          category_ids: "Product category",
+          pre_order_date: "Pre-order availability date",
+          cover_image_public_id: "Cover image",
+          weight_kg: "Shipping weight",
+        };
         const fieldErrors = Object.entries(responseData.errors)
-          .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`)
+          .map(([field, msgs]) => `${labels[field] ?? field}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`)
           .slice(0, 3)
           .join(" | ");
         errMessage = fieldErrors || errMessage;

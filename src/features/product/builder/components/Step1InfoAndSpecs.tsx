@@ -11,7 +11,6 @@
  *   • gender_target    — Men / Women / Unisex / Kids / Boys / Girls
  *   • age_group        — Adult / Teen / Child / Toddler / Infant
  *   • category_ids     — Multi-select from API (required, 1–15)
- *   • sub_category_ids — Dependent sub-category multi-select (optional, 0–15)
  */
 
 import { useState } from "react";
@@ -66,13 +65,6 @@ interface PaginatedOptions {
   results: SelectOption[];
 }
 
-interface CategoryDetail {
-  id: string;
-  name: string;
-  slug: string;
-  children: SelectOption[];
-}
-
 const GENDER_OPTIONS = [
   { value: "men",    label: "👔 Men"    },
   { value: "women",  label: "👗 Women"  },
@@ -119,14 +111,6 @@ async function fetchCategories(): Promise<SelectOption[]> {
   return data.results ?? [];
 }
 
-async function fetchSubCategories(parentSlug: string): Promise<SelectOption[]> {
-  if (!parentSlug) return [];
-  const data = await apiAsync
-    .get(`catalog/categories/${parentSlug}/detail/`)
-    .json<CategoryDetail>();
-  return data.children ?? [];
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // SKELETON
 // ─────────────────────────────────────────────────────────────────────────────
@@ -167,7 +151,7 @@ function SectionCard({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DROPDOWN SELECTORS FOR CATEGORIES & SUB-CATEGORIES
+// DROPDOWN SELECTOR FOR CATEGORIES
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function CategoryDropdownSelector({
@@ -341,181 +325,6 @@ export function CategoryDropdownSelector({
   );
 }
 
-export function SubCategoryDropdownSelector({
-  subCategories,
-  selectedSubCategoryIds,
-  toggleSubCategory,
-  onClearAll,
-  maxSubCategories = 15,
-  disabled = false,
-}: {
-  subCategories: SelectOption[];
-  selectedSubCategoryIds: string[];
-  toggleSubCategory: (id: string) => void;
-  onClearAll: () => void;
-  maxSubCategories?: number;
-  disabled?: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const selectedList = subCategories.filter((c) => selectedSubCategoryIds.includes(c.id));
-
-  return (
-    <div className="space-y-3 w-full">
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            role="combobox"
-            aria-expanded={open}
-            disabled={disabled}
-            className={cn(
-              "flex items-center justify-between w-full px-4 py-3 rounded-xl border text-sm font-medium transition-all",
-              "bg-white border-[#D9D9D9] text-[#5A6465]",
-              disabled
-                ? "bg-zinc-50 border-zinc-200 opacity-40 cursor-not-allowed"
-                : "hover:border-[#FDA600]/50 hover:bg-[#FFF6E3]/20 focus:outline-none focus:ring-2 focus:ring-[#01454A]/20 focus:border-[#01454A]",
-              open && !disabled && "border-[#01454A] ring-2 ring-[#01454A]/20"
-            )}
-          >
-            <span className="flex items-center gap-2">
-              <FolderOpen className="w-4 h-4 text-[#01454A]" />
-              {selectedSubCategoryIds.length > 0 ? (
-                <span className="text-[#1A1208] font-semibold">
-                  {selectedSubCategoryIds.length} sub-categor{selectedSubCategoryIds.length !== 1 ? "ies" : "y"} selected
-                </span>
-              ) : (
-                <span className="text-zinc-400">Select sub-categories...</span>
-              )}
-            </span>
-            <ChevronDown
-              className={cn(
-                "w-4 h-4 text-zinc-400 transition-transform duration-200",
-                open && "rotate-180"
-              )}
-            />
-          </button>
-        </PopoverTrigger>
-
-        <PopoverContent
-          className="w-[340px] p-0 border border-[#D9D9D9] shadow-xl rounded-2xl bg-white overflow-hidden"
-          align="start"
-          side="bottom"
-          sideOffset={6}
-        >
-          <Command className="bg-white">
-            <div className="border-b border-[#ECE6D6] px-3 py-2">
-              <CommandInput
-                placeholder="Search sub-categories..."
-                className="h-9 text-sm placeholder:text-zinc-400 border-0 focus:ring-0 bg-transparent"
-              />
-            </div>
-            <CommandList className="max-h-[280px] overflow-y-auto overscroll-contain">
-              <CommandEmpty className="py-8 text-center text-sm text-zinc-400">
-                No sub-category found.
-              </CommandEmpty>
-              <CommandGroup className="py-1">
-                {subCategories.map((sub) => {
-                  const selected = selectedSubCategoryIds.includes(sub.id);
-                  const disabledItem = !selected && selectedSubCategoryIds.length >= maxSubCategories;
-                  return (
-                    <CommandItem
-                      key={sub.id}
-                      value={sub.name}
-                      onSelect={() => {
-                        if (!disabledItem) toggleSubCategory(sub.id);
-                      }}
-                      className={cn(
-                        "flex items-center justify-between px-3 py-2 mx-1 rounded-lg cursor-pointer transition-all",
-                        "data-[selected=true]:bg-[#F5F5F5]",
-                        selected && "bg-[#F0F9F9]",
-                        disabledItem && "opacity-40 cursor-not-allowed"
-                      )}
-                    >
-                      <span className="flex items-center gap-2.5">
-                        <span
-                          className={cn(
-                            "w-4 h-4 rounded-sm flex items-center justify-center flex-shrink-0 border border-[#01454A]/30 transition-all",
-                            selected ? "bg-[#01454A]" : "bg-transparent"
-                          )}
-                        >
-                          {selected && <Check className="w-2.5 h-2.5 text-white" />}
-                        </span>
-                        <span className="text-sm font-medium text-[#1A1208]">{sub.name}</span>
-                      </span>
-
-                      {sub.image_url ? (
-                        <img
-                          src={sub.image_url}
-                          alt={sub.name}
-                          className="w-7 h-7 rounded-md object-cover border border-zinc-200"
-                        />
-                      ) : (
-                        <span className="w-7 h-7 rounded-md bg-zinc-100 flex items-center justify-center border border-zinc-200">
-                          <ImageIcon className="w-3.5 h-3.5 text-zinc-400" />
-                        </span>
-                      )}
-                    </CommandItem>
-                  );
-                })}
-              </CommandGroup>
-            </CommandList>
-            {selectedSubCategoryIds.length > 0 && (
-              <div className="border-t border-[#ECE6D6] px-3 py-2 flex items-center justify-between bg-[#FAFAF8]">
-                <span className="text-xs text-zinc-500 font-medium">
-                  {selectedSubCategoryIds.length}/{maxSubCategories} selected
-                </span>
-                <button
-                  type="button"
-                  onClick={onClearAll}
-                  className="text-xs text-red-500 font-semibold hover:underline"
-                >
-                  Clear all
-                </button>
-              </div>
-            )}
-          </Command>
-        </PopoverContent>
-      </Popover>
-
-      {selectedList.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {selectedList.map((sub) => (
-            <Badge
-              key={sub.id}
-              className={cn(
-                "flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full border",
-                "bg-white border-[#D9D9D9] text-[#1A1208] hover:border-[#01454A]/50",
-                "transition-all cursor-default"
-              )}
-            >
-              {sub.image_url ? (
-                <img
-                  src={sub.image_url}
-                  alt={sub.name}
-                  className="w-4 h-4 rounded-full object-cover"
-                />
-              ) : (
-                <span className="w-4 h-4 rounded-full bg-zinc-100 flex items-center justify-center">
-                  <ImageIcon className="w-2 h-2 text-zinc-400" />
-                </span>
-              )}
-              <span className="text-xs font-semibold">{sub.name}</span>
-              <button
-                type="button"
-                onClick={() => toggleSubCategory(sub.id)}
-                className="ml-0.5 text-zinc-400 hover:text-red-500 transition-colors"
-                aria-label={`Remove ${sub.name}`}
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN STEP 1 COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -524,27 +333,12 @@ export function Step1InfoAndSpecs() {
   const form = useFormContext<ProductBuilderFormValues>();
 
   const selectedCategoryIds = form.watch("category_ids") ?? [];
-  const selectedSubCategoryIds = form.watch("sub_category_ids") ?? [];
   const selectedCondition = form.watch("condition") ?? "new";
-  const selectedPrimaryCategoryId = selectedCategoryIds[0] ?? "";
 
   // ── TanStack Queries ───────────────────────────────────────────────────────
   const { data: categories = [], isLoading: catsLoading } = useQuery({
     queryKey: ["catalog", "categories"],
     queryFn: fetchCategories,
-    staleTime: 5 * 60_000,
-    gcTime: 10 * 60_000,
-  });
-
-  const primaryCategory = categories.find(
-    (cat) => cat.id === selectedPrimaryCategoryId
-  );
-  const selectedPrimaryCategorySlug = primaryCategory?.slug ?? "";
-
-  const { data: subCategories = [], isLoading: subsLoading } = useQuery({
-    queryKey: ["catalog", "subcategories", selectedPrimaryCategorySlug],
-    queryFn: () => fetchSubCategories(selectedPrimaryCategorySlug),
-    enabled: !!selectedPrimaryCategorySlug,
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
   });
@@ -560,23 +354,6 @@ export function Step1InfoAndSpecs() {
       next = [...current, categoryId];
     }
     form.setValue("category_ids", next, { shouldValidate: true });
-    
-    // Clear subcategories if the primary category changes
-    if (next.length === 0 || next[0] !== current[0]) {
-      form.setValue("sub_category_ids", [], { shouldValidate: true });
-    }
-  };
-
-  const toggleSubCategory = (subId: string) => {
-    const current = form.getValues("sub_category_ids") ?? [];
-    let next: string[];
-    if (current.includes(subId)) {
-      next = current.filter((id) => id !== subId);
-    } else {
-      if (current.length >= 15) return;
-      next = [...current, subId];
-    }
-    form.setValue("sub_category_ids", next, { shouldValidate: true });
   };
 
   // ── Loading skeleton ───────────────────────────────────────────────────────
@@ -831,7 +608,6 @@ export function Step1InfoAndSpecs() {
                   toggleCategory={toggleCategory}
                   onClearAll={() => {
                     form.setValue("category_ids", [], { shouldValidate: true });
-                    form.setValue("sub_category_ids", [], { shouldValidate: true });
                   }}
                 />
               </FormControl>
@@ -840,49 +616,6 @@ export function Step1InfoAndSpecs() {
           )}
         />
 
-        {/* Sub-Categories (dependent) */}
-        <FormField
-          control={form.control}
-          name="sub_category_ids"
-          render={() => (
-            <FormItem className="space-y-3">
-              <div className="flex items-center justify-between">
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                  Sub-Categories
-                  <span className="ml-1.5 text-xs font-normal text-zinc-400">
-                    (optional)
-                  </span>
-                </FormLabel>
-                {selectedSubCategoryIds.length > 0 && (
-                  <span className="text-xs text-zinc-500 font-mono">
-                    {selectedSubCategoryIds.length} / 15 selected
-                  </span>
-                )}
-              </div>
-
-              <FormControl>
-                <SubCategoryDropdownSelector
-                  subCategories={subCategories}
-                  selectedSubCategoryIds={selectedSubCategoryIds}
-                  toggleSubCategory={toggleSubCategory}
-                  onClearAll={() => form.setValue("sub_category_ids", [], { shouldValidate: true })}
-                  disabled={!selectedPrimaryCategoryId || subsLoading}
-                />
-              </FormControl>
-              {!selectedPrimaryCategoryId && (
-                <p className="text-xs text-zinc-400 italic">
-                  Select a primary category to load sub-categories.
-                </p>
-              )}
-              {selectedPrimaryCategoryId && subsLoading && (
-                <p className="text-xs text-[#01454A] animate-pulse">
-                  Loading sub-categories...
-                </p>
-              )}
-              <FormMessage />
-            </FormItem>
-          )}
-        />
       </SectionCard>
     </div>
   );

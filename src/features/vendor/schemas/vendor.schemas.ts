@@ -290,9 +290,7 @@ export const VendorProductCreateSchema = z.object({
       return !isNaN(parsed) && parsed >= 5000;
     }, { message: "Original price must be at least ₦5,000.00" }),
   currency:            z.string().default("NGN"),
-  shipping_amount:     z.string().optional(),
   stock_qty:           z.number().int().min(0),
-  max_stock:           z.number().int().nullable().optional(),
   // ── Physical attributes ──────────────────────────────────────────────────
   weight_kg:           z.string().optional().or(z.literal("")),  // e.g. "1.5"
   condition:           z.enum(["new", "used", "refurbished"]).optional().default("new"),
@@ -300,7 +298,6 @@ export const VendorProductCreateSchema = z.object({
   pre_order_date:      z.string().nullable().optional(),
   // Relations — arrays of UUID strings matching PrimaryKeyRelatedField(many=True)
   category_ids:        z.array(z.string().uuid()).min(1, "At least one category is required").max(15),
-  sub_category_ids:    z.array(z.string().uuid()).optional(),
   size_ids:            z.array(z.string().uuid()).optional(),
   color_ids:           z.array(z.string().uuid()).optional(),
   tag_ids:             z.array(z.string().uuid()).optional(),
@@ -313,9 +310,6 @@ export const VendorProductCreateSchema = z.object({
   commission_rate:      z.string().optional(),
   status:               z.enum(["draft", "pending", "published", "archived", "rejected"]).optional().default("draft"),
   idempotency_key:      z.string().uuid().optional(),
-  // ── SEO overrides ────────────────────────────────────────────────────────
-  meta_title:           z.string().max(160).optional().or(z.literal("")),
-  meta_description:     z.string().max(320).optional().or(z.literal("")),
   age_group:            z.string().optional().or(z.literal("")),
   gender_target:        z.string().optional().or(z.literal("")),
   // ── Variants (Step 5 builder output) ────────────────────────────────────

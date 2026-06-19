@@ -11,8 +11,8 @@ interface CategoryProductsClientProps {
 /**
  * CategoryProductsClient
  *
- * Fetches products filtered by category slug + optional brand/sub_category/page
- * query params. All state is URL-synced (?page=N, ?brand=, ?sub_category=) so
+ * Fetches products filtered by category slug + optional brand/page
+ * query params. All state is URL-synced (?page=N, ?brand=) so
  * results are bookmarkable and shareable. Rendered inside a Suspense boundary
  * on the category slug page.
  */
@@ -24,7 +24,6 @@ export default function CategoryProductsClient({
   const pathname = usePathname();
 
   const brand = searchParams.get("brand") ?? undefined;
-  const sub_category = searchParams.get("sub_category") ?? undefined;
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
 
   // Sync page change to URL (?page=N keeps it bookmarkable + browser Back works)
@@ -45,7 +44,6 @@ export default function CategoryProductsClient({
     <ProductGrid
       params={{
         category: categorySlug,
-        sub_category,
         brand,
         page,
         page_size: 12,

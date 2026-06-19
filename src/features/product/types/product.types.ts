@@ -346,7 +346,6 @@ export interface ProductDetail {
   shipping_profile?: ProductShippingProfile | null;
   measurement_guide?: ProductMeasurementGuideRow[] | null;
   categories?: Array<{ id: string; name: string; slug: string }> | null;
-  sub_categories?: Array<{ id: string; name: string; slug: string }> | null;
   tags?: Array<{ id: string; name: string; slug: string }> | null;
   specifications?: Array<{ title: string; content: string }> | null;
   gallery?: Array<ProductVariantGalleryMedia> | null;
@@ -355,7 +354,6 @@ export interface ProductDetail {
   measurement_template?: string | null;
   category_name: string | null;
   category_slug: string | null;
-  sub_category_name: string | null;
   brand_name: string | null;
   brand_slug: string | null;
   vendor_id: string | null;
@@ -423,29 +421,54 @@ export interface CreateProductInput {
   description: string;
   price: string;
   old_price?: string | null;
+  stock_qty: number;
   is_discounted?: boolean;
   discount_percentage?: number | null;
   discounted_price?: string | null;
   cash_payment_mode?: string;
   currency?: string;
-  shipping_amount?: string;
-  max_stock?: number | null;
   condition?: ProductCondition;
   is_pre_order?: boolean;
   pre_order_date?: string | null;
   category_ids: string[];
-  sub_category_ids?: string[];
   requires_measurement: boolean;
   is_customisable: boolean;
   hot_deal?: boolean;
   featured?: boolean;
   commission_rate?: string;
   status?: ProductStatus;
-  meta_title?: string;
-  meta_description?: string;
   age_group?: string;
   gender_target?: string;
   courier_id?: string | null;
+  cover_image_public_id?: string;
+  cover_image_url?: string | null;
+  cover_image_sku?: string;
+  cover_image_color_name?: string;
+  cover_image_color_hex?: string;
+  cover_image_size_id?: string | null;
+  gallery?: Array<{
+    public_id: string;
+    secure_url: string;
+    media_type?: MediaType;
+    alt_text?: string;
+    ordering?: number;
+    color_name?: string;
+    color_hex?: string;
+    size_id?: string | null;
+    sku?: string;
+    barcode?: string;
+    video_thumbnail?: string;
+    duration_sec?: number | null;
+  }>;
+  weight_kg?: string;
+  length_cm?: number;
+  width_cm?: number;
+  height_cm?: number;
+  dimensions_cm?: Record<string, unknown> | null;
+  is_fragile?: boolean;
+  requires_signature?: boolean;
+  processing_days?: number;
+  publish_intent?: "draft" | "pending";
   /** Unified variant + gallery media items to create/update. */
   variants?: Array<{
     size_id?: string | null;
@@ -462,7 +485,6 @@ export interface CreateProductInput {
   idempotency_key?: string;        // UUID v4 string
   fabric?: Omit<ProductFabricSpecification, "id"> | null;
   shipping_profile?: Omit<ProductShippingProfile, "id"> | null;
-  measurement_guide?: Array<Omit<ProductMeasurementGuideRow, "id">> | null;
 }
 
 export interface UpdateProductInput extends Partial<CreateProductInput> {}
@@ -491,10 +513,8 @@ export interface CouponValidateInput {
 
 export interface ProductFilterParams {
   q?: string;
-  /** Filter products by category and sub category slug (maps to category__slug on backend). */
+  /** Filter products by category slug or id. */
   category?: string;
-  /** Filter products by sub-category slug (maps to sub_categories__slug on backend). */
-  sub_category?: string;
   brand?: string;
   vendor?: string;
   in_stock?: boolean;

@@ -83,6 +83,7 @@ import type {
   VendorOrderStatus,
 } from "@/features/vendor/types/vendor.types";
 import type { ProductListItem } from "@/features/product";
+import { buildProductWritePayload } from "@/features/product/builder/utils/product-builder-payload";
 import { useCatalogCollections } from "@/features/catalog/hooks/use-catalog";
 import {
   useNinjaKycStatus,
@@ -1798,14 +1799,14 @@ function LocalDraftCard({
   const title = (draft.payload as any)?.title;
 
   return (
-    <div className="group relative flex flex-col gap-3 sm:gap-4 rounded-xl sm:rounded-2xl border border-[#ECE6D6] bg-white p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-[#FDA600]/30 transition-all duration-200">
+    <div className="group relative flex min-w-0 w-full flex-col gap-3 sm:gap-4 rounded-xl sm:rounded-2xl border border-[#ECE6D6] bg-white p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-[#FDA600]/30 transition-all duration-200">
       <span className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-1.5 rounded-full bg-[#01454A]/8 border border-[#01454A]/20 px-2.5 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#01454A]">
         <span className="h-1 sm:h-1.5 w-1 sm:w-1.5 rounded-full bg-[#01454A] animate-pulse" />
         Browser
       </span>
 
       {/* Header */}
-      <div className="flex items-start gap-2.5 sm:gap-3 pr-14 sm:pr-16">
+      <div className="flex min-w-0 items-start gap-2.5 sm:gap-3 pr-14 sm:pr-16">
         <div className="flex h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br from-[#FFF6E3] to-[#FFECC0] border border-[#FDA600]/25">
           <Package className="h-4 w-4 sm:h-5 sm:w-5 text-[#FDA600]" />
         </div>
@@ -1821,13 +1822,13 @@ function LocalDraftCard({
       </div>
 
       {/* Step progress bar */}
-      <div className="space-y-1 sm:space-y-1.5">
-        <div className="flex items-center justify-between">
+      <div className="min-w-0 space-y-1 sm:space-y-1.5">
+        <div className="flex min-w-0 items-center justify-between gap-2">
           <span className="text-[10px] sm:text-[11px] font-bold text-[#1A1208]">{stepLabel}</span>
-          <span className="text-[10px] sm:text-[11px] text-[#7A6B44]">{progress}% complete</span>
+          <span className="flex-shrink-0 text-[10px] sm:text-[11px] text-[#7A6B44]">{progress}% complete</span>
         </div>
         <DraftStepProgress step={step} />
-        <div className="flex items-center justify-between">
+        <div className="flex min-w-0 items-center justify-between gap-2">
           <span className="text-[9px] sm:text-[10px] text-[#BDBDBD]">
             Step {step} of 5
           </span>
@@ -1839,11 +1840,11 @@ function LocalDraftCard({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2 mt-0.5 sm:mt-1">
+      <div className="flex min-w-0 flex-col gap-2 mt-0.5 sm:mt-1 sm:flex-row">
         <Button
           type="button"
           onClick={onResume}
-          className="flex-1 h-8 sm:h-9 rounded-lg sm:rounded-xl bg-[#FDA600] text-black text-[11px] sm:text-xs font-bold hover:bg-[#E8960A] transition shadow-sm shadow-[#FDA600]/20 border-none cursor-pointer min-h-0"
+          className="min-w-0 flex-1 h-8 sm:h-9 rounded-lg sm:rounded-xl bg-[#FDA600] text-black text-[11px] sm:text-xs font-bold hover:bg-[#E8960A] transition shadow-sm shadow-[#FDA600]/20 border-none cursor-pointer min-h-0"
         >
           <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
           Resume building
@@ -1886,14 +1887,14 @@ function VendorLocalDraftPanel({ onResumeDraft }: { onResumeDraft: () => void })
   };
 
   return (
-    <div className="rounded-2xl sm:rounded-3xl border border-[#FDA600]/25 bg-gradient-to-br from-[#FFFBF0] to-[#FFF8E8] p-4 sm:p-6 shadow-sm">
+    <div className="min-w-0 overflow-hidden rounded-2xl sm:rounded-3xl border border-[#FDA600]/25 bg-gradient-to-br from-[#FFFBF0] to-[#FFF8E8] p-4 sm:p-6 shadow-sm">
       {/* Panel header */}
-      <div className="flex items-center justify-between mb-3 sm:mb-4">
-        <div className="flex items-center gap-2.5 sm:gap-3">
+      <div className="flex min-w-0 items-center justify-between gap-3 mb-3 sm:mb-4">
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
           <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg sm:rounded-xl bg-[#FDA600] shadow-sm shadow-[#FDA600]/30">
             <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-black" />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-xs sm:text-sm font-bold text-[#1A1208]">
               In-Progress Browser Draft
               <span className="ml-1.5 sm:ml-2 inline-flex items-center justify-center h-4.5 w-4.5 sm:h-5 sm:w-5 rounded-full bg-[#FDA600] text-[9px] sm:text-[10px] font-black text-black">
@@ -1916,7 +1917,7 @@ function VendorLocalDraftPanel({ onResumeDraft }: { onResumeDraft: () => void })
 
       {isExpanded && (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <LocalDraftCard
               draft={localDraft}
               onResume={onResumeDraft}
@@ -1961,24 +1962,8 @@ export function VendorProductComposerView() {
   };
 
   const handleBuilderSubmit = async (values: ProductBuilderFormValues, productId: string | null) => {
-    const hotDeal = (values.hot_deal ?? false) as boolean;
     let savedSlug: string | null = productSlugRef.current;
-    const sharedPayload = {
-      title: values.title, description: values.description,
-      price: values.price, old_price: values.old_price ?? undefined,
-      currency: values.currency ?? "NGN",
-      shipping_amount: values.shipping_amount ?? "0.00",
-      stock_qty: values.stock_qty as number,
-      requires_measurement: values.requires_measurement as boolean,
-      is_customisable: values.is_customisable as boolean,
-      category_ids: values.category_ids,
-      sub_category_ids: values.sub_category_ids ?? [],
-      hot_deal: hotDeal,
-      weight_kg: values.weight_kg || undefined,
-      condition: values.condition,
-      meta_title: values.meta_title || undefined,
-      meta_description: values.meta_description || undefined,
-    };
+    const sharedPayload = buildProductWritePayload(values);
 
     if (productSlugRef.current) {
       await updateMutation.mutateAsync(sharedPayload);
@@ -2002,13 +1987,13 @@ export function VendorProductComposerView() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       {/* ── Browser Draft Panel — local recovery only, no backend draft API ── */}
       {showDraftPanel && <VendorLocalDraftPanel onResumeDraft={handleResumeDraft} />}
 
       {/* ── Page header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl bg-white border border-[#ECE6D6] px-8 py-6 shadow-sm">
-        <div>
+      <div className="flex min-w-0 flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl bg-white border border-[#ECE6D6] px-4 sm:px-8 py-5 sm:py-6 shadow-sm">
+        <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44]">Product Studio</p>
           <h1 className="mt-1 font-bon_foyage text-3xl sm:text-4xl text-[#1A1208] leading-tight">Add New Product</h1>
         </div>
@@ -2023,7 +2008,7 @@ export function VendorProductComposerView() {
       {/* ── Builder container ── */}
       <div
         id="product-builder-anchor"
-        className="rounded-3xl bg-white border border-[#ECE6D6] text-[#1A1208] p-8 shadow-sm relative overflow-hidden scroll-mt-8"
+        className="min-w-0 rounded-3xl bg-white border border-[#ECE6D6] text-[#1A1208] p-4 sm:p-6 lg:p-8 shadow-sm relative overflow-hidden scroll-mt-8"
       >
         <ProductBuilderProvider vendorId={vendorId} onSubmit={handleBuilderSubmit}>
           <ProductBuilder />

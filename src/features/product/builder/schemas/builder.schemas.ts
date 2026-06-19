@@ -4,22 +4,29 @@ import { z } from "zod";
 // PRIMITIVES
 // ─────────────────────────────────────────────────────────────────────────────
 
-const QtySchema = z.number().int().min(0, "Quantity cannot be negative");
+const QtySchema = z.coerce
+  .number({
+    invalid_type_error: "Enter stock quantity as a whole number, for example 12.",
+  })
+  .int("Enter stock quantity as a whole number, for example 12.")
+  .min(0, "Quantity cannot be negative");
 
 const MoneySchema = z
   .string()
-  .min(1, "Price is required")
-  .regex(/^\d+(\.\d{1,2})?$/, "Enter a valid price (e.g. 12500.00)")
+  .trim()
+  .min(1, "Enter the new product price, for example ₦15,000.00.")
+  .regex(/^\d+(\.\d{1,2})?$/, "Use numbers only for price, for example 12500.00.")
   .refine((val) => {
     const parsed = parseFloat(val);
     return !isNaN(parsed) && parsed >= 5000;
   }, {
-    message: "Price must be at least ₦5,000.00",
+    message: "New price must be at least ₦5,000.00.",
   });
 
 const OptionalMoneySchema = z
   .string()
-  .regex(/^(\d+(\.\d{1,2})?)?$/, "Enter a valid price or leave blank")
+  .trim()
+  .regex(/^(\d+(\.\d{1,2})?)?$/, "Use numbers only, or leave this blank.")
   .optional()
   .or(z.literal(""))
   .refine((val) => {
@@ -27,7 +34,7 @@ const OptionalMoneySchema = z
     const parsed = parseFloat(val);
     return !isNaN(parsed) && parsed >= 5000;
   }, {
-    message: "Price must be at least ₦5,000.00",
+    message: "Old price must be at least ₦5,000.00 when provided.",
   });
 
 const FKIdSchema = z.string().uuid("Select a valid option").optional().nullable();
@@ -65,6 +72,8 @@ export const GalleryItemSchema = z.object({
 
 export type GalleryItem = z.infer<typeof GalleryItemSchema>;
 
+const MediaColorGalleryItemSchema = GalleryItemSchema.omit({ size_id: true });
+
 export const FaqRowSchema = z.object({
   question: z.string().min(5).max(500),
   answer: z.string().min(10).max(2000),
@@ -81,8 +90,11 @@ export const Step1Schema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(255),
   description: z.string().min(30, "Description must be at least 30 characters"),
   condition: z.enum(["new", "used", "refurbished"], { required_error: "Select a condition" }),
-  category_ids: z.array(z.string().uuid()).min(1).max(15).default([]),
-  sub_category_ids: z.array(z.string().uuid()).max(15).default([]),
+  category_ids: z
+    .array(z.string().uuid())
+    .min(1, "Choose at least one product category.")
+    .max(15, "Choose no more than 15 categories.")
+    .default([]),
   gender_target: z.string().optional().default(""),
   age_group: z.string().optional().default(""),
 });
@@ -96,9 +108,8 @@ export const Step2MediaAndMappingSchema = z.object({
   cover_image_sku: z.string().optional().default(""),
   cover_image_color_name: z.string().optional().default(""),
   cover_image_color_hex: z.string().optional().default(""),
-  cover_image_size_id: z.string().uuid().nullable().optional(),
   gallery: z
-    .array(GalleryItemSchema)
+    .array(MediaColorGalleryItemSchema)
     .max(3, "Maximum 3 gallery items allowed in addition to the cover image")
     .default([]),
 });
@@ -116,8 +127,7 @@ export const Step3PricingAndMeasurementsBaseSchema = z.object({
   discount_percentage: z.number().min(0).max(100).default(0),
   discounted_price: OptionalMoneySchema,
   currency: z.string().length(3).default("NGN"),
-  stock_qty: QtySchema.min(1, "Stock must be at least 1 unit"),
-  max_stock: QtySchema.optional().nullable(),
+  stock_qty: QtySchema.min(1, "Enter at least 1 available unit for this product."),
   cash_payment_mode: z.enum([
     "disabled",
     "cod",
@@ -129,10 +139,11 @@ export const Step3PricingAndMeasurementsBaseSchema = z.object({
   ]).default("disabled"),
   is_pre_order: z.boolean().default(false),
   pre_order_date: z.string().nullable().optional(),
+  cover_image_size_id: z.string().uuid().nullable().optional(),
+  gallery: z.array(GalleryItemSchema).max(3).default([]),
 
   requires_measurement: z.boolean().default(false),
   is_customisable: z.boolean().default(false),
-  measurement_guide: z.array(MeasurementGuideRowSchema).default([]),
   
   fabric_type: z.string().max(120).optional().or(z.literal("")),
   fabric_care_instructions: z.enum([
@@ -158,6 +169,27 @@ export const Step3PricingAndMeasurementsSchema = Step3PricingAndMeasurementsBase
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["old_price"], message: "Original price must be higher than current price" });
     }
   }
+  if (data.is_pre_order) {
+    if (!data.pre_order_date) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["pre_order_date"],
+        message: "Choose an expected availability date for pre-order items.",
+      });
+      return;
+    }
+    const selected = new Date(`${data.pre_order_date}T00:00:00`);
+    const minDate = new Date();
+    minDate.setHours(0, 0, 0, 0);
+    minDate.setDate(minDate.getDate() + 3);
+    if (Number.isNaN(selected.getTime()) || selected < minDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["pre_order_date"],
+        message: "Pre-order availability date must be at least 3 days from today.",
+      });
+    }
+  }
 });
 
 export type Step3PricingAndMeasurementsValues = z.infer<typeof Step3PricingAndMeasurementsSchema>;
@@ -167,32 +199,14 @@ export type Step3Values = Step3PricingAndMeasurementsValues;
 
 // STEP 4: Shipping
 export const Step4BaseSchema = z.object({
-  weight_kg: z.string().regex(/^(\d+(\.\d{1,3})?)?$/, "Enter a valid weight in kg (e.g. 1.5)").optional().or(z.literal("")),
-  length_cm: z.coerce.number().min(0).default(0),
-  width_cm: z.coerce.number().min(0).default(0),
-  height_cm: z.coerce.number().min(0).default(0),
+  weight_kg: z.string().regex(/^(\d+(\.\d{1,3})?)?$/, "Enter weight using numbers only, for example 1.5 kg.").optional().or(z.literal("")),
+  length_cm: z.coerce.number().min(0, "Length cannot be negative.").default(0),
+  width_cm: z.coerce.number().min(0, "Width cannot be negative.").default(0),
+  height_cm: z.coerce.number().min(0, "Height cannot be negative.").default(0),
   dimensions_cm: z.record(z.string(), z.any()).nullable().optional(),
   is_fragile: z.boolean().default(false),
   requires_signature: z.boolean().default(false),
-  restricted_countries: z.array(z.string().min(2).max(80)).default([]),
-  free_shipping_threshold: z
-    .string()
-    .regex(/^(\d+(\.\d{1,2})?)?$/, "Enter a valid threshold or leave blank")
-    .optional()
-    .or(z.literal("")),
-  processing_days: z.coerce.number().int().min(1).max(90).default(1),
-  shipping_amount: z
-    .string()
-    .regex(/^(\d+(\.\d{1,2})?)?$/, "Enter a valid price or leave blank")
-    .optional()
-    .or(z.literal(""))
-    .refine((val) => {
-      if (!val || val === "") return true;
-      const parsed = parseFloat(val);
-      return !isNaN(parsed) && parsed >= 2500;
-    }, {
-      message: "Fixed shipping cost must be at least ₦2,500.00",
-    }),
+  processing_days: z.coerce.number().int("Processing days must be a whole number.").min(1, "Processing days must be at least 1 day.").max(90, "Processing days cannot exceed 90 days.").default(1),
   courier_id: FKIdSchema,
 });
 
@@ -205,8 +219,6 @@ export const Step5Schema = z.object({
   publish_intent: z.enum(["draft", "pending"], { required_error: "Select a publish intent" }),
   featured: z.boolean().default(false),
   hot_deal: z.boolean().default(false),
-  meta_title: z.string().max(160).optional().or(z.literal("")),
-  meta_description: z.string().max(320).optional().or(z.literal("")),
 });
 
 export type Step5Values = z.infer<typeof Step5Schema>;

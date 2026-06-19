@@ -8,6 +8,7 @@ import {
   ProductBuilderFormSchema,
   BUILDER_STEPS,
 } from "@/features/product/builder/schemas/builder.schemas";
+import { buildProductWritePayload } from "@/features/product/builder/utils/product-builder-payload";
 
 describe("Product Builder Schemas", () => {
   describe("Step 1: Info & Specs Schema", () => {
@@ -17,7 +18,6 @@ describe("Product Builder Schemas", () => {
         description: "A premium hand-made three-piece agbada for weddings and formal events.",
         condition: "new",
         category_ids: ["019ec340-cfc0-7383-b75e-350d09e7b807"],
-        sub_category_ids: ["019ec340-d004-7c36-a640-ebfcf52b11e8"],
         gender_target: "men",
         age_group: "adult",
       };
@@ -26,6 +26,7 @@ describe("Product Builder Schemas", () => {
       expect(parsed.title).toBe("Classic Agbada Ensemble");
       expect(parsed.condition).toBe("new");
       expect(parsed.gender_target).toBe("men");
+      expect("sub_category_ids" in parsed).toBe(false);
     });
 
     it("fails when title is too short", () => {
@@ -64,6 +65,31 @@ describe("Product Builder Schemas", () => {
       expect(parsed.gallery).toHaveLength(1);
     });
 
+    it("keeps media mapping color-only at Step 2", () => {
+      const payload = {
+        cover_image_public_id: "cloudinary_public_id_123",
+        cover_image_url: "https://res.cloudinary.com/test/image/upload/v1234/test.jpg",
+        cover_image_color_name: "Bottle Green",
+        cover_image_color_hex: "#006A4E",
+        cover_image_size_id: "019ec340-cfc0-7383-b75e-350d09e7b807",
+        gallery: [
+          {
+            public_id: "gallery_id_1",
+            secure_url: "https://res.cloudinary.com/test/image/upload/v1234/gallery1.jpg",
+            media_type: "image",
+            ordering: 0,
+            color_name: "Gold",
+            color_hex: "#FDA600",
+            size_id: "019ec340-d004-7c36-a640-ebfcf52b11e8",
+          },
+        ],
+      };
+
+      const parsed = Step2Schema.parse(payload);
+      expect("cover_image_size_id" in parsed).toBe(false);
+      expect("size_id" in parsed.gallery[0]).toBe(false);
+    });
+
     it("fails without a cover image", () => {
       const payload = {
         cover_image_public_id: "",
@@ -85,15 +111,9 @@ describe("Product Builder Schemas", () => {
         price: "15000.00",
         old_price: "20000.00",
         stock_qty: 10,
+        cover_image_size_id: "019ec340-cfc0-7383-b75e-350d09e7b807",
         requires_measurement: true,
         is_customisable: false,
-        measurement_guide: [
-          {
-            size_label: "XL",
-            chest_cm: "120",
-            waist_cm: "110",
-          }
-        ],
         fabric_type: "Damask",
         fabric_care_instructions: "dry_clean",
         fabric_is_organic: false,
@@ -105,6 +125,7 @@ describe("Product Builder Schemas", () => {
       expect(parsed.requires_measurement).toBe(true);
       expect(parsed.fabric_type).toBe("Damask");
       expect(parsed.price).toBe("15000.00");
+      expect(parsed.cover_image_size_id).toBe("019ec340-cfc0-7383-b75e-350d09e7b807");
     });
 
     it("fails when old_price is less than price", () => {
@@ -122,19 +143,43 @@ describe("Product Builder Schemas", () => {
         expect(result.error.issues[0].message).toContain("Original price must be higher");
       }
     });
+
+    it("requires pre-order availability date to be at least 3 days away", () => {
+      const soon = new Date();
+      soon.setDate(soon.getDate() + 1);
+      const payload = {
+        price: "15000.00",
+        old_price: "",
+        stock_qty: 10,
+        is_pre_order: true,
+        pre_order_date: soon.toISOString().slice(0, 10),
+        requires_measurement: false,
+        fabric_type: "",
+      };
+
+      const result = Step3Schema.safeParse(payload);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toContain("at least 3 days");
+      }
+    });
   });
 
   describe("Step 4: Shipping Schema", () => {
     it("validates shipping details", () => {
       const payload = {
         weight_kg: "1.5",
-        shipping_amount: "2500.00",
+        length_cm: 10,
+        width_cm: 20,
+        height_cm: 5,
+        processing_days: 3,
         courier_id: "019ec340-cfc0-7383-b75e-350d09e7b807",
       };
 
       const parsed = Step4Schema.parse(payload);
       expect(parsed.weight_kg).toBe("1.5");
-      expect(parsed.shipping_amount).toBe("2500.00");
+      expect("shipping_amount" in parsed).toBe(false);
+      expect("free_shipping_threshold" in parsed).toBe(false);
     });
   });
 
@@ -148,13 +193,12 @@ describe("Product Builder Schemas", () => {
         publish_intent: "pending",
         featured: false,
         hot_deal: true,
-        meta_title: "Custom Agbada",
-        meta_description: "Order your custom agbada now.",
       };
 
       const parsed = Step5Schema.parse(payload);
       expect(parsed.publish_intent).toBe("pending");
       expect(parsed.faqs).toHaveLength(2);
+      expect("meta_title" in parsed).toBe(false);
     });
   });
 
@@ -165,7 +209,6 @@ describe("Product Builder Schemas", () => {
         description: "A premium hand-made three-piece agbada for weddings and formal events.",
         condition: "new",
         category_ids: ["019ec340-cfc0-7383-b75e-350d09e7b807"],
-        sub_category_ids: [],
         tag_ids: [],
         specifications: [],
         gender_target: "",
@@ -185,27 +228,73 @@ describe("Product Builder Schemas", () => {
 
         cover_image_public_id: "cloudinary_id",
         cover_image_url: "https://res.cloudinary.com/test/test.jpg",
+        cover_image_size_id: null,
         gallery: [],
 
         price: "15000.00",
         old_price: "20000.00",
         currency: "NGN",
         stock_qty: 10,
-        max_stock: null,
         weight_kg: "",
-        shipping_amount: "",
         courier_id: null,
 
         faqs: [],
         publish_intent: "pending",
         featured: false,
         hot_deal: false,
-        meta_title: "",
-        meta_description: "",
       };
 
       const result = ProductBuilderFormSchema.safeParse(payload);
       expect(result.success).toBe(true);
+    });
+
+    it("builds a sanitized backend payload without removed vendor-builder fields", () => {
+      const payload = ProductBuilderFormSchema.parse({
+        title: "Classic Agbada Ensemble",
+        description: "A premium hand-made three-piece agbada for weddings and formal events.",
+        condition: "new",
+        category_ids: ["019ec340-cfc0-7383-b75e-350d09e7b807"],
+        gender_target: "men",
+        age_group: "adult",
+        cover_image_public_id: "cloudinary_id",
+        cover_image_url: "https://res.cloudinary.com/test/test.jpg",
+        cover_image_color_name: "Bottle Green",
+        cover_image_color_hex: "#006A4E",
+        cover_image_size_id: "019ec340-d004-7c36-a640-ebfcf52b11e8",
+        gallery: [],
+        price: "15000.00",
+        old_price: "20000.00",
+        currency: "NGN",
+        stock_qty: 10,
+        cash_payment_mode: "disabled",
+        requires_measurement: false,
+        is_customisable: false,
+        fabric_type: "",
+        fabric_care_instructions: "machine_wash",
+        fabric_is_organic: false,
+        fabric_is_vegan: false,
+        fabric_country_of_origin: "",
+        weight_kg: "1.5",
+        length_cm: 10,
+        width_cm: 20,
+        height_cm: 5,
+        processing_days: 3,
+        courier_id: null,
+        faqs: [],
+        publish_intent: "pending",
+        featured: false,
+        hot_deal: false,
+      });
+
+      const mapped = buildProductWritePayload(payload, "019ec340-cfc0-7383-b75e-350d09e7b807");
+      expect(mapped).not.toHaveProperty("sub_category_ids");
+      expect(mapped).not.toHaveProperty("max_stock");
+      expect(mapped).not.toHaveProperty("shipping_amount");
+      expect(mapped).not.toHaveProperty("free_shipping_threshold");
+      expect(mapped).not.toHaveProperty("meta_title");
+      expect(mapped).not.toHaveProperty("meta_description");
+      expect(mapped.cover_image_size_id).toBe("019ec340-d004-7c36-a640-ebfcf52b11e8");
+      expect(mapped.idempotency_key).toBe("019ec340-cfc0-7383-b75e-350d09e7b807");
     });
   });
 

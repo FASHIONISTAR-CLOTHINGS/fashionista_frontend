@@ -2,7 +2,7 @@
 
 /**
  * @file ProductBuilder.tsx
- * @description Root orchestrator component for the 8-step product builder.
+ * @description Root orchestrator component for the 5-step product builder.
  *
  * Renders: BuilderStepper → active step component → BuilderNavigation
  * Wrapped by ProductBuilderProvider which owns form state and draft persistence.
@@ -84,7 +84,7 @@ function BuilderNavigation() {
   };
 
   return (
-    <div className="flex items-center justify-between pt-6 border-t border-[#ECE6D6] mt-8">
+    <div className="flex min-w-0 flex-col gap-4 pt-6 border-t border-[#ECE6D6] mt-8 sm:flex-row sm:items-center sm:justify-between">
       {/* ── Back ── */}
       <Button
         type="button"
@@ -92,7 +92,7 @@ function BuilderNavigation() {
         onClick={prevStep}
         disabled={isFirst || isSubmitting}
         className={cn(
-          "text-[#7A6B44] hover:text-[#1A1208] hover:bg-[#F8F5ED] border border-[#ECE6D6] gap-2",
+          "w-full text-[#7A6B44] hover:text-[#1A1208] hover:bg-[#F8F5ED] border border-[#ECE6D6] gap-2 sm:w-auto",
           isFirst && "invisible",
         )}
       >
@@ -101,7 +101,7 @@ function BuilderNavigation() {
       </Button>
 
       {/* ── Step indicator (center) ── */}
-      <div className="flex flex-col items-center select-none">
+      <div className="flex flex-col items-center select-none order-first sm:order-none">
         <span className="text-[#7A6B44] text-sm font-medium">
           Step {currentStep} of {BUILDER_STEPS.length}
         </span>
@@ -114,7 +114,7 @@ function BuilderNavigation() {
           type="submit"
           disabled={isSubmitting}
           className={cn(
-            "gap-2 px-6 font-semibold",
+            "w-full gap-2 px-6 font-semibold sm:w-auto",
             isEditMode
               ? "bg-[#01454A] hover:bg-[#01454A]/90 text-white shadow-lg shadow-[#01454A]/25"
               : publishIntent === "pending"
@@ -138,7 +138,7 @@ function BuilderNavigation() {
           onClick={nextStep}
           disabled={isSubmitting}
           className={cn(
-            "gap-2 px-6 font-semibold transition-all duration-200",
+            "w-full gap-2 px-6 font-semibold transition-all duration-200 sm:w-auto",
             stepComplete
               ? "bg-[#FDA600] hover:bg-[#E8960A] text-black shadow-lg shadow-[#FDA600]/25 opacity-100"
               : "bg-[#FDA600]/35 text-black/40 hover:bg-[#FDA600]/45 shadow-none border border-[#FDA600]/10 cursor-pointer"
@@ -170,15 +170,15 @@ export function ProductBuilder() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       {/* ── Stepper ── */}
       <BuilderStepper />
 
       {/* ── Step header ── */}
-      <div className="pb-4 border-b border-[#ECE6D6] mb-1">
-        <div className="flex items-center gap-3">
+      <div className="min-w-0 pb-4 border-b border-[#ECE6D6] mb-1">
+        <div className="flex min-w-0 items-center gap-3">
           <div className="w-1 h-8 rounded-full bg-gradient-to-b from-[#FDA600] to-[#FDA600]/40 flex-shrink-0" />
-          <div>
+          <div className="min-w-0">
             <h2 className="text-[#1A1208] font-bold text-xl leading-tight">
               {stepMeta.label}
             </h2>
@@ -188,7 +188,7 @@ export function ProductBuilder() {
       </div>
 
       {/* ── Active step content ── */}
-      <div className="min-h-[400px] animate-step-enter">
+      <div className="min-w-0 min-h-[400px] animate-step-enter">
         {StepComponent && <StepComponent />}
       </div>
 

@@ -2,7 +2,7 @@
 
 /**
  * @file BuilderStepper.tsx
- * @description Visual step indicator bar for the 8-step product builder.
+ * @description Visual step indicator bar for the 5-step product builder.
  *
  * Features:
  *  - Horizontal scrollable nav on mobile, full bar on desktop
@@ -24,10 +24,10 @@ export function BuilderStepper() {
     <nav
       role="navigation"
       aria-label="Product builder steps"
-      className="w-full"
+      className="w-full min-w-0"
     >
       {/* ── Progress bar ── */}
-      <div className="relative h-1.5 bg-[#ECE6D6] rounded-full overflow-hidden mb-6">
+      <div className="relative h-1.5 min-w-0 bg-[#ECE6D6] rounded-full overflow-hidden mb-6">
         <div
           className="absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out"
           style={{
@@ -42,13 +42,13 @@ export function BuilderStepper() {
       </div>
 
       {/* ── Step list ── */}
-      <ol className="flex items-start gap-1 overflow-x-auto pb-2 scroll-hide">
+      <ol className="flex min-w-0 items-stretch gap-1 overflow-x-auto pb-2 scroll-hide md:grid md:grid-cols-5 md:overflow-visible">
         {BUILDER_STEPS.map(({ step, label, description }) => {
           const isCompleted = step < currentStep;
           const isActive = step === currentStep;
 
           return (
-            <li key={step} className="flex-shrink-0 flex-1 min-w-[72px]">
+            <li key={step} className="min-w-[74px] flex-1 flex-shrink-0 md:min-w-0">
               <button
                 type="button"
                 title={description}
@@ -56,7 +56,7 @@ export function BuilderStepper() {
                 onClick={() => (isEditMode || isCompleted) && goToStep(step)}
                 disabled={!isEditMode && !isCompleted && !isActive}
                 className={cn(
-                  "w-full flex flex-col items-center gap-1.5 px-1.5 py-2 rounded-xl transition-all duration-200",
+                  "w-full h-full flex flex-col items-center gap-1.5 px-1.5 py-2 rounded-xl transition-all duration-200",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#01454A] focus-visible:ring-offset-1",
                   isActive && "bg-[#FFF6E3]",
                   (isEditMode || isCompleted) && "cursor-pointer hover:bg-[#F8F5ED]",

@@ -5,9 +5,9 @@
  * @description Step 4 — Shipping Profile
  *
  * Fields covered (aligned to ProductBuilderFormSchema Step4Schema):
- *   • weight_kg       — Product weight for courier rate calculation
- *   • shipping_amount — Fixed shipping cost overriding courier base (optional)
- *   • courier_id      — Optional preferred DeliveryCourier UUID
+ *   • weight_kg, length_cm, width_cm, height_cm, processing_days
+ *   • is_fragile, requires_signature
+ *   • courier_id — Optional preferred DeliveryCourier UUID
  *
  * Additionally surfaces available courier options from the platform API
  * so the vendor can pick a preferred courier for this product.
@@ -80,16 +80,16 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-6 space-y-6 transition-shadow hover:shadow-md">
+    <div className="min-w-0 rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-4 sm:p-6 space-y-6 transition-shadow hover:shadow-md">
       <div className="border-b border-[#ECE6D6] pb-3">
-        <div className="flex items-center gap-2.5">
-          <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#01454A]/10 text-[#01454A]">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#01454A]/10 text-[#01454A]">
             {icon}
           </span>
-          <h3 className="text-base font-bold text-[#1A1208]">{title}</h3>
+          <h3 className="min-w-0 text-base font-bold text-[#1A1208]">{title}</h3>
         </div>
         {subtitle && (
-          <p className="text-xs text-[#7A6B44] mt-1.5 ml-10">{subtitle}</p>
+          <p className="text-xs text-[#7A6B44] mt-1.5 sm:ml-10">{subtitle}</p>
         )}
       </div>
       {children}
@@ -105,7 +105,6 @@ export function Step4Shipping() {
   const form = useFormContext<ProductBuilderFormValues>();
 
   const weightKg      = form.watch("weight_kg")      ?? "";
-  const shippingAmt   = form.watch("shipping_amount") ?? "";
   const selectedCourierId = form.watch("courier_id")  ?? null;
   const isFragile = form.watch("is_fragile");
   const requiresSignature = form.watch("requires_signature");
@@ -121,28 +120,27 @@ export function Step4Shipping() {
   const selectedCourier = couriers.find((c) => c.id === selectedCourierId);
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="min-w-0 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
       {/* ── INFO BANNER ───────────────────────────────────────────────────── */}
-      <div className="flex items-start gap-3 rounded-xl border border-[#01454A]/20 bg-[#E8F3F1] p-4">
+      <div className="flex min-w-0 items-start gap-3 rounded-xl border border-[#01454A]/20 bg-[#E8F3F1] p-4">
         <Info className="w-5 h-5 text-[#01454A] flex-shrink-0 mt-0.5" />
-        <div className="text-sm text-[#01454A]">
+        <div className="min-w-0 text-sm text-[#01454A]">
           <p className="font-semibold">Shipping Profile</p>
           <p className="text-xs mt-0.5 text-[#01454A]/80">
-            Set your product weight for courier rate calculation. Optionally
-            lock a fixed shipping fee and/or a preferred courier. If left blank,
-            platform shipping rules will apply automatically.
+            Add package weight, dimensions, handling flags, and an optional courier.
+            Platform shipping fees and free-shipping defaults are applied automatically.
           </p>
         </div>
       </div>
 
-      {/* ── SECTION A: WEIGHT & SHIPPING COST ────────────────────────────── */}
+      {/* ── SECTION A: PACKAGE DETAILS ───────────────────────────────────── */}
       <SectionCard
         icon={<Package className="w-4 h-4" />}
         title="Package Details"
         subtitle="Used by the platform to calculate courier rates at checkout."
       >
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+        <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-2">
 
           {/* Weight */}
           <FormField
@@ -177,43 +175,15 @@ export function Step4Shipping() {
             )}
           />
 
-          {/* Fixed Shipping Cost */}
-          <FormField
-            control={form.control}
-            name="shipping_amount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm flex items-center gap-1.5">
-                  <DollarSign className="w-3.5 h-3.5 text-[#01454A]" />
-                  Fixed Shipping Cost (₦)
-                </FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm font-bold">
-                      ₦
-                    </span>
-                    <Input
-                      {...field}
-                      id="shipping-amount"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={field.value ?? ""}
-                  placeholder="e.g. 2500.00"
-                      className="bg-white border-[#D9D9D9] rounded-xl h-11 pl-8 focus-visible:ring-[#01454A]"
-                    />
-                  </div>
-                </FormControl>
-                <FormDescription className="text-xs">
-                  Minimum vendor-defined fixed shipping cost is ₦2,500. Leave blank to use platform rules.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="rounded-xl border border-[#01454A]/15 bg-[#E8F3F1] px-4 py-3 text-sm text-[#01454A]">
+            <p className="font-semibold">Platform shipping defaults</p>
+            <p className="mt-1 text-xs text-[#01454A]/80">
+              Fixed shipping cost and free-shipping thresholds are managed by Fashionistar settings.
+            </p>
+          </div>
         </div>
 
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-4">
+        <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {(["length_cm", "width_cm", "height_cm"] as const).map((fieldName) => (
             <FormField
               key={fieldName}
@@ -266,40 +236,13 @@ export function Step4Shipping() {
           />
         </div>
 
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="free_shipping_threshold"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                  Free Shipping Threshold (₦)
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    value={field.value ?? ""}
-                    inputMode="decimal"
-                    placeholder="Leave blank for platform default"
-                    className="bg-white border-[#D9D9D9] rounded-xl h-11 focus-visible:ring-[#01454A]"
-                  />
-                </FormControl>
-                <FormDescription className="text-xs">
-                  Optional product-level threshold. When blank, the global platform threshold applies.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
+        <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2">
           <FormField
             control={form.control}
             name="is_fragile"
             render={({ field }) => (
               <FormItem className="flex items-center justify-between rounded-xl bg-white border border-[#D9D9D9] px-4 py-3">
-                <div className="flex items-start gap-2">
+                <div className="flex min-w-0 items-start gap-2">
                   <Ruler className="mt-0.5 h-4 w-4 text-[#01454A]" />
                   <div>
                     <FormLabel className="text-sm font-semibold text-[#1A1208] cursor-pointer">
@@ -326,7 +269,7 @@ export function Step4Shipping() {
             name="requires_signature"
             render={({ field }) => (
               <FormItem className="flex items-center justify-between rounded-xl bg-white border border-[#D9D9D9] px-4 py-3">
-                <div className="flex items-start gap-2">
+                <div className="flex min-w-0 items-start gap-2">
                   <ShieldCheck className="mt-0.5 h-4 w-4 text-[#01454A]" />
                   <div>
                     <FormLabel className="text-sm font-semibold text-[#1A1208] cursor-pointer">
@@ -350,21 +293,13 @@ export function Step4Shipping() {
         </div>
 
         {/* Summary pill */}
-        {(weightKg || shippingAmt || isFragile || requiresSignature) && (
+        {(weightKg || isFragile || requiresSignature) && (
           <div className="flex flex-wrap gap-3 mt-2">
             {weightKg && (
               <div className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F3F1] border border-[#01454A]/20 px-3 py-1.5">
                 <Package className="w-3 h-3 text-[#01454A]" />
                 <span className="text-xs font-semibold text-[#01454A]">
                   {weightKg} kg
-                </span>
-              </div>
-            )}
-            {shippingAmt && (
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#FFF6E3] border border-[#FDA600]/30 px-3 py-1.5">
-                <DollarSign className="w-3 h-3 text-[#7A5500]" />
-                <span className="text-xs font-semibold text-[#7A5500]">
-                  ₦{parseFloat(shippingAmt).toLocaleString()} fixed
                 </span>
               </div>
             )}

@@ -6,7 +6,7 @@
  *
  * Usage:
  *   <ProductGrid params={{ category: "agbada", page: 1 }} />
- *   <ProductGrid params={{ category & sub_category : "summer-vibes", page: 1 }} pageSize={12} />
+ *   <ProductGrid params={{ category: "summer-vibes", page: 1 }} pageSize={12} />
  */
 
 import { useState, useCallback } from "react";

@@ -2,21 +2,13 @@
 
 /**
  * @file Step3PricingAndMeasurements.tsx
- * @description Pricing & Inventory, Fabric Specification, Size & Measurement Guide.
+ * @description Pricing, inventory, fabric details, and media-owned size links.
  * Rendered as Step 3 in the vendor product builder.
- *
- * Fields covered (aligned to ProductBuilderFormSchema Step3PricingAndMeasurementsBaseSchema):
- *   PRICING & INVENTORY:
- *     price, old_price, is_discounted, discount_percentage, discounted_price,
- *     currency, stock_qty, max_stock, cash_payment_mode, is_pre_order, pre_order_date
- *   FABRIC SPECIFICATION:
- *     fabric_type, fabric_care_instructions, fabric_is_organic, fabric_is_vegan,
- *     fabric_country_of_origin, is_customisable
- *   MEASUREMENT GUIDE:
- *     requires_measurement, measurement_guide[]
  */
 
-import { useFormContext, useFieldArray } from "react-hook-form";
+import React, { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useFormContext } from "react-hook-form";
 import type { ProductBuilderFormValues } from "../schemas/builder.schemas";
 import {
   FormField,
@@ -29,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/common";
 import {
   Select,
   SelectContent,
@@ -41,17 +34,19 @@ import {
   Ruler,
   Palette,
   Plus,
-  Trash2,
   Calendar,
   Leaf,
   Globe,
   Scissors,
   AlertCircle,
+  Image as ImageIcon,
+  Video as VideoIcon,
 } from "lucide-react";
-
-// ─────────────────────────────────────────────────────────────────────────────
-// CONSTANTS
-// ─────────────────────────────────────────────────────────────────────────────
+import {
+  createVendorMeasurementTemplate,
+  fetchVendorMeasurementTemplates,
+} from "@/features/product";
+import { toast } from "sonner";
 
 const PAYMENT_MODES = [
   { value: "payment_before_delivery",      label: "💳 Payment Before Delivery" },
@@ -70,22 +65,23 @@ const CARE_INSTRUCTION_OPTIONS = [
 ];
 
 const SIZE_LABELS = ["XS", "S", "M", "L", "XL", "XXL", "Custom"] as const;
+const NO_SIZE_VALUE = "__no_size_link__";
 
-const MEASUREMENT_COLS: { name: string; placeholder: string; field: string }[] =
-  [
-    { name: "Chest (cm)",  placeholder: "e.g. 92", field: "chest_cm"       },
-    { name: "Waist (cm)",  placeholder: "e.g. 76", field: "waist_cm"       },
-    { name: "Hip (cm)",    placeholder: "e.g. 98", field: "hip_cm"         },
-    { name: "Shoulder",    placeholder: "e.g. 44", field: "shoulder_cm"    },
-    { name: "Sleeve",      placeholder: "e.g. 62", field: "sleeve_cm"      },
-    { name: "Length",      placeholder: "e.g. 65", field: "length_cm"      },
-    { name: "Inseam",      placeholder: "e.g. 78", field: "inseam_cm"      },
-    { name: "Foot (cm)",   placeholder: "e.g. 26", field: "foot_length_cm" },
-  ];
+interface SizingTemplateOption {
+  size_id: string;
+  label: string;
+  templateName: string;
+  size_label: string;
+}
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SECTION CARD
-// ─────────────────────────────────────────────────────────────────────────────
+function formatLocalDatePlusDays(days: number) {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 function SectionCard({
   icon,
@@ -99,16 +95,16 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-6 space-y-6 transition-shadow hover:shadow-md">
+    <div className="min-w-0 rounded-2xl border border-[#ECE6D6] bg-[#FAFAF8] p-4 sm:p-6 space-y-6 transition-shadow hover:shadow-md">
       <div className="border-b border-[#ECE6D6] pb-3">
-        <div className="flex items-center gap-2.5">
-          <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#01454A]/10 text-[#01454A]">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#01454A]/10 text-[#01454A]">
             {icon}
           </span>
-          <h3 className="text-base font-bold text-[#1A1208]">{title}</h3>
+          <h3 className="min-w-0 text-base font-bold text-[#1A1208]">{title}</h3>
         </div>
         {subtitle && (
-          <p className="text-xs text-[#7A6B44] mt-1.5 ml-10">{subtitle}</p>
+          <p className="mt-1.5 text-xs text-[#7A6B44] sm:ml-10">{subtitle}</p>
         )}
       </div>
       {children}
@@ -116,118 +112,259 @@ function SectionCard({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN STEP 3 COMPONENT
-// ─────────────────────────────────────────────────────────────────────────────
+function SizeLinkSelect({
+  control,
+  name,
+  sizeOptions,
+  onAdd,
+}: {
+  control: ReturnType<typeof useFormContext<ProductBuilderFormValues>>["control"];
+  name: string;
+  sizeOptions: SizingTemplateOption[];
+  onAdd: (fieldName: string) => void;
+}) {
+  return (
+    <FormField
+      control={control}
+      name={name as never}
+      render={({ field }) => (
+        <FormItem className="min-w-0">
+          <FormLabel className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#7A6B44]">
+            Size Link
+          </FormLabel>
+          <div className="flex min-w-0 gap-2">
+            <Select
+              onValueChange={(value) => field.onChange(value === NO_SIZE_VALUE ? null : value)}
+              value={(field.value as string | null | undefined) || NO_SIZE_VALUE}
+            >
+              <FormControl>
+                <SelectTrigger className="min-w-0 flex-1 rounded-xl border-[#D9D9D9] bg-white h-11 focus:ring-[#01454A]">
+                  <SelectValue placeholder="Link to a size..." />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent className="rounded-xl border-[#D9D9D9] bg-white shadow-lg">
+                <SelectItem value={NO_SIZE_VALUE}>No size link</SelectItem>
+                {sizeOptions.map((option) => (
+                  <SelectItem key={option.size_id} value={option.size_id}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => onAdd(name)}
+              className="h-11 w-11 flex-shrink-0 rounded-xl border-[#D9D9D9] hover:bg-[#E8F3F1] hover:text-[#01454A]"
+              aria-label="Add new size template"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
 
 export function Step3PricingAndMeasurements() {
   const form = useFormContext<ProductBuilderFormValues>();
-
   const isDiscounted = form.watch("is_discounted");
-  const isPreOrder   = form.watch("is_pre_order");
+  const isPreOrder = form.watch("is_pre_order");
   const requiresMeasurement = form.watch("requires_measurement");
+  const galleryItems = form.watch("gallery") ?? [];
+  const minPreOrderDate = useMemo(() => formatLocalDatePlusDays(3), []);
 
-  const {
-    fields: guideFields,
-    append: appendGuideRow,
-    remove: removeGuideRow,
-  } = useFieldArray({
-    control: form.control,
-    name: "measurement_guide",
+  const coverPublicId = form.watch("cover_image_public_id");
+  const coverUrl = form.watch("cover_image_url");
+  const coverColorName = form.watch("cover_image_color_name");
+  const coverColorHex = form.watch("cover_image_color_hex");
+
+  const { data: templates = [], refetch: refetchTemplates } = useQuery({
+    queryKey: ["vendor", "measurement-templates"],
+    queryFn: fetchVendorMeasurementTemplates,
   });
 
-  const addNewGuideRow = () => {
-    appendGuideRow({
-      size_label:      "M",
-      chest_cm:        "",
-      waist_cm:        "",
-      hip_cm:          "",
-      shoulder_cm:     "",
-      sleeve_cm:       "",
-      length_cm:       "",
-      inseam_cm:       "",
-      foot_length_cm:  "",
-      sort_order:      guideFields.length,
+  const sizeOptions = useMemo(() => {
+    const options: SizingTemplateOption[] = [];
+    templates.forEach((template) => {
+      (template.template_rows || []).forEach((row) => {
+        if (row.size_id) {
+          options.push({
+            size_id: row.size_id,
+            label: `${template.name} - ${row.size_label}`,
+            templateName: template.name,
+            size_label: row.size_label,
+          });
+        }
+      });
     });
+    return options;
+  }, [templates]);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [targetFieldName, setTargetFieldName] = useState<string | null>(null);
+  const [templateName, setTemplateName] = useState("");
+  const [sizeLabel, setSizeLabel] = useState<(typeof SIZE_LABELS)[number]>("M");
+  const [chest, setChest] = useState("");
+  const [waist, setWaist] = useState("");
+  const [hip, setHip] = useState("");
+  const [length, setLength] = useState("");
+  const [shoulder, setShoulder] = useState("");
+  const [sleeve, setSleeve] = useState("");
+  const [inseam, setInseam] = useState("");
+  const [footLength, setFootLength] = useState("");
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+
+  const handleOpenAddSizeModal = (fieldName: string) => {
+    setTargetFieldName(fieldName);
+    setTemplateName("");
+    setSizeLabel("M");
+    setChest("");
+    setWaist("");
+    setHip("");
+    setLength("");
+    setShoulder("");
+    setSleeve("");
+    setInseam("");
+    setFootLength("");
+    setIsModalOpen(true);
+  };
+
+  const handleSaveSizeGuide = async () => {
+    if (!templateName.trim()) {
+      toast.error("Please enter a template name.");
+      return;
+    }
+    if (!targetFieldName) {
+      toast.error("Select a product media item before saving a size.");
+      return;
+    }
+
+    setIsSavingTemplate(true);
+    try {
+      const created = await createVendorMeasurementTemplate({
+        name: templateName.trim(),
+        description: "Created from the product builder pricing and measurement step.",
+        template_rows: [
+          {
+            size_label: sizeLabel,
+            chest_cm: chest || undefined,
+            waist_cm: waist || undefined,
+            hip_cm: hip || undefined,
+            length_cm: length || undefined,
+            shoulder_cm: shoulder || undefined,
+            sleeve_cm: sleeve || undefined,
+            inseam_cm: inseam || undefined,
+            foot_length_cm: footLength || undefined,
+            sort_order: 0,
+          },
+        ],
+      });
+
+      const createdRow =
+        (created.template_rows || []).find((row) => row.size_label === sizeLabel) ||
+        created.template_rows?.[0];
+
+      if (createdRow?.size_id) {
+        form.setValue(targetFieldName as never, createdRow.size_id as never, {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+        await refetchTemplates();
+        toast.success("Size guide saved and linked to this media.");
+        setIsModalOpen(false);
+      } else {
+        toast.error("Size guide saved, but no reusable size ID was returned.");
+      }
+    } catch {
+      toast.error("We could not save that size guide. Please try again.");
+    } finally {
+      setIsSavingTemplate(false);
+    }
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-
-      {/* ── SECTION A: PRICING & INVENTORY ───────────────────────────────── */}
+    <div className="min-w-0 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <SectionCard
-        icon={<DollarSign className="w-4 h-4" />}
+        icon={<DollarSign className="h-4 w-4" />}
         title="Pricing & Inventory"
-        subtitle="Set your base price, optional compare-at price, and stock quantity."
+        subtitle="Set the new price, optional old price, total stock, and payment mode."
       >
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-
-          {/* Base Price */}
+        <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-2">
           <FormField
             control={form.control}
             name="price"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                  Base Price (₦) <span className="text-[#FDA600]">*</span>
+              <FormItem className="min-w-0">
+                <FormLabel className="text-sm font-semibold text-[#1A1208]">
+                  New Price (NGN) <span className="text-[#FDA600]">*</span>
                 </FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm font-bold">₦</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-zinc-400">
+                      NGN
+                    </span>
                     <Input
                       {...field}
-                      id="base-price"
+                      id="new-price"
                       type="number"
                       step="0.01"
-                      min="0"
+                      min="5000"
                       placeholder="e.g. 15000.00"
-                      className="bg-white border-[#D9D9D9] rounded-xl pl-8 h-11 focus-visible:ring-[#01454A]"
+                      className="h-11 rounded-xl border-[#D9D9D9] bg-white pl-12 focus-visible:ring-[#01454A]"
                     />
                   </div>
                 </FormControl>
-                <FormDescription className="text-xs">Minimum ₦5,000.00</FormDescription>
+                <FormDescription className="text-xs">
+                  This is the selling price customers will pay. Minimum NGN 5,000.00.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          {/* Compare-at / Old Price */}
           <FormField
             control={form.control}
             name="old_price"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                  Compare-at Price (₦)
+              <FormItem className="min-w-0">
+                <FormLabel className="text-sm font-semibold text-[#1A1208]">
+                  Old Price (NGN)
                 </FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm font-bold">₦</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-zinc-400">
+                      NGN
+                    </span>
                     <Input
                       {...field}
-                      id="compare-price"
+                      id="old-price"
                       type="number"
                       step="0.01"
                       min="0"
                       value={field.value ?? ""}
                       placeholder="e.g. 20000.00"
-                      className="bg-white border-[#D9D9D9] rounded-xl pl-8 h-11 focus-visible:ring-[#01454A]"
+                      className="h-11 rounded-xl border-[#D9D9D9] bg-white pl-12 focus-visible:ring-[#01454A]"
                     />
                   </div>
                 </FormControl>
-                <FormDescription className="text-xs">Shows a strikethrough "was" price.</FormDescription>
+                <FormDescription className="text-xs">
+                  Optional previous price shown as the crossed-out reference.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          {/* Stock Qty */}
           <FormField
             control={form.control}
             name="stock_qty"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">
+              <FormItem className="min-w-0">
+                <FormLabel className="text-sm font-semibold text-[#1A1208]">
                   Total Stock Quantity <span className="text-[#FDA600]">*</span>
                 </FormLabel>
                 <FormControl>
@@ -236,73 +373,42 @@ export function Step3PricingAndMeasurements() {
                     id="stock-qty"
                     type="number"
                     min={1}
-                    onChange={(e) =>
-                      field.onChange(parseInt(e.target.value) || 0)
+                    onChange={(event) =>
+                      field.onChange(Number.parseInt(event.target.value, 10) || 0)
                     }
                     placeholder="e.g. 50"
-                    className="bg-white border-[#D9D9D9] rounded-xl h-11 focus-visible:ring-[#01454A]"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Max Stock */}
-          <FormField
-            control={form.control}
-            name="max_stock"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                  Max Stock Cap
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    id="max-stock"
-                    type="number"
-                    min={0}
-                    value={field.value ?? ""}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === "" ? null : parseInt(e.target.value)
-                      )
-                    }
-                    placeholder="Leave blank for unlimited"
-                    className="bg-white border-[#D9D9D9] rounded-xl h-11 focus-visible:ring-[#01454A]"
+                    className="h-11 rounded-xl border-[#D9D9D9] bg-white focus-visible:ring-[#01454A]"
                   />
                 </FormControl>
                 <FormDescription className="text-xs">
-                  Caps replenishment. Leave blank for unlimited stock.
+                  Enter the physical units available for sale.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          {/* Payment Mode */}
           <FormField
             control={form.control}
             name="cash_payment_mode"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">
+              <FormItem className="min-w-0">
+                <FormLabel className="text-sm font-semibold text-[#1A1208]">
                   Payment Mode <span className="text-[#FDA600]">*</span>
                 </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger
                       id="payment-mode"
-                      className="bg-white border-[#D9D9D9] rounded-xl h-11 focus:ring-[#01454A]"
+                      className="h-11 rounded-xl border-[#D9D9D9] bg-white focus:ring-[#01454A]"
                     >
                       <SelectValue placeholder="Select payment mode" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="rounded-xl bg-white border-[#D9D9D9] shadow-lg">
-                    {PAYMENT_MODES.map((m) => (
-                      <SelectItem key={m.value} value={m.value}>
-                        {m.label}
+                  <SelectContent className="rounded-xl border-[#D9D9D9] bg-white shadow-lg">
+                    {PAYMENT_MODES.map((mode) => (
+                      <SelectItem key={mode.value} value={mode.value}>
+                        {mode.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -312,13 +418,12 @@ export function Step3PricingAndMeasurements() {
             )}
           />
 
-          {/* Currency */}
           <FormField
             control={form.control}
             name="currency"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">
+              <FormItem className="min-w-0">
+                <FormLabel className="text-sm font-semibold text-[#1A1208]">
                   Currency
                 </FormLabel>
                 <FormControl>
@@ -327,29 +432,28 @@ export function Step3PricingAndMeasurements() {
                     id="currency"
                     maxLength={3}
                     placeholder="NGN"
-                    className="bg-white border-[#D9D9D9] rounded-xl h-11 uppercase focus-visible:ring-[#01454A]"
+                    className="h-11 rounded-xl border-[#D9D9D9] bg-white uppercase focus-visible:ring-[#01454A]"
                   />
                 </FormControl>
-                <FormDescription className="text-xs">3-letter ISO code (e.g. NGN, USD)</FormDescription>
+                <FormDescription className="text-xs">Use a 3-letter code such as NGN.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
 
-        {/* Discount Toggle Row */}
         <div className="space-y-4">
           <FormField
             control={form.control}
             name="is_discounted"
             render={({ field }) => (
-              <FormItem className="flex items-center justify-between rounded-xl border border-[#D9D9D9] bg-white px-4 py-3">
-                <div>
-                  <FormLabel className="text-sm font-semibold text-[#1A1208] cursor-pointer">
-                    🏷️ Apply Discount
+              <FormItem className="flex flex-col gap-3 rounded-xl border border-[#D9D9D9] bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <FormLabel className="cursor-pointer text-sm font-semibold text-[#1A1208]">
+                    Apply Discount
                   </FormLabel>
                   <p className="text-xs text-[#7A6B44]">
-                    Enable to set a custom discount percentage and price.
+                    Enable this only when you want customers to see a clear discount.
                   </p>
                 </div>
                 <FormControl>
@@ -364,14 +468,14 @@ export function Step3PricingAndMeasurements() {
           />
 
           {isDiscounted && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pl-2 border-l-2 border-[#FDA600]/40 ml-2">
+            <div className="grid grid-cols-1 gap-6 border-l-2 border-[#FDA600]/40 pl-4 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="discount_percentage"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                      Discount % <span className="text-[#FDA600]">*</span>
+                  <FormItem className="min-w-0">
+                    <FormLabel className="text-sm font-semibold text-[#1A1208]">
+                      Discount Percentage <span className="text-[#FDA600]">*</span>
                     </FormLabel>
                     <FormControl>
                       <div className="relative">
@@ -381,11 +485,15 @@ export function Step3PricingAndMeasurements() {
                           min={0}
                           max={100}
                           step={1}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          onChange={(event) =>
+                            field.onChange(Number.parseFloat(event.target.value) || 0)
+                          }
                           placeholder="e.g. 25"
-                          className="bg-white border-[#D9D9D9] rounded-xl h-11 pr-8 focus-visible:ring-[#FDA600]"
+                          className="h-11 rounded-xl border-[#D9D9D9] bg-white pr-8 focus-visible:ring-[#FDA600]"
                         />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm font-bold">%</span>
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-zinc-400">
+                          %
+                        </span>
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -396,25 +504,27 @@ export function Step3PricingAndMeasurements() {
                 control={form.control}
                 name="discounted_price"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[#1A1208] font-semibold text-sm">
-                      Discounted Price (₦)
+                  <FormItem className="min-w-0">
+                    <FormLabel className="text-sm font-semibold text-[#1A1208]">
+                      Discounted Price (NGN)
                     </FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm font-bold">₦</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-zinc-400">
+                          NGN
+                        </span>
                         <Input
                           {...field}
                           type="number"
                           step="0.01"
                           value={field.value ?? ""}
                           placeholder="e.g. 11250.00"
-                          className="bg-white border-[#D9D9D9] rounded-xl h-11 pl-8 focus-visible:ring-[#FDA600]"
+                          className="h-11 rounded-xl border-[#D9D9D9] bg-white pl-12 focus-visible:ring-[#FDA600]"
                         />
                       </div>
                     </FormControl>
                     <FormDescription className="text-xs">
-                      Auto-computed or set manually.
+                      Leave blank if the system should calculate from the percentage.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -424,20 +534,19 @@ export function Step3PricingAndMeasurements() {
           )}
         </div>
 
-        {/* Pre-Order Toggle */}
         <div className="space-y-4">
           <FormField
             control={form.control}
             name="is_pre_order"
             render={({ field }) => (
-              <FormItem className="flex items-center justify-between rounded-xl border border-[#D9D9D9] bg-white px-4 py-3">
-                <div>
-                  <FormLabel className="text-sm font-semibold text-[#1A1208] cursor-pointer flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4 text-[#01454A]" />
+              <FormItem className="flex flex-col gap-3 rounded-xl border border-[#D9D9D9] bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <FormLabel className="flex cursor-pointer items-center gap-1.5 text-sm font-semibold text-[#1A1208]">
+                    <Calendar className="h-4 w-4 text-[#01454A]" />
                     Pre-Order Mode
                   </FormLabel>
                   <p className="text-xs text-[#7A6B44]">
-                    Customers can order before stock is available.
+                    Use this when the tailor needs production time before the product is available.
                   </p>
                 </div>
                 <FormControl>
@@ -456,18 +565,22 @@ export function Step3PricingAndMeasurements() {
               control={form.control}
               name="pre_order_date"
               render={({ field }) => (
-                <FormItem className="pl-2 border-l-2 border-[#01454A]/40 ml-2">
-                  <FormLabel className="text-[#1A1208] font-semibold text-sm">
+                <FormItem className="border-l-2 border-[#01454A]/40 pl-4">
+                  <FormLabel className="text-sm font-semibold text-[#1A1208]">
                     Expected Availability Date
                   </FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       type="date"
+                      min={minPreOrderDate}
                       value={field.value ?? ""}
-                      className="bg-white border-[#D9D9D9] rounded-xl h-11 focus-visible:ring-[#01454A]"
+                      className="h-11 rounded-xl border-[#D9D9D9] bg-white focus-visible:ring-[#01454A]"
                     />
                   </FormControl>
+                  <FormDescription className="text-xs">
+                    Choose a date at least 3 days from today so production time is realistic.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -476,22 +589,19 @@ export function Step3PricingAndMeasurements() {
         </div>
       </SectionCard>
 
-      {/* ── SECTION B: FABRIC SPECIFICATION ──────────────────────────────── */}
       <SectionCard
-        icon={<Palette className="w-4 h-4" />}
+        icon={<Palette className="h-4 w-4" />}
         title="Fabric Specification"
-        subtitle="Describe the material composition, care instructions, and ethical sourcing details."
+        subtitle="Describe the material, care instructions, and ethical sourcing details."
       >
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-
-          {/* Fabric Type */}
+        <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-2">
           <FormField
             control={form.control}
             name="fabric_type"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm flex items-center gap-1.5">
-                  <Scissors className="w-3.5 h-3.5 text-[#01454A]" />
+              <FormItem className="min-w-0">
+                <FormLabel className="flex items-center gap-1.5 text-sm font-semibold text-[#1A1208]">
+                  <Scissors className="h-3.5 w-3.5 text-[#01454A]" />
                   Fabric Type
                 </FormLabel>
                 <FormControl>
@@ -499,8 +609,8 @@ export function Step3PricingAndMeasurements() {
                     {...field}
                     id="fabric-type"
                     value={field.value ?? ""}
-                    placeholder="e.g. 100% Egyptian Cotton, Silk-Organza Blend"
-                    className="bg-white border-[#D9D9D9] rounded-xl h-11 focus-visible:ring-[#01454A]"
+                    placeholder="e.g. 100% Egyptian Cotton"
+                    className="h-11 rounded-xl border-[#D9D9D9] bg-white focus-visible:ring-[#01454A]"
                     maxLength={120}
                   />
                 </FormControl>
@@ -509,28 +619,27 @@ export function Step3PricingAndMeasurements() {
             )}
           />
 
-          {/* Care Instructions */}
           <FormField
             control={form.control}
             name="fabric_care_instructions"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm">
+              <FormItem className="min-w-0">
+                <FormLabel className="text-sm font-semibold text-[#1A1208]">
                   Care Instructions
                 </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger
                       id="care-instructions"
-                      className="bg-white border-[#D9D9D9] rounded-xl h-11 focus:ring-[#01454A]"
+                      className="h-11 rounded-xl border-[#D9D9D9] bg-white focus:ring-[#01454A]"
                     >
                       <SelectValue placeholder="Select care instructions" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="rounded-xl bg-white border-[#D9D9D9] shadow-lg">
-                    {CARE_INSTRUCTION_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
+                  <SelectContent className="rounded-xl border-[#D9D9D9] bg-white shadow-lg">
+                    {CARE_INSTRUCTION_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -540,14 +649,13 @@ export function Step3PricingAndMeasurements() {
             )}
           />
 
-          {/* Country of Origin */}
           <FormField
             control={form.control}
             name="fabric_country_of_origin"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[#1A1208] font-semibold text-sm flex items-center gap-1.5">
-                  <Globe className="w-3.5 h-3.5 text-[#01454A]" />
+              <FormItem className="min-w-0">
+                <FormLabel className="flex items-center gap-1.5 text-sm font-semibold text-[#1A1208]">
+                  <Globe className="h-3.5 w-3.5 text-[#01454A]" />
                   Country of Origin
                 </FormLabel>
                 <FormControl>
@@ -556,7 +664,7 @@ export function Step3PricingAndMeasurements() {
                     id="country-origin"
                     value={field.value ?? ""}
                     placeholder="e.g. Nigeria, Ghana, Italy"
-                    className="bg-white border-[#D9D9D9] rounded-xl h-11 focus-visible:ring-[#01454A]"
+                    className="h-11 rounded-xl border-[#D9D9D9] bg-white focus-visible:ring-[#01454A]"
                     maxLength={80}
                   />
                 </FormControl>
@@ -566,16 +674,15 @@ export function Step3PricingAndMeasurements() {
           />
         </div>
 
-        {/* Ethical toggles */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField
             control={form.control}
             name="fabric_is_organic"
             render={({ field }) => (
-              <FormItem className="flex items-center justify-between rounded-xl border border-[#D9D9D9] bg-white px-4 py-3">
-                <div>
-                  <FormLabel className="text-sm font-semibold text-[#1A1208] cursor-pointer flex items-center gap-1.5">
-                    <Leaf className="w-4 h-4 text-green-600" />
+              <FormItem className="flex flex-col gap-3 rounded-xl border border-[#D9D9D9] bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <FormLabel className="flex cursor-pointer items-center gap-1.5 text-sm font-semibold text-[#1A1208]">
+                    <Leaf className="h-4 w-4 text-green-600" />
                     Organic / Certified
                   </FormLabel>
                   <p className="text-[10px] text-[#7A6B44]">GOTS-certified or organic material</p>
@@ -595,10 +702,10 @@ export function Step3PricingAndMeasurements() {
             control={form.control}
             name="fabric_is_vegan"
             render={({ field }) => (
-              <FormItem className="flex items-center justify-between rounded-xl border border-[#D9D9D9] bg-white px-4 py-3">
-                <div>
-                  <FormLabel className="text-sm font-semibold text-[#1A1208] cursor-pointer">
-                    🌿 Vegan / Cruelty-Free
+              <FormItem className="flex flex-col gap-3 rounded-xl border border-[#D9D9D9] bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <FormLabel className="cursor-pointer text-sm font-semibold text-[#1A1208]">
+                    Vegan / Cruelty-Free
                   </FormLabel>
                   <p className="text-[10px] text-[#7A6B44]">No animal-derived materials used</p>
                 </div>
@@ -617,10 +724,10 @@ export function Step3PricingAndMeasurements() {
             control={form.control}
             name="is_customisable"
             render={({ field }) => (
-              <FormItem className="flex items-center justify-between rounded-xl border border-[#D9D9D9] bg-white px-4 py-3 sm:col-span-2">
-                <div>
-                  <FormLabel className="text-sm font-semibold text-[#1A1208] cursor-pointer">
-                    🎨 Accept Custom Orders
+              <FormItem className="flex flex-col gap-3 rounded-xl border border-[#D9D9D9] bg-white px-4 py-3 sm:col-span-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <FormLabel className="cursor-pointer text-sm font-semibold text-[#1A1208]">
+                    Accept Custom Orders
                   </FormLabel>
                   <p className="text-[10px] text-[#7A6B44]">
                     Enable for bespoke color, fit, or embroidery requests.
@@ -639,24 +746,22 @@ export function Step3PricingAndMeasurements() {
         </div>
       </SectionCard>
 
-      {/* ── SECTION C: SIZE & MEASUREMENT GUIDE ──────────────────────────── */}
       <SectionCard
-        icon={<Ruler className="w-4 h-4" />}
-        title="Size & Measurement Guide"
-        subtitle="Build a detailed per-size measurement table to help customers find their fit."
+        icon={<Ruler className="h-4 w-4" />}
+        title="Size Links & Measurements"
+        subtitle="Attach uploaded media to reusable size templates. Upload media first, then link the right size here."
       >
-        {/* Toggle */}
         <FormField
           control={form.control}
           name="requires_measurement"
           render={({ field }) => (
-            <FormItem className="flex items-center justify-between rounded-xl border border-[#D9D9D9] bg-white px-4 py-3">
-              <div>
-                <FormLabel className="text-base font-semibold text-[#1A1208] cursor-pointer">
+            <FormItem className="flex flex-col gap-3 rounded-xl border border-[#D9D9D9] bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <FormLabel className="cursor-pointer text-base font-semibold text-[#1A1208]">
                   Enable Size Guide
                 </FormLabel>
                 <FormDescription className="text-xs">
-                  Turn on to build a per-size measurement chart.
+                  Turn this on when customers need size measurements before ordering.
                 </FormDescription>
               </div>
               <FormControl>
@@ -670,127 +775,176 @@ export function Step3PricingAndMeasurements() {
           )}
         />
 
-        {requiresMeasurement && (
+        {requiresMeasurement ? (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-[#7A6B44]">
-                <AlertCircle className="w-3 h-3 inline mr-1 text-[#FDA600]" />
-                Leave measurement fields blank if not applicable for that size.
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addNewGuideRow}
-                className="border-[#01454A] text-[#01454A] hover:bg-[#E8F3F1] rounded-xl"
-              >
-                <Plus className="w-4 h-4 mr-1.5" />
-                Add Size Row
-              </Button>
-            </div>
+            <p className="rounded-xl border border-[#FDA600]/30 bg-[#FFF7E6] px-4 py-3 text-xs text-[#7A6B44]">
+              <AlertCircle className="mr-1 inline h-3 w-3 text-[#FDA600]" />
+              Size links now live in Step 3 so pricing and measurement decisions stay together.
+            </p>
 
-            {guideFields.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[#D9D9D9] p-8 text-center bg-white">
-                <Ruler className="w-8 h-8 text-zinc-300 mx-auto mb-2" />
-                <p className="text-sm text-zinc-400">
-                  Click "Add Size Row" to build your measurement guide.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3 overflow-x-auto">
-                {/* Table header */}
-                <div className="grid grid-cols-[90px_repeat(8,1fr)_40px] gap-1.5 px-3 py-2 bg-[#F5FAF9] rounded-xl border border-[#D9D9D9] min-w-[800px]">
-                  <span className="text-[10px] font-bold uppercase text-zinc-500">Size</span>
-                  {MEASUREMENT_COLS.map((col) => (
-                    <span
-                      key={col.field}
-                      className="text-[10px] font-bold uppercase text-zinc-500 truncate"
-                    >
-                      {col.name}
+            <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
+              {coverPublicId || coverUrl ? (
+                <div className="min-w-0 rounded-2xl border border-[#ECE6D6] bg-white p-4 shadow-sm">
+                  <div className="mb-4 flex min-w-0 items-start gap-3">
+                    <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#E8F3F1] text-[#01454A]">
+                      <ImageIcon className="h-5 w-5" />
                     </span>
-                  ))}
-                  <span />
-                </div>
-
-                {/* Measurement rows */}
-                {guideFields.map((fieldRow, idx) => (
-                  <div
-                    key={fieldRow.id}
-                    className="grid grid-cols-[90px_repeat(8,1fr)_40px] gap-1.5 items-center bg-white p-2 rounded-xl border border-zinc-200 min-w-[800px]"
-                  >
-                    {/* Size label */}
-                    <FormField
-                      control={form.control}
-                      name={`measurement_guide.${idx}.size_label`}
-                      render={({ field: f }) => (
-                        <FormItem>
-                          <Select onValueChange={f.onChange} value={f.value}>
-                            <FormControl>
-                              <SelectTrigger className="h-8 text-xs border-[#D9D9D9] rounded-lg">
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="rounded-xl">
-                              {SIZE_LABELS.map((sz) => (
-                                <SelectItem key={sz} value={sz} className="text-xs">
-                                  {sz}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Measurement fields */}
-                    {MEASUREMENT_COLS.map((col) => (
-                      <FormField
-                        key={col.field}
-                        control={form.control}
-                        name={
-                          `measurement_guide.${idx}.${col.field}` as
-                            | `measurement_guide.${number}.chest_cm`
-                            | `measurement_guide.${number}.waist_cm`
-                            | `measurement_guide.${number}.hip_cm`
-                            | `measurement_guide.${number}.shoulder_cm`
-                            | `measurement_guide.${number}.sleeve_cm`
-                            | `measurement_guide.${number}.length_cm`
-                            | `measurement_guide.${number}.inseam_cm`
-                            | `measurement_guide.${number}.foot_length_cm`
-                        }
-                        render={({ field: f }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input
-                                {...f}
-                                value={f.value ?? ""}
-                                placeholder={col.placeholder}
-                                className="h-8 text-xs border-[#D9D9D9] rounded-lg focus-visible:ring-[#01454A]/30"
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    ))}
-
-                    {/* Delete row */}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                      onClick={() => removeGuideRow(idx)}
-                      aria-label={`Remove size row ${idx + 1}`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-[#1A1208]">Cover Image</p>
+                      <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-[#7A6B44]">
+                        <span
+                          className="h-3 w-3 flex-shrink-0 rounded-full border border-[#D9D9D9]"
+                          style={{ backgroundColor: coverColorHex || "#F8F5ED" }}
+                        />
+                        <span className="truncate">{coverColorName || "No color linked yet"}</span>
+                      </div>
+                    </div>
                   </div>
-                ))}
-              </div>
-            )}
+                  <SizeLinkSelect
+                    control={form.control}
+                    name="cover_image_size_id"
+                    sizeOptions={sizeOptions}
+                    onAdd={handleOpenAddSizeModal}
+                  />
+                </div>
+              ) : (
+                <div className="min-w-0 rounded-2xl border border-dashed border-[#D9D9D9] bg-white p-6 text-center">
+                  <ImageIcon className="mx-auto mb-2 h-8 w-8 text-zinc-300" />
+                  <p className="text-sm text-zinc-500">Upload a cover image in Step 2 to link a size.</p>
+                </div>
+              )}
+
+              {galleryItems.map((item, idx) => (
+                <div
+                  key={`${item.public_id || item.secure_url || idx}-${idx}`}
+                  className="min-w-0 rounded-2xl border border-[#ECE6D6] bg-white p-4 shadow-sm"
+                >
+                  <div className="mb-4 flex min-w-0 items-start gap-3">
+                    <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#E8F3F1] text-[#01454A]">
+                      {item.media_type === "video" ? (
+                        <VideoIcon className="h-5 w-5" />
+                      ) : (
+                        <ImageIcon className="h-5 w-5" />
+                      )}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-[#1A1208]">Gallery Media #{idx + 1}</p>
+                      <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-[#7A6B44]">
+                        <span
+                          className="h-3 w-3 flex-shrink-0 rounded-full border border-[#D9D9D9]"
+                          style={{ backgroundColor: item.color_hex || "#F8F5ED" }}
+                        />
+                        <span className="truncate">{item.color_name || "No color linked yet"}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <SizeLinkSelect
+                    control={form.control}
+                    name={`gallery.${idx}.size_id`}
+                    sizeOptions={sizeOptions}
+                    onAdd={handleOpenAddSizeModal}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-[#D9D9D9] bg-white p-6 text-center">
+            <Ruler className="mx-auto mb-2 h-8 w-8 text-zinc-300" />
+            <p className="text-sm text-zinc-500">
+              Turn on size guide support if this product needs customer measurements.
+            </p>
           </div>
         )}
       </SectionCard>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Add Measurement Size"
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-[#7A6B44]">
+            Save a reusable size row, then link it directly to the selected cover or gallery media.
+          </p>
+
+          <div className="space-y-3">
+            <label className="block text-xs font-bold uppercase tracking-[0.16em] text-[#7A6B44]">
+              Template Name
+            </label>
+            <Input
+              value={templateName}
+              onChange={(event) => setTemplateName(event.target.value)}
+              placeholder="e.g. Women's Premium Dress Guide"
+              className="h-10 rounded-xl border-[#D9D9D9] bg-white focus-visible:ring-[#01454A]"
+            />
+          </div>
+
+          <div className="space-y-3">
+            <label className="block text-xs font-bold uppercase tracking-[0.16em] text-[#7A6B44]">
+              Measurement Size
+            </label>
+            <Select
+              value={sizeLabel}
+              onValueChange={(value) => setSizeLabel(value as (typeof SIZE_LABELS)[number])}
+            >
+              <SelectTrigger className="h-10 rounded-xl border-[#D9D9D9] bg-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl bg-white">
+                {SIZE_LABELS.map((size) => (
+                  <SelectItem key={size} value={size}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {[
+              ["Chest (cm)", chest, setChest],
+              ["Waist (cm)", waist, setWaist],
+              ["Hip (cm)", hip, setHip],
+              ["Length (cm)", length, setLength],
+              ["Shoulder (cm)", shoulder, setShoulder],
+              ["Sleeve (cm)", sleeve, setSleeve],
+              ["Inseam (cm)", inseam, setInseam],
+              ["Foot (cm)", footLength, setFootLength],
+            ].map(([label, value, setter]) => (
+              <label key={label as string} className="space-y-1">
+                <span className="text-xs font-semibold text-[#1A1208]">{label as string}</span>
+                <Input
+                  value={value as string}
+                  onChange={(event) => (setter as (next: string) => void)(event.target.value)}
+                  placeholder="Optional"
+                  className="h-10 rounded-xl border-[#D9D9D9] bg-white focus-visible:ring-[#01454A]"
+                />
+              </label>
+            ))}
+          </div>
+
+          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsModalOpen(false)}
+              className="h-10 rounded-xl px-4 text-[#7A6B44] hover:text-[#1A1208]"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSaveSizeGuide}
+              isLoading={isSavingTemplate}
+              className="h-10 rounded-xl bg-[#FDA600] px-4 text-white hover:bg-[#E89700]"
+            >
+              Save Template
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
