@@ -1,5 +1,6 @@
-// fashionista_frontend/src/features/product/builder/components/HydrationGuard.tsx
 "use client";
+
+// fashionista_frontend/src/features/product/builder/components/HydrationGuard.tsx
 
 import { useState, useEffect, ReactNode } from "react";
 import { Loader2 } from "lucide-react";

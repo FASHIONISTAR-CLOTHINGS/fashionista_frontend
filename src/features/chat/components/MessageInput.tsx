@@ -1,8 +1,9 @@
+"use client";
+
 /**
  * Composer for sending chat messages.
  */
 
-"use client";
 
 import { useState } from "react";
 import { SendHorizontal } from "lucide-react";

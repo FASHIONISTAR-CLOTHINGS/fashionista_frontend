@@ -1,8 +1,9 @@
+"use client";
+
 /**
  * @file CustomOrdersDashboard.tsx
  * @description Premium custom tailoring orders administration dashboard.
  */
-"use client";
 
 import { useState } from "react";
 import Link from "next/link";

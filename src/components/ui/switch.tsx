@@ -1,8 +1,9 @@
+"use client";
+
 /**
  * @file switch.tsx
  * @description Fashionistar Switch primitive — Shadcn-compatible API.
  */
-"use client";
 
 import * as React from "react";
 import { cn } from "@/lib/utils";

@@ -1,8 +1,9 @@
+"use client";
+
 /**
  * Structured chat offer bubble.
  */
 
-"use client";
 
 import type { OfferData } from "../types/chat.types";
 

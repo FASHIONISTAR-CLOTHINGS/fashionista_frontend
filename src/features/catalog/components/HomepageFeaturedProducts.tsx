@@ -1,140 +1,115 @@
 /**
+ * HomepageFeaturedProducts.tsx — Premium 2026 Edition
  * features/catalog/components/HomepageFeaturedProducts.tsx — C2 (v2)
  *
- * Standalone RSC for the Featured Products section on the homepage.
- * Extracted from inline page.tsx so it can be independently Suspense-wrapped
- * and cache-tagged ("featured-products").
+ * RSC wrapper for the "Featured Products" section on the homepage.
+ * Delegates all card rendering to the shared <ProductCard /> component
+ * (single source of truth for card UI across all catalog pages).
  *
- * Migrated from next/image → FashionistarImage (Phase 2 overhaul). * Props:
- *   bundle — HomepageBundle passed from page.tsx (zero extra fetch)
- *
- * Design: 2-col mobile → 3-col tablet → 4-col desktop
- *         Product card: image, sale/AI-Fit badge, star rating, title, price
+ * Architecture:
+ *   - Props: HomepageBundle (already fetched by page.tsx — zero extra HTTP round-trip)
+ *   - Grid: 2-col mobile → 3-col tablet → 4-col widescreen
+ *   - Entrance: staggered card-enter CSS animation (no JS lib required)
+ *   - Skeleton: uses the ProductCardSkeleton for PPR/Suspense fallback
  */
 
 import Link from "next/link";
-import { FashionistarImage } from "@/components/media";
-import type { HomepageBundle, HomepageProductCard } from "../types/catalog.types";
+import ProductCard from "./ProductCard";
+import type { HomepageBundle } from "../types/catalog.types";
 
 interface Props {
   bundle: HomepageBundle;
+  /** Max cards to render (default 12). */
   limit?: number;
 }
 
-function StarRating({ rating }: { rating: number }) {
-  const stars = Math.min(5, Math.max(1, Math.round(rating || 5)));
+/**
+ * Skeleton variant — used as Suspense fallback.
+ * Pure CSS shimmer, no JS, compatible with PPR.
+ */
+export function HomepageFeaturedProductsSkeleton({ count = 8 }: { count?: number }) {
   return (
-    <span
-      className="text-[#fda600] text-sm leading-none"
-      aria-label={`${stars} out of 5 stars`}
-    >
-      {"★".repeat(stars)}
-      {"☆".repeat(5 - stars)}
-    </span>
-  );
-}
-
-function ProductCard({ product }: { product: HomepageProductCard }) {
-  const priceNum = parseFloat(product.price);
-
-  return (
-    <Link
-      href={`/products/${product.slug}`}
-      className="flex flex-col gap-2 group"
-      data-testid="product-card"
-    >
-      {/* ── Image container ───────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-xl bg-[#F4F5FB] aspect-square">
-        {/* FashionistarImage fill — parent is relative + aspect-square */}
-        <FashionistarImage
-          src={product.image_url || null}
-          alt={product.title}
-          fill
-          transformation="card"
-          objectFit="contain"
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          imgClassName="p-2 group-hover:scale-105 transition-transform duration-500"
-        />
-
-        {/* ── Badges ────────────────────────────────────────────────── */}
-        {product.hot_deal && (
-          <span className="absolute top-2 left-2 bg-[#fda600] text-white text-[10px] font-bold font-raleway px-2 py-0.5 rounded-md uppercase tracking-wide z-10">
-            Sale
-          </span>
-        )}
-        {product.requires_measurement && (
-          <span className="absolute top-2 right-2 bg-[#01454A] text-white text-[10px] font-semibold font-raleway px-2 py-0.5 rounded-md z-10">
-            AI Fit
-          </span>
-        )}
-        {product.discount_percentage > 0 && !product.hot_deal && (
-          <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold font-raleway px-2 py-0.5 rounded-md z-10">
-            -{product.discount_percentage}%
-          </span>
-        )}
+    <section className="section-wrapper" aria-busy="true" aria-label="Loading featured products">
+      {/* Section header skeleton */}
+      <div className="flex items-end justify-between mb-8">
+        <div>
+          <div className="shimmer h-4 w-32 rounded mb-2" />
+          <div className="shimmer h-8 w-64 rounded" />
+        </div>
+        <div className="shimmer h-4 w-20 rounded" />
       </div>
 
-      {/* ── Rating ────────────────────────────────────────────────────── */}
-      <StarRating rating={product.computed_avg_rating || product.rating} />
-
-      {/* ── Title ─────────────────────────────────────────────────────── */}
-      <p className="font-raleway font-semibold text-sm md:text-base text-black line-clamp-2 leading-snug">
-        {product.title}
-      </p>
-
-      {/* ── Price row ─────────────────────────────────────────────────── */}
-      <p className="font-raleway font-semibold text-base md:text-lg text-[#01454A]">
-        ₦{priceNum.toLocaleString("en-NG")}
-        {product.old_price && (
-          <span className="ml-2 text-sm line-through text-[#848484] font-normal">
-            ₦{parseFloat(product.old_price).toLocaleString("en-NG")}
-          </span>
-        )}
-      </p>
-
-      {/* ── Vendor name ───────────────────────────────────────────────── */}
-      {product.store_name && (
-        <p className="font-raleway text-xs text-[#848484] -mt-1">{product.store_name}</p>
-      )}
-    </Link>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+        {Array.from({ length: count }).map((_, i) => (
+          <div key={i} className="flex flex-col gap-2 rounded-2xl overflow-hidden">
+            {/* Image */}
+            <div className="shimmer aspect-[4/5] rounded-2xl" />
+            {/* Body */}
+            <div className="p-3 flex flex-col gap-2">
+              <div className="shimmer h-2.5 w-20 rounded" />
+              <div className="shimmer h-3.5 w-full rounded" />
+              <div className="shimmer h-3 w-3/4 rounded" />
+              <div className="shimmer h-4 w-16 rounded mt-1" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
-export function HomepageFeaturedProducts({ bundle, limit = 8 }: Props) {
+/**
+ * Main HomepageFeaturedProducts — RSC (Server Component).
+ * No "use client" — renders on the server for optimal LCP.
+ */
+export default function HomepageFeaturedProducts({ bundle, limit = 12 }: Props) {
   const products = bundle.featured_products.slice(0, limit);
 
-  if (!products.length) {
-    return (
-      <div
-        className="text-center py-12 text-[#848484] font-raleway"
-        data-testid="featured-products-empty"
-      >
-        Featured products coming soon.
-      </div>
-    );
-  }
+  if (products.length === 0) return null;
 
   return (
     <section
-      className="px-5 py-10 md:px-10 lg:px-20 space-y-6"
-      aria-label="Featured Products"
-      data-testid="featured-products-section"
+      className="section-wrapper"
+      aria-labelledby="featured-products-heading"
+      id="featured-products"
     >
-      {/* ── Section header ─────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
-        <h2 className="font-bon_foyage text-4xl md:text-5xl text-[#333]">Featured Products</h2>
+      {/* ── Section Header ──────────────────────────────────────────────── */}
+      <div className="flex items-end justify-between mb-8 animate-slide-up">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-[var(--BV-gold)] mb-1">
+            Curated for you
+          </p>
+          <h2
+            id="featured-products-heading"
+            className="section-title"
+          >
+            Featured Pieces
+          </h2>
+        </div>
         <Link
-          href="/categories"
-          className="font-raleway text-sm font-semibold text-[#01454A] hover:text-[#fda600] transition-colors duration-200"
+          href="/products"
+          className="text-sm font-semibold text-[var(--BV-green)] hover:text-[var(--BV-green-light)] underline underline-offset-4 decoration-[var(--BV-gold)] transition-colors duration-200 whitespace-nowrap"
+          aria-label="Browse all featured products"
         >
           View all →
         </Link>
       </div>
 
-      {/* ── Product grid — 2-col mobile, 3-col tablet, 4-col desktop ───── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5 lg:gap-6">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+      {/* ── Product Grid ────────────────────────────────────────────────── */}
+      <div
+        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
+        role="list"
+        aria-label="Featured products"
+      >
+        {products.map((card, idx) => (
+          <div key={card.id} role="listitem">
+            <ProductCard
+              card={card}
+              index={idx + 1}
+              priority={idx < 2}
+              showWishlist
+            />
+          </div>
         ))}
       </div>
     </section>

@@ -200,65 +200,17 @@ export async function getCatalogBlogPostBySlug(slug: string): Promise<CatalogBlo
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Fetch the entire homepage data bundle in a single HTTP round-trip.
+ * @deprecated Use `getHomepageBundleV2()` instead.
+ * This function is an alias kept for backward-compatibility only.
+ * It now delegates to the v2 bundle endpoint (6 sections + banners).
+ * Will be removed in the next major engineering cleanup sprint.
  *
- * Backend behavior:
- *   - Django-Ninja GET /api/v1/ninja/catalog/homepage/
- *   - Runs 5 DB queries in parallel via asyncio.gather()
- *   - Result cached in Redis for 5 minutes (catalog:homepage:bundle key)
- *   - Total backend latency: <30ms p95 (single DB RTT, parallel reads)
- *
- * Frontend behavior:
- *   - Next.js ISR: revalidate: 300 seconds with tag "homepage-bundle"
- *   - On cache HIT: returns in <1ms (edge CDN or Node cache)
- *   - On cache MISS: SSR fetch → Zod parse → render (first user, or after 5 min)
- *   - Falls back to empty safe bundle on any error — homepage never throws
- *
- * Returns a typed HomepageBundle with:
- *   - collections      — up to 10 collection carousel cards
- *   - categories       — up to 10 category grid cards
- *   - featured_products — up to 10 featured product cards
- *   - hot_deals        — up to 10 hot-deal product cards
- *   - reviews          — up to 8 public review cards
- *   - meta             — count metadata for each section
+ * @see getHomepageBundleV2
  */
 export async function getHomepageBundle(): Promise<HomepageBundle> {
-  const EMPTY_BUNDLE: HomepageBundle = {
-    collections: [],
-    categories: [],
-    featured_products: [],
-    hot_deals: [],
-    reviews: [],
-    banners: [],
-    meta: {
-      collections_count: 0,
-      categories_count: 0,
-      products_count: 0,
-      hot_deals_count: 0,
-      reviews_count: 0,
-      banners_count: 0,
-    },
-  };
-
-  try {
-    const raw = await fetchHomepageBundle("/api/v1/ninja/catalog/homepage/");
-    if (!raw) return EMPTY_BUNDLE;
-
-    const result = HomepageBundleSchema.safeParse(raw);
-    if (!result.success) {
-      console.warn(
-        "[catalog.server] getHomepageBundle parse error:",
-        result.error.flatten(),
-      );
-      // Return what we can — partial data is better than nothing
-      return EMPTY_BUNDLE;
-    }
-    return result.data as HomepageBundle;
-  } catch (err) {
-    console.error("[catalog.server] getHomepageBundle unexpected error:", err);
-    return EMPTY_BUNDLE;
-  }
+  return getHomepageBundleV2();
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Phase C4 — Detail + Paginated Catalog Server Functions

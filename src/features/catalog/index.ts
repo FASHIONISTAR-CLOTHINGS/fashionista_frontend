@@ -18,9 +18,9 @@ export {
   getCatalogBrands,
   getCatalogCategories,
   getCatalogCollections,
-  // Phase 11 — homepage bundle v1 (5 parallel DB reads)
+  /** @deprecated — delegates to getHomepageBundleV2(). Will be removed next sprint. */
   getHomepageBundle,
-  // Phase B3 — homepage bundle v2 (6 parallel DB reads + banners)
+  // Phase B3 — homepage bundle v2 (6 parallel DB reads + banners) — SOLE bundle function
   getHomepageBundleV2,
   // Phase C4 — detail + paginated server functions
   getCategoryDetail,
@@ -36,10 +36,14 @@ export {
 
 // ── Components ────────────────────────────────────────────────────────────────
 export { default as CatalogBlogList } from "./components/CatalogBlogList";
-export { default as CatalogCategoryGrid } from "./components/CatalogCategoryGrid";
-export { default as CatalogCollectionGrid } from "./components/CatalogCollectionGrid";
+// Category grid (CATEGORIES = for PRODUCTS)
+export { default as CatalogCategoryGrid, CatalogCategoryGridSkeleton } from "./components/CatalogCategoryGrid";
+// Collection grid (COLLECTIONS = for VENDORS)
+export { default as CatalogCollectionGrid, CatalogCollectionGridSkeleton } from "./components/CatalogCollectionGrid";
+// Phase 3 — Premium shared product card (used across all catalog pages)
+export { default as ProductCard } from "./components/ProductCard";
 // Phase C2 — extracted FeaturedProducts RSC
-export { HomepageFeaturedProducts } from "./components/HomepageFeaturedProducts";
+export { default as HomepageFeaturedProducts, HomepageFeaturedProductsSkeleton } from "./components/HomepageFeaturedProducts";
 // Phase D4 — CMS-driven banner hero carousel
 export { CatalogBannerHero } from "./components/CatalogBannerHero";
 // Phase C5 — Trending tags horizontal scroll rail

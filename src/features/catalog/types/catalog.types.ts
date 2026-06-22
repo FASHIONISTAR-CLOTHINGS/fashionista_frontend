@@ -1,5 +1,20 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Catalog Entity Types  (read-side, from Django-Ninja async API)
+//
+// Single source of truth: these interfaces mirror the backend Django models
+// and Ninja schemas in apps/catalog/schemas/catalog_schemas.py.
+//
+// Taxonomy rule:
+//   CATEGORIES → for products  (a product belongs to 1–15 categories)
+//   COLLECTIONS → for vendors  (a vendor joins collections it specialises in)
+//
+// Phase enrichment (2026-Q3):
+//   HomepageProductCard: +cloudinary_url, +gender_target, +age_group,
+//     +condition, +is_pre_order, +orders_count, +views
+//   HomepageCategoryCard: +cloudinary_url, +active (replaces is_deleted)
+//   HomepageCollectionCard: +cloudinary_url
+//   HomepageBundleMeta: +banners_count
+//   HomepageBundleOut: +banners list
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface CatalogCategoryChild {
@@ -127,11 +142,25 @@ export interface CatalogTag {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Homepage Bundle Types
-// v1: GET /api/v1/ninja/catalog/homepage/        (5 sections)
 // v2: GET /api/v1/ninja/catalog/homepage/bundle/ (6 sections + banners)
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Lean product card for homepage sections (featured + hot deals). */
+/**
+ * Lean product card for homepage sections (featured + hot deals).
+ *
+ * Image priority:
+ *   1. cloudinary_url — CDN-optimised WebP/AVIF at card dimensions (w_480)
+ *   2. image_url — raw backend URL (fallback)
+ *
+ * Demographic signals (for badge display):
+ *   gender_target: '' | 'men' | 'women' | 'unisex' | 'boys' | 'girls' | 'kids'
+ *   age_group:     '' | 'adult' | 'teen' | 'child' | 'toddler' | 'infant'
+ *   condition:     'new' | 'used' | 'refurbished'
+ *
+ * Social proof signals:
+ *   orders_count: total fulfilled orders (shown as "X sold")
+ *   views:        product page views (trending signal)
+ */
 export interface HomepageProductCard {
   id: string;
   title: string;
@@ -142,6 +171,8 @@ export interface HomepageProductCard {
   discount_percentage: number;
   currency: string;
   image_url: string | null;
+  /** Cloudinary card-optimised URL (w_480,h_480,c_fill). Primary image src. */
+  cloudinary_url: string | null;
   in_stock: boolean;
   stock_qty: number;
   featured: boolean;
@@ -152,10 +183,23 @@ export interface HomepageProductCard {
   computed_avg_rating: number;
   category_name: string | null;
   category_slug: string | null;
+  /** vendor_name — alias: store_name (Zod transform adds store_name too) */
+  vendor_name: string;
+  vendor_slug: string | null;
+  /** Zod transform alias for vendor_name */
   store_name: string;
+  /** Zod transform alias for vendor_slug */
   store_slug: string | null;
   requires_measurement: boolean;
   is_customisable: boolean;
+  // Demographic & discovery signals
+  gender_target: string;
+  age_group: string;
+  condition: string;
+  is_pre_order: boolean;
+  // Social proof signals
+  orders_count: number;
+  views: number;
   sizes: { id: string; name: string }[];
   colors: { id: string; name: string; hex_code: string }[];
   created_at: string | null;
@@ -174,7 +218,10 @@ export interface HomepageReviewCard {
   created_at: string | null;
 }
 
-/** Lean collection card for homepage carousel. */
+/**
+ * Lean collection card for homepage carousel.
+ * Collections are for VENDORS — vendors join collections they specialise in.
+ */
 export interface HomepageCollectionCard {
   id: string;
   name: string;
@@ -184,12 +231,17 @@ export interface HomepageCollectionCard {
   description: string;
   image: string | null;
   image_url: string;
+  /** Cloudinary-optimised collection hero image. */
+  cloudinary_url: string | null;
   background_image: string | null;
   background_image_url: string;
   created_at: string | null;
 }
 
-/** Lean category card for homepage grid. */
+/**
+ * Lean category card for homepage grid.
+ * Categories are for PRODUCTS — a product belongs to 1–15 categories.
+ */
 export interface HomepageCategoryCard {
   id: string;
   name: string;
@@ -197,6 +249,9 @@ export interface HomepageCategoryCard {
   slug: string;
   image: string | null;
   image_url: string;
+  /** Cloudinary-optimised category tile image. */
+  cloudinary_url: string | null;
+  /** Whether the category is publicly visible. Always true for homepage cards. */
   active: boolean;
   created_at: string | null;
 }
@@ -224,12 +279,13 @@ export interface HomepageBundleMeta {
   products_count: number;
   hot_deals_count: number;
   reviews_count: number;
-  banners_count?: number;
+  banners_count: number;
 }
 
 /**
- * Full homepage data bundle.
- * banners defaults to [] for v1 compatibility.
+ * Full homepage data bundle (v2).
+ * Single RSC fetch from /api/v1/ninja/catalog/homepage/bundle/
+ * ISR: revalidate 300s, tagged "homepage-bundle".
  */
 export interface HomepageBundle {
   collections: HomepageCollectionCard[];

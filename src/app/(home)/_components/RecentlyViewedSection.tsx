@@ -1,13 +1,14 @@
+"use client";
+
 /**
  * @file RecentlyViewedSection.tsx
- * @description "use client" section rendering the RecentlyViewedRail on the home page.
+ * @description Client component ("use client" boundary) — section rendering
+ * the RecentlyViewedRail on the home page.
  *
  * SSR-safe: useRecentlyViewed hydrates from localStorage on mount.
  * Renders nothing on SSR (rail returns null when items=[]).
  * Revenue strategy: 35% of conversions come from recently-viewed re-engagement.
  */
-"use client";
-
 import { RecentlyViewedRail } from "@/features/catalog/components/RecentlyViewedRail";
 
 /**

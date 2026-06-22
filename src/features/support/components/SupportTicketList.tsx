@@ -1,8 +1,9 @@
+"use client";
+
 /**
  * Ticket rail for the support workspace.
  */
 
-"use client";
 
 import { LifeBuoy } from "lucide-react";
 

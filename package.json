@@ -2,7 +2,6 @@
   "name": "fashionistar-ai",
   "version": "2.0.0",
   "description": "FASHIONISTAR AI — Enterprise E-commerce Platform (Next.js 16.2.4 + Django 6.0 + FSD 2.0)",
-  "type": "module",
   "private": true,
   "license": "MIT",
   "author": "FASHIONISTAR Engineering Team",

@@ -23,9 +23,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { CatalogCategoryGrid, CatalogCollectionGrid } from "@/features/catalog";
 import { getHomepageBundleV2 } from "@/features/catalog/api/catalog.server";
-import { HomepageFeaturedProducts } from "@/features/catalog/components/HomepageFeaturedProducts";
+import HomepageFeaturedProducts, { HomepageFeaturedProductsSkeleton } from "@/features/catalog/components/HomepageFeaturedProducts";
 import { CatalogBannerHero } from "@/features/catalog/components/CatalogBannerHero";
-import { ProductGridSkeleton } from "@/features/product";
 import { RecentlyViewedSection } from "./_components/RecentlyViewedSection";
 import { DealsCountdown } from "./_components/DealsCountdown";
 import { NewsletterForm } from "./_components/NewsletterForm";
@@ -105,8 +104,8 @@ export default async function Home() {
         <CatalogCategoryGrid categories={bundle.categories} />
       </div>
 
-      {/* ── Featured Products (C2: extracted RSC component) ──────────────── */}
-      <Suspense fallback={<ProductGridSkeleton count={8} />}>
+      {/* ── Featured Products (C2: premium RSC card grid) ──────────────── */}
+      <Suspense fallback={<HomepageFeaturedProductsSkeleton count={8} />}>
         <HomepageFeaturedProducts bundle={bundle} limit={8} />
       </Suspense>
 

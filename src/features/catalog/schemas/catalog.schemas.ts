@@ -34,7 +34,7 @@ export const CatalogCategorySchema = z.object({
   image: NullableStringSchema,
   image_url: ImageUrlSchema,
   cloudinary_url: OptionalNullableStringSchema,
-  active: z.boolean(),
+  active: z.boolean().default(true),
   created_at: z.string(),
   updated_at: z.string(),
 });
@@ -135,9 +135,17 @@ export const CatalogCollectionListSchema = z.array(CatalogCollectionSchema);
 export const CatalogBlogPostListSchema = z.array(CatalogBlogPostSchema);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Phase 11 — Homepage Bundle Zod Schemas
-// Match the JSON shape returned by GET /api/v1/ninja/catalog/homepage/
+// Phase 11 + Enrich — Homepage Bundle Zod Schemas
+// Match the JSON shape returned by GET /api/v1/ninja/catalog/homepage/bundle/
 // Every field uses safe transforms so partial/null server data never throws.
+//
+// Enriched fields (2026-Q3):
+//   HomepageProductCardSchema: cloudinary_url, gender_target, age_group,
+//     condition, is_pre_order, orders_count, views
+//   HomepageCategoryCardSchema: cloudinary_url, active
+//   HomepageCollectionCardSchema: cloudinary_url
+//   HomepageBundleMetaSchema: banners_count
+//   HomepageBundleSchema: banners
 // ─────────────────────────────────────────────────────────────────────────────
 
 const HomepageProductCardSchema = z.object({
@@ -152,6 +160,7 @@ const HomepageProductCardSchema = z.object({
   discount_percentage: z.number().nullable().default(0),
   currency: z.string().default("NGN"),
   image_url: ImageUrlSchema,
+  cloudinary_url: ImageUrlSchema,
   in_stock: z.boolean().default(true),
   stock_qty: z.number().nullable().default(0),
   featured: z.boolean().default(false),
@@ -166,6 +175,14 @@ const HomepageProductCardSchema = z.object({
   vendor_slug: z.string().nullable().optional().default(null),
   requires_measurement: z.boolean().default(false),
   is_customisable: z.boolean().default(false),
+  // Demographic & discovery signals
+  gender_target: z.string().nullable().optional().default(""),
+  age_group: z.string().nullable().optional().default(""),
+  condition: z.string().nullable().optional().default("new"),
+  is_pre_order: z.boolean().default(false),
+  // Social proof signals
+  orders_count: z.number().nullable().default(0),
+  views: z.number().nullable().default(0),
   sizes: z.array(z.object({ id: IdSchema, name: z.string() })).default([]),
   colors: z
     .array(z.object({ id: IdSchema, name: z.string(), hex_code: z.string() }))
@@ -180,6 +197,13 @@ const HomepageProductCardSchema = z.object({
   review_count: data.review_count ?? 0,
   computed_review_count: data.computed_review_count ?? 0,
   computed_avg_rating: data.computed_avg_rating ?? 0,
+  orders_count: data.orders_count ?? 0,
+  views: data.views ?? 0,
+  gender_target: data.gender_target ?? "",
+  age_group: data.age_group ?? "",
+  condition: data.condition ?? "new",
+  // Prefer cloudinary_url (CDN-optimised) over image_url (raw backend URL)
+  // Both resolve to empty string for missing images — safe to use as <img src>
   store_name: data.vendor_name,
   store_slug: data.vendor_slug,
 }));
@@ -205,6 +229,7 @@ const HomepageCollectionCardSchema = z.object({
   description: z.string().nullable().transform((v) => v ?? ""),
   image: NullableStringSchema,
   image_url: ImageUrlSchema,
+  cloudinary_url: ImageUrlSchema,
   background_image: NullableStringSchema,
   background_image_url: ImageUrlSchema,
   created_at: z.string().nullable().optional().default(null),
@@ -217,9 +242,15 @@ const HomepageCategoryCardSchema = z.object({
   slug: z.string(),
   image: NullableStringSchema,
   image_url: ImageUrlSchema,
+  cloudinary_url: ImageUrlSchema,
   active: z.boolean().default(true),
+  // Legacy: some backends still emit is_deleted; transform it away
+  is_deleted: z.boolean().optional(),
   created_at: z.string().nullable().optional().default(null),
-});
+}).transform((data) => ({
+  ...data,
+  active: data.active ?? !data.is_deleted,
+}));
 
 const HomepageBannerCardSchema = z.object({
   id: IdSchema,

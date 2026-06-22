@@ -1,8 +1,9 @@
+"use client";
+
 /**
  * @file PaymentDashboard.tsx
  * @description Premium payment audit and transaction inspection component.
  */
-"use client";
 
 import { useState } from "react";
 import Link from "next/link";

@@ -1,4 +1,5 @@
-w/**
+"use client";
+/**
  * @file FashionistarImage.tsx
  * @description Canonical Fashionistar platform image component — v3 (2026/2027).
  *
@@ -36,7 +37,6 @@ w/**
  *     <FashionistarImage publicId="collection.jpg" alt="Collection" fill transformation="card" />
  *   </div>
  */
-"use client";
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import NextImage from "next/image";

@@ -1,8 +1,9 @@
+"use client";
+
 /**
  * PasswordResetConfirmForm — Shared form for email + phone reset confirm.
  * Unified FSD implementation.
  */
-"use client";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

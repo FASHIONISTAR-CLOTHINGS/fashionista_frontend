@@ -1,7 +1,8 @@
+"use client";
+
 // Shared Settings UI Primitives for Fashionistar Dashboards
 // Used by both Vendor and Client settings pages
 
-"use client";
 
 import { ReactNode } from "react";
 import { CheckCircle2, ChevronDown, Eye, EyeOff } from "lucide-react";

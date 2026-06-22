@@ -1,8 +1,9 @@
+"use client";
+
 /**
  * @file ClientDashboard.tsx
  * @description Premium client governance and moderation dashboard component.
  */
-"use client";
 
 import React, { useState } from "react";
 import { useAdminClients, useUpdateAdminClient } from "../hooks";

@@ -1,8 +1,9 @@
+"use client";
+
 /**
  * @file hooks.ts
  * @description Admin hooks for the Cart domain using TanStack Query v5.
  */
-"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";

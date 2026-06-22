@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * WebVitalsReporter.tsx — Core Web Vitals telemetry client.
  *
@@ -21,7 +23,6 @@
  *   import { WebVitalsReporter } from "@/components/telemetry/WebVitalsReporter";
  *   <WebVitalsReporter />
  */
-"use client";
 
 import { useReportWebVitals } from "next/web-vitals";
 

@@ -1,8 +1,9 @@
+"use client";
+
 /**
  * @file radio-group.tsx
  * @description Fashionistar RadioGroup primitive — Shadcn-compatible API.
  */
-"use client";
 
 import * as React from "react";
 import { cn } from "@/lib/utils";

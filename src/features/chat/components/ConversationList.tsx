@@ -1,8 +1,9 @@
+"use client";
+
 /**
  * Compact conversation rail for the chat workspace.
  */
 
-"use client";
 
 import { MessageSquareMore } from "lucide-react";
 

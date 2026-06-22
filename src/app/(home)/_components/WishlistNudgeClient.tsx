@@ -1,7 +1,9 @@
+"use client";
+
 /**
  * @file WishlistNudgeClient.tsx
- * @description "use client" boundary that reads the live wishlist count from
- * TanStack Query and mounts the WishlistNudge sticky bar.
+ * @description Client component ("use client" boundary) that reads the live
+ * wishlist count from TanStack Query and mounts the WishlistNudge sticky bar.
  *
  * Why a separate file? The (home)/layout.tsx is a Server Component.
  * Revenue components that need client hooks must live in a dedicated
@@ -10,7 +12,6 @@
  * Placement: rendered inside (home)/layout.tsx, outside <main>.
  * z-index: 40 — above sticky nav (z-30), below modals (z-50).
  */
-"use client";
 
 import { usePathname } from "next/navigation";
 import { useWishlist } from "@/features/product";

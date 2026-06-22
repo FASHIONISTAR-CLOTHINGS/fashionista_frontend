@@ -1,8 +1,9 @@
+"use client";
+
 /**
  * Scrollable message timeline for the active conversation.
  */
 
-"use client";
 
 import { formatDistanceToNowStrict } from "date-fns";
 

@@ -1,5 +1,6 @@
-// fashionista_frontend/src/features/product/builder/components/BuilderErrorBoundary.tsx
 "use client";
+
+// fashionista_frontend/src/features/product/builder/components/BuilderErrorBoundary.tsx
 
 import { Component, ErrorInfo, ReactNode } from "react";
 import { AlertTriangle, RotateCcw } from "lucide-react";

@@ -1,8 +1,9 @@
+"use client";
+
 /**
  * @file WalletDashboard.tsx
  * @description Premium wallet audit and ledger governance component.
  */
-"use client";
 
 import { useState } from "react";
 import Link from "next/link";
