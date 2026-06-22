@@ -112,7 +112,6 @@ const imageRemotePatterns = unique([
 const nextConfig = {
   output: "standalone",
   distDir,
-  cacheComponents: true,
   allowedDevOrigins,
   experimental: {
     // cpus: 1,   // Uncomment for debugging: force single-threaded builds to avoid worker spawning issues in Windows/OneDrive setups.

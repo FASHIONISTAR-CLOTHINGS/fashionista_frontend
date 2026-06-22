@@ -1,4 +1,4 @@
-/**
+w/**
  * @file FashionistarImage.tsx
  * @description Canonical Fashionistar platform image component — v3 (2026/2027).
  *

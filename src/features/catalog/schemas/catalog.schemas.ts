@@ -147,17 +147,19 @@ const HomepageProductCardSchema = z.object({
   sku: z.string().default(""),
   price: z.string().default("0.00"),
   old_price: z.string().nullable().optional().default(null),
-  discount_percentage: z.number().default(0),
+  // numeric fields: backend returns null for products without computed values;
+  // .nullable() allows null, .default(N) coerces null → fallback via .transform()
+  discount_percentage: z.number().nullable().default(0),
   currency: z.string().default("NGN"),
   image_url: ImageUrlSchema,
   in_stock: z.boolean().default(true),
-  stock_qty: z.number().default(0),
+  stock_qty: z.number().nullable().default(0),
   featured: z.boolean().default(false),
   hot_deal: z.boolean().default(false),
-  rating: z.number().default(0),
-  review_count: z.number().default(0),
-  computed_review_count: z.number().default(0),
-  computed_avg_rating: z.number().default(0),
+  rating: z.number().nullable().default(0),
+  review_count: z.number().nullable().default(0),
+  computed_review_count: z.number().nullable().default(0),
+  computed_avg_rating: z.number().nullable().default(0),
   category_name: z.string().nullable().optional().default(null),
   category_slug: z.string().nullable().optional().default(null),
   vendor_name: z.string().default("Fashionistar"),
@@ -171,6 +173,13 @@ const HomepageProductCardSchema = z.object({
   created_at: z.string().nullable().optional().default(null),
 }).transform((data) => ({
   ...data,
+  // Coerce any remaining null numeric fields to their safe defaults
+  discount_percentage: data.discount_percentage ?? 0,
+  stock_qty: data.stock_qty ?? 0,
+  rating: data.rating ?? 0,
+  review_count: data.review_count ?? 0,
+  computed_review_count: data.computed_review_count ?? 0,
+  computed_avg_rating: data.computed_avg_rating ?? 0,
   store_name: data.vendor_name,
   store_slug: data.vendor_slug,
 }));
@@ -225,12 +234,12 @@ const HomepageBannerCardSchema = z.object({
 });
 
 const HomepageBundleMetaSchema = z.object({
-  collections_count: z.number().default(0),
-  categories_count: z.number().default(0),
-  products_count: z.number().default(0),
-  hot_deals_count: z.number().default(0),
-  reviews_count: z.number().default(0),
-  banners_count: z.number().default(0),
+  collections_count: z.number().nullable().default(0).transform((v) => v ?? 0),
+  categories_count: z.number().nullable().default(0).transform((v) => v ?? 0),
+  products_count: z.number().nullable().default(0).transform((v) => v ?? 0),
+  hot_deals_count: z.number().nullable().default(0).transform((v) => v ?? 0),
+  reviews_count: z.number().nullable().default(0).transform((v) => v ?? 0),
+  banners_count: z.number().nullable().default(0).transform((v) => v ?? 0),
 });
 
 export const HomepageBundleSchema = z.object({
