@@ -6,6 +6,7 @@ import Script from "next/script";
 import { Providers } from "@/components/providers";
 import { Preloader } from "@/components/shared/preloader/Preloader";
 import { GlobalToastProvider } from "@/components";
+import { WebVitalsReporter } from "@/components/telemetry/WebVitalsReporter";
 
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -312,6 +313,9 @@ export default function RootLayout({
 
         {/* React-managed first-paint preloader — safe to unmount after hydration. */}
         <Preloader />
+
+        {/* Core Web Vitals telemetry — fire-and-forget via sendBeacon. Zero render. */}
+        <WebVitalsReporter />
 
         <Providers>
           {children}

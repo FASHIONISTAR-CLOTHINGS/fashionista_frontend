@@ -57,6 +57,13 @@ const TRANSFORMATION_PRESETS: Record<string, string> = {
   avatar:     "c_fill,g_face,w_150,h_150,r_max,q_auto,f_auto",
   og:         "c_fill,w_1200,h_630,q_auto:good,f_auto",
   banner:     "c_fill,g_auto,w_1600,q_auto:best,f_auto",
+  /**
+   * storefront — Phase 4 JIT responsive preset for catalog grid cards.
+   * Targets 450px display width with automatic format (WebP/AVIF) and
+   * aggressive quality compression to hit sub-100KB per image on mobile.
+   * Use on HomepageFeaturedProducts, HotDeals, and category grid tiles.
+   */
+  storefront: "c_fill,g_auto,q_auto,f_auto,w_450",
 };
 
 /** Standard responsive break-widths for srcSet generation. */

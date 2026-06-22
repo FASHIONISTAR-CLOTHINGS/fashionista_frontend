@@ -8,12 +8,18 @@ import {
 import type { ProductDetail } from "@/features/product";
 import { ProductDetailClient } from "./ProductDetailClient";
 import { ProductDetailSkeleton } from "./ProductDetailSkeleton";
+import { JsonLdScript } from "@/components/seo/JsonLdScript";
+import { generateProductSchema } from "@/components/seo/schemas";
 
 interface ProductDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
 const PRODUCT_VALIDATION_SLUG = "__product_validation__";
+
+// ISR — 10 minute cache for product detail pages.
+// Background revalidation on every catalog update via revalidateTag().
+export const revalidate = 600;
 
 export async function generateStaticParams() {
   try {
@@ -95,8 +101,34 @@ export default async function ProductDetailPage({
 
   const initialProduct: ProductDetail | null = await getProductDetailForMetadata(slug);
 
+  // Build Product JSON-LD schema if we have product data
+  const productSchema = initialProduct
+    ? generateProductSchema(
+        {
+          id: initialProduct.id,
+          title: initialProduct.title,
+          slug: initialProduct.slug,
+          description: initialProduct.description,
+          cover_image_url: initialProduct.cover_image_url,
+          // ProductDetail uses `price`, `rating`, `review_count`, `brand_name`
+          base_price: initialProduct.price,
+          stock_qty: initialProduct.stock_qty ?? null,
+          rating_avg: initialProduct.computed_avg_rating ?? initialProduct.rating,
+          vendor_name: initialProduct.vendor_name,
+          vendor_brand_name: initialProduct.brand_name,
+          // SKU lives on variants — grab first variant's SKU if available
+          sku: initialProduct.variants?.[0]?.sku ?? undefined,
+        },
+        initialProduct.computed_review_count ?? initialProduct.review_count
+      )
+    : null;
+
   return (
     <div className="min-h-screen bg-background">
+      {/* Product JSON-LD for Google rich snippets */}
+      {productSchema && (
+        <JsonLdScript id="product-ld" data={productSchema} />
+      )}
       <Suspense fallback={<ProductDetailSkeleton />}>
         <ProductDetailClient slug={slug} initialProduct={initialProduct} />
       </Suspense>

@@ -33,6 +33,17 @@ import { HomepageHotDealsSection } from "./_components/HomepageHotDealsSection";
 import { HomepageReviewsSection } from "./_components/HomepageReviewsSection";
 import { WaitlistMobileForm } from "./_components/WaitlistMobileForm";
 import { Hero } from "@/components";
+import { JsonLdScript } from "@/components/seo/JsonLdScript";
+import {
+  generateWebSiteSchema,
+  generateItemListSchema,
+} from "@/components/seo/schemas";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ISR — 5 minute cache, stale-while-revalidate semantics on CDN edge.
+// Matches the backend Redis TTL for catalog:homepage:bundle.
+// ─────────────────────────────────────────────────────────────────────────────
+export const revalidate = 300;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Metadata — per-page SEO
@@ -204,41 +215,23 @@ export default async function Home() {
         <NewsletterForm />
       </div>
 
-      {/* ── JSON-LD Structured Data ─────────────────────────────────── */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "WebSite",
-            name: "Fashionistar",
-            url: "https://fashionistar.net",
-            potentialAction: {
-              "@type": "SearchAction",
-              target: "https://fashionistar.net/products?q={search_term_string}",
-              "query-input": "required name=search_term_string",
-            },
-          }),
-        }}
+      {/* ── JSON-LD Structured Data — WebSite + ItemList ─────────────── */}
+      <JsonLdScript
+        id="website-ld"
+        data={generateWebSiteSchema()}
       />
       {bundle.featured_products.length > 0 && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "ItemList",
-              name: "Featured Products",
-              itemListElement: bundle.featured_products.slice(0, 8).map((p, i) => ({
-                "@type": "ListItem",
-                position: i + 1,
-                name: p.title,
-                url: `https://fashionistar.net/products/${p.slug}`,
-              })),
-            }),
-          }}
+        <JsonLdScript
+          id="featured-products-ld"
+          data={generateItemListSchema(bundle.featured_products, "Featured Products")}
         />
-      )}  
+      )}
+      {bundle.hot_deals.length > 0 && (
+        <JsonLdScript
+          id="hot-deals-ld"
+          data={generateItemListSchema(bundle.hot_deals, "Deals of the Week")}
+        />
+      )}
     </div>
   );
 }

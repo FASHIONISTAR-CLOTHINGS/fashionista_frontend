@@ -36,6 +36,10 @@ interface CategorySlugPageProps {
   params: Promise<{ slug: string }>;
 }
 
+// Sentinel slug used when getCatalogCategories() returns no results at build
+// time — avoids a real fetch in generateMetadata during prerendering.
+const VALIDATION_SLUG = "__category_validation__";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Metadata — dynamic SEO from model fields
 // ─────────────────────────────────────────────────────────────────────────────
@@ -44,6 +48,8 @@ export async function generateMetadata({
   params,
 }: CategorySlugPageProps): Promise<Metadata> {
   const { slug } = await params;
+  // Guard: skip external fetch for the build-time validation sentinel
+  if (slug === VALIDATION_SLUG) return { title: "Category | Fashionistar" };
   const category = await getCategoryDetail(slug);
 
   if (!category) return { title: "Category | Fashionistar" };
@@ -138,7 +144,7 @@ function SubCategoryCard({ child }: { child: SubCategoryChild }) {
 // Static Params
 // ─────────────────────────────────────────────────────────────────────────────
 
-const VALIDATION_SLUG = "__category_validation__";
+// VALIDATION_SLUG is declared above generateMetadata — see top of file.
 
 export async function generateStaticParams() {
   try {
