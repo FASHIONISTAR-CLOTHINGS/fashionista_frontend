@@ -19,3 +19,6 @@ export * from "./Step5FAQAndReview";
 export * from "./ProductBuilder";
 export * from "./ProductBuilderProvider";
 export * from "./BuilderStepper";
+export { BuilderErrorBoundary } from "./BuilderErrorBoundary";
+export { HydrationGuard } from "./HydrationGuard";
+

@@ -37,6 +37,8 @@ import {
   productKeys,
   ProductBuilder,
   ProductBuilderProvider,
+  BuilderErrorBoundary,
+  HydrationGuard,
 } from "@/features/product";
 import type { ProductDetail } from "@/features/product";
 import type { ProductBuilderFormValues } from "@/features/product/builder/schemas/builder.schemas";
@@ -439,7 +441,11 @@ export default function VendorProductDetailPage({
             <Edit className="w-5 h-5 text-[#01454A]" /> Edit Studio: {product.title}
           </h2>
           <ProductBuilderProvider vendorId={vendorId} initialValues={initialFormValues} onSubmit={handleEditSubmit}>
-            <ProductBuilder />
+            <BuilderErrorBoundary>
+              <HydrationGuard>
+                <ProductBuilder />
+              </HydrationGuard>
+            </BuilderErrorBoundary>
           </ProductBuilderProvider>
         </div>
       ) : (

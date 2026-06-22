@@ -5,9 +5,14 @@
 
 // ── Schemas ─────────────────────────────────────────────────────────────────
 export * from "./schemas/builder.schemas";
+export * from "./schemas/stepper.schemas";
 
 // ── Provider / Context ───────────────────────────────────────────────────────
 export { ProductBuilderProvider, useBuilderContext } from "./components/ProductBuilderProvider";
+export { useProductBuilderStore } from "./store/useProductBuilderStore";
+export { BuilderErrorBoundary } from "./components/BuilderErrorBoundary";
+export { HydrationGuard } from "./components/HydrationGuard";
+
 
 // ── API Actions ──────────────────────────────────────────────────────────────
 export {

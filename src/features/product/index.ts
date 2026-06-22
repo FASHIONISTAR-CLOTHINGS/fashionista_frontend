@@ -200,8 +200,11 @@ export {
   BUILDER_STEPS,
   TOTAL_STEPS,
   builderProgress,
+  BuilderErrorBoundary,
+  HydrationGuard,
 } from "./builder";
 export type {
+
   ProductBuilderFormValues,
   Step1Values,
   Step2Values,

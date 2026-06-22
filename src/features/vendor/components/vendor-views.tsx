@@ -1,6 +1,7 @@
- "use client";
+"use client";
 
 import { FashionistarImage, FashionistarVideo } from "@/components/media";
+import { BuilderErrorBoundary, HydrationGuard } from "@/features/product";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -2011,7 +2012,11 @@ export function VendorProductComposerView() {
         className="min-w-0 rounded-3xl bg-white border border-[#ECE6D6] text-[#1A1208] p-4 sm:p-6 lg:p-8 shadow-sm relative overflow-hidden scroll-mt-8"
       >
         <ProductBuilderProvider vendorId={vendorId} onSubmit={handleBuilderSubmit}>
-          <ProductBuilder />
+          <BuilderErrorBoundary>
+            <HydrationGuard>
+              <ProductBuilder />
+            </HydrationGuard>
+          </BuilderErrorBoundary>
         </ProductBuilderProvider>
       </div>
     </div>
