@@ -31,17 +31,8 @@ export {
   CheckoutQuoteSchema,
 } from "./schemas/cart.schemas";
 
-// ── API ────────────────────────────────────────────────────────────────────
 export {
-  fetchCart,
-  addCartItem,
-  updateCartItem,
-  removeCartItem,
-  clearCart,
-  applyCoupon,
-  removeCoupon,
   mergeAnonymousCommerce,
-  prepareCheckout,
   submitCheckout,
 } from "./api/cart.api";
 
