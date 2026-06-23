@@ -195,22 +195,6 @@ export async function getCatalogBlogPostBySlug(slug: string): Promise<CatalogBlo
   return result.data;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Phase 11 — Homepage Bundle Server Function
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * @deprecated Use `getHomepageBundleV2()` instead.
- * This function is an alias kept for backward-compatibility only.
- * It now delegates to the v2 bundle endpoint (6 sections + banners).
- * Will be removed in the next major engineering cleanup sprint.
- *
- * @see getHomepageBundleV2
- */
-export async function getHomepageBundle(): Promise<HomepageBundle> {
-  return getHomepageBundleV2();
-}
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Phase C4 — Detail + Paginated Catalog Server Functions

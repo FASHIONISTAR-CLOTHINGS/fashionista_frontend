@@ -17,7 +17,6 @@
 import { useCallback, useId, useState, useEffect } from "react";
 import { Search, UserRound, ShoppingCart } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { FashionistarImage } from "@/components/media";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import AccountOptions from "@/components/shared/overlays/AccountOptions";
@@ -90,14 +89,15 @@ const NewNavbar = () => {
     >
       {/* ── Brand ─────────────────────────────────────────────────── */}
       <Link href="/" className="flex items-center gap-2 shrink-0">
-        <FashionistarImage
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src="/logo.svg"
-          alt="Fashionistar"
-          width={78}
-          height={76}
+          alt="Fashionistar logo"
+          width={50}
+          height={49}
           className="w-10 md:w-[50px] h-auto"
           style={{ height: "auto" }}
-          priority
+          loading="eager"
         />
         <span className="font-bon_foyage text-2xl md:text-3xl text-foreground">
           Fashionistar

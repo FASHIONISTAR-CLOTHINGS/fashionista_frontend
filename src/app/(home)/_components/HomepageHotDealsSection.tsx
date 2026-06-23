@@ -34,12 +34,12 @@ export function HomepageHotDealsSection({ products }: Props) {
 
   return (
     <div
-      className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
+      className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 items-stretch"
       role="list"
       aria-label="Hot deals this week"
     >
       {displayProducts.map((product, idx) => (
-        <div key={product.id} role="listitem">
+        <div key={product.id} role="listitem" className="h-full">
           <ProductCard
             card={product}
             index={idx + 1}

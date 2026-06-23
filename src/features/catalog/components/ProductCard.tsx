@@ -167,7 +167,7 @@ export default function ProductCard({
   return (
     <article
       className={`
-        group relative flex flex-col rounded-2xl overflow-hidden cursor-pointer
+        group relative flex flex-col h-full rounded-2xl overflow-hidden cursor-pointer
         product-card-glass animate-card-enter ${staggerClass}
       `}
       aria-label={`Product: ${card.title}`}

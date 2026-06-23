@@ -18,8 +18,6 @@ export {
   getCatalogBrands,
   getCatalogCategories,
   getCatalogCollections,
-  /** @deprecated — delegates to getHomepageBundleV2(). Will be removed next sprint. */
-  getHomepageBundle,
   // Phase B3 — homepage bundle v2 (6 parallel DB reads + banners) — SOLE bundle function
   getHomepageBundleV2,
   // Phase C4 — detail + paginated server functions

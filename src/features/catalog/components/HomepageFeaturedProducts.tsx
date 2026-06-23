@@ -97,12 +97,12 @@ export default function HomepageFeaturedProducts({ bundle, limit = 12 }: Props) 
 
       {/* ── Product Grid ────────────────────────────────────────────────── */}
       <div
-        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6"
+        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 items-stretch"
         role="list"
         aria-label="Featured products"
       >
         {products.map((card, idx) => (
-          <div key={card.id} role="listitem">
+          <div key={card.id} role="listitem" className="h-full">
             <ProductCard
               card={card}
               index={idx + 1}
