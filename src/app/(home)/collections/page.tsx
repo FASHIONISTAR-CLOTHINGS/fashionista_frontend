@@ -169,21 +169,21 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
       </section>
 
       {/* ── CTA ───────────────────────────────────────────────────────────── */}
-      <section className="bg-[#0D0D0D] px-4 py-16 md:px-8 lg:px-20">
+      <section className="bg-[var(--BV-cream)]/60 border-t border-[var(--BV-border)] px-4 py-16 md:px-8 lg:px-20">
         <div className="max-w-2xl mx-auto text-center space-y-5">
-          <p className="font-raleway text-sm font-semibold uppercase tracking-widest text-[#fda600]">
+          <p className="font-raleway text-sm font-semibold uppercase tracking-widest text-[#FDA600]">
             AI-Powered Fashion
           </p>
-          <h2 className="font-bon_foyage text-3xl text-white md:text-5xl">
+          <h2 className="font-bon_foyage text-3xl text-[#01454A] md:text-5xl">
             Your Perfect Fit, Every Time
           </h2>
-          <p className="font-raleway text-base text-white/70 leading-7">
+          <p className="font-raleway text-base text-[#01454A]/70 leading-7">
             Take your digital measurements in 60 seconds. Our AI matches you to the right size
             across every brand and collection on Fashionistar.
           </p>
           <Link
             href="/get-measured"
-            className="touch-target inline-block rounded-full bg-[#fda600] px-10 py-3.5 font-raleway text-sm font-bold text-black shadow-lg hover:bg-[#e09500] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
+            className="touch-target inline-block rounded-full bg-[#FDA600] px-10 py-3.5 font-raleway text-sm font-bold text-[#1A1208] shadow-lg hover:bg-[#e09500] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
           >
             Get Measured Free
           </Link>

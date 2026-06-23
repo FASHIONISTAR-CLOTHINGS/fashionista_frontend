@@ -580,9 +580,9 @@ const NewMobileNav = () => {
                   href={dashboardHref}
                   className={cn(
                     "block w-full text-center py-3 px-4 rounded-xl",
-                    "bg-foreground text-background",
-                    "font-raleway font-semibold hover:opacity-90 transition-opacity",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
+                    "bg-[#01454A] text-white",
+                    "font-raleway font-semibold hover:bg-[#012e31] transition-colors",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FDA600]",
                   )}
                 >
                   Open Dashboard
@@ -609,9 +609,9 @@ const NewMobileNav = () => {
                   href={signInHref}
                   className={cn(
                     "block w-full text-center py-3 px-4 rounded-xl",
-                    "bg-foreground text-background",
-                    "font-raleway font-semibold hover:opacity-90 transition-opacity",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
+                    "bg-[#01454A] text-white",
+                    "font-raleway font-semibold hover:bg-[#012e31] transition-colors",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FDA600]",
                   )}
                 >
                   Sign In

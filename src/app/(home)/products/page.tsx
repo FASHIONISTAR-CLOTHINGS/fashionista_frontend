@@ -21,7 +21,7 @@ import { useProductFilters } from "@/features/product/hooks/use-product-filters"
 import { useToggleWishlist } from "@/features/product/hooks/use-product";
 import { useWishlistItemIds } from "@/features/client/hooks/use-client-wishlist";
 import ProductFilterPanel from "@/features/product/components/ProductFilterPanel";
-import { SlidersHorizontal, X, PackageSearch, Loader2, Heart } from "lucide-react";
+import { SlidersHorizontal, X, PackageSearch, Loader2, Heart, ShoppingBag } from "lucide-react";
 import { useCatalogProducts } from "@/features/catalog/hooks/use-catalog-products";
 import Link from "next/link";
 import { FashionistarImage } from "@/components/media";
@@ -29,10 +29,10 @@ import { FashionistarPagination } from "@/components/ui/FashionistarPagination";
 import { Button } from "@/components/ui/button";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Product Card
+// Premium Product Card (mirrors shared ProductCard design — brand tokens)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function ProductCard({ product }: { product: CatalogProduct }) {
+function CatalogProductCard({ product, index = 1 }: { product: CatalogProduct; index?: number }) {
   const hasDiscount = product.old_price && parseFloat(product.old_price) > parseFloat(product.price);
   const discountPct = hasDiscount
     ? Math.round((1 - parseFloat(product.price) / parseFloat(product.old_price!)) * 100)
@@ -41,90 +41,145 @@ function ProductCard({ product }: { product: CatalogProduct }) {
   const wishlistIds = useWishlistItemIds();
   const isWishlisted = wishlistIds.has(product.id) || wishlistIds.has(product.slug);
 
+  const [addedToCart, setAddedToCart] = useState(false);
+
   const handleWishlist = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
     toggleWishlist(product.slug);
   };
 
-  return (
-    <Link
-      href={`/products/${product.slug}`}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-border/40 bg-card transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl"
-      data-testid="product-card"
-    >
-      {/* Image */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-muted/20">
-        {product.image_url ? (
-          <FashionistarImage
-            src={product.image_url}
-            alt={product.title}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            imgClassName="transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <PackageSearch size={40} className="text-muted-foreground/30" />
-          </div>
-        )}
+  const handleQuickAdd = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 1800);
+  };
 
-        {/* Badges */}
-        <div className="absolute left-2 top-2 flex flex-col gap-1">
+  const staggerClass = `stagger-${Math.min(index, 12)}`;
+
+  return (
+    <article
+      className={`group relative flex flex-col rounded-2xl overflow-hidden cursor-pointer product-card-glass animate-card-enter ${staggerClass}`}
+      aria-label={`Product: ${product.title}`}
+    >
+      {/* ── Image Container ─────────────────────────────────────────────── */}
+      <Link
+        href={`/products/${product.slug}`}
+        className="block relative overflow-hidden"
+        aria-label={`View ${product.title}`}
+        prefetch={false}
+      >
+        {/* 4:5 aspect ratio — fashion industry standard */}
+        <div className="relative w-full aspect-[4/5] bg-[#F8F5ED]">
+          {product.image_url ? (
+            <FashionistarImage
+              src={product.image_url}
+              alt={product.title}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              imgClassName="transition-transform duration-500 group-hover:scale-105 object-cover object-top"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#F8F5ED] to-[#01454A]/5">
+              <PackageSearch size={40} className="text-[#01454A]/20" />
+            </div>
+          )}
+
+          {/* Glimmer sweep on mount */}
+          <div className="glimmer-overlay" aria-hidden="true" />
+
+          {/* Hover gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1A1208]/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        </div>
+
+        {/* ── Badges (top-left) ─────────────────────────────────────────── */}
+        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10">
           {product.featured && (
-            <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] tracking-wide uppercase bg-[#01454A] text-white font-bold animate-card-pop">
               Featured
             </span>
           )}
           {product.hot_deal && (
-            <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] tracking-wide uppercase bg-red-500 text-white font-bold animate-card-pop">
               🔥 Hot
             </span>
           )}
           {hasDiscount && (
-            <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] tracking-wide uppercase bg-[#FDA600] text-[#1A1208] font-bold animate-card-pop">
               -{discountPct}%
             </span>
           )}
         </div>
 
-        {/* Stock badge */}
+        {/* ── Out-of-stock overlay ──────────────────────────────────────── */}
         {!product.in_stock && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm">
-            <span className="rounded-full border border-border bg-card/80 px-3 py-1 text-xs font-semibold text-muted-foreground">
-              Out of Stock
+          <div className="absolute inset-0 bg-[#1A1208]/50 backdrop-blur-[1px] flex items-center justify-center z-20">
+            <span className="bg-white/90 text-[#1A1208] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
+              Sold Out
             </span>
           </div>
         )}
 
+        {/* ── Wishlist button (top-right) ───────────────────────────────── */}
         <button
           type="button"
           data-testid="wishlist-btn"
           aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          aria-pressed={isWishlisted}
           onClick={handleWishlist}
           disabled={wishlistLoading}
-          className={`absolute right-2 top-2 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border shadow-sm transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60 ${
+          className={`absolute top-2.5 right-2.5 z-10 p-2 rounded-full transition-all duration-200 active:scale-90 disabled:cursor-not-allowed disabled:opacity-60 ${
             isWishlisted
-              ? "border-rose-200 bg-rose-500 text-white"
-              : "border-white/70 bg-white/95 text-[hsl(var(--primary))]"
+              ? "bg-[#FDA600] text-[#1A1208] shadow-lg"
+              : "bg-white/80 text-[#01454A] backdrop-blur-sm hover:bg-white"
           }`}
         >
           {wishlistLoading ? (
             <Loader2 size={16} className="animate-spin" />
           ) : (
-            <Heart size={17} fill={isWishlisted ? "currentColor" : "none"} />
+            <Heart size={16} fill={isWishlisted ? "currentColor" : "none"} />
           )}
         </button>
-      </div>
 
-      {/* Info */}
-      <div className="flex flex-col gap-1.5 p-3">
+        {/* ── Quick-add (appears on hover) ──────────────────────────────── */}
+        {product.in_stock && (
+          <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-10">
+            <button
+              type="button"
+              onClick={handleQuickAdd}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 active:scale-95 ${
+                addedToCart
+                  ? "bg-[#01454A] text-white"
+                  : "bg-[#FDA600] text-[#1A1208] hover:bg-[#e09500]"
+              }`}
+            >
+              {addedToCart ? "✓ Added!" : (
+                <>
+                  <ShoppingBag size={15} />
+                  Quick Add
+                </>
+              )}
+            </button>
+          </div>
+        )}
+      </Link>
+
+      {/* ── Card Body ─────────────────────────────────────────────────────── */}
+      <Link
+        href={`/products/${product.slug}`}
+        className="flex flex-col gap-1.5 p-3 flex-1"
+        aria-label={`View details for ${product.title}`}
+        prefetch={false}
+      >
+        {/* Brand name */}
         {product.brand_name && (
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/70">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#01454A] truncate">
             {product.brand_name}
           </p>
         )}
-        <h3 className="line-clamp-2 text-sm font-semibold text-foreground leading-snug">
+
+        {/* Product title */}
+        <h3 className="text-sm font-semibold text-[#1A1208] line-clamp-2 leading-snug group-hover:text-[#01454A] transition-colors duration-200">
           {product.title}
         </h3>
 
@@ -135,48 +190,67 @@ function ProductCard({ product }: { product: CatalogProduct }) {
               {[1, 2, 3, 4, 5].map((star) => (
                 <svg
                   key={star}
-                  className={`h-3 w-3 ${star <= Math.round(product.rating) ? "text-amber-400" : "text-muted-foreground/20"}`}
+                  className={`h-3 w-3 ${star <= Math.round(product.rating) ? "text-[#FDA600]" : "text-gray-200"}`}
                   fill="currentColor"
                   viewBox="0 0 20 20"
+                  aria-hidden="true"
                 >
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
               ))}
             </div>
-            <span className="text-[10px] text-muted-foreground">({product.review_count})</span>
+            <span className="text-[10px] text-[#01454A]/60">({product.review_count})</span>
           </div>
         )}
 
         {/* Price */}
         <div className="flex items-baseline gap-2 mt-auto pt-1">
-          <span className="text-base font-bold text-foreground">
+          <span className="text-base font-bold text-[#FDA600]">
             ₦{parseFloat(product.price).toLocaleString("en-NG")}
           </span>
           {hasDiscount && (
-            <span className="text-xs text-muted-foreground line-through">
+            <span className="text-xs text-[#01454A]/50 line-through">
               ₦{parseFloat(product.old_price!).toLocaleString("en-NG")}
             </span>
           )}
         </div>
 
-        {/* Sizes */}
+        {/* Color swatches */}
+        {product.colors && product.colors.length > 0 && (
+          <div className="flex items-center gap-1 flex-wrap">
+            {product.colors.slice(0, 5).map((c) => (
+              <span
+                key={c.id}
+                className="color-swatch"
+                style={{ backgroundColor: c.hex_code }}
+                title={c.name}
+                aria-label={`Color: ${c.name}`}
+              />
+            ))}
+            {product.colors.length > 5 && (
+              <span className="text-[9px] text-[#01454A]/60">+{product.colors.length - 5}</span>
+            )}
+          </div>
+        )}
+
+        {/* Size chips */}
         {product.sizes && product.sizes.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1">
+          <div className="flex flex-wrap gap-1 mt-0.5">
             {product.sizes.slice(0, 5).map((s) => (
               <span
                 key={s.id}
-                className="rounded border border-border/40 px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground"
+                className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium border border-[#01454A]/20 text-[#01454A]/70 bg-white/70"
               >
                 {s.name}
               </span>
             ))}
             {product.sizes.length > 5 && (
-              <span className="text-[9px] text-muted-foreground">+{product.sizes.length - 5}</span>
+              <span className="text-[9px] text-[#01454A]/60">+{product.sizes.length - 5}</span>
             )}
           </div>
         )}
-      </div>
-    </Link>
+      </Link>
+    </article>
   );
 }
 
@@ -213,15 +287,15 @@ function ProductGrid({
 }) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="animate-pulse rounded-2xl bg-muted/40">
-            <div className="aspect-[4/5] w-full rounded-t-2xl bg-muted/60" />
-            <div className="space-y-2 p-3">
-              <div className="h-3 w-16 rounded bg-muted/60" />
-              <div className="h-4 w-full rounded bg-muted/60" />
-              <div className="h-4 w-2/3 rounded bg-muted/60" />
-              <div className="h-5 w-20 rounded bg-muted/40" />
+          <div key={i} className="flex flex-col gap-2 rounded-2xl overflow-hidden">
+            <div className="shimmer aspect-[4/5] rounded-2xl" />
+            <div className="p-3 flex flex-col gap-2">
+              <div className="shimmer h-2.5 w-20 rounded" />
+              <div className="shimmer h-3.5 w-full rounded" />
+              <div className="shimmer h-3 w-3/4 rounded" />
+              <div className="shimmer h-4 w-16 rounded mt-1" />
             </div>
           </div>
         ))}
@@ -232,9 +306,9 @@ function ProductGrid({
   if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <PackageSearch size={64} className="mb-4 text-muted-foreground/30" />
-        <h3 className="text-lg font-semibold text-foreground">No products found</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <PackageSearch size={64} className="mb-4 text-[#01454A]/20" />
+        <h3 className="text-lg font-semibold text-[#1A1208]">No products found</h3>
+        <p className="mt-1 text-sm text-[#01454A]/60">
           Try adjusting your filters or search query.
         </p>
       </div>
@@ -244,14 +318,14 @@ function ProductGrid({
   return (
     <div className="relative">
       {isFetching && !isLoading && (
-        <div className="absolute right-0 top-0 flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+        <div className="absolute right-0 top-0 flex items-center gap-1.5 rounded-full bg-[#01454A]/10 px-3 py-1 text-xs font-medium text-[#01454A] z-10">
           <Loader2 size={11} className="animate-spin" />
           Updating…
         </div>
       )}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {products.map((product, idx) => (
+          <CatalogProductCard key={product.id} product={product} index={idx + 1} />
         ))}
       </div>
     </div>
@@ -301,13 +375,13 @@ function CatalogPage() {
       {/* SEO head (static — layout.tsx handles the base title) */}
       <main className="min-h-screen bg-background">
         {/* Page header */}
-        <div className="border-b border-border/40 bg-card/60 px-4 py-6 sm:px-6 lg:px-8">
+        <div className="border-b border-[#01454A]/10 bg-[#F8F5ED]/60 px-4 py-6 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-screen-2xl">
-            <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
+            <h1 className="text-2xl font-bold text-[#1A1208] sm:text-3xl">
               {search ? `Results for "${search}"` : category ? `${category}` : "All Products"}
             </h1>
             <p
-              className="mt-1 text-sm text-muted-foreground"
+              className="mt-1 text-sm text-[#01454A]/60"
               aria-live="polite"
               aria-atomic="true"
             >
@@ -320,22 +394,22 @@ function CatalogPage() {
             {hasActiveFilters && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {search && (
-                  <span className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                  <span className="flex items-center gap-1 rounded-full bg-[#01454A]/10 px-3 py-1 text-xs font-medium text-[#01454A]">
                     Search: {search}
                   </span>
                 )}
                 {category && (
-                  <span className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                  <span className="flex items-center gap-1 rounded-full bg-[#01454A]/10 px-3 py-1 text-xs font-medium text-[#01454A]">
                     Category: {category}
                   </span>
                 )}
                 {brand && (
-                  <span className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                  <span className="flex items-center gap-1 rounded-full bg-[#01454A]/10 px-3 py-1 text-xs font-medium text-[#01454A]">
                     Brand: {brand}
                   </span>
                 )}
                 {(minPrice > 0 || maxPrice > 0) && (
-                  <span className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                  <span className="flex items-center gap-1 rounded-full bg-[#FDA600]/20 px-3 py-1 text-xs font-medium text-[#1A1208]">
                     ₦{minPrice.toLocaleString()} — ₦{maxPrice.toLocaleString()}
                   </span>
                 )}

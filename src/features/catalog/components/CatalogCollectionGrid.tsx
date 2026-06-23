@@ -12,9 +12,13 @@
  * A collection groups vendors — not products.
  *
  * Grid: 1-col mobile → 2-col tablet → 3-col desktop
+ *
+ * Palette: mirrors the Category section — cream/white background, forest-green
+ * text accents, gold highlights. NO dark/black backgrounds.
  */
 
 import Link from "next/link";
+
 import { FashionistarImage } from "@/components/media";
 import { getCatalogCollections } from "../api/catalog.server";
 import type { HomepageCollectionCard } from "../types/catalog.types";
@@ -24,20 +28,11 @@ import type { HomepageCollectionCard } from "../types/catalog.types";
 // ─────────────────────────────────────────────────────────────────────────────
 
 function resolveCollectionImage(item: HomepageCollectionCard): string | null {
-  // Prefer Cloudinary URL (CDN-optimised, w_800)
   const candidates = [item.cloudinary_url, item.image_url, item.image];
   for (const c of candidates) {
     if (c && !c.endsWith("/media/None") && !c.endsWith("/media/null") && c !== "null") {
       return c;
     }
-  }
-  return null;
-}
-
-function resolveBackgroundImage(item: HomepageCollectionCard): string | null {
-  // Use background as a secondary hero image if present
-  if (item.background_image_url && !item.background_image_url.endsWith("/media/None")) {
-    return item.background_image_url;
   }
   return null;
 }
@@ -48,7 +43,7 @@ function resolveBackgroundImage(item: HomepageCollectionCard): string | null {
 
 export function CatalogCollectionGridSkeleton({ count = 3 }: { count?: number }) {
   return (
-    <section className="section-wrapper bg-[var(--BV-ink)]" aria-busy="true">
+    <section className="section-wrapper bg-[var(--BV-cream)]/40" aria-busy="true">
       <div className="flex items-end justify-between mb-8">
         <div>
           <div className="shimmer h-3 w-24 rounded mb-2" />
@@ -57,9 +52,9 @@ export function CatalogCollectionGridSkeleton({ count = 3 }: { count?: number })
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {Array.from({ length: count }).map((_, i) => (
-          <div key={i} className="rounded-2xl overflow-hidden">
+          <div key={i} className="rounded-2xl overflow-hidden border border-[#01454A]/10">
             <div className="shimmer aspect-[4/3]" />
-            <div className="p-4 flex flex-col gap-2">
+            <div className="p-4 flex flex-col gap-2 bg-white">
               <div className="shimmer h-3 w-20 rounded" />
               <div className="shimmer h-5 w-full rounded" />
               <div className="shimmer h-3 w-3/4 rounded" />
@@ -108,30 +103,27 @@ export default async function CatalogCollectionGrid({
 
   return (
     <section
-      className="section-wrapper bg-[var(--BV-ink)]"
+      className="section-wrapper bg-[var(--BV-cream)]/40"
       aria-labelledby="collections-heading"
       id="latest-collections"
     >
-      {/* ── Section Header (dark version) ───────────────────────────────── */}
+      {/* ── Section Header (light version — mirrors Category section) ──────── */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 animate-slide-up gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-[var(--BV-gold)] mb-1">
             Vendor Collections
           </p>
-          <h2
-            id="collections-heading"
-            className="section-title text-[var(--BV-cream)]"
-          >
+          <h2 id="collections-heading" className="section-title">
             Latest Collections
           </h2>
-          <p className="mt-1 text-sm text-[var(--BV-cream)]/60 max-w-md">
+          <p className="mt-1 text-sm text-[var(--BV-muted)] max-w-md">
             Curated vendor drops — ready-to-wear, custom tailoring, and premium showcases.
           </p>
         </div>
         {showCta && (
           <Link
             href="/collections"
-            className="text-sm font-semibold text-[var(--BV-gold)] hover:text-[var(--BV-gold-dark)] underline underline-offset-4 transition-colors duration-200 whitespace-nowrap"
+            className="text-sm font-semibold text-[#01454A] hover:text-[#012e31] underline underline-offset-4 decoration-[#FDA600] transition-colors duration-200 whitespace-nowrap"
             aria-label="View all vendor collections"
           >
             All collections →
@@ -141,24 +133,21 @@ export default async function CatalogCollectionGrid({
 
       {collections.length > 0 ? (
         <>
-          {/* ── Filter Pills ─────────────────────────────────────────────── */}
+          {/* ── Collection filter nav — horizontally scrollable on mobile ─── */}
           {navItems.length > 1 && (
             <div className="overflow-x-auto scroll-hide -mx-5 px-5 mb-8 sm:mx-0 sm:px-0">
               <nav
-                className="flex items-center gap-2 pb-1 min-w-max sm:flex-wrap sm:min-w-0"
-                aria-label="Filter by collection"
+                className="flex items-center gap-2 pb-1 min-w-max md:flex-wrap md:min-w-0"
+                aria-label="Collection filters"
               >
                 <Link
                   href="/"
                   scroll={false}
-                  className={`
-                    touch-target rounded-full border px-5 py-2 text-sm font-semibold
-                    whitespace-nowrap transition-all duration-200
-                    ${!selectedCollection
-                      ? "bg-[var(--BV-gold)] border-[var(--BV-gold)] text-[var(--BV-ink)]"
-                      : "border-[var(--BV-gold)]/40 text-[var(--BV-gold)] hover:bg-[var(--BV-gold)] hover:text-[var(--BV-ink)]"
-                    }
-                  `}
+                  className={`touch-target rounded-full border border-[#01454A] px-5 py-2 text-sm font-semibold whitespace-nowrap transition md:px-6 md:py-3 ${
+                    !selectedCollection
+                      ? "bg-[#01454A] text-white"
+                      : "text-[#01454A] hover:bg-[#01454A] hover:text-white"
+                  }`}
                 >
                   All
                 </Link>
@@ -167,14 +156,11 @@ export default async function CatalogCollectionGrid({
                     key={item.id}
                     href={`/?collection=${item.slug}`}
                     scroll={false}
-                    className={`
-                      touch-target rounded-full border px-5 py-2 text-sm font-semibold
-                      whitespace-nowrap transition-all duration-200
-                      ${selectedCollection === item.slug
-                        ? "bg-[var(--BV-gold)] border-[var(--BV-gold)] text-[var(--BV-ink)]"
-                        : "border-[var(--BV-gold)]/40 text-[var(--BV-gold)] hover:bg-[var(--BV-gold)] hover:text-[var(--BV-ink)]"
-                      }
-                    `}
+                    className={`touch-target rounded-full border border-[#01454A] px-5 py-2 text-sm font-semibold whitespace-nowrap transition md:px-6 md:py-3 ${
+                      selectedCollection === item.slug
+                        ? "bg-[#01454A] text-white"
+                        : "text-[#01454A] hover:bg-[#01454A] hover:text-white"
+                    }`}
                   >
                     {item.title}
                   </Link>
@@ -183,102 +169,57 @@ export default async function CatalogCollectionGrid({
             </div>
           )}
 
-          {/* ── Collection Cards ─────────────────────────────────────────── */}
-          <div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
-            role="list"
-            aria-label="Vendor collections"
-          >
+          {/* ── Collection cards grid ──────────────────────────────────────── */}
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((item, idx) => {
-              const heroSrc = resolveCollectionImage(item);
-              const bgSrc = resolveBackgroundImage(item);
-              const staggerClass = `stagger-${Math.min(idx + 1, 12)}`;
-
+              const imgSrc = resolveCollectionImage(item);
+              const staggerDelay = idx < 6 ? `stagger-${idx + 1}` : "";
               return (
                 <Link
                   key={item.id}
                   href={`/collections/${item.slug}`}
-                  role="listitem"
+                  className={`group relative flex flex-col overflow-hidden rounded-2xl border border-[#01454A]/10 bg-white shadow-sm hover:-translate-y-1 hover:shadow-xl transition-all duration-300 animate-card-enter ${staggerDelay}`}
                   data-testid="collection-card"
-                  aria-label={`View ${item.title} collection`}
-                  className={`
-                    group relative overflow-hidden rounded-2xl cursor-pointer
-                    animate-card-enter ${staggerClass}
-                    border border-white/5 hover:border-[var(--BV-gold)]/30
-                    transition-all duration-300
-                    shadow-xl shadow-black/20 hover:shadow-2xl hover:shadow-[var(--BV-gold)]/10
-                    hover:-translate-y-2
-                  `}
                 >
-                  {/* Hero image — 4:3 aspect ratio */}
-                  <div className="relative aspect-[4/3] overflow-hidden bg-[var(--BV-ink)]">
-                    {heroSrc ? (
+                  {/* Collection image */}
+                  <div className="relative h-56 w-full overflow-hidden bg-[#F8F5ED]">
+                    {imgSrc ? (
                       <FashionistarImage
-                        src={heroSrc}
+                        src={imgSrc}
                         alt={item.title}
                         fill
+                        transformation="card"
+                        objectFit="contain"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-108"
-                      />
-                    ) : bgSrc ? (
-                      <FashionistarImage
-                        src={bgSrc}
-                        alt={item.title}
-                        fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-108 opacity-60"
+                        imgClassName="p-6 group-hover:scale-105 transition-transform duration-500 object-contain"
                       />
                     ) : (
-                      /* Brand gradient fallback */
-                      <div className="absolute inset-0 bg-gradient-to-br from-[var(--BV-green)] to-[var(--BV-ink)]" />
+                      <div className="flex h-full items-center justify-center">
+                        <span className="text-5xl opacity-20" aria-hidden="true">👗</span>
+                      </div>
                     )}
-
-                    {/* Gradient vignette over image */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--BV-ink)] via-[var(--BV-ink)]/20 to-transparent" />
-
-                    {/* Gold "Collection" badge */}
-                    <span className="absolute top-4 right-4 bg-[var(--BV-gold)] text-[var(--BV-ink)] text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full animate-card-pop">
-                      Collection
-                    </span>
-
-                    {/* Glimmer sweep on mount */}
-                    <div className="glimmer-overlay" aria-hidden="true" />
+                    {/* Hover gradient overlay */}
+                    <div
+                      className="absolute inset-0 bg-gradient-to-t from-[#01454A]/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      aria-hidden="true"
+                    />
                   </div>
 
-                  {/* Card body */}
-                  <div className="relative bg-[var(--BV-ink)] p-5 space-y-2">
-                    {/* Sub-title / editorial label */}
-                    <p className="text-xs font-bold uppercase tracking-widest text-[var(--BV-gold)]">
-                      {item.sub_title || "Fashionistar Edit"}
+                  {/* Collection info */}
+                  <div className="flex flex-col gap-1.5 p-5">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#FDA600]">
+                      {item.sub_title || "Fashionistar Collection"}
                     </p>
-
-                    {/* Collection title */}
-                    <h3 className="text-lg font-semibold text-[var(--BV-cream)] leading-snug group-hover:text-white transition-colors duration-200">
+                    <h3 className="text-lg font-semibold text-[#1A1208] leading-snug group-hover:text-[#01454A] transition-colors duration-200">
                       {item.title}
                     </h3>
-
-                    {/* Description */}
-                    {item.description && (
-                      <p className="text-sm text-[var(--BV-cream)]/60 line-clamp-2 leading-relaxed">
-                        {item.description}
-                      </p>
-                    )}
-
-                    {/* Explore CTA */}
-                    <div className="flex items-center gap-1.5 pt-1">
-                      <span className="text-sm font-semibold text-[var(--BV-gold)] group-hover:text-[var(--BV-gold-dark)] transition-colors">
-                        Explore
-                      </span>
-                      <svg
-                        className="w-4 h-4 text-[var(--BV-gold)] transition-transform duration-200 group-hover:translate-x-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2.5}
-                        aria-hidden="true"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
+                    <p className="line-clamp-2 text-sm leading-6 text-[#01454A]/60">
+                      {item.description ||
+                        "A curated collection for precise fit and modern fashion commerce."}
+                    </p>
+                    <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-[#01454A]">
+                      <span>Explore collection</span>
+                      <span aria-hidden="true">→</span>
                     </div>
                   </div>
                 </Link>
@@ -287,21 +228,23 @@ export default async function CatalogCollectionGrid({
           </div>
         </>
       ) : (
-        <div className="rounded-3xl border border-dashed border-white/10 bg-white/5 px-6 py-14 text-center">
-          <p className="text-2xl font-bold text-[var(--BV-cream)]">Collections Coming Soon</p>
-          <p className="mt-2 text-sm text-[var(--BV-cream)]/50 max-w-sm mx-auto">
-            Vendor collections will appear here once they are published and live.
+        <div className="rounded-3xl border border-dashed border-[#01454A]/20 bg-[#F8F5ED]/60 px-6 py-14 text-center">
+          <p className="font-bon_foyage text-3xl text-[#01454A]">
+            Collections Will Appear Here Soon
+          </p>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#01454A]/60 md:text-base">
+            We only show live published collections on this surface. Once they are available, they
+            will appear here automatically.
           </p>
         </div>
       )}
 
-      {/* ── CTA ──────────────────────────────────────────────────────────── */}
-      {showCta && collections.length > 0 && (
-        <div className="flex justify-center mt-10">
+      {/* ── CTA ─────────────────────────────────────────────────────────────── */}
+      {showCta && (
+        <div className="flex justify-center mt-8">
           <Link
             href="/collections"
-            className="btn-gold px-10 py-3 text-sm"
-            aria-label="Browse all vendor collections"
+            className="touch-target rounded-full bg-[#01454A] px-8 py-4 text-base font-semibold text-white shadow-sm transition hover:bg-[#012e31] focus-visible:ring-2 focus-visible:ring-[#FDA600] md:text-lg"
           >
             See All Collections
           </Link>

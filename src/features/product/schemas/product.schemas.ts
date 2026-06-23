@@ -130,7 +130,10 @@ export const ProductFaqSchema = z
 export const ProductMeasurementGuideSchema = z
   .object({
     id: z.string().optional(),
-    size_label: z.enum(["XS", "S", "M", "L", "XL", "XXL", "Custom"]),
+    size_label: z.preprocess(
+      (v) => (v == null || v === "" ? undefined : v),
+      z.enum(["XS", "S", "M", "L", "XL", "XXL", "Custom"]).optional(),
+    ),
     chest_cm: z.string().optional().default(""),
     waist_cm: z.string().optional().default(""),
     hip_cm: z.string().optional().default(""),
@@ -207,7 +210,14 @@ export const ProductVariantGalleryMediaSchema = z
     id: IdSchema,
     public_id: z.string().nullable().optional(),
     sku: z.string(),
-    size: ProductMeasurementGuideSchema.nullable().optional(),
+    /**
+     * size can be:
+     *  - null / undefined  → no size selected
+     *  - { id, name }      → FK reference only (from gallery endpoint)
+     *  - full MeasurementGuide shape (from vendor product detail)
+     * Using z.any() + passthrough avoids all shape conflicts.
+     */
+    size: z.any().nullable().optional(),
     /** Direct text field — no FK. e.g. "Midnight Blue" */
     color_name: z.string().default(""),
     /** Direct hex field — e.g. "#1A1A4E" */

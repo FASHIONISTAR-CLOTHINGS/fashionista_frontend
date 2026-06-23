@@ -2,13 +2,20 @@
 
 /**
  * @file NewFooter.tsx
- * @description Canonical Fashionistar footer.
+ * @description Canonical Fashionistar footer — Forest Green Edition.
  *
  * Sections:
- *   1. Newsletter Band (white/light background)
- *   2. Dark Community Body — brand community CTA + address + account links + app stores
- *   3. Bottom copyright bar — brand + social icons + copyright
- *
+ *   1. Light Brand Band  — quick links + phone hours (white/cream background)
+ *   2. Forest-Green Community Body — brand CTA, address, account links, app stores
+ *   3. Bottom Bar — brand logo, social icons, copyright
+ * 
+ *  
+ ** Brand palette:
+ *   #01454A  — Forest Green (background)
+ *   #FDA600  — Gold (accents)
+ *   #F8F5ED  — Cream (text on dark)
+ *   #1A1208  — Ink (text on light)
+ * 
  * Improvements over v1:
  * - console.log() removed (was leaking PII in production)
  * - All hardcoded hex colors replaced with CSS design tokens
@@ -49,8 +56,6 @@ interface NewFooterProps {
   email?: string;
 }
 
-
-
 /**
  * NewFooter — Fashionistar canonical footer.
  *
@@ -80,7 +85,7 @@ const NewFooter = ({
     { label: "Influencers", href: "/contact-us" },
     { label: "Join our team", href: "/contact-us" },
   ];
- 
+
   const accountLinks = [
     { label: "Sign In", href: "/auth/sign-in" },
     { label: "View Cart", href: "/cart" },
@@ -96,19 +101,19 @@ const NewFooter = ({
 
   return (
     <footer className="text-foreground">
-      {/* ─── 1. Newsletter Band ──────────────────────────────────── */}
+
+      {/* ─── 1. Light Brand Band ─────────────────────────────────────────────── */}
       <div
         className="bg-background pt-8 md:pt-16 border-t border-border"
         style={{ boxShadow: "0px 4px 20px 0px hsl(var(--foreground) / 0.06)" }}
       >
-        {/* Quick link row */}
         <div className="w-full px-8 md:px-20 flex items-center gap-y-8 md:gap-4 flex-wrap justify-between py-8">
           <ul className="md:order-2 space-y-1">
             {quickCompanyLinks.map(({ label, href }) => (
               <li key={label}>
                 <Link
                   href={href}
-                  className="text-foreground/80 hover:text-[hsl(var(--accent))] text-lg md:text-xl font-raleway font-medium transition-colors"
+                  className="text-foreground/80 hover:text-[#01454A] text-lg md:text-xl font-raleway font-medium transition-colors"
                 >
                   {label}
                 </Link>
@@ -123,40 +128,41 @@ const NewFooter = ({
         </div>
       </div>
 
-      {/* ─── 2. Dark Community Body ──────────────────────────────── */}
-      <div className="bg-foreground w-full px-5 md:px-24 pt-16 pb-4 flex flex-col">
+      {/* ─── 2. Forest-Green Community Body ────────────────────────────────────── */}
+      <div className="bg-[#01454A] w-full px-5 md:px-24 pt-16 pb-4 flex flex-col">
         <div className="flex flex-wrap gap-8 justify-between items-start">
+
           {/* Left — brand + contact */}
           <div className="w-full md:w-[38%] flex flex-col gap-4 md:gap-7">
-            <h3 className="font-bon_foyage text-[35px] leading-[35px] md:text-[58px] md:leading-[58px] text-background">
-              <span className="text-[hsl(var(--accent))]">Join </span>The Largest{" "}
-              <span className="text-[hsl(var(--accent))]">Fashion</span> Community
+            <h3 className="font-bon_foyage text-[35px] leading-[35px] md:text-[58px] md:leading-[58px] text-[#F8F5ED]">
+              <span className="text-[#FDA600]">Join </span>The Largest{" "}
+              <span className="text-[#FDA600]">Fashion</span> Community
             </h3>
-            <p className="font-satoshi text-[15px] md:text-lg md:leading-6 text-background/60">
+            <p className="font-satoshi text-[15px] md:text-lg md:leading-6 text-[#F8F5ED]/70">
               Step into the world of innovation and style as you embark on a captivating fashion
               experience and journey to explore our collections.
             </p>
 
             {/* Address */}
             <address className="not-italic flex flex-col gap-3">
-              <p className="font-satoshi text-[15px] md:text-lg leading-6 text-background flex items-center gap-2">
-                <MapPin size={20} className="text-background/60 shrink-0" aria-hidden="true" />
+              <p className="font-satoshi text-[15px] md:text-lg leading-6 text-[#F8F5ED] flex items-center gap-2">
+                <MapPin size={20} className="text-[#F8F5ED]/60 shrink-0" aria-hidden="true" />
                 <strong>Address:</strong>&nbsp;{address}
               </p>
 
               <a
                 href={`tel:${phone.replace(/\s/g, "")}`}
-                className="font-satoshi text-[15px] md:text-lg leading-6 text-background flex items-center gap-2 hover:text-[hsl(var(--accent))] transition-colors"
+                className="font-satoshi text-[15px] md:text-lg leading-6 text-[#F8F5ED] flex items-center gap-2 hover:text-[#FDA600] transition-colors"
               >
-                <Phone size={20} className="text-background/60 shrink-0" aria-hidden="true" />
+                <Phone size={20} className="text-[#F8F5ED]/60 shrink-0" aria-hidden="true" />
                 <strong>Call Us:</strong>&nbsp;{phone}
               </a>
 
               <a
                 href={`mailto:${email}`}
-                className="font-satoshi text-[15px] md:text-lg leading-6 text-background flex items-center gap-2 hover:text-[hsl(var(--accent))] transition-colors"
+                className="font-satoshi text-[15px] md:text-lg leading-6 text-[#F8F5ED] flex items-center gap-2 hover:text-[#FDA600] transition-colors"
               >
-                <Mail size={20} className="text-background/60 shrink-0" aria-hidden="true" />
+                <Mail size={20} className="text-[#F8F5ED]/60 shrink-0" aria-hidden="true" />
                 <strong>Email:</strong>&nbsp;{email}
               </a>
             </address>
@@ -164,7 +170,7 @@ const NewFooter = ({
 
           {/* Center — Account links */}
           <div className="flex flex-col gap-4 md:gap-8">
-            <h3 className="text-background text-lg md:text-[32px] md:leading-[43px] font-medium font-satoshi">
+            <h3 className="text-[#F8F5ED] text-lg md:text-[32px] md:leading-[43px] font-medium font-satoshi">
               Account
             </h3>
             <ul className="flex flex-col gap-4 md:gap-6">
@@ -172,7 +178,7 @@ const NewFooter = ({
                 <li key={label}>
                   <Link
                     href={href}
-                    className="font-satoshi text-[15px] md:font-medium md:text-[20px] text-background/60 hover:text-[hsl(var(--accent))] transition-colors"
+                    className="font-satoshi text-[15px] md:font-medium md:text-[20px] text-[#F8F5ED]/70 hover:text-[#FDA600] transition-colors"
                   >
                     {label}
                   </Link>
@@ -183,10 +189,10 @@ const NewFooter = ({
 
           {/* Right — Install App */}
           <div className="w-1/2 md:w-[318px] flex flex-col gap-3 md:gap-7">
-            <h3 className="text-background text-lg md:text-[32px] md:leading-[43px] font-medium font-satoshi">
+            <h3 className="text-[#F8F5ED] text-lg md:text-[32px] md:leading-[43px] font-medium font-satoshi">
               Install App
             </h3>
-            <p className="font-satoshi text-[15px] md:text-lg text-background/60">
+            <p className="font-satoshi text-[15px] md:text-lg text-[#F8F5ED]/70">
               From Apple Store or Google Play Store
             </p>
 
@@ -194,7 +200,7 @@ const NewFooter = ({
             <span
               aria-label="App Store — Coming soon"
               title="Coming soon"
-              className="flex items-center gap-2 bg-black/80 border border-background/10 p-2 rounded-xl cursor-not-allowed opacity-60 select-none"
+              className="flex items-center gap-2 bg-[#012e31] border border-[#F8F5ED]/10 p-2 rounded-xl cursor-not-allowed opacity-70 select-none"
             >
               <svg width="45" height="45" viewBox="0 0 45 45" fill="none" aria-hidden="true">
                 <path
@@ -205,7 +211,7 @@ const NewFooter = ({
                 />
               </svg>
               <div className="flex flex-col gap-0.5">
-                <span className="text-[11px] md:text-sm text-background/60 font-satoshi">Download on the</span>
+                <span className="text-[11px] md:text-sm text-[#F8F5ED]/60 font-satoshi">Download on the</span>
                 <span className="text-white md:text-xl font-semibold font-satoshi">App Store</span>
               </div>
             </span>
@@ -214,7 +220,7 @@ const NewFooter = ({
             <span
               aria-label="Google Play — Coming soon"
               title="Coming soon"
-              className="flex items-center gap-2 bg-black/80 border border-background/10 p-2 rounded-xl cursor-not-allowed opacity-60 select-none"
+              className="flex items-center gap-2 bg-[#012e31] border border-[#F8F5ED]/10 p-2 rounded-xl cursor-not-allowed opacity-70 select-none"
             >
               <svg width="45" height="45" viewBox="0 0 45 45" fill="none" aria-hidden="true">
                 <path
@@ -223,30 +229,31 @@ const NewFooter = ({
                 />
               </svg>
               <div className="flex flex-col gap-0.5">
-                <span className="text-[11px] md:text-sm text-background/60 font-satoshi">Get it on</span>
+                <span className="text-[11px] md:text-sm text-[#F8F5ED]/60 font-satoshi">Get it on</span>
                 <span className="text-white md:text-xl font-semibold font-satoshi">Google Play</span>
               </div>
             </span>
 
             {/* Payment gateways */}
             <div>
-              <p className="font-satoshi font-medium text-[15px] md:text-[20px] text-background mb-2">
+              <p className="font-satoshi font-medium text-[15px] md:text-[20px] text-[#F8F5ED] mb-2">
                 Secured payment gateways
               </p>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-raleway font-bold text-sm text-foreground bg-background px-3 py-2 rounded-lg">
+                <span className="font-raleway font-bold text-sm text-[#01454A] bg-[#F8F5ED] px-3 py-2 rounded-lg">
                   Flutterwave
                 </span>
-                <span className="font-raleway font-bold text-sm text-foreground bg-background px-3 py-2 rounded-lg">
+                <span className="font-raleway font-bold text-sm text-[#01454A] bg-[#F8F5ED] px-3 py-2 rounded-lg">
                   Paystack
                 </span>
               </div>
             </div>
           </div>
+
         </div>
 
-        {/* ─── 3. Bottom Bar ──────────────────────────────────────── */}
-        <div className="flex flex-col md:flex-row border-t border-background/10 justify-between items-center pt-6 mt-10 gap-4">
+        {/* ─── 3. Bottom Bar ──────────────────────────────────────────────────── */}
+        <div className="flex flex-col md:flex-row border-t border-[#F8F5ED]/10 justify-between items-center pt-6 mt-10 gap-4">
           {/* Brand */}
           <div className="flex items-center gap-2">
             <FashionistarImage
@@ -257,13 +264,13 @@ const NewFooter = ({
               className="w-[46px] md:w-full h-auto"
               style={{ height: "auto" }}
             />
-            <span className="font-bon_foyage px-3 text-3xl md:text-4xl text-background">
+            <span className="font-bon_foyage px-3 text-3xl md:text-4xl text-[#F8F5ED]">
               Fashionistar
             </span>
           </div>
 
           {/* Copyright (desktop) */}
-          <p className="text-background/60 font-satoshi hidden md:block text-[15px] text-center leading-5">
+          <p className="text-[#F8F5ED]/60 font-satoshi hidden md:block text-[15px] text-center leading-5">
             © {year} Fashionistar. All rights reserved.
           </p>
 
@@ -279,14 +286,14 @@ const NewFooter = ({
                   aria-label={label}
                   className={cn(
                     "w-8 h-8 md:w-[45px] md:h-[45px]",
-                    "bg-[hsl(var(--accent))] flex justify-center items-center rounded-full",
-                    "hover:opacity-80 transition-opacity",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
+                    "bg-[#FDA600] flex justify-center items-center rounded-full",
+                    "hover:bg-[#e09500] transition-colors duration-200",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FDA600]",
                   )}
                 >
                   <Icon
                     size={18}
-                    className="text-[hsl(var(--accent-foreground))]"
+                    className="text-[#1A1208]"
                     aria-hidden="true"
                   />
                 </a>
@@ -295,11 +302,12 @@ const NewFooter = ({
           )}
 
           {/* Copyright (mobile) */}
-          <p className="text-background/60 font-satoshi md:hidden text-[13px] text-center leading-5">
+          <p className="text-[#F8F5ED]/60 font-satoshi md:hidden text-[13px] text-center leading-5">
             © {year} Fashionistar. All rights reserved.
           </p>
         </div>
       </div>
+
     </footer>
   );
 };
