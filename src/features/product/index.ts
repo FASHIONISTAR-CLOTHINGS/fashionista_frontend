@@ -169,9 +169,6 @@ export { useProductFilters } from "./hooks/use-product-filters";
 export { useProductStore } from "./store/product.store";
 
 // ── Components ─────────────────────────────────────────────────────────────
-export { default as ReviewCard } from "./components/ReviewCard";
-export { default as ReviewScroll } from "./components/ReviewScroll";
-export { default as WishlistTableCell } from "./components/WishlistTableCell";
 export { default as ProductCard } from "./components/ProductCard";
 export {
   default as ProductCardSkeleton,

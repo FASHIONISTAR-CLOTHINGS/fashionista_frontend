@@ -1,20 +1,17 @@
 /**
  * features/catalog/components/CatalogCollectionGrid.tsx
- * CatalogCollectionGrid.tsx — Premium 2026 Edition
+ * CatalogCollectionGrid.tsx — Premium Compact 2026 Edition
  *
- * RSC — "Latest Collections" hero grid.
- * Uses cloudinary_url (CDN w_800 fill) with image_url fallback.
- * Parallax-style scale + translate hover transform on collection hero images.
- * Staggered card-enter animation on mount — no Framer Motion.
+ * RSC — "Latest Collections" section.
+ * Now uses the SAME compact tile pattern as CatalogCategoryGrid:
+ *   - Grid: 3-col mobile → 4-col tablet → 6-col desktop
+ *   - Tile: small square image (w-14 h-14 → w-18 h-18 → w-20 h-20) + name below
+ *   - Staggered card-enter CSS animation — no Framer Motion
+ *   - product-card-glass background (identical to category tiles)
+ *   - Hover: border-gold, scale image, green underline accent
  *
  * Taxonomy note: COLLECTIONS are for VENDORS.
  * Vendors join collections to signal the fashion categories they specialise in.
- * A collection groups vendors — not products.
- *
- * Grid: 1-col mobile → 2-col tablet → 3-col desktop
- *
- * Palette: mirrors the Category section — cream/white background, forest-green
- * text accents, gold highlights. NO dark/black backgrounds.
  */
 
 import Link from "next/link";
@@ -38,10 +35,10 @@ function resolveCollectionImage(item: HomepageCollectionCard): string | null {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Skeleton
+// Skeleton (Suspense / PPR fallback) — mirrors CatalogCategoryGridSkeleton
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function CatalogCollectionGridSkeleton({ count = 3 }: { count?: number }) {
+export function CatalogCollectionGridSkeleton({ count = 6 }: { count?: number }) {
   return (
     <section className="section-wrapper bg-[var(--BV-cream)]/40" aria-busy="true">
       <div className="flex items-end justify-between mb-8">
@@ -50,15 +47,11 @@ export function CatalogCollectionGridSkeleton({ count = 3 }: { count?: number })
           <div className="shimmer h-8 w-56 rounded" />
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
         {Array.from({ length: count }).map((_, i) => (
-          <div key={i} className="rounded-2xl overflow-hidden border border-[#01454A]/10">
-            <div className="shimmer aspect-[4/3]" />
-            <div className="p-4 flex flex-col gap-2 bg-white">
-              <div className="shimmer h-3 w-20 rounded" />
-              <div className="shimmer h-5 w-full rounded" />
-              <div className="shimmer h-3 w-3/4 rounded" />
-            </div>
+          <div key={i} className="flex flex-col items-center gap-2 p-3 rounded-2xl">
+            <div className="shimmer w-14 h-14 sm:w-20 sm:h-20 rounded-2xl" />
+            <div className="shimmer h-3 w-14 rounded" />
           </div>
         ))}
       </div>
@@ -107,7 +100,7 @@ export default async function CatalogCollectionGrid({
       aria-labelledby="collections-heading"
       id="latest-collections"
     >
-      {/* ── Section Header (light version — mirrors Category section) ──────── */}
+      {/* ── Section Header (mirrors CatalogCategoryGrid header) ────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 animate-slide-up gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-[var(--BV-gold)] mb-1">
@@ -123,7 +116,7 @@ export default async function CatalogCollectionGrid({
         {showCta && (
           <Link
             href="/collections"
-            className="text-sm font-semibold text-[#01454A] hover:text-[#012e31] underline underline-offset-4 decoration-[#FDA600] transition-colors duration-200 whitespace-nowrap"
+            className="text-sm font-semibold text-[var(--BV-green)] hover:text-[var(--BV-green-light)] underline underline-offset-4 decoration-[var(--BV-gold)] transition-colors duration-200 whitespace-nowrap"
             aria-label="View all vendor collections"
           >
             All collections →
@@ -133,7 +126,7 @@ export default async function CatalogCollectionGrid({
 
       {collections.length > 0 ? (
         <>
-          {/* ── Collection filter nav — horizontally scrollable on mobile ─── */}
+          {/* ── Collection filter nav — scrollable on mobile ─────────────────── */}
           {navItems.length > 1 && (
             <div className="overflow-x-auto scroll-hide -mx-5 px-5 mb-8 sm:mx-0 sm:px-0">
               <nav
@@ -143,7 +136,7 @@ export default async function CatalogCollectionGrid({
                 <Link
                   href="/"
                   scroll={false}
-                  className={`touch-target rounded-full border border-[#01454A] px-5 py-2 text-sm font-semibold whitespace-nowrap transition md:px-6 md:py-3 ${
+                  className={`touch-target rounded-full border border-[#01454A] px-4 py-1.5 text-xs font-semibold whitespace-nowrap transition ${
                     !selectedCollection
                       ? "bg-[#01454A] text-white"
                       : "text-[#01454A] hover:bg-[#01454A] hover:text-white"
@@ -156,7 +149,7 @@ export default async function CatalogCollectionGrid({
                     key={item.id}
                     href={`/?collection=${item.slug}`}
                     scroll={false}
-                    className={`touch-target rounded-full border border-[#01454A] px-5 py-2 text-sm font-semibold whitespace-nowrap transition md:px-6 md:py-3 ${
+                    className={`touch-target rounded-full border border-[#01454A] px-4 py-1.5 text-xs font-semibold whitespace-nowrap transition ${
                       selectedCollection === item.slug
                         ? "bg-[#01454A] text-white"
                         : "text-[#01454A] hover:bg-[#01454A] hover:text-white"
@@ -169,82 +162,84 @@ export default async function CatalogCollectionGrid({
             </div>
           )}
 
-          {/* ── Collection cards grid ──────────────────────────────────────── */}
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {/* ── Collection tile grid — SAME pattern as CatalogCategoryGrid ─── */}
+          <div
+            className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4"
+            role="list"
+            aria-label="Vendor collections"
+          >
             {items.map((item, idx) => {
               const imgSrc = resolveCollectionImage(item);
-              const staggerDelay = idx < 6 ? `stagger-${idx + 1}` : "";
+              const staggerClass = `stagger-${Math.min(idx + 1, 12)}`;
+
               return (
                 <Link
                   key={item.id}
                   href={`/collections/${item.slug}`}
-                  className={`group relative flex flex-col overflow-hidden rounded-2xl border border-[#01454A]/10 bg-white shadow-sm hover:-translate-y-1 hover:shadow-xl transition-all duration-300 animate-card-enter ${staggerDelay}`}
+                  role="listitem"
                   data-testid="collection-card"
+                  aria-label={`Browse ${item.title} collection`}
+                  className={`
+                    group flex flex-col items-center gap-2.5 p-3 sm:p-4
+                    rounded-2xl text-center cursor-pointer
+                    product-card-glass animate-card-enter ${staggerClass}
+                    hover:border-[var(--BV-gold)]/40
+                    focus-visible:outline-2 focus-visible:outline-[var(--BV-green)] focus-visible:outline-offset-2
+                  `}
                 >
-                  {/* Collection image */}
-                  <div className="relative h-56 w-full overflow-hidden bg-[#F8F5ED]">
+                  {/* Collection image tile — identical dimensions to category tiles */}
+                  <div className="relative w-14 h-14 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-xl overflow-hidden bg-[var(--BV-surface)] flex-shrink-0">
                     {imgSrc ? (
                       <FashionistarImage
                         src={imgSrc}
                         alt={item.title}
                         fill
-                        transformation="card"
-                        objectFit="contain"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        imgClassName="p-6 group-hover:scale-105 transition-transform duration-500 object-contain"
+                        sizes="80px"
+                        className="object-contain p-1 group-hover:scale-110 transition-transform duration-300"
+                        showBlurUp={false}
                       />
                     ) : (
-                      <div className="flex h-full items-center justify-center">
-                        <span className="text-5xl opacity-20" aria-hidden="true">👗</span>
+                      /* Branded monogram fallback */
+                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[var(--BV-cream)] to-[var(--BV-green)]/10">
+                        <span className="text-lg font-bold text-[var(--BV-green)]/40">
+                          {item.title.charAt(0).toUpperCase()}
+                        </span>
                       </div>
                     )}
-                    {/* Hover gradient overlay */}
-                    <div
-                      className="absolute inset-0 bg-gradient-to-t from-[#01454A]/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                      aria-hidden="true"
-                    />
                   </div>
 
-                  {/* Collection info */}
-                  <div className="flex flex-col gap-1.5 p-5">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#FDA600]">
-                      {item.sub_title || "Fashionistar Collection"}
-                    </p>
-                    <h3 className="text-lg font-semibold text-[#1A1208] leading-snug group-hover:text-[#01454A] transition-colors duration-200">
-                      {item.title}
-                    </h3>
-                    <p className="line-clamp-2 text-sm leading-6 text-[#01454A]/60">
-                      {item.description ||
-                        "A curated collection for precise fit and modern fashion commerce."}
-                    </p>
-                    <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-[#01454A]">
-                      <span>Explore collection</span>
-                      <span aria-hidden="true">→</span>
-                    </div>
-                  </div>
+                  {/* Collection name */}
+                  <p className="text-xs sm:text-sm font-semibold text-[var(--BV-ink)] leading-tight group-hover:text-[var(--BV-green)] transition-colors duration-200 line-clamp-2">
+                    {item.title}
+                  </p>
+
+                  {/* Gold underline accent on hover — same as category tiles */}
+                  <span
+                    className="block h-0.5 w-0 group-hover:w-8 bg-[var(--BV-gold)] rounded-full transition-all duration-300"
+                    aria-hidden="true"
+                  />
                 </Link>
               );
             })}
           </div>
         </>
       ) : (
-        <div className="rounded-3xl border border-dashed border-[#01454A]/20 bg-[#F8F5ED]/60 px-6 py-14 text-center">
-          <p className="font-bon_foyage text-3xl text-[#01454A]">
-            Collections Will Appear Here Soon
-          </p>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#01454A]/60 md:text-base">
+        <div className="rounded-3xl border border-dashed border-[var(--BV-border)] bg-[var(--BV-surface)] px-6 py-14 text-center">
+          <p className="text-2xl font-bold text-[var(--BV-ink)]">Collections Will Appear Here Soon</p>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[var(--BV-muted)] md:text-base">
             We only show live published collections on this surface. Once they are available, they
             will appear here automatically.
           </p>
         </div>
       )}
 
-      {/* ── CTA ─────────────────────────────────────────────────────────────── */}
+      {/* ── CTA Button ──────────────────────────────────────────────────────── */}
       {showCta && (
-        <div className="flex justify-center mt-8">
+        <div className="flex justify-center mt-10">
           <Link
             href="/collections"
-            className="touch-target rounded-full bg-[#01454A] px-8 py-4 text-base font-semibold text-white shadow-sm transition hover:bg-[#012e31] focus-visible:ring-2 focus-visible:ring-[#FDA600] md:text-lg"
+            className="btn-primary px-10 py-3 text-sm"
+            aria-label="Browse all vendor collections"
           >
             See All Collections
           </Link>
