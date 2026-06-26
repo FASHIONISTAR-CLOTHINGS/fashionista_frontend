@@ -12,9 +12,6 @@ export type {
   MeasurementProfile,
   MeasurementUnit,
   CreateMeasurementProfileInput,
-  MirrorSizeImportInput,
-  MirrorSizeSession,
-  MirrorSizeSessionInput,
   UpdateMeasurementProfileInput,
 } from "./types/measurements.types";
 
@@ -23,8 +20,6 @@ export {
   MeasurementProfileSchema,
   MeasurementListEnvelopeSchema,
   MeasurementDetailEnvelopeSchema,
-  MirrorSizeSessionEnvelopeSchema,
-  MirrorSizeSessionSchema,
   parseMeasurementResponse,
 } from "./schemas/measurements.schemas";
 
@@ -34,11 +29,9 @@ export {
   fetchDefaultMeasurementProfile,
   fetchMeasurementProfileById,
   createMeasurementProfile,
-  createMirrorSizeSession,
   updateMeasurementProfile,
   setDefaultMeasurementProfile,
   deleteMeasurementProfile,
-  importMirrorSizeMeasurement,
 } from "./api/measurements.api";
 
 // ── TanStack Query Hooks ───────────────────────────────────────────────────────
@@ -47,25 +40,13 @@ export {
   useMeasurementProfiles,
   useDefaultMeasurementProfile,
   useCreateMeasurementProfile,
-  useCreateMirrorSizeSession,
   useUpdateMeasurementProfile,
   useSetDefaultProfile,
-  useDeleteMeasurementProfile,
-  useImportMirrorSizeMeasurement,
 } from "./hooks/use-measurements";
 
 // ── Components ─────────────────────────────────────────────────────────────────
 export { MeasurementProfilePanel } from "./components/MeasurementProfilePanel";
-export { MirrorSizeMeasurementFlow } from "./components/MirrorSizeMeasurementFlow";
-
-
-
-
-
-
-
-
-
+export { InHouseMeasurementFlow } from "./components/InHouseMeasurementFlow";
 
 export { MeasurementCard } from "@/features/measurements/components/MeasurementCard";
 export { BodyDiagram } from "@/features/measurements/components/BodyDiagram";

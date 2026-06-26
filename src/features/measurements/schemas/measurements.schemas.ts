@@ -64,17 +64,7 @@ export const MeasurementDetailEnvelopeSchema = z.object({
   data: MeasurementProfileSchema,
 });
 
-export const MirrorSizeSessionSchema = z.object({
-  provider: z.literal("mirrorsize").default("mirrorsize"),
-  access_code: z.string().min(1),
-  qr_code: z.string().default(""),
-  measurement_url: z.string().url(),
-});
 
-export const MirrorSizeSessionEnvelopeSchema = z.object({
-  status: z.string().optional(),
-  data: MirrorSizeSessionSchema,
-});
 
 /**
  * Parse and validate a measurements API response with safe error handling.

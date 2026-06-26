@@ -1,4 +1,4 @@
-import { MirrorSizeMeasurementFlow } from "@/features/measurements";
+import { InHouseMeasurementFlow } from "@/features/measurements";
 
 export default function GetMeasuredPage() {
   return (
@@ -9,7 +9,7 @@ export default function GetMeasuredPage() {
       <div className="grid gap-6 py-6 lg:grid-cols-[0.95fr_1.05fr]">
         <section className="space-y-4">
           <p className="font-raleway text-2xl text-black">
-            Watch the guide before starting your MirrorSize measurement session.
+            Watch the guide before starting your In-House AI measurement session.
           </p>
           <div
             className="relative h-[468px] w-full rounded-[8px] border-4 border-[#F4F5FB]"
@@ -28,7 +28,7 @@ export default function GetMeasuredPage() {
           <div className="rounded-[8px] bg-[#F4F5FB] px-4 py-3 font-satoshi text-base text-[#475367] md:text-lg">
             Save your measurements once and reuse them across custom fashion orders for a smoother, more accurate fitting experience.
           </div>
-          <MirrorSizeMeasurementFlow />
+          <InHouseMeasurementFlow />
         </section>
       </div>
     </main>

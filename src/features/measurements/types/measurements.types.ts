@@ -97,23 +97,7 @@ export interface CreateMeasurementProfileInput {
 /** Used internally for patch payloads — all fields optional */
 export type UpdateMeasurementProfileInput = Partial<CreateMeasurementProfileInput>;
 
-export interface MirrorSizeSessionInput {
-  name?: string;
-  email?: string;
-  mobile_no?: string;
-}
 
-export interface MirrorSizeSession {
-  provider: "mirrorsize";
-  access_code: string;
-  qr_code: string;
-  measurement_url: string;
-}
-
-export interface MirrorSizeImportInput {
-  access_code: string;
-  set_as_default?: boolean;
-}
 
 export interface BodyScanSession {
   id: string;

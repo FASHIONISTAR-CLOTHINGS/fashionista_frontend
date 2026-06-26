@@ -5,7 +5,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import { useCartStore } from "../store/cart.store";
@@ -51,7 +51,7 @@ async function getProductDetails(qc: any, productId: string, productSlug?: strin
 export function useCart() {
   const store = useCartStore();
   const subtotalNum = store.items.reduce((sum, item) => sum + parseFloat(item.unit_price) * item.quantity, 0);
-  const discountNum = store.applied_coupon ? parseFloat(store.applied_coupon.discount_amount) : 0;
+
 
   const cart: Cart = {
     id: "local-cart",

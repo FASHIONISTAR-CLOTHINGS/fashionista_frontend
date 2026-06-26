@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file measurements.api.ts
  * @description Measurements domain API client.
  *
@@ -12,15 +12,11 @@ import { unwrapApiData } from "@/core/api/response";
 import {
   MeasurementListEnvelopeSchema,
   MeasurementDetailEnvelopeSchema,
-  MirrorSizeSessionEnvelopeSchema,
   parseMeasurementResponse,
 } from "../schemas/measurements.schemas";
 import type {
   MeasurementProfile,
   CreateMeasurementProfileInput,
-  MirrorSizeImportInput,
-  MirrorSizeSession,
-  MirrorSizeSessionInput,
   UpdateMeasurementProfileInput,
 } from "../types/measurements.types";
 
@@ -149,27 +145,4 @@ export async function deleteMeasurementProfile(
   await apiSync.delete(`v1/measurements/${profileId}/`);
 }
 
-export async function createMirrorSizeSession(
-  input: MirrorSizeSessionInput,
-): Promise<MirrorSizeSession> {
-  const { data } = await apiSync.post<unknown>("v1/measurements/mirrorsize/session/", input);
-  const parsed = parseMeasurementResponse(
-    MirrorSizeSessionEnvelopeSchema,
-    { data: unwrapApiData(data) },
-    "createMirrorSizeSession",
-  );
-  return parsed.data as MirrorSizeSession;
-}
 
-export async function importMirrorSizeMeasurement(
-  input: MirrorSizeImportInput,
-): Promise<MeasurementProfile> {
-  const { data } = await apiSync.post<unknown>("v1/measurements/mirrorsize/import/", input);
-  const raw = { data: unwrapApiData(data) };
-  const parsed = parseMeasurementResponse(
-    MeasurementDetailEnvelopeSchema,
-    raw,
-    "importMirrorSizeMeasurement",
-  );
-  return parsed.data as MeasurementProfile;
-}

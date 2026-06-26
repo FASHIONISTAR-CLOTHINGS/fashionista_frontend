@@ -21,16 +21,12 @@ import {
   fetchMeasurementProfiles,
   fetchDefaultMeasurementProfile,
   createMeasurementProfile,
-  createMirrorSizeSession,
   updateMeasurementProfile,
   setDefaultMeasurementProfile,
   deleteMeasurementProfile,
-  importMirrorSizeMeasurement,
 } from "../api/measurements.api";
 import type {
   CreateMeasurementProfileInput,
-  MirrorSizeImportInput,
-  MirrorSizeSessionInput,
   UpdateMeasurementProfileInput,
 } from "../types/measurements.types";
 
@@ -46,7 +42,7 @@ export const measurementKeys = {
   profiles: () => [...measurementKeys.all, "profiles"] as const,
   default: () => [...measurementKeys.all, "default"] as const,
   detail: (id: string | number) => [...measurementKeys.all, "detail", id] as const,
-  mirrorsize: () => [...measurementKeys.all, "mirrorsize"] as const,
+
   list: () => [...measurementKeys.all, "list"] as const,
   lists: () => [...measurementKeys.all, "list"] as const,
   details: () => [...measurementKeys.all, "detail"] as const,
@@ -62,7 +58,7 @@ export const measurementListKeys = {
   list: (params?: Record<string, unknown>) => [...measurementKeys.lists(), params ?? {}] as const,
   details: () => [...measurementKeys.all, "detail"] as const,
   detail: (id: string) => [...measurementKeys.details(), id] as const,
-  mirrorsize: () => [...measurementKeys.all, "mirrorsize"] as const,
+
 } as const;
 
 // ─── READ HOOKS ───────────────────────────────────────────────────────────────
@@ -165,33 +161,7 @@ export function useDeleteMeasurementProfile() {
   });
 }
 
-export function useCreateMirrorSizeSession() {
-  return useMutation({
-    mutationFn: (input: MirrorSizeSessionInput) => createMirrorSizeSession(input),
-    onSuccess: () => {
-      toast.success("MirrorSize measurement session created.");
-    },
-    onError: (err: unknown) => {
-      const msg = err instanceof Error ? err.message : "Failed to start MirrorSize.";
-      toast.error(msg);
-    },
-  });
-}
 
-export function useImportMirrorSizeMeasurement() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (input: MirrorSizeImportInput) => importMirrorSizeMeasurement(input),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: measurementKeys.all });
-      toast.success("MirrorSize measurements imported.");
-    },
-    onError: (err: unknown) => {
-      const msg = err instanceof Error ? err.message : "Measurement is not available yet.";
-      toast.error(msg);
-    },
-  });
-}
 
 
 
