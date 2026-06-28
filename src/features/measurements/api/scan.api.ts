@@ -3,9 +3,12 @@
  * @description AI Body Scan API client — wraps the FASHIONISTAR dual-engine scan endpoints.
  *
  * Endpoint Routing:
- *  - DRF (sync/write):  POST /api/v1/measurements/scan/initiate/
- *  - DRF (sync/write):  POST /api/v1/measurements/scan/{id}/submit-landmarks/
- *  - Ninja (async/read): GET /api/v1/ninja/measurements/scan/{id}/status/
+ *  - DRF (sync/write):   POST /api/v1/measurements/scan/initiate/
+ *  - DRF (sync/write):   POST /api/v1/measurements/scan/{id}/submit-landmarks/
+ *  - Ninja (async/read): GET  /api/v1/ninja/ai/scan/{id}/status/
+ *
+ * NOTE: The status polling endpoint is under /api/v1/ninja/ai/ (NOT /ninja/measurements/).
+ * The AI Ninja router is mounted at /api/v1/ninja/ai/ in the main Ninja app config.
  */
 
 import { apiSync } from "@/core/api/client.sync";
@@ -51,9 +54,9 @@ export interface ScanStatusResponse {
   scan_confidence?: number;
   extracted_measurements?: Record<string, number | null>;
   error_message?: string;
+  measurement_profile_id?: string | number;
   processing_started_at?: string;
   completed_at?: string;
-  measurement_profile_id?: string | number;
 }
 
 // ─── API Functions ─────────────────────────────────────────────────────────────
@@ -102,9 +105,10 @@ export async function submitLandmarks(
 }
 
 /**
- * GET /api/v1/ninja/measurements/scan/{sessionId}/status/
+ * GET /api/v1/ninja/ai/scan/{sessionId}/status/
  *
  * Polls the scan session processing status.
+ * Mounted under the AI Ninja router at /api/v1/ninja/ai/ — NOT /ninja/measurements/.
  * Call every 2 seconds until status = 'completed' | 'failed'.
  *
  * @example
@@ -116,8 +120,10 @@ export async function submitLandmarks(
 export async function pollScanStatus(
   sessionId: string
 ): Promise<ScanStatusResponse> {
+  // The AI scan status endpoint lives under ai_router at /api/v1/ninja/ai/
+  // apiAsync base URL should be set to /api/v1/ninja/ so the path is ai/scan/...
   const raw = await apiAsync
-    .get(`measurements/scan/${sessionId}/status/`)
+    .get(`ai/scan/${sessionId}/status/`)
     .json<ScanStatusResponse>();
   return raw;
 }
