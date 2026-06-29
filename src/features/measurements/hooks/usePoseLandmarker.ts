@@ -40,18 +40,6 @@ interface PoseLandmarkerResult {
   segmentationMasks?: unknown[];
 }
 
-interface PoseLandmarkerOptions {
-  baseOptions: {
-    modelAssetPath: string;
-    delegate?: "GPU" | "CPU";
-  };
-  runningMode: "IMAGE" | "VIDEO" | "LIVE_STREAM";
-  numPoses?: number;
-  minPoseDetectionConfidence?: number;
-  minPosePresenceConfidence?: number;
-  minTrackingConfidence?: number;
-  outputSegmentationMasks?: boolean;
-}
 
 // Key landmark indices for quality scoring
 const KEY_LANDMARK_INDICES = [
@@ -123,12 +111,13 @@ export function usePoseLandmarker(): UsePoseLandmarkerReturn {
 
       const vision = await FilesetResolver.forVisionTasks(MEDIAPIPE_WASM_URL);
 
-      const options: PoseLandmarkerOptions = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const options: any = {
         baseOptions: {
           modelAssetPath: POSE_MODEL_URL,
           delegate: "GPU",  // auto-falls back to CPU on unsupported browsers
         },
-        runningMode: "VIDEO",
+        runningMode: "VIDEO" as const,
         numPoses: 1,
         minPoseDetectionConfidence: 0.65,
         minPosePresenceConfidence: 0.65,

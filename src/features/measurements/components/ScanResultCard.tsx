@@ -143,6 +143,13 @@ export function ScanResultCard({ result, onSaveEdit, className }: ScanResultCard
       {/* ── Actions ── */}
       <div className="flex gap-3">
         <button
+          onClick={() => setUnit(u => u === "cm" ? "inch" : "cm")}
+          className="rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10
+                     px-4 py-2.5 text-sm font-medium transition min-w-[72px]"
+        >
+          {unit === "cm" ? "CM" : "IN"}
+        </button>
+        <button
           onClick={handleCopyForTailor}
           className={cn(
             "flex-1 rounded-xl border px-4 py-2.5 text-sm font-medium transition flex items-center justify-center gap-2",

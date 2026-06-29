@@ -4,10 +4,10 @@
  *
  * Dual-Engine Strategy:
  *  - Ninja async → canonical reads via /api/v1/ninja/measurements/
- *  - DRF sync    → mutations and MirrorSize provider sessions
+ *  - DRF sync    → mutations and scan session writes
  */
 
-// ── Types ──────────────────────────────────────────────────────────────────────
+// ── Domain Types ───────────────────────────────────────────────────────────────
 export type {
   MeasurementProfile,
   MeasurementUnit,
@@ -42,38 +42,32 @@ export {
   useCreateMeasurementProfile,
   useUpdateMeasurementProfile,
   useSetDefaultProfile,
+  useMeasurements,
+  useMeasurement,
 } from "./hooks/use-measurements";
 
-// ── Components ─────────────────────────────────────────────────────────────────
-export { MeasurementProfilePanel } from "./components/MeasurementProfilePanel";
-export { InHouseMeasurementFlow } from "./components/InHouseMeasurementFlow";
+// ── UI Components ──────────────────────────────────────────────────────────────
+export { MeasurementProfilePanel }  from "./components/MeasurementProfilePanel";
+export { InHouseMeasurementFlow }   from "./components/InHouseMeasurementFlow";
+export { MeasurementCard }          from "./components/MeasurementCard";
+export { BodyDiagram }              from "./components/BodyDiagram";
 
-export { MeasurementCard } from "@/features/measurements/components/MeasurementCard";
-export { BodyDiagram } from "@/features/measurements/components/BodyDiagram";
-export { useMeasurements, useMeasurement } from "@/features/measurements/hooks/use-measurements";
-
-
-
-
-// ── Admin Dashboard ────────────────────────────────────────────────────────────
-
-
-// ── AI Camera Scan (In-House Measurement Engine) ───────────────────────────────
-export { AICameraCapture }        from "./components/AICameraCapture";
-export { PoseOverlay }            from "./components/PoseOverlay";
-export { CalibrationGuide }       from "./components/CalibrationGuide";
+// ── AI Camera Scan Components ──────────────────────────────────────────────────
+export { AICameraCapture }           from "./components/AICameraCapture";
+export { PoseOverlay }               from "./components/PoseOverlay";
+export { CalibrationGuide }          from "./components/CalibrationGuide";
 export { MeasurementProgress, MeasurementProgressPill }
-                                  from "./components/MeasurementProgress";
-export { MeasurementProfileCard } from "./components/MeasurementProfileCard";
-export { ScanResultCard }         from "./components/ScanResultCard";
+                                     from "./components/MeasurementProgress";
+export { MeasurementProfileCard }    from "./components/MeasurementProfileCard";
+export { ScanResultCard }            from "./components/ScanResultCard";
 
 // ── AI Scan Hooks ──────────────────────────────────────────────────────────────
-export { usePoseLandmarker }      from "./hooks/usePoseLandmarker";
-export { useMeasurementCapture }  from "./hooks/useMeasurementCapture";
-export { useScanSession }         from "./hooks/useScanSession";
+export { usePoseLandmarker }         from "./hooks/usePoseLandmarker";
+export { useMeasurementCapture }     from "./hooks/useMeasurementCapture";
+export { useScanSession }            from "./hooks/useScanSession";
 
 // ── AI Scan API ────────────────────────────────────────────────────────────────
-export * as scanApi               from "./api/scan.api";
+export * as scanApi                  from "./api/scan.api";
 
 // ── Landmark math & unit conversion utils ──────────────────────────────────────
 export {
@@ -89,6 +83,22 @@ export {
 } from "./utils/landmarkToMeasurement";
 
 // ── AI-specific types ──────────────────────────────────────────────────────────
-export type { ScanProgressPhase } from "./components/MeasurementProgress";
+export type { ScanProgressPhase }   from "./components/MeasurementProgress";
 export type { ExtractedMeasurements, WorldLandmark }
-                                  from "./utils/landmarkToMeasurement";
+                                    from "./utils/landmarkToMeasurement";
+
+// ── Q5: Full AICameraCapture flow types ────────────────────────────────────────
+// All types needed to consume or extend the AI camera scan flow externally.
+export type {
+  CapturePhase,
+  CaptureFrame,
+  UseMeasurementCaptureReturn,
+} from "./hooks/useMeasurementCapture";
+
+export type {
+  ScanStatusResponse,
+  ScanSessionResponse,
+  ScanInitPayload,
+  LandmarkSubmitPayload,
+  LandmarkPoint,
+} from "./api/scan.api";

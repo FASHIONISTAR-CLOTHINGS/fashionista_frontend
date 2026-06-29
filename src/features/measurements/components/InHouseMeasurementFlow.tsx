@@ -1,224 +1,226 @@
 "use client";
+/**
+ * @file InHouseMeasurementFlow.tsx
+ * @description Full AI Body Scan orchestration component (Production Implementation).
+ *
+ * PRODUCTION IMPLEMENTATION — replaces the previous photo-upload stub.
+ *
+ * Flow:
+ *   1. Intro card — explains the scan process, shows requirements
+ *   2. AICameraCapture — real-time MediaPipe pose detection + submission
+ *   3. Processing state — shows animated progress while Celery processes
+ *   4. Success state — shows profile ID and links to profile
+ *
+ * Integration:
+ *   - Uses useMeasurementCapture hook (MediaPipe + session lifecycle)
+ *   - Calls /api/v1/measurements/scan/initiate/ (DRF POST)
+ *   - Polls /api/v1/ninja/ai/scan/{id}/status/ (Ninja GET)
+ *   - On complete: calls onComplete(profileId) for router.push
+ *
+ * Props:
+ *   onComplete(profileId) — called when scan saves measurement profile
+ *   onCancel()            — called when user clicks Cancel
+ */
 
-import { useState } from "react";
-import { Camera, CheckCircle2, Loader2, Ruler, Shirt, Sun, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useCallback } from "react";
+import { AICameraCapture } from "./AICameraCapture";
+import { cn } from "@/lib/utils";
 
-export function InHouseMeasurementFlow() {
-  const [step, setStep] = useState(1); // 1: Guidance, 2: Upload Front, 3: Upload Side, 4: Processing
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [frontPhoto, setFrontPhoto] = useState<File | null>(null);
-  const [sidePhoto, setSidePhoto] = useState<File | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+// ─── Icons (inline SVG — zero dependency) ─────────────────────────────────────
 
-  const handleNextStep = () => {
-    if (step === 1) {
-      if (!name || !email) {
-        alert("Please enter your name and email.");
-        return;
-      }
-      setStep(2);
-    }
-  };
+const IconCheck    = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>;
+const IconCamera   = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><circle cx="12" cy="13" r="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} /></svg>;
+const IconRuler    = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6h18M3 12h18M3 18h18" /></svg>;
+const IconStar     = () => <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>;
 
-  const handleFrontUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFrontPhoto(e.target.files[0]);
-      setStep(3);
-    }
-  };
+// ─── Flow phases ──────────────────────────────────────────────────────────────
 
-  const handleSideUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSidePhoto(e.target.files[0]);
-      setStep(4);
-      // Simulate processing
-      setIsSubmitting(true);
-      setTimeout(() => {
-        setIsSubmitting(false);
-        setStep(5); // Success
-      }, 3000);
-    }
-  };
+type FlowPhase = "intro" | "scanning" | "success";
 
-  return (
-    <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-      {step === 1 && (
-        <form
-          onSubmit={(e) => { e.preventDefault(); handleNextStep(); }}
-          className="rounded-[8px] border border-[#E5E7EB] bg-white p-6 shadow-card_shadow space-y-4"
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-[8px] bg-[#FDA600]/10 text-[#FDA600]">
-              <Ruler size={20} />
-            </div>
-            <div>
-              <p className="text-lg font-semibold text-black">Get measured with In-House AI Scan</p>
-              <p className="text-sm text-[#5A6465]">Provide your name and email to start our AI-guided photo measurement session.</p>
-            </div>
+// ─── Props ────────────────────────────────────────────────────────────────────
+
+interface InHouseMeasurementFlowProps {
+  /** Called when scan completes and measurement profile is saved. */
+  onComplete?: (profileId: string | number | null) => void;
+  /** Called when user cancels. */
+  onCancel?: () => void;
+  className?: string;
+}
+
+// ─── Requirements checklist ───────────────────────────────────────────────────
+
+const REQUIREMENTS = [
+  "Wear fitted clothing (no baggy tops or skirts)",
+  "Stand in a well-lit area with a plain background",
+  "Allow camera permission when prompted",
+  "Stand 1.5–2 metres from your device",
+  "Your full body must be visible — head to toe",
+];
+
+const MEASUREMENT_LIST = [
+  "Bust", "Waist", "Hips", "Shoulder Width",
+  "Arm Length", "Inseam", "Thigh", "Height",
+  "Neck", "Wrist", "Knee", "Ankle",
+];
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export function InHouseMeasurementFlow({
+  onComplete,
+  onCancel,
+  className,
+}: InHouseMeasurementFlowProps) {
+  const [phase, setPhase]         = useState<FlowPhase>("intro");
+  const [profileId, setProfileId] = useState<string | number | null>(null);
+
+  const handleScanComplete = useCallback(
+    (id: string | number | null) => {
+      setProfileId(id);
+      setPhase("success");
+      onComplete?.(id);
+    },
+    [onComplete]
+  );
+
+  const handleScanCancel = useCallback(() => {
+    setPhase("intro");
+    onCancel?.();
+  }, [onCancel]);
+
+  // ── INTRO PHASE ─────────────────────────────────────────────────────────────
+  if (phase === "intro") {
+    return (
+      <div className={cn("flex flex-col gap-6", className)}>
+
+        {/* Header badge */}
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-violet-500/15 flex items-center justify-center text-violet-400 ring-1 ring-violet-500/20">
+            <IconRuler />
           </div>
-
-          <div className="grid gap-4 mt-4">
-            <Field label="Full Name" value={name} onChange={setName} placeholder="Your name" />
-            <Field label="Email" value={email} onChange={setEmail} placeholder="you@example.com" type="email" />
+          <div>
+            <h2 className="text-xl font-bold text-white tracking-tight">
+              In-House AI Body Scan
+            </h2>
+            <p className="text-sm text-white/50">
+              30 seconds · 14 measurements · 100% private
+            </p>
           </div>
-
-          <Button
-            type="submit"
-            className="w-full h-12 bg-[#FDA600] flex items-center justify-center gap-2 rounded-[8px] px-5 text-sm font-bold text-white mt-6"
-          >
-            Start Scanning Session
-          </Button>
-        </form>
-      )}
-
-      {step >= 2 && step <= 4 && (
-        <div className="rounded-[8px] border border-[#E5E7EB] bg-white p-6 shadow-card_shadow space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-black">AI Scan Progress</h3>
-            <span className="text-xs font-bold uppercase tracking-widest text-[#FDA600] bg-[#FDA600]/10 px-2.5 py-1 rounded-full">
-              Step {step - 1} of 2
-            </span>
-          </div>
-
-          {step === 2 && (
-            <div className="space-y-4">
-              <p className="text-sm text-[#5A6465]">
-                Please upload or capture a **Front-view** photo standing upright with your arms slightly away from your torso.
-              </p>
-              <div className="border-2 border-dashed border-[#E5E7EB] rounded-[8px] p-8 text-center flex flex-col items-center justify-center hover:border-[#FDA600] transition-colors relative cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFrontUpload}
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                />
-                <Camera className="text-[#FDA600] mb-3" size={32} />
-                <span className="text-sm font-semibold text-black">Click to Capture / Upload Front Photo</span>
-                <span className="text-xs text-[#858585] mt-1">Supports JPEG, PNG</span>
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-4">
-              <p className="text-sm text-[#5A6465]">
-                Please upload or capture a **Side-view** photo standing at a 90-degree angle to the camera.
-              </p>
-              <div className="border-2 border-dashed border-[#E5E7EB] rounded-[8px] p-8 text-center flex flex-col items-center justify-center hover:border-[#FDA600] transition-colors relative cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleSideUpload}
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                />
-                <Camera className="text-[#FDA600] mb-3" size={32} />
-                <span className="text-sm font-semibold text-black">Click to Capture / Upload Side Photo</span>
-                <span className="text-xs text-[#858585] mt-1">Supports JPEG, PNG</span>
-              </div>
-            </div>
-          )}
-
-          {step === 4 && (
-            <div className="flex flex-col items-center justify-center py-10 text-center space-y-4">
-              <Loader2 className="animate-spin text-[#FDA600]" size={42} />
-              <p className="text-lg font-semibold text-black">Analyzing Sizing Photos...</p>
-              <p className="text-sm text-[#5A6465] max-w-sm">
-                Our in-house AI vision engine (ViTPose-B) is extracting whole-body keypoints from {frontPhoto?.name} and {sidePhoto?.name} to compute accurate tailor measurements. Status: {isSubmitting ? "Processing" : "Idle"}.
-              </p>
-            </div>
-          )}
         </div>
-      )}
 
-      {step === 5 && (
-        <div className="rounded-[8px] border border-[#E5E7EB] bg-white p-6 shadow-card_shadow flex flex-col items-center justify-center py-12 text-center space-y-4">
-          <CheckCircle2 className="text-emerald-500" size={56} />
-          <p className="text-xl font-bold text-black">Measurements Extracted!</p>
-          <p className="text-sm text-[#5A6465] max-w-md">
-            Your body scan profile has been successfully processed and verified. These measurements will now be applied to custom orders.
+        {/* Measurement preview */}
+        <div className="rounded-2xl bg-white/5 border border-white/8 p-5">
+          <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">
+            What We Measure
           </p>
-          <Button
-            onClick={() => setStep(1)}
-            className="bg-black text-white px-6 h-11 rounded-[8px] font-bold mt-4"
+          <div className="grid grid-cols-3 gap-2">
+            {MEASUREMENT_LIST.map((m) => (
+              <div key={m} className="flex items-center gap-1.5">
+                <span className="text-violet-400"><IconStar /></span>
+                <span className="text-xs text-white/70">{m}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Requirements */}
+        <div className="rounded-2xl bg-white/5 border border-white/8 p-5">
+          <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">
+            Before You Start
+          </p>
+          <ul className="flex flex-col gap-2">
+            {REQUIREMENTS.map((req) => (
+              <li key={req} className="flex items-start gap-2.5">
+                <span className="mt-0.5 text-emerald-400 shrink-0"><IconCheck /></span>
+                <span className="text-sm text-white/70">{req}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Privacy note */}
+        <div className="rounded-xl bg-blue-500/8 border border-blue-500/15 px-4 py-3 flex items-start gap-3">
+          <svg className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          </svg>
+          <p className="text-xs text-blue-300/80">
+            <strong className="text-blue-300">100% Private.</strong> Only pose coordinates are transmitted — no video
+            or images are recorded or stored on our servers.
+          </p>
+        </div>
+
+        {/* CTA buttons */}
+        <div className="flex gap-3">
+          {onCancel && (
+            <button
+              onClick={onCancel}
+              className="flex-1 rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10
+                         font-semibold text-sm py-3 transition-colors"
+            >
+              Cancel
+            </button>
+          )}
+          <button
+            onClick={() => setPhase("scanning")}
+            className="flex-1 rounded-xl bg-violet-600 hover:bg-violet-500 text-white
+                       font-semibold text-sm py-3 transition-colors flex items-center justify-center gap-2"
           >
-            Start New Scan
-          </Button>
+            <IconCamera />
+            Start AI Scan
+          </button>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {/* Pre-Scan Tooltips / Guidelines Panel */}
-      <section className="rounded-[8px] border border-[#E5E7EB] bg-white p-6 shadow-card_shadow space-y-6">
-        <div>
-          <p className="text-lg font-semibold text-black">Scanning Guidelines</p>
-          <p className="mt-1 text-sm text-[#5A6465]">Follow these rules to ensure 100% measurement accuracy.</p>
-        </div>
-
-        <div className="grid gap-4">
-          <TooltipTip
-            icon={<Shirt className="text-[#FDA600]" size={18} />}
-            title="Wear Activewear"
-            body="Loose clothing adds up to 3 inches of error. Wear tight-fitting garments or activewear."
-          />
-          <TooltipTip
-            icon={<Sun className="text-[#FDA600]" size={18} />}
-            title="Even Lighting"
-            body="Stand in bright, uniform lighting. Avoid backlighting or strong shadows."
-          />
-          <TooltipTip
-            icon={<User className="text-[#FDA600]" size={18} />}
-            title="Standing Posture"
-            body="Stand upright, feet shoulder-width apart, arms slightly away from the torso."
-          />
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-  type?: string;
-}) {
-  return (
-    <label className="block">
-      <span className="text-xs font-bold uppercase tracking-widest text-[#858585]">{label}</span>
-      <input
-        type={type}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        className="mt-2 h-11 w-full rounded-[8px] border border-[#E5E7EB] px-3 text-sm text-black outline-none focus:border-[#FDA600]"
+  // ── SCANNING PHASE ──────────────────────────────────────────────────────────
+  if (phase === "scanning") {
+    return (
+      <AICameraCapture
+        className={className}
+        onComplete={handleScanComplete}
+        onCancel={handleScanCancel}
       />
-    </label>
-  );
-}
+    );
+  }
 
-function TooltipTip({
-  icon,
-  title,
-  body,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  body: string;
-}) {
+  // ── SUCCESS PHASE ───────────────────────────────────────────────────────────
   return (
-    <div className="flex gap-3 items-start p-3 bg-[#F8F9FC] rounded-[8px]">
-      <div className="mt-0.5">{icon}</div>
-      <div>
-        <p className="text-sm font-semibold text-black">{title}</p>
-        <p className="text-xs text-[#5A6465] mt-0.5 leading-relaxed">{body}</p>
+    <div className={cn("flex flex-col items-center gap-6 py-8 text-center", className)}>
+      <div className="w-20 h-20 rounded-full bg-emerald-500/15 ring-4 ring-emerald-500/25
+                      flex items-center justify-center text-emerald-400 animate-bounce-once">
+        <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <h3 className="text-xl font-bold text-white">Measurements Saved!</h3>
+        <p className="text-sm text-white/50 max-w-xs mx-auto">
+          Your AI body scan is complete. Your measurement profile is ready
+          for size recommendations and perfect fit.
+        </p>
+        {profileId && (
+          <p className="text-xs text-white/30 mt-1">Profile ID: {profileId}</p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-3 w-full max-w-xs">
+        {profileId && (
+          <a
+            href={`/client/dashboard/measurements/${profileId}`}
+            className="rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold
+                       text-sm py-3 transition-colors text-center"
+          >
+            View My Measurements
+          </a>
+        )}
+        <button
+          onClick={() => setPhase("intro")}
+          className="rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10
+                     font-semibold text-sm py-3 transition-colors"
+        >
+          Scan Again
+        </button>
       </div>
     </div>
   );

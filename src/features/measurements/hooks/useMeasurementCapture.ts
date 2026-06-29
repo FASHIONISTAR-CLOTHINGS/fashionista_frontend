@@ -264,10 +264,15 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
         return;
       }
 
-      // Submit to backend
+      // Submit to backend — map Landmark (visibility?: number) → LandmarkPoint (visibility: number)
       await scanSession.submit({
         user_height_cm: height,
-        landmarks:      lms,
+        landmarks:      lms.map((l) => ({
+          x:          l.x,
+          y:          l.y,
+          z:          l.z,
+          visibility: l.visibility ?? 0,
+        })),
         device_type:    "web",
       });
 
