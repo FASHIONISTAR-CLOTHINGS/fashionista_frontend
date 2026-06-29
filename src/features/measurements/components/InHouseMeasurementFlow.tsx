@@ -39,7 +39,7 @@ type FlowPhase = "intro" | "scanning" | "success";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
-interface InHouseMeasurementFlowProps {
+export interface InHouseMeasurementFlowProps {
   /** Called when scan completes and measurement profile is saved. */
   onComplete?: (profileId: string | number | null) => void;
   /** Called when user cancels. */

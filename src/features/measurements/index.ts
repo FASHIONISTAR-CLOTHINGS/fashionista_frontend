@@ -102,3 +102,7 @@ export type {
   LandmarkSubmitPayload,
   LandmarkPoint,
 } from "./api/scan.api";
+
+// ── Component prop types (for external wrappers / mobile adapters) ──────────────
+export type { AICameraCaptureProps }       from "./components/AICameraCapture";
+export type { InHouseMeasurementFlowProps } from "./components/InHouseMeasurementFlow";

@@ -30,7 +30,7 @@ const IconRuler     = () => <svg className="w-5 h-5" fill="none" stroke="current
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
-interface AICameraCaptureProps {
+export interface AICameraCaptureProps {
   /** Called when measurements are saved. Receives the new MeasurementProfile ID. */
   onComplete?: (profileId: string | number | null) => void;
   /** Called when user cancels. */
