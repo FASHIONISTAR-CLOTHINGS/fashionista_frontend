@@ -33,6 +33,7 @@ import {
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import { useCart, useSubmitCheckout } from "@/features/cart/hooks/use-cart";
+import { useAuthStore } from "@/features/auth/store/auth.store";
 import { formatCurrency } from "@/lib/formatting";
 import {
   AddressReferenceField,
@@ -154,6 +155,8 @@ export function CheckoutPage() {
   const [mounted, setMounted] = useState(false);
 
   const { data: cart, isLoading } = useCart();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
   const { mutate: submit, isPending: submitting } = useSubmitCheckout(
     (orderId, paymentUrl) => {
       if (paymentUrl) {
@@ -163,6 +166,13 @@ export function CheckoutPage() {
       }
     },
   );
+
+  useEffect(() => {
+    if (mounted && !isLoading && !isAuthenticated) {
+      toast.error("Please sign in to complete your checkout.");
+      router.push("/auth/sign-in?returnUrl=/cart/checkout");
+    }
+  }, [mounted, isLoading, isAuthenticated, router]);
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("paystack");
   const [form, setForm] = useState<DeliveryForm>({
@@ -208,7 +218,10 @@ export function CheckoutPage() {
       : addressSelection.country_code;
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => {
+      setMounted(true);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   if (!mounted || isLoading) return <CheckoutPageSkeleton />;

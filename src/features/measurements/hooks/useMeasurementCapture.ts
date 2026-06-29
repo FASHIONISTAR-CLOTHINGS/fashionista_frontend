@@ -141,6 +141,36 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+
+        // ── CRITICAL: Wait for video to decode first frame ─────────────────
+        // We MUST wait until videoEl.readyState >= 2 (HAVE_CURRENT_DATA)
+        // before allowing the MediaPipe frame loop to start.
+        // Without this, detectForVideo() fires on a 0×0 frame and crashes the
+        // internal C++ graph with "ROI width/height > 0" assertion failures.
+        await new Promise<void>((resolve, reject) => {
+          const el = videoRef.current!;
+
+          // If already ready (e.g. srcObject swap), resolve immediately
+          if (el.readyState >= 2 && el.videoWidth > 0) {
+            resolve();
+            return;
+          }
+
+          const onCanPlay = () => {
+            el.removeEventListener("canplay", onCanPlay);
+            el.removeEventListener("error",   onError);
+            resolve();
+          };
+          const onError = (e: Event) => {
+            el.removeEventListener("canplay", onCanPlay);
+            el.removeEventListener("error",   onError);
+            reject(new Error(`Video error: ${(e as ErrorEvent).message ?? "unknown"}`));
+          };
+
+          el.addEventListener("canplay", onCanPlay);
+          el.addEventListener("error",   onError);
+        });
+
         await videoRef.current.play();
       }
     } catch (err: unknown) {
@@ -148,6 +178,7 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
       throw new Error(`Camera error: ${msg}`);
     }
   }, []);
+
 
   // ── Stop camera ─────────────────────────────────────────────────────────────
   const stopCamera = useCallback(() => {

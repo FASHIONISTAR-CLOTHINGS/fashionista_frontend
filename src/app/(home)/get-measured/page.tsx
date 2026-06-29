@@ -1,5 +1,18 @@
-import { InHouseMeasurementFlow } from "@/features/measurements";
+import type { Metadata } from "next";
+import { GetMeasuredClient } from "./_client";
 
+export const metadata: Metadata = {
+  title: "Get Measured — FASHIONISTAR",
+  description:
+    "Measure your body in 30 seconds using your device camera. " +
+    "Our in-house AI accurately captures 14 body measurements for perfect fit.",
+};
+
+/**
+ * @route /get-measured
+ * @description Public-facing measurement page accessible from the home layout.
+ * Uses a client wrapper because InHouseMeasurementFlow requires browser APIs.
+ */
 export default function GetMeasuredPage() {
   return (
     <main className="px-5 py-10 md:px-24">
@@ -7,6 +20,7 @@ export default function GetMeasuredPage() {
         Measurement
       </h1>
       <div className="grid gap-6 py-6 lg:grid-cols-[0.95fr_1.05fr]">
+        {/* Left: Tutorial video */}
         <section className="space-y-4">
           <p className="font-raleway text-2xl text-black">
             Watch the guide before starting your In-House AI measurement session.
@@ -24,11 +38,15 @@ export default function GetMeasuredPage() {
             />
           </div>
         </section>
+
+        {/* Right: AI Scan flow (client component — needs browser camera APIs) */}
         <section className="space-y-4">
           <div className="rounded-[8px] bg-[#F4F5FB] px-4 py-3 font-satoshi text-base text-[#475367] md:text-lg">
-            Save your measurements once and reuse them across custom fashion orders for a smoother, more accurate fitting experience.
+            Save your measurements once and reuse them across custom fashion orders
+            for a smoother, more accurate fitting experience.
           </div>
-          <InHouseMeasurementFlow />
+          {/* Client boundary wraps InHouseMeasurementFlow */}
+          <GetMeasuredClient />
         </section>
       </div>
     </main>

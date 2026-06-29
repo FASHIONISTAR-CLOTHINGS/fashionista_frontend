@@ -57,11 +57,25 @@ export function AICameraCapture({
 
   // ── Frame loop ──────────────────────────────────────────────────────────────
   const frameLoop = useCallback(() => {
-    capture.processFrame();
+    // Secondary guard: only process when the video element has actual dimensions.
+    // Primary guard is inside usePoseLandmarker.detectFromVideo.
+    // Both guards together prevent the MediaPipe "ROI width/height > 0" assertion.
+    const videoEl = capture.videoRef.current;
+    const videoReady =
+      videoEl !== null &&
+      videoEl.readyState >= 2 &&
+      videoEl.videoWidth  > 0 &&
+      videoEl.videoHeight > 0;
+
+    if (videoReady) {
+      capture.processFrame();
+    }
+
     if (capture.phase === "capturing" || capture.phase === "awaiting_height") {
       rafRef.current = requestAnimationFrame(frameLoop);
     }
   }, [capture]);
+
 
   useEffect(() => {
     if (capture.phase === "capturing" || capture.phase === "awaiting_height") {
