@@ -68,8 +68,11 @@ dev-webpack: ## Start Next.js dev server with Webpack (fallback — use --webpac
 	@echo "$(CYAN)Starting Next.js dev server with Webpack (Turbopack disabled)...$(NC)"
 	$(NEXT_DEV_ENV) $(PNPM) exec next dev --webpack --hostname $(NEXT_DEV_HOST) --port $(NEXT_DEV_PORT)
 
-build: ## Build production bundle
+build: ## Build production bundle (auto-clears .next cache to prevent Windows/OneDrive EPERM)
 	@echo "$(CYAN)Building for production...$(NC)"
+	@echo "$(YELLOW)→ Clearing stale .next cache (prevents EPERM on Windows/OneDrive)...$(NC)"
+	@-powershell -NoProfile -Command "Get-Process node -ErrorAction SilentlyContinue | Where-Object { $$_.MainWindowTitle -eq '' } | Stop-Process -Force" 2>/dev/null || true
+	@-powershell -NoProfile -Command "Start-Sleep 1; if (Test-Path '.next') { Remove-Item -Recurse -Force '.next' -ErrorAction SilentlyContinue }" 2>/dev/null || true
 	pnpm build
 	@echo "$(GREEN)✓ Production build complete$(NC)"
 
