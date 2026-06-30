@@ -11,6 +11,7 @@
 
 import { useState } from "react";
 import { useShippingProfiles } from "@/features/product/hooks/use-shipping";
+import type { ShippingProfile } from "@/features/product/types/shipping.types";
 
 const ACCENT = "#8B5CF6";
 const BG = "#FAFAF9";
@@ -31,7 +32,7 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
   );
 }
 
-function ShippingCard({ profile }: { profile: Record<string, unknown> }) {
+function ShippingCard({ profile }: { profile: ShippingProfile }) {
   const freeThreshold = profile.free_shipping_threshold
     ? `₦${Number(profile.free_shipping_threshold).toLocaleString()}`
     : "Not available";
@@ -90,7 +91,7 @@ function ShippingCard({ profile }: { profile: Record<string, unknown> }) {
 
 export default function ClientShippingInfoPage() {
   const { data: profiles = [], isLoading } = useShippingProfiles();
-  const [search, setSearch] = useState("");
+  const [search] = useState("");
 
   const filtered = profiles.filter((p) =>
     String(p.processing_days).includes(search) ||
@@ -148,7 +149,7 @@ export default function ClientShippingInfoPage() {
         {!isLoading && filtered.length > 0 && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 24 }}>
             {filtered.map((profile) => (
-              <ShippingCard key={String(profile.id)} profile={profile as Record<string, unknown>} />
+              <ShippingCard key={String(profile.id)} profile={profile} />
             ))}
           </div>
         )}

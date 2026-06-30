@@ -103,7 +103,7 @@ export default function VendorSizeGuideDetailPage() {
           <h2 style={{ color: TEXT, fontSize: 16, fontWeight: 700, marginBottom: 24 }}>Measurement Values</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
             {MEASUREMENT_FIELDS.map(({ key, label }) => {
-              const val = (guide as Record<string, unknown>)[key] as string | null | undefined;
+              const val = (guide as unknown as Record<string, unknown>)[key] as string | null | undefined;
               return (
                 <div key={key} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   <span style={{ fontSize: 12, color: MUTED, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</span>

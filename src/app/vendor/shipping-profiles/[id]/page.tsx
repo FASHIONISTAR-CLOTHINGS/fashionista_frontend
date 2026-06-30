@@ -42,7 +42,6 @@ function Badge({ active, label }: { active: boolean; label: string }) {
 
 export default function VendorShippingProfileDetailPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const id = params?.id ?? "";
 
   const { data: profile, isLoading, isError } = useShippingProfile(id);
