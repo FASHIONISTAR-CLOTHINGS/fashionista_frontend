@@ -6,7 +6,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useShippingProfile } from "@/features/product/hooks/use-shipping";
 
 const ACCENT = "#F59E0B";
