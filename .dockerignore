@@ -1,0 +1,35 @@
+# .git
+# .gitignore
+# .env.local
+# .env
+# node_modules
+# .next
+# .pnpm-store
+# .vscode
+.idea
+.turbo
+*.swp
+*.swo
+*~
+.DS_Store
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+.cache
+# tests/
+# __tests__/
+# docs/
+# .editorconfig
+# .prettierignore
+# .eslintignore
+# Makefile
+# docker-compose.override.yml
+# .github
+# tmp/
+.tmp*
+coverage/
+dist/
+# build/
+# playwright-report/
+# test-results/
+# REAL_LIVE_VISION_BROWSER_AUTH_FULLSTACK_TESTING/

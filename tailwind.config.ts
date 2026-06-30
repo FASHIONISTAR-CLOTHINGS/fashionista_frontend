@@ -1,47 +1,178 @@
 import type { Config } from "tailwindcss";
-import plugin from "tailwindcss/plugin";
-import { PluginAPI } from "tailwindcss/types/config";
+import defaultTheme from "tailwindcss/defaultTheme";
+import animatePlugin from "tailwindcss-animate";
 
 const config: Config = {
+  // ── Dark Mode: class-based (controlled by next-themes) ──────────────────
+  darkMode: "class",
+
+  // ── Content Paths ─────────────────────────────────────────────────────────
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/**/*.{ts,tsx,js,jsx}",
+    "./src/app/**/*.{ts,tsx}",
+    "./src/components/**/*.{ts,tsx}",
+    "./src/features/**/*.{ts,tsx}",
+    "./src/core/**/*.{ts,tsx}",
   ],
+
   theme: {
+    container: {
+      center: true,
+      padding: {
+        DEFAULT: "1rem",
+        sm: "1.5rem",
+        md: "2rem",
+        lg: "3rem",
+        xl: "4rem",
+        "2xl": "5rem",
+      },
+    },
+
     extend: {
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      // ── Brand Colors ────────────────────────────────────────────────────
+      colors: {
+        // Primary — FASHIONISTAR Deep Green
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        // Accent — FASHIONISTAR Gold
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        // Shadcn/ui system colors
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        // Chart colors for analytics
+        chart: {
+          "1": "hsl(var(--chart-1))",
+          "2": "hsl(var(--chart-2))",
+          "3": "hsl(var(--chart-3))",
+          "4": "hsl(var(--chart-4))",
+          "5": "hsl(var(--chart-5))",
+        },
+        // Brand-specific direct colors
+        brand: {
+          green: "#01454A",
+          gold: "#FDA600",
+          cream: "#F4F3EC",
+          dark: "#333333",
+          gray: "#848484",
+          lightgray: "#D9D9D9",
+          lightbg: "#F4F5FB",
+        },
       },
-      boxShadow: {
-        card_shadow: "0px 0px 12px 0px #D9D9D930",
-      },
+
+      // ── Typography ────────────────────────────────────────────────────────
       fontFamily: {
-        satoshi: ["var(--font-satoshi)"],
-        bon_foyage: ["var(--font-bon_foyage)"],
-        raleway: ["var(--font-raleway)"],
+        // The root layout now ships local Satoshi as the canonical sans font.
+        // Keep shadcn/ui `font-sans` and legacy `font-raleway` utilities aligned
+        // to that same local source to avoid production-only font fallback drift.
+        sans: ["var(--font-satoshi)", ...defaultTheme.fontFamily.sans],
+        raleway: ["var(--font-satoshi)", "sans-serif"],
+        satoshi: ["var(--font-satoshi)", "sans-serif"],
+        // ── Bon Foyage — brand display font (layout var is --font-bon-foyage)
+        // Both class forms (hyphen + underscore) resolve to the same variable
+        // so legacy `font-bon_foyage` classes in older components work correctly.
+        "bon-foyage": ["var(--font-bon-foyage)", "Georgia", "serif"],
+        bon_foyage: ["var(--font-bon-foyage)", "Georgia", "serif"],
       },
-      gridTemplateColumns: {
-        fluid: "repeat(auto-fit, minmax(339px, 1fr))",
-        card_fluid: "repeat(auto-fit, minmax(170px, 1fr))",
+
+      // ── Border Radius (Shadcn/ui) ─────────────────────────────────────────
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+
+      // ── Custom Animations ─────────────────────────────────────────────────
+      keyframes: {
+        "fade-in": {
+          from: { opacity: "0", transform: "translateY(10px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-up": {
+          from: { opacity: "0", transform: "translateY(40px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-in-right": {
+          from: { opacity: "0", transform: "translateX(40px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        "spin-slow": {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
+        },
+        "scan-line": {
+          "0%": { top: "10%", opacity: "0" },
+          "10%": { opacity: "0.9" },
+          "90%": { opacity: "0.9" },
+          "100%": { top: "90%", opacity: "0" },
+        },
+        "fade-in-scale": {
+          from: { opacity: "0", transform: "scale(0.8) translateX(-10px)" },
+          to: { opacity: "1", transform: "scale(1) translateX(0)" },
+        },
+        "count-up": {
+          from: { opacity: "0", transform: "translateY(20px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+      },
+
+      animation: {
+        "fade-in": "fade-in 0.4s ease-out both",
+        "slide-up": "slide-up 0.5s ease-out both",
+        "slide-in-right": "slide-in-right 0.4s ease-out both",
+        shimmer: "shimmer 2s linear infinite",
+        "spin-slow": "spin-slow 3s linear infinite",
+        "scan-line": "scan-line 3s ease-in-out infinite",
+        "fade-in-scale": "fade-in-scale 0.5s ease-out forwards",
+        "count-up": "count-up 0.6s ease-out both",
+      },
+
+      // ── Box Shadows ───────────────────────────────────────────────────────
+      boxShadow: {
+        card: "0px 4px 25px 0px rgba(0, 0, 0, 0.10)",
+        "card-hover": "0px 8px 40px 0px rgba(1, 69, 74, 0.20)",
+        "button-glow": "0px 4px 20px rgba(1, 69, 74, 0.40)",
+      },
+
+      // ── Backdrop Blur ─────────────────────────────────────────────────────
+      backdropBlur: {
+        xs: "2px",
       },
     },
   },
-  plugins: [
-    plugin(function ({ addUtilities }: PluginAPI) {
-      const newUtilities = {
-        ".hide_scrollbar": {
-          "scrollbar-width": "none",
-          "-ms-overflow-style": "none",
-        },
-        ".hide_scrollbar::-webkit-scrollbar": {
-          display: "none",
-        },
-      };
-      addUtilities(newUtilities);
-    }),
-  ],
+
+  plugins: [animatePlugin],
 };
+
 export default config;

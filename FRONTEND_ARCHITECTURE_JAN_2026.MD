@@ -3,7 +3,7 @@
 # 🏛️ FASHIONISTAR AI: INDUSTRIAL FRONTEND ARCHITECTURE (V7.0 - Final Enterprise Edition)
 
 **Target Era:** 2026-2030
-**Core Framework:** Next.js 15 (App Router + Turbopack)
+**Core Framework:** Next.js 16 0R 17 (App Router + Turbopack)
 **Language:** TypeScript 5.8+ (Strict Mode)
 **Styling Engine:** Tailwind CSS v4 + Shadcn/ui
 **Backend Alignment:** Django 6.0 (Sync DRF + Async Ninja Hybrid)
@@ -45,7 +45,7 @@ We are architecting a **High-Performance Distributed UI** built on the **Feature
 1.  **Dual-Pipeline Networking:** Strict separation of `Axios` for DRF (Transactional) and `Ky/Fetch` for Ninja (Computational/AI) APIs.
 2.  **Instantaneous UX through Optimistic UI:** All user interactions provide immediate feedback, with server reconciliation happening invisibly.
 3.  **URL as the Single Source of State:** We employ URL-Driven State using **Nuqs**, ensuring every application state is shareable, bookmarkable, and SEO-friendly.
-4.  **Next-Gen Hybrid Rendering (PPR):** We leverage **Partial Prerendering** in Next.js 15 for instant static shells with dynamic content streams, providing the fastest possible initial load.
+4.  **Next-Gen Hybrid Rendering (PPR):** We leverage **Partial Prerendering** in Next.js 16 for instant static shells with dynamic content streams, providing the fastest possible initial load.
 5.  **Industrial-Grade Resilience & Observability:** Granular error boundaries, centralized monitoring with Sentry and OpenTelemetry, and automated CI/CD quality gates ensure 99.99% uptime.
 
 ---
@@ -99,7 +99,7 @@ This structure is mandatory for scalability and team velocity.
 
 ```text
 src/
-├── app/                        # ROUTING LAYER (Next.js 15 App Router)
+├── app/                        # ROUTING LAYER (Next.js 16 App Router)
 │   ├── [locale]/               # Internationalization Wrapper
 │   │   ├── (public)/           # Static Marketing Pages
 │   │   ├── (shop)/             # E-Commerce Logic
@@ -403,7 +403,7 @@ export const env = createEnv({
 
 ## 5. PERFORMANCE & RENDERING STRATEGY
 
-### 5.1 Next.js 15 Partial Prerendering (PPR)
+### 5.1 Next.js 16 Partial Prerendering (PPR)
 Enabled in `next.config.js`.
 
 ```javascript
@@ -647,7 +647,7 @@ The pipeline is enhanced with mandatory QA gates.
 ## 15. IMPLEMENTATION ROADMAP & PRODUCTION CHECKLIST
 
 ### Phase 1: Foundation (Days 1-3)
-- [ ] Initialize Next.js 15 + TS.
+- [ ] Initialize Next.js 16 + TS.
 - [ ] Setup Tailwind v4 + Shadcn/ui CLI.
 - [ ] Create `core/api/client.sync.ts` & `client.async.ts` (Use code in Section 4.2).
 - [ ] Configure `t3-env` for variable validation (Use code in Section 4.5).
@@ -672,4 +672,4 @@ The pipeline is enhanced with mandatory QA gates.
 ---
 **Status:** READY FOR DEVELOPMENT  
 **Version:** 7.0 Final Enterprise Edition  
-**Signed Off By:** Lead Architect DANIEL EZICHI 
+**Signed Off By:** Lead Architect DANIEL EZICHI

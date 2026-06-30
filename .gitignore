@@ -8,10 +8,13 @@
 
 # testing
 /coverage
+# /test-results
+/tests/playwright-report
 
 # next.js
 /.next/
 /out/
+/.pnpm-store/
 
 # production
 /build
@@ -34,3 +37,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Live Reset Build Output
+.next-live-reset
+.next-live-reset/
+.env*

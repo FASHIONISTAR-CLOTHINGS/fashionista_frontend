@@ -1,116 +1,134 @@
-import React from "react";
-import VendorCard from "@/app/components/VendorCard";
-// import { vendor } from "@/app/utils/mock";
-import { getAllVendors } from "@/app/utils/libs";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Suspense } from "react";
+import { VendorsClient } from "./VendorsClient";
 
-const page = async () => {
-  const vendors = (await getAllVendors()) || [];
-  const vendor_list = vendors.map((vendor) => (
-    <VendorCard vendorProp={vendor} key={vendor.id} />
-  ));
+// ── Metadata ─────────────────────────────────────────────────────────────────
+export const metadata: Metadata = {
+  title: "Our Vendors | Fashionistar — Premium Fashion Designers & Tailors",
+  description:
+    "Discover professional tailors and fashion designers on Fashionistar. Browse curated vendor stores, bespoke clothing, and exclusive collections.",
+  alternates: { canonical: "/vendors" },
+  openGraph: {
+    title: "Our Vendors | Fashionistar",
+    description:
+      "Connect with Nigeria's finest fashion designers and tailors on Fashionistar.",
+    url: "/vendors",
+    type: "website",
+  },
+};
+
+// ── Skeleton fallback ─────────────────────────────────────────────────────────
+function VendorGridSkeleton() {
   return (
-    <div className="py-5 px-2 md:px-8 lg:px-28 ">
-      <h2 className="text-[60px] font-bon_foyage  py-2 leading-10 text-black">
-        {" "}
-        Fashion Vendors
-      </h2>
-
-      <div className="bg-[#D9D9D9] w-full h-[58px]  px-5 gap-2 font-satoshi flex items-center">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 20 20"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M14.5833 14.5835L18.3333 18.3335"
-            stroke="#282828"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M16.6667 9.1665C16.6667 5.02437 13.3089 1.6665 9.16675 1.6665C5.02461 1.6665 1.66675 5.02437 1.66675 9.1665C1.66675 13.3087 5.02461 16.6665 9.16675 16.6665C13.3089 16.6665 16.6667 13.3087 16.6667 9.1665Z"
-            stroke="#282828"
-            strokeWidth="1.5"
-            strokeLinejoin="round"
-          />
-        </svg>
-
-        <input
-          type="search"
-          placeholder="Search for items..."
-          className="placeholder:text-sm text-[#484848] placeholder:text-[#282828] outline-none w-full h-full bg-inherit"
-        />
-      </div>
-      <div className=" relative flex justify-center items-center py-10  w-full">
-        <div className="absolute left-0 font-satoshi font-medium text-sm leading-[19px] text-[#4e4e4e]">
-          {" "}
-          We have {vendors.length} Vendor(s) for you
-        </div>
-        <div className="absolute right-0 flex items-center gap-2 md:py-10 ">
-          <div className="flex items-center gap-1  md:gap-2 py-1 px-1 md:py-2  md:px-[14px] rounded-[50px] border-[0.8px] border-[#959595]">
-            <p className="text-[9px] leading-3 md:leading-6 md:text-base text-[#959595] font-satoshi">
-              Sort by
-            </p>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M10.25 11.2449L11.3068 12.3598C11.8693 12.9533 12.1505 13.25 12.5 13.25C12.8495 13.25 13.1307 12.9533 13.6932 12.3598L14.75 11.2449M12.5 13.1846V9.90327C12.5 8.22815 12.5 7.39062 12.1649 6.6521C11.8297 5.91353 11.1994 5.36199 9.93875 4.25894L9.5 3.875"
-                stroke="#959595"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M1.25 3.875C1.25 2.95617 1.25 2.49675 1.42882 2.1458C1.58611 1.83709 1.83709 1.58611 2.1458 1.42882C2.49675 1.25 2.95617 1.25 3.875 1.25C4.79383 1.25 5.25325 1.25 5.6042 1.42882C5.91291 1.58611 6.16389 1.83709 6.32119 2.1458C6.5 2.49675 6.5 2.95617 6.5 3.875C6.5 4.79383 6.5 5.25325 6.32119 5.6042C6.16389 5.91291 5.91291 6.16389 5.6042 6.32119C5.25325 6.5 4.79383 6.5 3.875 6.5C2.95617 6.5 2.49675 6.5 2.1458 6.32119C1.83709 6.16389 1.58611 5.91291 1.42882 5.6042C1.25 5.25325 1.25 4.79383 1.25 3.875Z"
-                stroke="#959595"
-              />
-              <path
-                d="M1.25 12.125C1.25 11.2062 1.25 10.7467 1.42882 10.3958C1.58611 10.0871 1.83709 9.83608 2.1458 9.6788C2.49675 9.5 2.95617 9.5 3.875 9.5C4.79383 9.5 5.25325 9.5 5.6042 9.6788C5.91291 9.83608 6.16389 10.0871 6.32119 10.3958C6.5 10.7467 6.5 11.2062 6.5 12.125C6.5 13.0438 6.5 13.5033 6.32119 13.8542C6.16389 14.1629 5.91291 14.4139 5.6042 14.5712C5.25325 14.75 4.79383 14.75 3.875 14.75C2.95617 14.75 2.49675 14.75 2.1458 14.5712C1.83709 14.4139 1.58611 14.1629 1.42882 13.8542C1.25 13.5033 1.25 13.0438 1.25 12.125Z"
-                stroke="#959595"
-              />
-            </svg>
+    <div className="px-5 py-10 md:px-10 lg:px-20">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="animate-pulse rounded-2xl border border-[#ECE6D6] bg-white overflow-hidden">
+            <div className="h-44 bg-[#ECE6D6]" />
+            <div className="p-5 space-y-3">
+              <div className="h-4 w-3/4 rounded bg-[#ECE6D6]" />
+              <div className="h-3 w-full rounded bg-[#ECE6D6]" />
+              <div className="h-3 w-1/2 rounded bg-[#ECE6D6]" />
+            </div>
           </div>
-          <div className="flex items-center gap-1  md:gap-2 py-1 px-1 md:py-2  md:px-[14px] rounded-[50px] border-[0.8px] border-[#959595]">
-            <span className="text-[9px] leading-3 md:leading-6 md:text-base text-[#959595] font-satoshi">
-              Filter
-            </span>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M10.25 11.2449L11.3068 12.3598C11.8693 12.9533 12.1505 13.25 12.5 13.25C12.8495 13.25 13.1307 12.9533 13.6932 12.3598L14.75 11.2449M12.5 13.1846V9.90327C12.5 8.22815 12.5 7.39062 12.1649 6.6521C11.8297 5.91353 11.1994 5.36199 9.93875 4.25894L9.5 3.875"
-                stroke="#959595"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M1.25 3.875C1.25 2.95617 1.25 2.49675 1.42882 2.1458C1.58611 1.83709 1.83709 1.58611 2.1458 1.42882C2.49675 1.25 2.95617 1.25 3.875 1.25C4.79383 1.25 5.25325 1.25 5.6042 1.42882C5.91291 1.58611 6.16389 1.83709 6.32119 2.1458C6.5 2.49675 6.5 2.95617 6.5 3.875C6.5 4.79383 6.5 5.25325 6.32119 5.6042C6.16389 5.91291 5.91291 6.16389 5.6042 6.32119C5.25325 6.5 4.79383 6.5 3.875 6.5C2.95617 6.5 2.49675 6.5 2.1458 6.32119C1.83709 6.16389 1.58611 5.91291 1.42882 5.6042C1.25 5.25325 1.25 4.79383 1.25 3.875Z"
-                stroke="#959595"
-              />
-              <path
-                d="M1.25 12.125C1.25 11.2062 1.25 10.7467 1.42882 10.3958C1.58611 10.0871 1.83709 9.83608 2.1458 9.6788C2.49675 9.5 2.95617 9.5 3.875 9.5C4.79383 9.5 5.25325 9.5 5.6042 9.6788C5.91291 9.83608 6.16389 10.0871 6.32119 10.3958C6.5 10.7467 6.5 11.2062 6.5 12.125C6.5 13.0438 6.5 13.5033 6.32119 13.8542C6.16389 14.1629 5.91291 14.4139 5.6042 14.5712C5.25325 14.75 4.79383 14.75 3.875 14.75C2.95617 14.75 2.49675 14.75 2.1458 14.5712C1.83709 14.4139 1.58611 14.1629 1.42882 13.8542C1.25 13.5033 1.25 13.0438 1.25 12.125Z"
-                stroke="#959595"
-              />
-            </svg>
-          </div>
-        </div>
-      </div>
-      <div className="flex flex-wrap justify-between gap-3 gap-y-10 lg:gap-8 pb-10 ">
-        {vendor_list}
+        ))}
       </div>
     </div>
   );
-};
+}
 
-export default page;
+// ── Page ──────────────────────────────────────────────────────────────────────
+export default function VendorsPage() {
+  return (
+    <div className="bg-background text-foreground">
+      {/* ── Hero ──────────────────────────────────────────────────────────── */}
+      <section className="relative min-h-[300px] md:min-h-[380px] bg-[#01454A] flex items-end overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/pattern-batik.svg')] opacity-10 bg-cover bg-center" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#01454A] via-[#01454A]/90 to-[#fda600]/20" />
+
+        <div className="relative z-10 px-5 py-12 md:px-10 lg:px-20 space-y-4 max-w-3xl">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 text-sm text-white/70 font-raleway">
+            <Link href="/" className="hover:text-[#fda600] transition-colors">Home</Link>
+            <span>/</span>
+            <span className="text-white">Vendors</span>
+          </nav>
+
+          <p className="font-raleway text-sm font-semibold uppercase tracking-widest text-[#fda600]">
+            Our Artisans
+          </p>
+          <h1 className="font-bon_foyage text-4xl leading-none text-white md:text-6xl lg:text-7xl">
+            Meet Our Vendors
+          </h1>
+          <p className="font-raleway text-base leading-7 text-white/80 max-w-xl">
+            Browse Nigeria&apos;s finest tailors and fashion designers. Each vendor is
+            carefully vetted for craftsmanship, reliability, and style excellence.
+          </p>
+
+          <div className="flex items-center gap-3 pt-2">
+            <Link
+              href="/get-measured"
+              className="rounded-full bg-[#fda600] px-7 py-3 font-raleway text-sm font-bold text-black shadow hover:bg-[#e09500] transition-colors"
+            >
+              Get Measured
+            </Link>
+            <Link
+              href="/categories"
+              className="rounded-full border border-white/40 px-7 py-3 font-raleway text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+            >
+              Browse Products
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stats strip ───────────────────────────────────────────────────── */}
+      <section className="border-b border-border bg-[#F8F9FC]">
+        <div className="px-5 py-5 md:px-10 lg:px-20">
+          <div className="flex flex-wrap items-center gap-8 text-sm font-raleway text-[#475367]">
+            {[
+              { value: "200+",  label: "Verified Vendors" },
+              { value: "4.8★", label: "Average Rating" },
+              { value: "50k+", label: "Orders Fulfilled" },
+              { value: "100%", label: "Quality Assured" },
+            ].map(({ value, label }) => (
+              <div key={label} className="flex flex-col items-start gap-0.5">
+                <span className="text-xl font-bold text-[#01454A]">{value}</span>
+                <span className="text-xs uppercase tracking-wide">{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Live Vendor Grid (Client) ──────────────────────────────────────── */}
+      <Suspense fallback={<VendorGridSkeleton />}>
+        <VendorsClient />
+      </Suspense>
+
+      {/* ── Become a Vendor CTA ────────────────────────────────────────────── */}
+      <section className="bg-[#01454A] px-5 py-16 md:px-10 lg:px-20">
+        <div className="max-w-2xl mx-auto text-center space-y-5">
+          <p className="font-raleway text-sm font-semibold uppercase tracking-widest text-[#fda600]">
+            Grow Your Brand
+          </p>
+          <h2 className="font-bon_foyage text-3xl text-white md:text-5xl">
+            Become a Fashionistar Vendor
+          </h2>
+          <p className="font-raleway text-base text-white/70 leading-7">
+            Join 200+ vetted artisans reaching thousands of fashion-conscious clients
+            daily. AI-powered measurements, built-in payments, and zero commissions on
+            your first 6 months.
+          </p>
+          <Link
+            href="/auth/sign-up?role=vendor"
+            className="inline-block rounded-full bg-[#fda600] px-10 py-3.5 font-raleway text-sm font-bold text-black shadow hover:bg-[#e09500] transition-colors"
+          >
+            Apply to Sell
+          </Link>
+        </div>
+      </section>
+    </div>
+  );
+}

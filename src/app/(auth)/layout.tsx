@@ -1,19 +1,18 @@
-import Image from "next/image";
+import { FashionistarImage } from "@/components/media";
 import React from "react";
-import bg_auth from "../../../public/bg-auth.svg";
-import logo from "../../../public/logo.svg";
 
 const layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
   return (
     <div className=" bg-[#F4F3EC] pb-10">
       <div className="w-full px-10 z-30 h-[100px] bg-white shadow-md flex items-center fixed top-0 left-0">
         <div className=" flex items-center">
-          <Image
+          <FashionistarImage
             src="/logo.svg"
-            width={55}
-            height={54}
-            alt="logo"
-            className=""
+            width={78}
+            height={76}
+            alt="Fashionistar Logo"
+            className="w-auto h-auto"
+            priority
           />
           <h2 className="font-bon_foyage px-3 text-4xl text-black">
             Fashionistar

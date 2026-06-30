@@ -1,238 +1,236 @@
-import Image from "next/image";
-import { data2 } from "../utils/mock";
-import Cads from "../components/Cads";
+/**
+ * app/(home)/page.tsx — Fashionistar Homepage (v2 — Phase C1 + D2)
+ *
+ * Production Architecture 2026–2027:
+ *   - Single RSC with ONE server fetch: getHomepageBundle() (v1 compatible)
+ *     OR getHomepageBundleV2() for 6-section bundle with banners.
+ *   - Backend: 5–6 parallel DB queries via asyncio.gather() < 30ms p95
+ *   - Frontend: ISR revalidate 300s — matches backend Redis TTL
+ *   - ALL sections receive data as props — ZERO additional HTTP round-trips
+ *   - Suspense boundaries with pixel-perfect skeleton fallbacks
+ *   - data-testid on every section for Playwright E2E tests
+ *
+ * C1 Fix: CatalogCategoryGrid and CatalogCollectionGrid now receive
+ *   bundle.categories and bundle.collections as props → zero double-fetch.
+ *
+ * Data flow:
+ *   getHomepageBundleV2() → HomepageBundle →
+ *     { collections, categories, featured_products, hot_deals, reviews, banners }
+ *       ↓ props to each section component (no re-fetch anywhere)
+ */
+
 import Link from "next/link";
-import Hero from "../components/Hero";
-import ShopByCategory from "../components/ShopByCategory";
-import LatestCollection from "../components/LatestCollection";
-import { CollectionsProps, PageProps } from "@/types";
-import { formatCurrency } from "../utils/formatCurrency";
+import { Suspense } from "react";
+import { CatalogCategoryGrid, CatalogCollectionGrid } from "@/features/catalog";
+import { getHomepageBundleV2 } from "@/features/catalog/api/catalog.server";
+import HomepageFeaturedProducts, { HomepageFeaturedProductsSkeleton } from "@/features/catalog/components/HomepageFeaturedProducts";
+import { CatalogBannerHero } from "@/features/catalog/components/CatalogBannerHero";
+import { RecentlyViewedSection } from "./_components/RecentlyViewedSection";
+import { DealsCountdown } from "./_components/DealsCountdown";
+import { NewsletterForm } from "./_components/NewsletterForm";
+import { HomepageHotDealsSection } from "./_components/HomepageHotDealsSection";
+import { HomepageReviewsSection } from "./_components/HomepageReviewsSection";
+import { WaitlistMobileForm } from "./_components/WaitlistMobileForm";
+import { Hero } from "@/components";
+import { JsonLdScript } from "@/components/seo/JsonLdScript";
+import {
+  generateWebSiteSchema,
+  generateItemListSchema,
+} from "@/components/seo/schemas";
 
-type DealsProp = CollectionsProps & {
-  status: "sold out" | "sales";
-  new_price: string;
+// ─────────────────────────────────────────────────────────────────────────────
+// ISR — 5 minute cache, stale-while-revalidate semantics on CDN edge.
+// Matches the backend Redis TTL for catalog:homepage:bundle.
+// ─────────────────────────────────────────────────────────────────────────────
+export const revalidate = 300;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Metadata — per-page SEO
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const metadata = {
+  title: "Fashionistar — AI-Powered Fashion & Custom Tailoring in Nigeria",
+  description:
+    "Shop premium bespoke clothing from verified Nigerian tailors. Use our AI body measurement system for a perfect fit. Collections, senator outfits, gowns & more.",
+  keywords: [
+    "Nigerian fashion",
+    "bespoke tailoring",
+    "AI measurement",
+    "senator outfit",
+    "custom clothing Nigeria",
+  ],
+  openGraph: {
+    title: "Fashionistar — AI-Powered Fashion & Custom Tailoring",
+    description:
+      "Nigeria's premier AI-powered e-commerce platform connecting clients with verified tailors.",
+    type: "website",
+  },
 };
-type ReviewProps = {
-  id: string;
-  image: string;
-  text: string;
-  rating: number;
-  name: string;
-};
-export default async function Home(props: PageProps) {
-  const { searchParams } = props;
 
-  const deals = data2.map((card) => {
-    return <Cads data={card} key={card.image} />;
-  });
-  const get_deals = async () => {
-    try {
-      const res = await fetch("http://localhost:4000/deals");
-      const deals = (await res.json()) as DealsProp[];
-      return deals;
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  const get_reviews = async () => {
-    try {
-      const res = await fetch("http://localhost:4000/reviews", {
-        headers: { "Content-Type": "application/json" },
-      });
-      const reviews = (await res.json()) as ReviewProps[];
-      return reviews;
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  const new_deals = (await get_deals()) || [];
+// ─────────────────────────────────────────────────────────────────────────────
+// Main Homepage Page — Single bundle fetch → all sections receive props
+// ─────────────────────────────────────────────────────────────────────────────
 
-  const dealList = new_deals.map((deal) => (
-    <div
-      key={deal.id}
-      className="flex flex-col w-[45%]  md:w-[32%] max-w-[300px]"
-    >
-      <div className="relative ">
-        <Image
-          src={deal.image}
-          className="rounded-[8px] w-full h-[220px] md:h-[350px] object-contain"
-          alt=""
-          width={500}
-          height={500}
-        />
-        <div className="absolute top-7 left-2 md:top-10 lg:top-3 lg:left-3">
-          {deal.status == "sales" ? (
-            <p className="w-[83px] h-7 rounded-[5px] flex items-center justify-center uppercase bg-[#fda600] text-white font-semibold font-raleway">
-              {deal.status}
-            </p>
-          ) : (
-            <p className="bg-[#848484] py-1 px-4 text-white rounded-[5px] uppercase font-semibold">
-              {deal.status}
-            </p>
-          )}
-        </div>
-        <span className="absolute bottom-8 md:bottom-10 lg:bottom-4 right-3">
-          <svg
-            width="25"
-            height="25"
-            viewBox="0 0 25 25"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M12.5 22.2656L13.0391 23.3063C12.8725 23.3926 12.6876 23.4376 12.5 23.4376C12.3124 23.4376 12.1275 23.3926 11.9609 23.3063L11.9484 23.3L11.9203 23.2844C11.7566 23.1999 11.5951 23.1114 11.4359 23.0188C9.53126 21.9353 7.73455 20.6723 6.07031 19.2469C3.19531 16.7672 0 13.0469 0 8.59375C0 4.43125 3.25937 1.5625 6.64062 1.5625C9.05781 1.5625 11.1766 2.81562 12.5 4.71875C13.8234 2.81562 15.9422 1.5625 18.3594 1.5625C21.7406 1.5625 25 4.43125 25 8.59375C25 13.0469 21.8047 16.7672 18.9297 19.2469C17.1244 20.7912 15.164 22.1443 13.0797 23.2844L13.0516 23.3L13.0422 23.3047H13.0391L12.5 22.2656ZM6.64062 3.90625C4.55312 3.90625 2.34375 5.725 2.34375 8.59375C2.34375 11.9531 4.8125 15.0688 7.60156 17.4719C9.12336 18.7733 10.7633 19.9299 12.5 20.9266C14.2367 19.9299 15.8766 18.7733 17.3984 17.4719C20.1875 15.0688 22.6562 11.9531 22.6562 8.59375C22.6562 5.725 20.4469 3.90625 18.3594 3.90625C16.2141 3.90625 14.2828 5.44687 13.6266 7.74375C13.5575 7.98934 13.41 8.20561 13.2066 8.35965C13.0033 8.5137 12.7551 8.59706 12.5 8.59706C12.2449 8.59706 11.9967 8.5137 11.7934 8.35965C11.59 8.20561 11.4425 7.98934 11.3734 7.74375C10.7172 5.44687 8.78594 3.90625 6.64062 3.90625Z"
-              fill="#01454A"
-            />
-          </svg>
-        </span>
-      </div>{" "}
-      <div className="flex flex-col gap-3">
-        <span className="text-[#fda600] text-xl">★★★★★</span>
-        <p className="font-raleway font-semibold text-lg md:text-2xl text-black">
-          {deal.title}
-        </p>
-        <div className="flex items-center gap-2">
-          <p className="font-raleway font-semibold text-lg md:text-2xl text-black">
-            {formatCurrency(deal.new_price)}
-          </p>
-          <p className="font-raleway font-semibold  md:text-xl line-through text-[#848484]">
-            {formatCurrency(deal.price)}
-          </p>
-        </div>
-      </div>
-    </div>
-  ));
-  const reviews = (await get_reviews()) || [];
-
-  const reviewList = reviews.map((review) => (
-    <div
-      style={{ boxShadow: "0px 4px 25px 0px #0000001A" }}
-      key={review.id}
-      className="flex flex-col md:flex-row items-center gap-10 py-9 px-10 border border-[#D9D9D9] w-full shrink-0  lg:w-[48%]"
-    >
-      <Image
-        src={review.image}
-        alt=""
-        width={500}
-        height={500}
-        className="w-[105px] h-[105px] object-cover"
-      />
-      <div className="flex flex-col items-center md:items-start gap-2.5">
-        <span className="text-[#fda600] text-xl">★★★★★</span>
-
-        <p className="font-raleway text-center md:text-left text-xl text-[#333] flex-none  self-stretch grow-0   w-full">
-          {review.text}
-        </p>
-
-        <p className="font-raleway font-semibold text-2xl text-black ">
-          {review.name}
-        </p>
-      </div>
-    </div>
-  ));
+export default async function Home() {
+  /**
+   * ONE server-side fetch — backend asyncio.gather() runs 6 DB queries in
+   * parallel via /catalog/homepage/bundle/ (Phase B3).
+   * ISR: revalidate 300s, tagged "homepage-bundle" for on-demand invalidation.
+   * On error → EMPTY_BUNDLE (homepage never crashes).
+   */
+  const bundle = await getHomepageBundleV2();
+  const highlightedCollection = bundle.collections[0] ?? null;
+  const categoryCount = bundle.meta.categories_count || bundle.categories.length;
+  const collectionCount = bundle.meta.collections_count || bundle.collections.length;
 
   return (
-    <div className="flex flex-col gap-5">
-      <Hero />
-      <div className=" mt-10 md:hidden flex z-30">
-        <form className="flex w-full">
-          <div className="h-[60px] lg:h-[85px] w-full md:w-1/2 bg-[#F4F5FB] rounded-r-[100px] flex items-center p-1.5 lg:p-3">
-            <input
-              type="email"
-              className="w-2/3 h-full outline-none bg-inherit placeholder:not-italic placeholder:font-raleway placeholder:font-medium placeholder:text-xl placeholder:text-[#333] text-[#333]"
-              placeholder="Enter Email Address"
-            />
+    <div className="flex flex-col gap-0" data-testid="homepage">
 
-            <button className="w-1/3 lg:min-h-[66px] h-full rounded-r-[100px] bg-[#01454a] text-white shrink-0 text-sm lg:text-xl font-bold font-raleway">
-              Join Waitlist
-            </button>
+      {/* ── Hero: CMS Banner if available, else static Hero ──────────────── */}
+      {bundle.banners.length > 0 ? (
+        <CatalogBannerHero banners={bundle.banners} />
+      ) : (
+        <Hero />
+      )}
+
+      {/* ── Mobile email waitlist ───────────────────────────────────── */}
+      <div className="mt-8 md:hidden flex z-30 px-4" data-testid="mobile-email-waitlist">
+        {/* WaitlistMobileForm is a client component — form action handled there */}
+        <WaitlistMobileForm />
+      </div>
+
+      {/* ── Live Category Grid (C1 FIX: no internal fetch — uses bundle.categories) ── */}
+      <div data-testid="category-grid-section">
+        <CatalogCategoryGrid categories={bundle.categories} />
+      </div>
+
+      {/* ── Featured Products (C2: premium RSC card grid) ──────────────── */}
+      <Suspense fallback={<HomepageFeaturedProductsSkeleton count={8} />}>
+        <HomepageFeaturedProducts bundle={bundle} limit={8} />
+      </Suspense>
+
+      {/* ── Recently Viewed Rail (client-side, localStorage) ─────────────── */}
+      <RecentlyViewedSection />
+
+      {/* ── Live Collection Grid (C1 FIX: no internal fetch — uses bundle.collections) ── */}
+      <div data-testid="collection-grid-section">
+        <CatalogCollectionGrid collections={bundle.collections} />
+      </div>
+
+      {/* ── Honest Live Promo Surface ─────────────────────────────────────── */}
+      <div
+        className="w-full bg-[#fda600] relative p-8 md:p-14 lg:p-24 overflow-hidden"
+        data-testid="campaign-banner"
+      >
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/10 via-transparent to-[#01454A]/10" />
+        <div className="relative z-10 grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+          <div className="space-y-5">
+            <p className="font-raleway font-semibold text-sm md:text-base text-black/70 tracking-[0.25em] uppercase">
+              Live Fashionistar Edit
+            </p>
+            <h2 className="font-bon_foyage text-[clamp(2rem,6vw,4.5rem)] leading-tight text-black md:max-w-3xl">
+              {highlightedCollection
+                ? highlightedCollection.title
+                : "Discover live collections, verified vendors, and tailored fashion with zero placeholder merchandising."}
+            </h2>
+            <p className="max-w-2xl font-raleway text-sm leading-7 text-black/75 md:text-base">
+              {highlightedCollection?.description ||
+                "Browse the latest live categories and collections published on Fashionistar. Every card on this page now reflects real catalog data or an explicit empty state."}
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href={highlightedCollection ? `/collections/${highlightedCollection.slug}` : "/collections"}
+                className="px-10 py-3 md:py-4 rounded-[100px] bg-[#01454A] text-white font-raleway font-semibold text-base hover:bg-[#01454A]/90 transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg min-h-[44px] inline-flex items-center"
+              >
+                {highlightedCollection ? "Explore Collection" : "Browse Collections"}
+              </Link>
+              <Link
+                href="/products"
+                className="px-10 py-3 md:py-4 rounded-[100px] border border-[#01454A]/20 bg-white/60 text-[#01454A] font-raleway font-semibold text-base hover:bg-white transition-all duration-300 min-h-[44px] inline-flex items-center"
+              >
+                Shop Products
+              </Link>
+            </div>
           </div>
-        </form>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-[2rem] bg-white/70 p-6 shadow-sm backdrop-blur">
+              <p className="font-raleway text-xs font-bold uppercase tracking-[0.25em] text-[#01454A]/70">
+                Categories
+              </p>
+              <p className="mt-3 font-bon_foyage text-5xl text-[#01454A]">{categoryCount}</p>
+              <p className="mt-2 font-raleway text-sm leading-6 text-[#01454A]/80">
+                Live discovery lanes published for shoppers right now.
+              </p>
+            </div>
+            <div className="rounded-[2rem] bg-white/70 p-6 shadow-sm backdrop-blur">
+              <p className="font-raleway text-xs font-bold uppercase tracking-[0.25em] text-[#01454A]/70">
+                Collections
+              </p>
+              <p className="mt-3 font-bon_foyage text-5xl text-[#01454A]">{collectionCount}</p>
+              <p className="mt-2 font-raleway text-sm leading-6 text-[#01454A]/80">
+                Curated edits pulled from the live catalog bundle.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <ShopByCategory />
-      <LatestCollection searchParams={searchParams} />
-      <div className=" w-full h-[593px] bg-[#fda600] md:h-[746px] relative p-10 md:p-14 lg:p-24 flex flex-col gap-5 md:gap-10 items-center">
-        <p className="font-raleway font-semibold text-xl text-black">
-          SENATOR OUTFITS
-        </p>
-        <p className="font-bon_foyage text-[42px] md:text-6xl lg:text-[75px] lg:leading-[74px] leading-[42px] text-center text-black md:w-1/2">
-          {" "}
-          The New Fashion Collection
-        </p>
-        <Link
-          href="/categories"
-          className="px-10 py-3 md:py-5 rounded-[100px] bg-[#01454A] flex text-white font-raleway font-semibold text-xl"
-        >
-          Shop Now
-        </Link>
-        <Image
-          src="/man.png"
-          alt=""
-          width={500}
-          height={500}
-          className="w-[200px] h-[232px] md:w-[370px] md:h-[450px] lg:w-[500px] lg:h-[582px] absolute left-0 md:left-6 bottom-0"
-        />
-        <Image
-          src="/adunni.png"
-          alt=""
-          width={1000}
-          height={1000}
-          className="w-[200px] h-[321px] md:w-[350px] md:h-[550px] lg:w-[592px] lg:h-[758px] absolute right-0 bottom-0 object-cover"
-        />
-      </div>
-      <div className="px-5 py-10 md:p-10 lg:p-20 space-y-5 md:space-y-10">
-        <div className="flex flex-wrap justify-center md:justify-normal items-center gap-5 lg:gap-20">
-          <h3 className="font-bon_foyage whitespace-nowrap text-center text-5xl leading-[48px] text-[#333]">
-            {" "}
+      {/* ── Deals of the Week (live from hot_deals in bundle) ────────────── */}
+      <div
+        className="px-5 py-10 md:px-10 lg:px-20 space-y-6 md:space-y-10"
+        data-testid="deals-section"
+      >
+        <div className="flex flex-wrap justify-center md:justify-normal items-center gap-5 lg:gap-16">
+          <h2 className="font-bon_foyage whitespace-nowrap text-center text-[clamp(2rem,5vw,3.5rem)] leading-tight text-[#333]">
             Deals of the Week
-          </h3>
-          <div className="flex justify-center items-center space-x-4 bg-[#01454A] rounded-[8px] max-w-[429px] h-[111px] w-full text-white">
-            <div className=" p-4 rounded-lg text-center">
-              <span className="block text-[32px] leading-[37px] font-medium text-white">
-                10
-              </span>
-              <span className="text-xl font-medium font-raleway text-white">
-                Hours
-              </span>
-            </div>
-            :
-            <div className="bg-primary text-primary-foreground p-4 rounded-lg text-center">
-              <span className="block text-[32px] leading-[37px] font-medium text-white">
-                20
-              </span>
-              <span className="text-xl font-medium font-raleway text-white">
-                Minutes
-              </span>
-            </div>
-            :
-            <div className="bg-primary text-primary-foreground p-4 rounded-lg text-center">
-              <span className="block text-[32px] leading-[37px] font-medium text-white">
-                59
-              </span>
-              <span className="text-xl font-medium font-raleway text-white">
-                Seconds
-              </span>
-            </div>
+          </h2>
+          <div data-testid="deals-countdown">
+            <DealsCountdown />
           </div>
         </div>
-        <div className="flex items-center flex-wrap gap-y-2 md:gap-3 lg:gap-6 justify-between">
-          {dealList}
-        </div>
-      </div>
-      {/* Reviews section */}
 
-      <div className="px-5 py-10 md:p-10 lg:p-20 space-y-5">
-        <h2 className="font-bon_foyage text-5xl text-[#333]">Our Reviews</h2>
-        <div className="flex md:flex-wrap items-center lg:p-5 overflow-hidden gap-10 md:gap-3 lg:gap-6 justify-between">
-          {reviewList}
-        </div>
-        <div className="flex items-center gap-3 justify-center">
-          <span className="w-[1.5rem] h-[1.5rem] rounded-full bg-[#01454A] border-2 border-[#01454A]" />
-          <span className="w-[1.5rem] h-[1.5rem] rounded-full bg-[#D9D9D9]/10 border-2 border-[#01454A]" />
-          <span className="w-[1.5rem] h-[1.5rem] rounded-full bg-[#D9D9D9]/10 border-2 border-[#01454A]" />
-        </div>
+        {/* Hot deal cards — live from homepage bundle (zero extra fetch) */}
+        <HomepageHotDealsSection products={bundle.hot_deals} />
       </div>
+
+      {/* ── Customer Reviews (from homepage bundle) ──────────────────────── */}
+      <div data-testid="reviews-section">
+        <HomepageReviewsSection reviews={bundle.reviews} />
+      </div>
+
+      {/* ── Newsletter CTA ────────────────────────────────────────────────── */}
+      <div
+        className="mx-5 md:mx-10 lg:mx-20 mb-10 rounded-3xl bg-gradient-to-r from-[#01454A] to-[#01454A]/80 p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8"
+        data-testid="newsletter-section"
+      >
+        <div>
+          <h2 className="font-bon_foyage text-3xl md:text-4xl text-white mb-2">
+            Stay in Style
+          </h2>
+          <p className="font-raleway text-[#ECE6D6]/80 text-base md:text-lg">
+            Get exclusive deals, new arrivals and style tips delivered to your inbox.
+          </p>
+        </div>
+        <NewsletterForm />
+      </div>
+
+      {/* ── JSON-LD Structured Data — WebSite + ItemList ─────────────── */}
+      <JsonLdScript
+        id="website-ld"
+        data={generateWebSiteSchema()}
+      />
+      {bundle.featured_products.length > 0 && (
+        <JsonLdScript
+          id="featured-products-ld"
+          data={generateItemListSchema(bundle.featured_products, "Featured Products")}
+        />
+      )}
+      {bundle.hot_deals.length > 0 && (
+        <JsonLdScript
+          id="hot-deals-ld"
+          data={generateItemListSchema(bundle.hot_deals, "Deals of the Week")}
+        />
+      )}
     </div>
   );
 }

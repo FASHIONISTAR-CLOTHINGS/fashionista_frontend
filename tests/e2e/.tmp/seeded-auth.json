@@ -1,0 +1,42 @@
+{
+  "_note": "Tokens are obtained dynamically by master-vision-e2e-2026-05-28.spec.ts via API login at runtime",
+  "_seed_date": "2026-05-29",
+  "admin": {
+    "accessToken": "",
+    "refreshToken": "",
+    "user": {
+      "id": "",
+      "role": "admin",
+      "is_staff": true,
+      "first_name": "Admin",
+      "last_name": "FASHIONISTAR",
+      "is_verified": true
+    }
+  },
+  "vendor": {
+    "accessToken": "",
+    "refreshToken": "",
+    "user": {
+      "id": "",
+      "role": "vendor",
+      "is_staff": false,
+      "first_name": "Adaeze",
+      "last_name": "Couture",
+      "is_verified": true,
+      "has_vendor_profile": true
+    }
+  },
+  "client": {
+    "accessToken": "",
+    "refreshToken": "",
+    "user": {
+      "id": "",
+      "role": "client",
+      "is_staff": false,
+      "first_name": "Vision",
+      "last_name": "Client",
+      "is_verified": true,
+      "has_client_profile": true
+    }
+  }
+}

@@ -1,0 +1,141 @@
+
+> fashionistar-ai@2.0.0 dev C:\Users\FASHIONISTAR\OneDrive\Documenti\FASHIONISTAR_ANTAGRAVITY\fashionista_frontend
+> next dev
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.198:3000
+- Environments: .env.local
+✓ Ready in 4.0s
+Creating turbopack project {
+  dir: 'C:\\Users\\FASHIONISTAR\\OneDrive\\Documenti\\FASHIONISTAR_ANTAGRAVITY\\fashionista_frontend',
+  testMode: true
+}
+- Cache Components enabled
+- Experiments (use with caution):
+  ✓ workerThreads
+
+ GET / 200 in 27.6s (next.js: 2.5s, application-code: 25.1s)
+ GET / 200 in 9.6s (next.js: 22ms, application-code: 9.6s)
+ GET / 200 in 5.2s (next.js: 11ms, application-code: 5.2s)
+ GET / 200 in 6.9s (next.js: 18ms, application-code: 6.8s)
+ GET / 200 in 6.4s (next.js: 12ms, application-code: 6.4s)
+○ Compiling /contact-us ...
+ GET /contact-us 200 in 7.4s (next.js: 4.8s, application-code: 2.5s)
+ GET /contact-us 200 in 2.1s (next.js: 9ms, application-code: 2.1s)
+✓ Compiled in 1720ms
+ GET / 200 in 12.5s (next.js: 619ms, application-code: 11.9s)
+ GET / 200 in 8.1s (next.js: 11ms, application-code: 8.0s)
+ GET /contact-us 200 in 2.5s (next.js: 53ms, application-code: 2.4s)
+ GET / 200 in 6.2s (next.js: 11ms, application-code: 6.2s)
+ GET /contact-us 200 in 4.0s (next.js: 25ms, application-code: 4.0s)
+ GET / 200 in 3.2s (next.js: 8ms, application-code: 3.2s)
+ GET /contact-us 200 in 3.0s (next.js: 15ms, application-code: 3.0s)
+ GET / 200 in 4.2s (next.js: 8ms, application-code: 4.2s)
+ GET / 200 in 8.9s (next.js: 209ms, application-code: 8.7s)
+ GET / 200 in 9.6s (next.js: 9ms, application-code: 9.6s)
+ GET / 200 in 6.9s (next.js: 11ms, application-code: 6.9s)
+ GET / 200 in 7.4s (next.js: 9ms, application-code: 7.4s)
+ GET / 200 in 3.0s (next.js: 11ms, application-code: 3.0s)
+ GET / 200 in 5.4s (next.js: 11ms, application-code: 5.4s)
+ GET / 200 in 4.2s (next.js: 9ms, application-code: 4.2s)
+ GET / 200 in 4.0s (next.js: 6ms, application-code: 4.0s)
+ GET / 200 in 6.4s (next.js: 15ms, application-code: 6.4s)
+ GET / 200 in 5.6s (next.js: 7ms, application-code: 5.6s)
+ GET / 200 in 9.0s (next.js: 16ms, application-code: 8.9s)
+ GET / 200 in 4.8s (next.js: 11ms, application-code: 4.8s)
+ GET / 200 in 9.8s (next.js: 8ms, application-code: 9.8s)
+ GET / 200 in 26.7s (next.js: 466ms, application-code: 26.3s)
+✓ Finished filesystem cache database compaction in 44s
+○ Compiling /categories ...
+ GET /categories 200 in 34.6s (next.js: 22.7s, application-code: 11.8s)
+ GET /categories 200 in 32.6s (next.js: 21.1s, application-code: 11.6s)
+ GET /categories 200 in 32.9s (next.js: 21.1s, application-code: 11.7s)
+ GET /categories 200 in 57s (next.js: 51s, application-code: 6.3s)
+✓ Finished writing to filesystem cache in 23.9s
+✓ Finished filesystem cache database compaction in 12.1s
+○ Compiling /products ...
+ GET /products 200 in 10.6s (next.js: 8.2s, application-code: 2.4s)
+✓ Finished filesystem cache database compaction in 21.3s
+✓ Finished filesystem cache database compaction in 14.8s
+ GET /products 200 in 5.0s (next.js: 77ms, application-code: 4.9s)
+ GET /collections 200 in 8.8s (next.js: 2.3s, application-code: 6.4s)
+✓ Finished writing to filesystem cache in 14.9s
+○ Compiling /get-measured ...
+ GET /get-measured 200 in 10.9s (next.js: 9.9s, application-code: 976ms)
+○ Compiling /auth/sign-in ...
+ GET /auth/sign-in 200 in 22.1s (next.js: 12.1s, application-code: 10.1s)
+✓ Finished writing to filesystem cache in 11.3s
+○ Compiling /client/dashboard ...
+ GET /client/dashboard 200 in 105s (next.js: 103s, application-code: 2.3s)
+ GET /client/dashboard 200 in 78s (next.js: 75s, application-code: 3.4s)
+ GET /client/dashboard 200 in 2.8s (next.js: 31ms, application-code: 2.7s)
+○ Compiling /client/dashboard/notifications ...
+ GET /client/dashboard/notifications 200 in 8.4s (next.js: 3.3s, application-code: 5.1s)
+✓ Finished writing to filesystem cache in 15.1s
+✓ Compiled in 3.3s
+ GET /client/dashboard/notifications 200 in 9.0s (next.js: 1811ms, application-code: 7.2s)
+ GET /client/dashboard/notifications 200 in 1661ms (next.js: 18ms, application-code: 1643ms)
+ GET /client/dashboard/notifications 200 in 3.5s (next.js: 192ms, application-code: 3.3s)
+ GET /client/dashboard/notifications 200 in 167ms (next.js: 25ms, application-code: 142ms)
+ GET /client/dashboard/notifications 200 in 429ms (next.js: 45ms, application-code: 384ms)
+ GET /client/dashboard/notifications 200 in 33ms (next.js: 5ms, application-code: 28ms)
+ GET /client/dashboard/notifications 200 in 91ms (next.js: 7ms, application-code: 83ms)
+ GET /client/dashboard/notifications 200 in 33ms (next.js: 6ms, application-code: 27ms)
+ GET /client/dashboard/notifications 200 in 117ms (next.js: 10ms, application-code: 107ms)
+ GET /client/dashboard 200 in 1170ms (next.js: 412ms, application-code: 758ms)
+ GET /products 200 in 297ms (next.js: 102ms, application-code: 195ms)
+○ Compiling /products/[slug] ...
+✓ Finished writing to filesystem cache in 16.2s
+✓ Finished filesystem cache database compaction in 23.6s
+ GET /products/vision-browser-product-1779776978161 200 in 50s (next.js: 43s, generate-params: 35.1s, application-code: 7.6s)
+✓ Finished filesystem cache database compaction in 14.9s
+○ Compiling /wishlist ...
+ GET /wishlist 200 in 30.6s (next.js: 21.5s, application-code: 9.1s)
+○ Compiling /collections/[slug] ...
+✓ Finished writing to filesystem cache in 14.1s
+✓ Finished writing to filesystem cache in 11.5s
+✓ Finished filesystem cache database compaction in 21.4s
+ GET /collections/summer-regency-2026-snve 200 in 101s (next.js: 63s, generate-params: 12.5s, application-code: 38.1s)
+✓ Finished filesystem cache database compaction in 12.3s
+✓ Finished filesystem cache database compaction in 85s
+✓ Finished filesystem cache database compaction in 12.9s
+✓ Finished filesystem cache database compaction in 16.6s
+ GET /collections/summer-regency-2026-snve 200 in 39.0s (next.js: 4.5s, generate-params: 84ms, application-code: 34.5s)
+✓ Finished filesystem cache database compaction in 20.5s
+ GET / 200 in 19.3s (next.js: 1918ms, application-code: 17.4s)
+ GET / 200 in 14.3s (next.js: 589ms, application-code: 13.7s)
+ GET / 200 in 13.0s (next.js: 117ms, application-code: 12.9s)
+ GET / 200 in 4.8s (next.js: 37ms, application-code: 4.8s)
+ GET / 200 in 5.2s (next.js: 38ms, application-code: 5.1s)
+ GET / 200 in 7.3s (next.js: 41ms, application-code: 7.2s)
+ GET / 200 in 9.6s (next.js: 90ms, application-code: 9.5s)
+ GET / 200 in 4.7s (next.js: 20ms, application-code: 4.7s)
+ GET / 200 in 7.4s (next.js: 99ms, application-code: 7.3s)
+ GET / 200 in 13.3s (next.js: 87ms, application-code: 13.2s)
+ GET / 200 in 7.5s (next.js: 50ms, application-code: 7.4s)
+ GET / 200 in 19.6s (next.js: 67ms, application-code: 19.6s)
+ GET / 200 in 17.6s (next.js: 1274ms, application-code: 16.3s)
+ GET / 200 in 7.2s (next.js: 88ms, application-code: 7.1s)
+ GET / 200 in 9.0s (next.js: 50ms, application-code: 8.9s)
+ GET /wishlist 200 in 13.3s (next.js: 1151ms, application-code: 12.1s)
+ GET / 200 in 9.2s (next.js: 38ms, application-code: 9.1s)
+ GET / 200 in 5.0s (next.js: 26ms, application-code: 4.9s)
+ GET / 200 in 7.3s (next.js: 17ms, application-code: 7.2s)
+ GET / 200 in 4.7s (next.js: 27ms, application-code: 4.7s)
+ GET / 200 in 14.1s (next.js: 53ms, application-code: 14.0s)
+ GET / 200 in 9.7s (next.js: 49ms, application-code: 9.6s)
+ GET / 200 in 4.9s (next.js: 10ms, application-code: 4.9s)
+ GET / 200 in 3.5s (next.js: 15ms, application-code: 3.5s)
+ GET / 200 in 3.6s (next.js: 11ms, application-code: 3.6s)
+ GET / 200 in 8.8s (next.js: 16ms, application-code: 8.7s)
+ GET / 200 in 5.1s (next.js: 23ms, application-code: 5.1s)
+ GET / 200 in 5.2s (next.js: 30ms, application-code: 5.2s)
+ GET / 200 in 7.2s (next.js: 16ms, application-code: 7.2s)
+ GET / 200 in 8.0s (next.js: 41ms, application-code: 7.9s)
+ GET / 200 in 11.6s (next.js: 37ms, application-code: 11.5s)
+ GET / 200 in 4.7s (next.js: 11ms, application-code: 4.7s)
+ GET / 200 in 3.9s (next.js: 26ms, application-code: 3.8s)
+ GET / 200 in 6.4s (next.js: 193ms, application-code: 6.2s)
+[?25h
+ ELIFECYCLE  Command failed with exit code 1.
