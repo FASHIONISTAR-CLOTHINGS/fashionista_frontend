@@ -59,9 +59,11 @@ const KEY_LANDMARK_INDICES = [
 
 // Pinned to a stable version — @latest causes non-deterministic WASM loads
 const MEDIAPIPE_WASM_URL =
+  process.env.NEXT_PUBLIC_MEDIAPIPE_WASM_URL ||
   "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm";
 
 const POSE_MODEL_URL =
+  process.env.NEXT_PUBLIC_POSE_MODEL_URL ||
   "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task";
 
 /**
