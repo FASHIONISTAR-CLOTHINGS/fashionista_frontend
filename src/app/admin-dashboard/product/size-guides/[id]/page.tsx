@@ -4,7 +4,6 @@
  * Route: /admin-dashboard/product/size-guides/[id]/
  */
 "use client";
-import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSizeGuide } from "@/features/product/hooks/use-size-guide";
 
