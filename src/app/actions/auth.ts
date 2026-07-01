@@ -49,20 +49,21 @@ export const login = async (prev: any, formdata: FormData) => {
     const { access, refresh, role } = res.data;
     // user_role = role;
 
-    cookies().set("access_token", access, {
+    const cookieStore = await cookies();
+    cookieStore.set("access_token", access, {
       maxAge: 60 * 60 * 24,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
     });
-    cookies().set("refresh_token", refresh, {
+    cookieStore.set("refresh_token", refresh, {
       maxAge: 60 * 60 * 24 * 7,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
     });
 
-    cookies().set("role", role, {
+    cookieStore.set("role", role, {
       maxAge: 60 * 60 * 24 * 7 * 365,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
