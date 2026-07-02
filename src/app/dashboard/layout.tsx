@@ -1,5 +1,7 @@
 import { checkUserRole } from "../utils/lib";
 
+export const dynamic = "force-dynamic";
+
 export default async function Layout({
   client,
   vendor,
