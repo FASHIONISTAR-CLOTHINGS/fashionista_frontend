@@ -42,37 +42,35 @@ export const verify = async (formdata: FormData) => {
 };
 export const login = async (prev: any, formdata: FormData) => {
   const data = Object.fromEntries(formdata.entries());
-  let user_role;
   try {
     const res = await axiosInstance.post("/auth/login", data);
     console.log(res.data);
     const { access, refresh, role } = res.data;
-    // user_role = role;
 
-    cookies().set("access_token", access, {
+    const cookieStore = await cookies();
+    cookieStore.set("access_token", access, {
       maxAge: 60 * 60 * 24,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
     });
-    cookies().set("refresh_token", refresh, {
+    cookieStore.set("refresh_token", refresh, {
       maxAge: 60 * 60 * 24 * 7,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
     });
 
-    cookies().set("role", role, {
+    cookieStore.set("role", role, {
       maxAge: 60 * 60 * 24 * 7 * 365,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
     });
+    return { success: true };
   } catch (error: any) {
     return { call_errors: error?.response?.data?.detail };
   }
-
-  // redirect("/dashboard");
 };
 
 export const forget_password = async (formdata: FormData) => {

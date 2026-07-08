@@ -16,8 +16,11 @@ const Category = ({
   ) => {
     updateNewProductField({ [e.target.name]: e.target.value });
   };
+  const handleSubmit = async (formData: FormData) => {
+    await CategoryAction(formData);
+  };
   return (
-    <form action={CategoryAction} id="category" className="space-y-10 w-full">
+    <form action={handleSubmit} id="category" className="space-y-10 w-full">
       <div className="space-y-2 ">
         <h2 className="font-satoshi font-medium text-lg leading-6 text-black">
           {" "}

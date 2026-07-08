@@ -150,8 +150,12 @@ const Gallery = ({
     );
   };
 
+  const handleSubmit = async (formData: FormData) => {
+    await GalleryAction(formData);
+  };
+
   return (
-    <form action={GalleryAction} id="gallery" className="w-full space-y-10">
+    <form action={handleSubmit} id="gallery" className="w-full space-y-10">
       <div className="space-y-2">
         <h2 className="font-satoshi font-medium text-lg leading-6 text-black">
           Gallery

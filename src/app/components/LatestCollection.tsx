@@ -1,7 +1,5 @@
-import { waitForDebugger } from "inspector";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
 import { formatCurrency } from "../utils/formatCurrency";
 interface CollectionsProps {
   id: string;
@@ -26,6 +24,7 @@ const LatestCollection = async ({
       return collections;
     } catch (error) {
       console.log(error);
+      return [];
     }
   };
   const collections = (await catFunc()) || [];

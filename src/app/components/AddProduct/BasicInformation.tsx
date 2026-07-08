@@ -74,9 +74,13 @@ const BasicInformation = ({
     updateNewProductField({ [e.target.name]: e.target.value });
   };
 
+  const handleSubmit = async (formData: FormData) => {
+    await BasicInformationAction(formData);
+  };
+
   return (
     <form
-      action={BasicInformationAction}
+      action={handleSubmit}
       id="basic"
       className="flex flex-col gap-8 w-full shrink-0"
     >

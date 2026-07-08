@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
 interface CategoryProp {
   id: number;
   image: string;
@@ -17,6 +16,7 @@ const ShopByCategory = async () => {
       return data;
     } catch (error) {
       console.log(error);
+      return [];
     }
   };
 

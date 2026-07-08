@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 
 export const checkUserRole = async () => {
-  const role = cookies().get("role")?.value;
+  const cookieStore = await cookies();
+  const role = cookieStore.get("role")?.value;
   return role;
 };

@@ -16,9 +16,11 @@ const Prices = ({
   ) => {
     updateNewProductField({ [e.target.name]: e.target.value });
   };
-  console.log("New Product details", newProductFields);
+  const handleSubmit = async (formData: FormData) => {
+    await PricesAction(formData);
+  };
   return (
-    <form id="prices" action={PricesAction} className="space-y-10 w-full">
+    <form id="prices" action={handleSubmit} className="space-y-10 w-full">
       <div className="space-y-2">
         <h2 className="font-satoshi font-medium text-lg leading-6 text-black">
           Prices
