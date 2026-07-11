@@ -16,6 +16,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   const [collapsedGroups, setCollapsedGroups] = useState<{ [key: string]: boolean }>({
     overview: false,
+    analytics: false,
     commerce: false,
     identity: false,
     financial: false,
@@ -44,6 +45,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       label: "Overview",
       items: [
         { href: "/admin-dashboard", label: "Dashboard", icon: "dashboard" }
+      ]
+    },
+    {
+      id: "analytics",
+      label: "Analytics",
+      items: [
+        { href: "/admin-dashboard/analytics", label: "Analytics Dashboard", icon: "analytics" },
+        { href: "/admin-dashboard/analytics/report", label: "Reports", icon: "reports" }
       ]
     },
     {
@@ -112,6 +121,22 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const renderIcon = (iconName: string, active: boolean) => {
     const strokeColor = active ? "#fda600" : "#bbb";
     switch (iconName) {
+      case "analytics":
+        return (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 3v18h18" stroke={strokeColor} strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M7 14l4-4 4 4 6-6" stroke={strokeColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        );
+      case "reports":
+        return (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke={strokeColor} strokeWidth="1.5" strokeLinejoin="round" />
+            <polyline points="14 2 14 8 20 8" stroke={strokeColor} strokeWidth="1.5" strokeLinejoin="round" />
+            <line x1="8" y1="13" x2="16" y2="13" stroke={strokeColor} strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="8" y1="17" x2="14" y2="17" stroke={strokeColor} strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        );
       case "dashboard":
         return (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
