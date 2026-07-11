@@ -42,9 +42,9 @@ export function useRealtimeAnalytics() {
 
     const url = buildWsUrl();
     const token = readAccessToken();
-    const wsUrl = token ? `${url}?token=${encodeURIComponent(token)}` : url;
+    const subprotocols = token ? [`bearer.${token}`] : undefined;
 
-    const ws = new WebSocket(wsUrl);
+    const ws = new WebSocket(url, subprotocols);
     wsRef.current = ws;
 
     ws.onopen = () => {

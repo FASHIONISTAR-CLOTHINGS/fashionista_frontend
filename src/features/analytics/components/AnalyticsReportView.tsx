@@ -34,12 +34,13 @@ export function AnalyticsReportView() {
   const productQuery = useProductReport(daysNum);
   const userQuery = useUserReport(daysNum);
 
-  const activeQuery = {
+  const queryMap = {
     platform: platformQuery,
     orders: orderQuery,
     products: productQuery,
     users: userQuery,
-  }[reportType ?? "platform"];
+  } as const;
+  const activeQuery = queryMap[reportType as keyof typeof queryMap] ?? queryMap.platform;
 
   return (
     <div className="space-y-8">

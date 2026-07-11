@@ -38,6 +38,10 @@ export function ReportTable({ report, isLoading }: ReportTableProps) {
       }
     }
     all.sort((a, b) => {
+      if (sortKey === "metric") {
+        const cmp = a.metric.localeCompare(b.metric);
+        return sortDesc ? -cmp : cmp;
+      }
       const av = typeof a.value === "number" ? a.value : 0;
       const bv = typeof b.value === "number" ? b.value : 0;
       return sortDesc ? bv - av : av - bv;
