@@ -49,7 +49,7 @@
     "@radix-ui/react-tooltip": "^1.2.0",
     "@react-email/components": "^0.0.34",
     "@react-oauth/google": "^0.13.4",
-    "@sentry/nextjs": "^9.4.0",
+    "@sentry/nextjs": "10",
     "@t3-oss/env-nextjs": "^0.12.0",
     "@tanstack/react-query": "^5.66.0",
     "@tanstack/react-query-devtools": "^5.66.0",
