@@ -5,6 +5,8 @@ import NewMobileNav from "@/components/shared/navigation/NewMobileNav";
 import { WishlistNudgeClient } from "./_components/WishlistNudgeClient";
 import { getPublicPlatformSettings } from "@/features/public-engagement";
 
+export const dynamic = "force-dynamic";
+
 export default function Home({
   children,
 }: Readonly<{
