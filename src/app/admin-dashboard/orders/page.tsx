@@ -1,4 +1,3 @@
-import OrderList from "@/app/components/OrderList";
 import { OrderProp } from "@/types";
 import React from "react";
 import Link from "next/link";
