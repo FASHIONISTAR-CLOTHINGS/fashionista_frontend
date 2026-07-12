@@ -1,4 +1,4 @@
-const DEFAULT_BACKEND_ROOT = "http://127.0.0.1:8001";
+const DEFAULT_BACKEND_ROOT = "https://fashionistar-fashionistar-api-v1.hf.space";
 
 function stripTrailingSlash(value: string): string {
   return value.replace(/\/+$/, "");
@@ -26,7 +26,6 @@ export function getClientBackendRootUrl(): string {
 }
 
 export function getServerBackendRootUrl(): string {
-  console.log("Fashionista: ", process.env.BACKEND_INTERNAL_URL);
   return stripTrailingSlash(
     process.env.BACKEND_INTERNAL_URL ??
       process.env.NEXT_PUBLIC_BACKEND_URL ??
