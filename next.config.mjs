@@ -5,10 +5,17 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
-const backendUrl =
-  process.env.BACKEND_INTERNAL_URL ||
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  "http://127.0.0.1:8001";
+const backendUrl = (() => {
+  const raw =
+    process.env.BACKEND_INTERNAL_URL ||
+    process.env.NEXT_PUBLIC_BACKEND_URL ||
+    "http://127.0.0.1:8001";
+  if (!raw || !raw.startsWith("http://") && !raw.startsWith("https://")) {
+    console.warn(`[next.config] backendUrl "${raw}" is not a valid URL, falling back to http://127.0.0.1:8001`);
+    return "http://127.0.0.1:8001";
+  }
+  return raw;
+})();
 const distDir = process.env.NEXT_DIST_DIR || ".next";
 
 function unique(values) {
