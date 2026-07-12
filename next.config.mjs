@@ -5,14 +5,15 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
+const FALLBACK_BACKEND_URL = "https://fashionistar-fashionistar-api-v1.hf.space";
 const backendUrl = (() => {
   const raw =
     process.env.BACKEND_INTERNAL_URL ||
     process.env.NEXT_PUBLIC_BACKEND_URL ||
-    "http://127.0.0.1:8001";
-  if (!raw || !raw.startsWith("http://") && !raw.startsWith("https://")) {
-    console.warn(`[next.config] backendUrl "${raw}" is not a valid URL, falling back to http://127.0.0.1:8001`);
-    return "http://127.0.0.1:8001";
+    FALLBACK_BACKEND_URL;
+  if (!raw || (!raw.startsWith("http://") && !raw.startsWith("https://"))) {
+    console.warn(`[next.config] backendUrl is not a valid URL, using fallback: ${FALLBACK_BACKEND_URL}`);
+    return FALLBACK_BACKEND_URL;
   }
   return raw;
 })();

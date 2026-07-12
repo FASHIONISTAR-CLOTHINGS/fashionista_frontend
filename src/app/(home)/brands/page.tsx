@@ -16,6 +16,8 @@ import { getCatalogBrands } from "@/features/catalog";
 import { FashionistarImage } from "@/components/media";
 import { FashionistarPagination } from "@/components/ui/FashionistarPagination";
 
+export const dynamic = "force-dynamic";
+
 // ── SEO ───────────────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
   title: "Fashion Brands | Fashionistar",

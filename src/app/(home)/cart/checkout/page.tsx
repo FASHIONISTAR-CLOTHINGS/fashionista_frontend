@@ -4,6 +4,8 @@ import { CommerceRouteGuard } from "@/features/auth/components/CommerceRouteGuar
 import { CheckoutPage } from "@/features/cart/components/CheckoutPage";
 import { CheckoutPageSkeleton } from "@/features/cart/components/CheckoutPageSkeleton";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Checkout — FASHIONISTAR",
   description:

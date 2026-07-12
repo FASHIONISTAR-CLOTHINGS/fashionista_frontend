@@ -10,6 +10,8 @@ import Link from "next/link";
 import { FashionistarImage } from "@/components/media";
 import { NewsletterForm } from "../_components/NewsletterForm";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "About Us | Fashionistar",
   description:
