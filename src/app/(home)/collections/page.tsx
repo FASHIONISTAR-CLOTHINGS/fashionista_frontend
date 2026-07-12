@@ -15,6 +15,8 @@ import { CatalogCollectionGrid } from "@/features/catalog";
 import { getCatalogCollections } from "@/features/catalog";
 import { FashionistarPagination } from "@/components/ui/FashionistarPagination";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Fashion Collections | Fashionistar",
   description:

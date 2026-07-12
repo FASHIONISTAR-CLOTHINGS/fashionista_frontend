@@ -22,6 +22,8 @@ import { Suspense } from "react";
 import { getCollectionDetail, getCatalogCollections } from "@/features/catalog";
 import CollectionVendorClient from "./CollectionVendorClient";
 
+export const dynamic = "force-dynamic";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────

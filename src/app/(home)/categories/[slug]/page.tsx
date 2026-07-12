@@ -28,6 +28,8 @@ import {
 import { ProductGridSkeleton } from "@/features/product";
 import CategoryProductsClient from "./CategoryProductsClient";
 
+export const dynamic = "force-dynamic";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────

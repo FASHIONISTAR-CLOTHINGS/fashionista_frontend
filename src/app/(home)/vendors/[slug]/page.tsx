@@ -33,6 +33,8 @@ import {
 import { ProductGridSkeleton } from "@/features/product";
 import VendorPublicProfileClient from "./VendorPublicProfileClient";
 
+export const dynamic = "force-dynamic";
+
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface VendorPublicOut {
   id:             string;

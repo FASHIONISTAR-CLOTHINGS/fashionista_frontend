@@ -42,6 +42,7 @@ import {
 // ISR — 5 minute cache, stale-while-revalidate semantics on CDN edge.
 // Matches the backend Redis TTL for catalog:homepage:bundle.
 // ─────────────────────────────────────────────────────────────────────────────
+export const dynamic = "force-dynamic";
 export const revalidate = 300;
 
 // ─────────────────────────────────────────────────────────────────────────────
