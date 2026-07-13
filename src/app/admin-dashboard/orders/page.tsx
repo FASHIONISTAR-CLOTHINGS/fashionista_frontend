@@ -1,6 +1,14 @@
-import { OrderProp } from "@/types";
-import React from "react";
 import Link from "next/link";
+
+interface OrderProp {
+  id: number;
+  date: string;
+  customer_name: string;
+  address: string;
+  payment_status: string;
+  order_status: string;
+  items: number;
+}
 
 const page = () => {
   const order: OrderProp[] = [

@@ -1,4 +1,3 @@
-import React from "react";
 import Link from "next/link";
 import man from "../../../../public/man4_asset.svg";
 import man2 from "../../../../public/woman3.svg";

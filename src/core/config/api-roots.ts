@@ -5,15 +5,6 @@ function stripTrailingSlash(value: string): string {
 }
 
 function getLocalBrowserBackendOverride(): string | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const hostname = window.location.hostname;
-  if (hostname === "localhost" || hostname === "127.0.0.1") {
-    return DEFAULT_BACKEND_ROOT;
-  }
-
   return null;
 }
 
