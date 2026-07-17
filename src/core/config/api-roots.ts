@@ -9,11 +9,20 @@ function getLocalBrowserBackendOverride(): string | null {
 }
 
 export function getClientBackendRootUrl(): string {
+  if (typeof window !== "undefined") {
+    return "";
+  }
   return stripTrailingSlash(
     getLocalBrowserBackendOverride() ??
       process.env.NEXT_PUBLIC_BACKEND_URL ??
       DEFAULT_BACKEND_ROOT,
   );
+}
+
+export function getClientWsRootUrl(): string {
+  const root =
+    process.env.NEXT_PUBLIC_BACKEND_URL || DEFAULT_BACKEND_ROOT;
+  return stripTrailingSlash(root);
 }
 
 export function getServerBackendRootUrl(): string {
@@ -42,4 +51,10 @@ export function getAdminSyncApiBaseUrl(): string {
 
 export function getAdminAsyncApiBaseUrl(): string {
   return `${getClientBackendRootUrl()}/api/v1/admin_backend`;
+}
+
+export function getClientWsBaseUrl(): string {
+  const root = getClientWsRootUrl();
+  const wsRoot = root.replace(/^http/, "ws");
+  return `${wsRoot}/ws`;
 }

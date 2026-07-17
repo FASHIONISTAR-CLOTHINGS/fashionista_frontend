@@ -9,7 +9,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
-import { getClientBackendRootUrl } from "@/core/config/api-roots";
+import { getClientWsBaseUrl } from "@/core/config/api-roots";
 import { readAccessToken } from "@/features/auth/lib/auth-session.client";
 import { useRealtimeStore } from "../stores/realtime-store";
 import type { AnalyticsWSEvent } from "../types";
@@ -19,9 +19,7 @@ const RECONNECT_MAX_MS = 30_000;
 const PING_INTERVAL_MS = 30_000;
 
 function buildWsUrl(): string {
-  const root = getClientBackendRootUrl();
-  const wsRoot = root.replace(/^http/, "ws");
-  return `${wsRoot}/ws/analytics/realtime/`;
+  return `${getClientWsBaseUrl()}/analytics/realtime/`;
 }
 
 export function useRealtimeAnalytics() {
