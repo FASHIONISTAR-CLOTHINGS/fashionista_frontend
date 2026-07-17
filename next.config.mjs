@@ -233,12 +233,12 @@ const nextConfig = {
   rewrites: async () => ({
     beforeFiles: [
       {
-        source: "/api/v1/:path*",
-        destination: `${backendUrl}/api/v1/:path*`,
+        source: "/api/v1/:path*/",
+        destination: `${backendUrl}/api/v1/:path*/`,
       },
       {
-        source: "/api/v1/ninja/:path*",
-        destination: `${backendUrl}/api/v1/ninja/:path*`,
+        source: "/api/v1/:path*",
+        destination: `${backendUrl}/api/v1/:path*/`,
       },
       {
         source: "/media/:path*",
