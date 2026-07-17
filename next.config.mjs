@@ -122,6 +122,7 @@ const nextConfig = {
   output: "standalone",
   distDir,
   allowedDevOrigins,
+  skipTrailingSlashRedirect: true,
   experimental: {
     // cpus: 1,   // Uncomment for debugging: force single-threaded builds to avoid worker spawning issues in Windows/OneDrive setups.
     //   // cpus: 1 intentionally REMOVED — caused 404s on first route request and 
