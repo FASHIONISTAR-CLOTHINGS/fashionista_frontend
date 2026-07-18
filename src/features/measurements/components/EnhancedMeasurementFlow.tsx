@@ -32,7 +32,7 @@
  *   <EnhancedMeasurementFlow onComplete={(id) => router.push(`/measurements/${id}`)} />
  */
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEnhancedMeasurementCapture } from "../hooks/useEnhancedMeasurementCapture";
 import { useAutoCapture } from "../hooks/useAutoCapture";
@@ -43,6 +43,11 @@ import { CalibrationGuide } from "./CalibrationGuide";
 import { VoiceCoachDisplay } from "./VoiceCoachDisplay";
 import { PhoneOrientationIndicator } from "./PhoneOrientationIndicator";
 import { CountdownOverlay } from "./CountdownOverlay";
+import { ScanProgressStepper } from "./ScanProgressStepper";
+import { ScanTutorialOverlay } from "./ScanTutorialOverlay";
+import { MeasurementReveal } from "./MeasurementReveal";
+import { useHapticFeedback } from "../hooks/useHapticFeedback";
+import { ScanFallbackManual } from "./ScanFallbackManual";
 import { cn } from "@/lib/utils";
 import { POSE_THRESHOLDS, CAPTURE_CONFIG } from "@/lib/brand";
 
@@ -67,20 +72,7 @@ export interface EnhancedMeasurementFlowProps {
 
 // ─── Phase steps for progress stepper ────────────────────────────────────────
 
-const STEPPER_STEPS = [
-  { key: "setup",    label: "Setup"    },
-  { key: "front",    label: "Front"    },
-  { key: "side",     label: "Side"     },
-  { key: "results",  label: "Results"  },
-] as const;
 
-function getStepperIndex(phase: string): number {
-  if (phase === "device_setup" || phase === "loading_model") return 0;
-  if (phase.startsWith("front") || phase === "positioning") return 1;
-  if (phase.startsWith("side")) return 2;
-  if (phase === "submitting" || phase === "processing" || phase === "completed") return 3;
-  return 0;
-}
 
 // ─── Animation variants ───────────────────────────────────────────────────────
 
@@ -101,17 +93,25 @@ export function EnhancedMeasurementFlow({
   const capture     = useEnhancedMeasurementCapture();
   const voice       = useVoiceCoach();
   const orientation = usePhoneOrientation();
+  const haptic      = useHapticFeedback();
+  const [tutorialDone, setTutorialDone] = useState(false);
 
   // Separate auto-capture instances for front and side
   const frontAutoCapture = useAutoCapture({
-    onCapture: () => capture.triggerFrontCapture(),
+    onCapture: () => {
+      haptic.trigger("autoCapture");
+      capture.triggerFrontCapture();
+    },
     qualityThreshold:       POSE_THRESHOLDS.frontGood,
     stabilityFramesRequired: CAPTURE_CONFIG.landmarkBufferSize,
     enabled: capture.phase === "front_aligning",
   });
 
   const sideAutoCapture = useAutoCapture({
-    onCapture: () => capture.triggerSideCapture(),
+    onCapture: () => {
+      haptic.trigger("autoCapture");
+      capture.triggerSideCapture();
+    },
     qualityThreshold:       POSE_THRESHOLDS.sideGood,
     stabilityFramesRequired: Math.round(CAPTURE_CONFIG.landmarkBufferSize * 0.7),
     enabled: capture.phase === "side_aligning",
@@ -214,40 +214,19 @@ export function EnhancedMeasurementFlow({
     [voice]
   );
 
-  const stepperIndex = getStepperIndex(capture.phase);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className={cn("flex flex-col gap-4 w-full max-w-sm mx-auto", className)}>
 
+      {/* ── Tutorial overlay (first-visit only) ─────────────────────────── */}
+      {!tutorialDone && (
+        <ScanTutorialOverlay onComplete={() => setTutorialDone(true)} />
+      )}
+
       {/* ── Progress Stepper ── */}
-      {capture.phase !== "idle" && capture.phase !== "loading_model" && (
-        <div className="flex items-center justify-between px-1">
-          {STEPPER_STEPS.map((step, i) => (
-            <div key={step.key} className="flex items-center gap-1">
-              <div className={cn(
-                "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-300",
-                i < stepperIndex  ? "bg-[#2D6A4F] text-white" :
-                i === stepperIndex ? "bg-[#F4C430] text-[#0A0A0A]" :
-                "bg-white/10 text-white/30"
-              )}>
-                {i < stepperIndex ? <IconCheck /> : i + 1}
-              </div>
-              <span className={cn(
-                "text-[10px] font-medium hidden sm:block transition-colors",
-                i === stepperIndex ? "text-[#F4C430]" : "text-white/30"
-              )}>
-                {step.label}
-              </span>
-              {i < STEPPER_STEPS.length - 1 && (
-                <div className={cn(
-                  "flex-1 h-px mx-2 transition-colors duration-300",
-                  i < stepperIndex ? "bg-[#2D6A4F]" : "bg-white/10"
-                )} />
-              )}
-            </div>
-          ))}
-        </div>
+      {capture.phase !== "idle" && capture.phase !== "loading_model" && capture.phase !== "failed" && (
+        <ScanProgressStepper phase={capture.phase} className="px-1" />
       )}
 
       <AnimatePresence mode="wait">
@@ -596,81 +575,52 @@ export function EnhancedMeasurementFlow({
           </motion.div>
         )}
 
-        {/* ── COMPLETED ── */}
-        {capture.phase === "completed" && (
+        {/* ── COMPLETED — Full MeasurementReveal ── */}
+        {capture.phase === "completed" && capture.sessionStatus && (
           <motion.div
             key="completed"
-            {...PAGE_VARIANTS}
-            transition={{ duration: 0.25 }}
-            className="flex flex-col items-center gap-5 py-12 max-w-sm mx-auto text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
           >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.1 }}
-              className="w-20 h-20 rounded-full bg-[#2D6A4F]/20 ring-4 ring-[#2D6A4F]/30 flex items-center justify-center text-[#52B788]"
-            >
-              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-              </svg>
-            </motion.div>
-            <div>
-              <h3 className="text-white font-bold text-xl">Measurements Captured!</h3>
-              <p className="text-white/50 text-sm mt-1">
-                14 precise measurements saved to your profile.
-              </p>
-            </div>
-            {capture.sessionStatus?.scan_confidence != null && (
-              <div className="text-xs text-white/40">
-                Scan accuracy:{" "}
-                <span className="text-[#52B788] font-semibold">
-                  {Math.round(capture.sessionStatus.scan_confidence * 100)}%
-                </span>
-              </div>
-            )}
-            <div className="flex flex-col gap-2 w-full">
-              <a
-                href="/client/dashboard/measurements"
-                className="rounded-xl bg-[#F4C430] text-[#0A0A0A] font-semibold py-3 text-sm
-                           text-center hover:bg-[#C9A227] transition"
-              >
-                View My Measurements →
-              </a>
-              <button
-                onClick={capture.reset}
-                className="text-xs text-white/40 hover:text-white/70 transition"
-              >
-                Scan again
-              </button>
-            </div>
+            <MeasurementReveal
+              scanResult={capture.sessionStatus}
+              qualityScore={capture.sessionStatus.scan_confidence ?? 0.8}
+              onRetake={capture.reset}
+              onViewProfile={() => {
+                const profileId = capture.sessionStatus?.measurement_profile_id;
+                if (profileId) {
+                  window.location.href = `/client/dashboard/measurements`;
+                }
+              }}
+            />
           </motion.div>
         )}
 
-        {/* ── FAILED ── */}
+        {/* -- FAILED -- */}
         {capture.phase === "failed" && (
           <motion.div
             key="failed"
             {...PAGE_VARIANTS}
-            transition={{ duration: 0.25 }}
-            className="flex flex-col items-center gap-5 py-12 max-w-sm mx-auto text-center"
+            transition={{ duration: 0.3 }}
+            className="flex flex-col gap-4"
           >
-            <div className="w-20 h-20 rounded-full bg-[#DC2626]/20 flex items-center justify-center">
-              <svg className="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+            <div className="flex flex-col items-center gap-2 text-center">
+              <div className="w-16 h-16 rounded-full bg-[#DC2626]/20 flex items-center justify-center">
+                <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <p className="text-white font-bold">Scan Failed</p>
+              {capture.error && <p className="text-red-400/80 text-xs">{capture.error}</p>}
+              <button
+                onClick={capture.reset}
+                className="rounded-xl bg-[#2D6A4F] hover:bg-[#1B4332] text-white px-6 py-2 font-medium text-sm transition flex items-center gap-2"
+              >
+                <IconRefresh /> Try Again
+              </button>
             </div>
-            <div>
-              <h3 className="text-white font-bold">Scan Failed</h3>
-              <p className="text-red-400/80 text-sm mt-1">{capture.error}</p>
-            </div>
-            <button
-              onClick={capture.reset}
-              className="rounded-xl bg-[#2D6A4F] hover:bg-[#1B4332] text-white px-6 py-2.5
-                         font-medium text-sm transition flex items-center gap-2"
-            >
-              <IconRefresh />
-              Try Again
-            </button>
+            <ScanFallbackManual variant="inline" />
           </motion.div>
         )}
 

@@ -35,15 +35,15 @@ interface PhaseConfig {
 }
 
 const PHASE_CONFIG: Record<ScanProgressPhase, PhaseConfig> = {
-  idle:          { label: "Ready",                    sublabel: "Press start to begin scan",        pct: 0,   color: "white/20"   },
-  loading:       { label: "Loading AI Model",         sublabel: "Downloading pose detector...",      pct: 12,  color: "violet-500" },
-  initialising:  { label: "Initialising Camera",      sublabel: "Starting pose detection engine...", pct: 28,  color: "violet-500" },
-  detecting:     { label: "Detecting Pose",            sublabel: "Hold still — capturing landmarks",  pct: 50,  color: "blue-500"   },
-  submitting:    { label: "Uploading Measurements",   sublabel: "Sending body data to server...",    pct: 68,  color: "sky-500"    },
-  processing:    { label: "AI Processing",            sublabel: "Computing body measurements...",    pct: 82,  color: "amber-500"  },
-  saving:        { label: "Saving Profile",           sublabel: "Creating your measurement profile", pct: 95,  color: "green-500"  },
-  completed:     { label: "Complete",                 sublabel: "Measurements saved successfully",   pct: 100, color: "green-400"  },
-  failed:        { label: "Scan Failed",              sublabel: "Please try again",                  pct: 0,   color: "red-500"    },
+  idle:          { label: "Ready",                    sublabel: "Press start to begin scan",        pct: 0,   color: "[#2D6A4F]/40" },
+  loading:       { label: "Loading AI Model",         sublabel: "Downloading pose detector...",      pct: 12,  color: "[#2D6A4F]"    },
+  initialising:  { label: "Initialising Camera",      sublabel: "Starting pose detection engine...", pct: 28,  color: "[#2D6A4F]"    },
+  detecting:     { label: "Detecting Pose",            sublabel: "Hold still — capturing landmarks",  pct: 50,  color: "[#52B788]"    },
+  submitting:    { label: "Uploading Measurements",   sublabel: "Sending body data to server...",    pct: 68,  color: "[#F4C430]"    },
+  processing:    { label: "AI Processing",            sublabel: "Computing body measurements...",    pct: 82,  color: "[#F4C430]"    },
+  saving:        { label: "Saving Profile",           sublabel: "Creating your measurement profile", pct: 95,  color: "[#2D6A4F]"    },
+  completed:     { label: "Complete",                 sublabel: "Measurements saved successfully",   pct: 100, color: "[#52B788]"    },
+  failed:        { label: "Scan Failed",              sublabel: "Please try again",                  pct: 0,   color: "[#DC2626]"    },
 };
 
 interface MeasurementProgressProps {

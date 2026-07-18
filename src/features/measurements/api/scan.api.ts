@@ -2,61 +2,128 @@
  * @file scan.api.ts
  * @description AI Body Scan API client — wraps the FASHIONISTAR dual-engine scan endpoints.
  *
+ * UPDATED (TASK-020 Steps 20-21):
+ *   - Added user_age to LandmarkSubmitPayload (anthropometric ratio adjustment)
+ *   - Renamed landmarks → front_landmarks (back-compat alias kept)
+ *   - Added side_landmarks (optional — 90° side pose for depth estimation)
+ *   - ScanStatusResponse now includes measurements_inches field
+ *
  * Endpoint Routing:
  *  - DRF (sync/write):   POST /api/v1/measurements/scan/initiate/
  *  - DRF (sync/write):   POST /api/v1/measurements/scan/{id}/submit-landmarks/
  *  - Ninja (async/read): GET  /api/v1/ninja/ai/scan/{id}/status/
- *
- * NOTE: The status polling endpoint is under /api/v1/ninja/ai/ (NOT /ninja/measurements/).
- * The AI Ninja router is mounted at /api/v1/ninja/ai/ in the main Ninja app config.
+ *  - Ninja (async/read): GET  /api/v1/ninja/ai/height-predict/ (public)
  */
 
 import { apiSync } from "@/core/api/client.sync";
 import { apiAsync } from "@/core/api/client.async";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Landmark Point ───────────────────────────────────────────────────────────
 
-/** A single MediaPipe world-coordinate landmark (in metres). */
+/** A single MediaPipe world-coordinate landmark (metres, normalised 0-1 for x/y). */
 export interface LandmarkPoint {
-  x: number;
-  y: number;
-  z: number;
+  x:          number;
+  y:          number;
+  z:          number;
   visibility: number;
 }
+
+// ─── Initiate Payload ─────────────────────────────────────────────────────────
 
 /** Payload for POST /scan/initiate/ */
 export interface ScanInitPayload {
   device_type?: "web" | "ios" | "android";
 }
 
-/** Payload for POST /scan/{id}/submit-landmarks/ */
+// ─── Submit Payload (V2 — dual pose) ─────────────────────────────────────────
+
+/**
+ * Payload for POST /scan/{id}/submit-landmarks/
+ *
+ * V2 changes:
+ *   - front_landmarks: primary pose (replaces the old 'landmarks' field)
+ *   - side_landmarks:  optional 90° right-side pose (enables depth estimation → ±2.5cm)
+ *   - user_age:        improves anthropometric ratio selection for <25 and >50 age groups
+ *   - user_weight_kg:  enables BMI-correction (NHANES 2017-2020 table)
+ *
+ * Back-compat: 'landmarks' still accepted server-side for legacy clients.
+ */
 export interface LandmarkSubmitPayload {
-  /** User-provided height in cm. Auto-estimated if not provided (see height estimation). */
+  /** User-provided height in cm. Required — used for scale calibration. */
   user_height_cm: number;
-  /** Optional user-provided weight in kg — improves circumference estimates. */
+
+  /** Optional weight in kg — enables BMI correction layer (reduces error ±5cm → ±2.5cm). */
   user_weight_kg?: number;
+
+  /**
+   * Optional age — improves anthropometric ratio adjustment.
+   * Particularly effective for ages <25 (higher shoulder-to-hip ratio)
+   * and >50 (larger abdominal proportions).
+   */
+  user_age?: number;
+
   device_type?: "web" | "ios" | "android";
-  /** Exactly 33 MediaPipe world landmarks from PoseLandmarker. */
-  landmarks: LandmarkPoint[];
+
+  /**
+   * Front-facing pose landmarks (33 MediaPipe BlazePose points).
+   * Named 'front_landmarks' in V2. The server still accepts 'landmarks' for back-compat.
+   */
+  front_landmarks?: LandmarkPoint[];
+
+  /**
+   * Side profile landmarks (33 MediaPipe BlazePose points).
+   * Captured after front pose — user turns 90° to right side.
+   * Used for body depth estimation (the 'b' in Ramanujan's ellipse: C = π(3(a+b) - √((3a+b)(a+3b)))).
+   * Optional — scan proceeds with front-only if not provided.
+   */
+  side_landmarks?: LandmarkPoint[];
+
+  /**
+   * @deprecated Use front_landmarks instead.
+   * Kept for backward compatibility with existing clients.
+   */
+  landmarks?: LandmarkPoint[];
 }
+
+// ─── Response Types ───────────────────────────────────────────────────────────
 
 /** Response from initiate / submit-landmarks endpoints. */
 export interface ScanSessionResponse {
   session_id: string;
-  status: "pending" | "processing" | "completed" | "failed";
-  message?: string;
+  status:     "pending" | "processing" | "completed" | "failed";
+  message?:   string;
 }
 
 /** Full scan session status from Ninja polling endpoint. */
 export interface ScanStatusResponse {
-  session_id: string;
-  status: "pending" | "processing" | "completed" | "failed";
-  scan_confidence?: number;
+  session_id:             string;
+  status:                 "pending" | "processing" | "completed" | "failed";
+  scan_confidence?:       number;
+  /** Primary measurement output — all values in centimetres. */
   extracted_measurements?: Record<string, number | null>;
-  error_message?: string;
+  /** NEW (Step 25): Measurements also pre-converted to inches by the backend. */
+  measurements_cm?:        Record<string, number | null>;
+  measurements_inches?:    Record<string, number | null>;
+  /** Plausibility warnings from anthropometric filter. */
+  plausibility_warnings?:  string[];
+  /** Whether BMI correction was applied. */
+  correction_applied?:     string;
+  /** Computed BMI (if weight was provided). */
+  bmi?:                    number | null;
+  error_message?:          string;
   measurement_profile_id?: string | number;
-  processing_started_at?: string;
-  completed_at?: string;
+  processing_started_at?:  string;
+  completed_at?:           string;
+}
+
+/** Response from GET /api/v1/ninja/ai/height-predict/ */
+export interface HeightPredictResponse {
+  predicted_cm:   number;
+  predicted_inch: string;
+  range_low_cm:   number;
+  range_high_cm:  number;
+  confidence:     "high" | "moderate" | "low";
+  note:           string;
 }
 
 // ─── API Functions ─────────────────────────────────────────────────────────────
@@ -66,10 +133,6 @@ export interface ScanStatusResponse {
  *
  * Creates a BodyScanSession with status=PENDING.
  * The returned session_id is used to submit landmarks and poll status.
- *
- * @example
- * const session = await initiateBodyScan({ device_type: "web" });
- * console.log(session.session_id); // "3f5a1c9e-..."
  */
 export async function initiateBodyScan(
   payload: ScanInitPayload = {}
@@ -84,22 +147,37 @@ export async function initiateBodyScan(
 /**
  * POST /api/v1/measurements/scan/{sessionId}/submit-landmarks/
  *
- * Sends 33 MediaPipe world landmarks + user height to the backend.
+ * V2: Sends front landmarks (+ optional side landmarks, weight, age) to the backend.
  * Triggers the Celery MeasurementWorkflow (returns immediately — poll for status).
+ *
+ * The payload is normalised here so both legacy `landmarks` and new `front_landmarks`
+ * are sent, ensuring server-side back-compat.
  *
  * @example
  * await submitLandmarks(sessionId, {
  *   user_height_cm: 175.5,
- *   landmarks: poseLandmarkerResult.worldLandmarks[0],
+ *   user_weight_kg: 72,
+ *   user_age: 28,
+ *   front_landmarks: frontWorldLandmarks,
+ *   side_landmarks: sideWorldLandmarks,
  * });
  */
 export async function submitLandmarks(
   sessionId: string,
-  payload: LandmarkSubmitPayload
+  payload:   LandmarkSubmitPayload
 ): Promise<ScanSessionResponse> {
+  // Normalise: send both field names for server back-compat
+  const normalised = {
+    ...payload,
+    // New field name
+    front_landmarks: payload.front_landmarks ?? payload.landmarks,
+    // Legacy field — keep for Django serializer back-compat
+    landmarks:       payload.front_landmarks ?? payload.landmarks,
+  };
+
   const { data } = await apiSync.post<{ status: string; data: ScanSessionResponse }>(
     `v1/measurements/scan/${sessionId}/submit-landmarks/`,
-    payload
+    normalised
   );
   return (data as any)?.data ?? data;
 }
@@ -108,22 +186,33 @@ export async function submitLandmarks(
  * GET /api/v1/ninja/ai/scan/{sessionId}/status/
  *
  * Polls the scan session processing status.
- * Mounted under the AI Ninja router at /api/v1/ninja/ai/ — NOT /ninja/measurements/.
- * Call every 2 seconds until status = 'completed' | 'failed'.
- *
- * @example
- * const status = await pollScanStatus(sessionId);
- * if (status.status === "completed") {
- *   console.log(status.extracted_measurements);
- * }
+ * Call every 1-2 seconds until status = 'completed' | 'failed'.
+ * Uses adaptive polling: fast for first 3 polls, then 2-second intervals.
  */
 export async function pollScanStatus(
   sessionId: string
 ): Promise<ScanStatusResponse> {
-  // The AI scan status endpoint lives under ai_router at /api/v1/ninja/ai/
-  // apiAsync base URL should be set to /api/v1/ninja/ so the path is ai/scan/...
   const raw = await apiAsync
     .get(`ai/scan/${sessionId}/status/`)
     .json<ScanStatusResponse>();
   return raw;
+}
+
+/**
+ * GET /api/v1/ninja/ai/height-predict/
+ *
+ * Public endpoint — predicts height range from age and sex using WHO/NHANES tables.
+ * Used on the marketing get-measured page to pre-fill the height field.
+ * 24-hour Redis cache on the backend.
+ *
+ * @example
+ * const { predicted_cm } = await predictHeight(28, "female");
+ */
+export async function predictHeight(
+  age: number,
+  sex: "male" | "female" | "neutral" = "neutral"
+): Promise<HeightPredictResponse> {
+  return apiAsync
+    .get(`ai/height-predict/`, { searchParams: { age: String(age), sex } })
+    .json<HeightPredictResponse>();
 }

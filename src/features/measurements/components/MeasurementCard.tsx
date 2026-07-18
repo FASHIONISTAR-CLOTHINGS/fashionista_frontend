@@ -38,7 +38,7 @@ export function MeasurementCard({ profile, onEdit, onStartScan, className = "" }
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-[#2D6A4F]/20 flex items-center justify-center">
             <span className="text-base">📐</span>
           </div>
           <div>
@@ -50,7 +50,7 @@ export function MeasurementCard({ profile, onEdit, onStartScan, className = "" }
           {onStartScan && (
             <button
               onClick={onStartScan}
-              className="text-xs px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white transition-colors"
+              className="text-xs px-3 py-1.5 rounded-lg bg-[#2D6A4F] hover:bg-[#1B4332] text-white transition-colors"
               id="start-body-scan-btn"
             >
               📷 AI Scan

@@ -1,27 +1,41 @@
 "use client";
 /**
  * @file MeasurementScanPageClient.tsx
- * @description Client Component: orchestrates the full AI body scan flow.
+ * @description TASK-020: Client Component — orchestrates the full AI body scan flow.
+ *
+ * UPGRADED: Now uses EnhancedMeasurementFlow (10-phase state machine with:
+ *   - Voice AI coaching via Web Speech API
+ *   - Phone orientation indicator (DeviceOrientationEvent)
+ *   - Auto-capture 3-2-1 countdown (useAutoCapture hook)
+ *   - Front + side pose two-phase capture
+ *   - 30-frame landmark buffer for accuracy
+ *   - BMI correction via backend (weight_kg optional)
  *
  * Page states:
- *   intro    → Shows InHouseMeasurementFlow (the multi-step scan UI)
- *   complete → Shows success summary + redirect to profile
+ *   intro    → Shows EnhancedMeasurementFlow (multi-phase scan UI)
+ *   complete → Redirects to /client/dashboard/measurements/{profileId}
  */
 
-import { useRouter } from "next/navigation";
-import { useCallback } from "react";
-import { InHouseMeasurementFlow } from "@/features/measurements/components/InHouseMeasurementFlow";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, Suspense } from "react";
+import { EnhancedMeasurementFlow } from "@/features/measurements/components/EnhancedMeasurementFlow";
 
-export function MeasurementScanPageClient() {
-  const router = useRouter();
+// ─── Inner client component (reads search params) ─────────────────────────────
 
-  /** Called by InHouseMeasurementFlow when scan + save is complete. */
+function ScanPageInner() {
+  const router     = useRouter();
+  const params     = useSearchParams();
+
+  // Pre-fill from /get-measured modal (passed via query string)
+  const heightCmStr = params.get("height_cm");
+  const initialHeightCm = heightCmStr ? parseFloat(heightCmStr) : undefined;
+
+  /** Called by EnhancedMeasurementFlow when scan + save is complete. */
   const handleScanComplete = useCallback(
     (profileId: string | number | null) => {
       if (profileId) {
         router.push(`/client/dashboard/measurements/${profileId}`);
       } else {
-        // Profile saved but no ID returned — go to measurements list
         router.push("/client/dashboard/measurements");
       }
     },
@@ -33,14 +47,14 @@ export function MeasurementScanPageClient() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0d0d1a] via-[#120f2a] to-[#0a0a18] px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#0A0A0A] via-[#0D1810] to-[#0A0A0A] px-4 py-8 sm:px-6">
       <div className="max-w-2xl mx-auto">
 
-        {/* Page header */}
+        {/* Page header — brand compliant */}
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-violet-500/10 border border-violet-500/20 px-4 py-1.5 mb-4">
-            <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
-            <span className="text-xs font-medium text-violet-300 tracking-wider uppercase">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#2D6A4F]/15 border border-[#2D6A4F]/30 px-4 py-1.5 mb-4">
+            <span className="w-2 h-2 rounded-full bg-[#52B788] animate-pulse" />
+            <span className="text-xs font-semibold text-[#52B788] tracking-wider uppercase">
               AI Body Measurement
             </span>
           </div>
@@ -53,18 +67,36 @@ export function MeasurementScanPageClient() {
           </p>
         </div>
 
-        {/* Measurement flow */}
-        <InHouseMeasurementFlow
+        {/* Enhanced measurement flow — full 10-phase state machine */}
+        <EnhancedMeasurementFlow
           onComplete={handleScanComplete}
           onCancel={handleCancel}
+          initialHeightCm={initialHeightCm}
         />
 
-        {/* Footer note */}
+        {/* Privacy footer */}
         <p className="mt-6 text-center text-xs text-white/30">
-          All measurements are processed on our servers. No video is stored or
-          transmitted — only pose landmark coordinates.
+          All measurements are processed on our secure servers. No video is stored
+          or transmitted — only pose landmark coordinates.
         </p>
       </div>
     </div>
+  );
+}
+
+// ─── Exported component (wraps in Suspense for useSearchParams) ───────────────
+
+export function MeasurementScanPageClient() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full border-4 border-[#2D6A4F]/20 border-t-[#2D6A4F] animate-spin mx-auto mb-4" />
+          <p className="text-white/40 text-sm">Loading scanner…</p>
+        </div>
+      </div>
+    }>
+      <ScanPageInner />
+    </Suspense>
   );
 }
