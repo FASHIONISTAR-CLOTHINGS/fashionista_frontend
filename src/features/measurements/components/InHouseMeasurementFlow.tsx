@@ -94,7 +94,7 @@ export function InHouseMeasurementFlow({
 
         {/* Header badge */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-violet-500/15 flex items-center justify-center text-violet-400 ring-1 ring-violet-500/20">
+          <div className="w-12 h-12 rounded-2xl bg-[#2D6A4F]/15 flex items-center justify-center text-[#52B788] ring-1 ring-[#2D6A4F]/20">
             <IconRuler />
           </div>
           <div>
@@ -115,7 +115,7 @@ export function InHouseMeasurementFlow({
           <div className="grid grid-cols-3 gap-2">
             {MEASUREMENT_LIST.map((m) => (
               <div key={m} className="flex items-center gap-1.5">
-                <span className="text-violet-400"><IconStar /></span>
+                <span className="text-[#F4C430]"><IconStar /></span>
                 <span className="text-xs text-white/70">{m}</span>
               </div>
             ))}
@@ -161,7 +161,7 @@ export function InHouseMeasurementFlow({
           )}
           <button
             onClick={() => setPhase("scanning")}
-            className="flex-1 rounded-xl bg-violet-600 hover:bg-violet-500 text-white
+            className="flex-1 rounded-xl bg-[#2D6A4F] hover:bg-[#1B4332] text-white
                        font-semibold text-sm py-3 transition-colors flex items-center justify-center gap-2"
           >
             <IconCamera />
@@ -208,7 +208,7 @@ export function InHouseMeasurementFlow({
         {profileId && (
           <a
             href={`/client/dashboard/measurements/${profileId}`}
-            className="rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold
+            className="rounded-xl bg-[#2D6A4F] hover:bg-[#1B4332] text-white font-semibold
                        text-sm py-3 transition-colors text-center"
           >
             View My Measurements

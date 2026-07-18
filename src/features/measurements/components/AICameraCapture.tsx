@@ -132,7 +132,7 @@ export function AICameraCapture({
           <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6 flex flex-col gap-5">
 
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-violet-500/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-[#2D6A4F]/20 flex items-center justify-center">
                 <IconRuler />
               </div>
               <div>
@@ -154,7 +154,7 @@ export function AICameraCapture({
                   value={heightInput}
                   onChange={(e) => setHeightInput(e.target.value)}
                   className="flex-1 rounded-xl bg-white/10 border border-white/10 text-white px-4 py-2.5 text-sm
-                             placeholder:text-white/30 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                             placeholder:text-white/30 focus:outline-none focus:border-[#F4C430] focus:ring-1 focus:ring-[#F4C430] transition"
                 />
                 {/* CM / INCH toggle */}
                 <div className="flex rounded-xl overflow-hidden border border-white/10">
@@ -165,7 +165,7 @@ export function AICameraCapture({
                       className={cn(
                         "px-3 py-2 text-xs font-semibold transition",
                         heightUnit === unit
-                          ? "bg-violet-600 text-white"
+                          ? "bg-[#2D6A4F] text-white"
                           : "bg-white/5 text-white/50 hover:bg-white/10"
                       )}
                     >
@@ -189,9 +189,9 @@ export function AICameraCapture({
 
             <button
               onClick={handleStartCapture}
-              className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-white
-                         font-semibold py-3 hover:from-violet-700 hover:to-purple-700 transition
-                         flex items-center justify-center gap-2 shadow-lg shadow-violet-500/25"
+              className="w-full rounded-xl bg-gradient-to-r from-[#2D6A4F] to-[#1B4332] text-white
+                         font-semibold py-3 hover:from-[#1B4332] hover:to-[#0D2818] transition
+                         flex items-center justify-center gap-2 shadow-lg shadow-[#2D6A4F]/25"
             >
               <IconCamera />
               Start Body Scan
@@ -212,7 +212,7 @@ export function AICameraCapture({
       {/* ── LOADING MODEL PHASE ── */}
       {capture.phase === "loading_model" && (
         <div className="flex flex-col items-center gap-4 py-12">
-          <div className="w-16 h-16 rounded-full bg-violet-500/20 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-[#2D6A4F]/20 flex items-center justify-center">
             <IconLoader />
           </div>
           <p className="text-white/70 font-medium">Loading AI pose detection model...</p>
@@ -283,8 +283,8 @@ export function AICameraCapture({
       {(capture.phase === "submitting" || capture.phase === "processing") && (
         <div className="flex flex-col items-center gap-6 py-12 max-w-sm mx-auto">
           <div className="relative w-24 h-24">
-            <div className="absolute inset-0 rounded-full border-4 border-violet-500/20" />
-            <div className="absolute inset-0 rounded-full border-4 border-t-violet-500 animate-spin" />
+            <div className="absolute inset-0 rounded-full border-4 border-[#2D6A4F]/20" />
+            <div className="absolute inset-0 rounded-full border-4 border-t-[#2D6A4F] animate-spin" />
             <div className="absolute inset-0 flex items-center justify-center">
               <IconRuler />
             </div>
@@ -303,9 +303,9 @@ export function AICameraCapture({
               <div key={step} className="flex items-center gap-2">
                 <div className={cn(
                   "w-4 h-4 rounded-full border flex items-center justify-center",
-                  i === 0 ? "border-violet-500 bg-violet-500/20" : "border-white/10"
+                  i === 0 ? "border-[#2D6A4F] bg-[#2D6A4F]/20" : "border-white/10"
                 )}>
-                  {i === 0 && <div className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />}
+                  {i === 0 && <div className="w-1.5 h-1.5 rounded-full bg-[#2D6A4F] animate-pulse" />}
                 </div>
                 <span>{step}</span>
               </div>

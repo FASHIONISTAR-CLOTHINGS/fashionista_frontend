@@ -42,7 +42,7 @@ export function CalibrationGuide({
 
       {/* ── Corner scan-line brackets ── */}
       {(["tl", "tr", "bl", "br"] as const).map((corner) => (
-        <CornerBracket key={corner} corner={corner} isGood={isGood} />
+        <CornerBracket key={corner} corner={corner} isGood={isGood} isMedium={isMedium} />
       ))}
 
       {/* ── Body silhouette guide ── */}
@@ -53,21 +53,21 @@ export function CalibrationGuide({
         "absolute bottom-4 left-4 right-4 rounded-xl px-4 py-2.5 backdrop-blur-md",
         "transition-colors duration-500 flex items-center justify-between gap-2",
         isGood
-          ? "bg-green-500/20 border border-green-500/30"
+          ? "bg-[#2D6A4F]/20 border border-[#2D6A4F]/30"
           : isMedium
-          ? "bg-amber-500/20 border border-amber-500/30"
-          : "bg-white/10 border border-white/10",
+          ? "bg-[#F4C430]/20 border border-[#F4C430]/30"
+          : "bg-[#DC2626]/15 border border-[#DC2626]/20",
       )}>
         <p className={cn(
           "text-xs font-medium",
-          isGood ? "text-green-300" : isMedium ? "text-amber-300" : "text-white/60",
+          isGood ? "text-[#52B788]" : isMedium ? "text-[#F4C430]" : "text-[#DC2626]/80",
         )}>
           {instruction}
         </p>
         {/* Quality dot */}
         <div className={cn(
           "w-2 h-2 rounded-full flex-shrink-0",
-          isGood ? "bg-green-400 animate-pulse" : isMedium ? "bg-amber-400" : "bg-white/20",
+          isGood ? "bg-[#52B788] animate-pulse" : isMedium ? "bg-[#F4C430]" : "bg-[#DC2626]/60",
         )} />
       </div>
 
@@ -89,8 +89,8 @@ export function CalibrationGuide({
 
 type Corner = "tl" | "tr" | "bl" | "br";
 
-function CornerBracket({ corner, isGood }: { corner: Corner; isGood: boolean }) {
-  const color = isGood ? "#86efac" : "#94a3b8";
+function CornerBracket({ corner, isGood, isMedium }: { corner: Corner; isGood: boolean; isMedium: boolean }) {
+  const color = isGood ? "#2D6A4F" : isMedium ? "#F4C430" : "#DC2626";
   const size  = 20;
   const thick = 2.5;
 
@@ -138,7 +138,7 @@ function SilhouetteGuide({ isGood }: { isGood: boolean }) {
             M60,130 L80,200 L85,270
           `}
           fill="none"
-          stroke={isGood ? "#86efac" : "#94a3b8"}
+          stroke={isGood ? "#2D6A4F" : isMedium ? "#F4C430" : "#DC2626"}
           strokeWidth="5"
           strokeLinecap="round"
           strokeLinejoin="round"
