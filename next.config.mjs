@@ -146,6 +146,31 @@ const nextConfig = {
   },
   headers: async () => [
     {
+      // ── MediaPipe SW: always revalidate so updates deploy immediately ──
+      source: "/sw-mediapipe.js",
+      headers: [
+        { key: "Cache-Control", value: "public, max-age=0, must-revalidate" },
+        { key: "Service-Worker-Allowed", value: "/" },
+      ],
+    },
+    {
+      // ── WASM cross-origin isolation (required for SharedArrayBuffer + SIMD) ──
+      // Applied only to the scan page to avoid breaking other routes
+      source: "/client/dashboard/measurements/scan/:path*",
+      headers: [
+        { key: "Cross-Origin-Opener-Policy",   value: "same-origin" },
+        { key: "Cross-Origin-Embedder-Policy",  value: "require-corp" },
+      ],
+    },
+    {
+      // ── MediaPipe WASM binaries — immutable, versioned by npm version ──
+      source: "/_next/static/:path*.wasm",
+      headers: [
+        { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        { key: "Cross-Origin-Resource-Policy", value: "cross-origin" },
+      ],
+    },
+    {
       // Static preloader CSS — cache 1 year, immutable (no personalization)
       source: "/preloader.css",
       headers: [

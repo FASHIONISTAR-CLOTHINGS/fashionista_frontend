@@ -17,14 +17,20 @@
  */
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, Suspense } from "react";
+import { useCallback, useEffect, Suspense } from "react";
 import { EnhancedMeasurementFlow } from "@/features/measurements/components/EnhancedMeasurementFlow";
+import { registerMediaPipeSW } from "@/features/measurements/lib/registerMediaPipeSW";
 
 // ─── Inner client component (reads search params) ─────────────────────────────
 
 function ScanPageInner() {
   const router     = useRouter();
   const params     = useSearchParams();
+
+  // Phase 13 / TASK-041: Register MediaPipe SW & warm model cache on page load.
+  // This runs asynchronously — the user sees the intro UI while the 30MB model
+  // downloads into the SW cache in the background.
+  useEffect(() => registerMediaPipeSW(), []);
 
   // Pre-fill from /get-measured modal (passed via query string)
   const heightCmStr = params.get("height_cm");
