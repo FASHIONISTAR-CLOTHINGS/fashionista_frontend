@@ -25,6 +25,8 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { predictHeightFromAge } from "@/lib/brand";
 import { InHouseMeasurementFlow } from "@/features/measurements/components/InHouseMeasurementFlow";
+import { initiateBodyScan } from "@/features/measurements/api/scan.api";
+import { useDeviceType } from "@/features/measurements/hooks/useDeviceType";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -50,7 +52,9 @@ export function GetMeasuredClient({
   ctaOnly = false,
   cta = "Get My Free Measurements →",
 }: GetMeasuredClientProps) {
-  const router = useRouter();
+  const router  = useRouter();
+  const device  = useDeviceType();   // TASK-061: Device detection for routing fork
+
   const [isModalOpen, setIsModalOpen]     = useState(false);
   const [isScanMode, setIsScanMode]       = useState(false);
 
@@ -93,7 +97,7 @@ export function GetMeasuredClient({
   }, [age, sex, heightUnit]);
 
   // ── Validate + submit ─────────────────────────────────────────────────────
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     const newErrors: Record<string, string> = {};
     const ageNum = parseInt(age, 10);
 
@@ -114,28 +118,61 @@ export function GetMeasuredClient({
 
     const data: MeasurementEntryData = { age: ageNum, heightCm, sex, weightKg };
 
-    // Save to sessionStorage for post-login recovery
     try {
-      sessionStorage.setItem("fashionistar_measurement_entry", JSON.stringify({
-        ...data,
-        timestamp: Date.now(),
-      }));
-    } catch {
-      // sessionStorage not available (private mode)
+      // ── Step 1: Initiate scan session (gets QR + URL from backend) ──────
+      const session = await initiateBodyScan({ device_type: device.apiDeviceType });
+
+      // ── Step 2: Save full session data to sessionStorage for recovery ───
+      try {
+        sessionStorage.setItem("fashionistar_measurement_entry", JSON.stringify({
+          ...data,
+          session_id:      session.session_id,
+          measurement_url: session.measurement_url,
+          qr_code_b64:     session.qr_code_b64,
+          qr_code_url:     session.qr_code_url,
+          timestamp:       Date.now(),
+        }));
+      } catch {
+        // sessionStorage not available (private mode)
+      }
+
+      // ── Step 3: Build shared search params ──────────────────────────────
+      const params = new URLSearchParams({
+        session_id: session.session_id,
+        age:        String(ageNum),
+        height_cm:  String(heightCm),
+        ...(weightKg && { weight_kg: String(weightKg) }),
+      });
+
+      // ── Step 4: Route based on device type ──────────────────────────────
+      if (device.isMobile || device.isTablet) {
+        // Mobile/tablet → go directly to the camera scan page
+        router.push(`/client/dashboard/measurements/scan?${params.toString()}`);
+      } else {
+        // Desktop/laptop → show QR gateway
+        const qrParams = new URLSearchParams({
+          session_id: session.session_id,
+          murl:       session.measurement_url,
+          age:        String(ageNum),
+          height_cm:  String(heightCm),
+          ...(weightKg && { weight_kg: String(weightKg) }),
+        });
+        router.push(`/client/dashboard/measurements/scan/qr?${qrParams.toString()}`);
+      }
+
+    } catch (err) {
+      console.error("[GetMeasuredClient] Failed to initiate scan:", err);
+      // Fallback: navigate to dashboard scan without session (backward-compat)
+      const fallbackParams = new URLSearchParams({
+        age:       String(ageNum),
+        height_cm: String(heightCm),
+        ...(weightKg && { weight_kg: String(weightKg) }),
+      });
+      router.push(`/client/dashboard/measurements/scan?${fallbackParams.toString()}`);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Build redirect URL with pre-filled params
-    const params = new URLSearchParams({
-      age:       String(ageNum),
-      height_cm: String(heightCm),
-      ...(weightKg && { weight_kg: String(weightKg) }),
-    });
-
-    const dashboardUrl = `/client/dashboard/measurements/new?${params.toString()}`;
-
-    // Check auth — try to navigate; middleware will redirect to login if unauthenticated
-    router.push(dashboardUrl);
-  }, [age, heightInput, heightUnit, weight, sex, prediction, router]);
+  }, [age, heightInput, heightUnit, weight, sex, prediction, router, device]);
 
   // ── Quick scan (public page, no auth) ────────────────────────────────────
   const handleScanComplete = useCallback(

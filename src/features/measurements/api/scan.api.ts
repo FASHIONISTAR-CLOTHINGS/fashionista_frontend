@@ -87,11 +87,21 @@ export interface LandmarkSubmitPayload {
 
 // ─── Response Types ───────────────────────────────────────────────────────────
 
-/** Response from initiate / submit-landmarks endpoints. */
+/** Response from POST /scan/initiate/ */
 export interface ScanSessionResponse {
-  session_id: string;
-  status:     "pending" | "processing" | "completed" | "failed";
-  message?:   string;
+  session_id:       string;
+  status:           "pending" | "processing" | "completed" | "failed";
+  message?:         string;
+  /** Full frontend URL for this scan session — used to build the QR code link. */
+  measurement_url:  string;
+  /** Base64-encoded PNG QR code for immediate display (no data: prefix). */
+  qr_code_b64:      string;
+  /**
+   * Cloudinary URL of the persisted QR code PNG.
+   * Empty string on first response (Cloudinary upload is async).
+   * Use qr_code_b64 for immediate display; qr_code_url for long-term retrieval.
+   */
+  qr_code_url:      string;
 }
 
 /** Full scan session status from Ninja polling endpoint. */
@@ -132,7 +142,10 @@ export interface HeightPredictResponse {
  * POST /api/v1/measurements/scan/initiate/
  *
  * Creates a BodyScanSession with status=PENDING.
- * The returned session_id is used to submit landmarks and poll status.
+ * Returns session_id, measurement_url, qr_code_b64 (for QR display) and qr_code_url.
+ *
+ * IMPORTANT: Always pass device_type so the backend correctly records the requesting device.
+ * This is used for analytics and for the QR gateway decision logic.
  */
 export async function initiateBodyScan(
   payload: ScanInitPayload = {}
@@ -141,7 +154,14 @@ export async function initiateBodyScan(
     "v1/measurements/scan/initiate/",
     payload
   );
-  return (data as any)?.data ?? data;
+  const session = (data as any)?.data ?? data;
+  // Ensure QR fields always exist (graceful if backend is on older version)
+  return {
+    measurement_url: "",
+    qr_code_b64:     "",
+    qr_code_url:     "",
+    ...session,
+  };
 }
 
 /**
