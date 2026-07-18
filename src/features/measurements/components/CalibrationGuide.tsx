@@ -138,7 +138,7 @@ function SilhouetteGuide({ isGood }: { isGood: boolean }) {
             M60,130 L80,200 L85,270
           `}
           fill="none"
-          stroke={isGood ? "#2D6A4F" : isMedium ? "#F4C430" : "#DC2626"}
+          stroke={isGood ? "#2D6A4F" : "#6B7280"}
           strokeWidth="5"
           strokeLinecap="round"
           strokeLinejoin="round"
