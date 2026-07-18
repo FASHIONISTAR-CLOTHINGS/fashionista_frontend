@@ -46,7 +46,6 @@ export function registerMediaPipeSW(): () => void {
       console.log("[SW] MediaPipe SW registered:", registration.scope);
 
       // Wait for the SW to be active
-      const sw = registration.installing ?? registration.waiting ?? registration.active;
       const active = await new Promise<ServiceWorker | null>((resolve) => {
         if (registration?.active) { resolve(registration.active); return; }
         const handler = () => {

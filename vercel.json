@@ -3,5 +3,40 @@
   "framework": "nextjs",
   "buildCommand": "pnpm build",
   "installCommand": "pnpm install --no-frozen-lockfile",
-  "cleanUrls": false
+  "cleanUrls": false,
+
+  "headers": [
+    {
+      "source": "/sw-mediapipe.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
+    {
+      "source": "/client/dashboard/measurements/scan/(.*)",
+      "headers": [
+        { "key": "Cross-Origin-Opener-Policy",  "value": "same-origin" },
+        { "key": "Cross-Origin-Embedder-Policy", "value": "require-corp" }
+      ]
+    }
+  ],
+
+  "crons": [
+    {
+      "path": "/api/v1/ninja/ai/health/",
+      "schedule": "*/5 * * * *"
+    }
+  ],
+
+  "regions": ["fra1", "iad1"],
+
+  "env": {
+    "NEXT_TELEMETRY_DISABLED": "1"
+  },
+
+  "github": {
+    "silent": false,
+    "autoJobCancelation": true
+  }
 }

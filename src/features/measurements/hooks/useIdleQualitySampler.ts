@@ -54,28 +54,28 @@ interface UseIdleQualitySamplerReturn {
 
 // ─── Polyfill type declarations ───────────────────────────────────────────────
 
-type RequestIdleCallbackHandle = number;
-interface RequestIdleCallbackDeadline {
-  didTimeout:             boolean;
-  timeRemaining:          () => number;
-}
-type RequestIdleCallbackFn = (deadline: RequestIdleCallbackDeadline) => void;
+// ─── Local types for the idle scheduler polyfill ─────────────────────────────
+// We do NOT re-declare Window.requestIdleCallback — TypeScript's lib.dom.d.ts
+// already types it. We use a local interface only for our internal use.
 
-declare global {
-  interface Window {
-    requestIdleCallback: (fn: RequestIdleCallbackFn, opts?: { timeout: number }) => RequestIdleCallbackHandle;
-    cancelIdleCallback:  (handle: RequestIdleCallbackHandle) => void;
-  }
+interface IdleDeadline {
+  readonly didTimeout:  boolean;
+  timeRemaining:        () => number;
 }
+type IdleCallbackFn = (deadline: IdleDeadline) => void;
 
 // ─── Idle scheduler (with polyfill) ──────────────────────────────────────────
 
-function scheduleIdle(fn: RequestIdleCallbackFn, timeout: number): () => void {
+function scheduleIdle(fn: IdleCallbackFn, timeout: number): () => void {
   if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-    const handle = window.requestIdleCallback(fn, { timeout });
+    // Use the browser's native requestIdleCallback (typed via lib.dom.d.ts)
+    const handle = window.requestIdleCallback(
+      fn as IdleRequestCallback,
+      { timeout },
+    );
     return () => window.cancelIdleCallback(handle);
   }
-  // Safari / fallback: just use setTimeout(0)
+  // Safari / older browsers: setTimeout(0) polyfill
   const id = setTimeout(() => fn({ didTimeout: true, timeRemaining: () => 0 }), 0);
   return () => clearTimeout(id);
 }
