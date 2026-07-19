@@ -24,7 +24,8 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { predictHeightFromAge } from "@/lib/brand";
-import { InHouseMeasurementFlow } from "@/features/measurements/components/InHouseMeasurementFlow";
+// A-3 FIX: Replace deprecated InHouseMeasurementFlow with full-featured EnhancedMeasurementFlow
+import { EnhancedMeasurementFlow } from "@/features/measurements/components/EnhancedMeasurementFlow";
 import { initiateBodyScan } from "@/features/measurements/api/scan.api";
 import { useDeviceType } from "@/features/measurements/hooks/useDeviceType";
 
@@ -452,10 +453,25 @@ export function GetMeasuredClient({
                     </div>
                   </div>
                 ) : (
-                  /* ── Quick Scan Mode (inline, public page) ── */
-                  <InHouseMeasurementFlow
+                  /*
+                   * A-3 FIX: Quick Scan Mode (inline, public page)
+                   * Replaced deprecated InHouseMeasurementFlow with EnhancedMeasurementFlow.
+                   * Now delivers: voice coaching, orientation check, side pose, countdown,
+                   * MeasurementReveal staggered cards, and MeasurementTimeline delta badges.
+                   * initialAge + initialHeightCm forwarded from the entry modal.
+                   */
+                  <EnhancedMeasurementFlow
                     onComplete={handleScanComplete}
                     onCancel={() => setIsScanMode(false)}
+                    initialAge={parseInt(age, 10) || undefined}
+                    initialHeightCm={
+                      prediction?.predictedCm ??
+                      (parseFloat(heightInput) > 0
+                        ? heightUnit === "inch"
+                          ? Math.round(parseFloat(heightInput) * 2.54 * 10) / 10
+                          : parseFloat(heightInput)
+                        : undefined)
+                    }
                   />
                 )}
               </div>

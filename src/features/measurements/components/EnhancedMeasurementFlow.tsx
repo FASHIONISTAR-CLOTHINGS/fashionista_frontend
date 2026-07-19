@@ -65,7 +65,7 @@ export interface EnhancedMeasurementFlowProps {
   onCancel?:   () => void;
   /** Pre-filled height from marketing entry modal */
   initialHeightCm?: number;
-  /** Pre-filled age for backend prediction */
+  /** Pre-filled age for backend prediction — A-5 FIX: now actually forwarded to backend */
   initialAge?: number;
   className?: string;
 }
@@ -88,6 +88,7 @@ export function EnhancedMeasurementFlow({
   onComplete,
   onCancel,
   initialHeightCm,
+  initialAge,
   className,
 }: EnhancedMeasurementFlowProps) {
   const capture     = useEnhancedMeasurementCapture();
@@ -119,6 +120,26 @@ export function EnhancedMeasurementFlow({
 
   // RAF ref
   const rafRef = useRef<number | null>(null);
+  // A-2 FIX: Track previous frame's landmarks for jitter / stability detection
+  const prevNosePosRef = useRef<{ x: number; y: number } | null>(null);
+
+  // ── Jitter / Stability helper ─────────────────────────────────────────────
+  /**
+   * Returns true when nose (landmark 0) hasn't moved more than JITTER_THRESHOLD
+   * in normalised coords between consecutive frames.
+   * dx²+dy² < 0.0004 ≡ sub-pixel motion at 720p → "stable".
+   */
+  function isFrameStable(frame: import("../hooks/useEnhancedMeasurementCapture").EnhancedCaptureFrame): boolean {
+    const nose = frame.normalLandmarks?.[0];
+    if (!nose || (nose.visibility ?? 0) < 0.5) return false;
+    const prev = prevNosePosRef.current;
+    const jitterThreshold = 0.02 * 0.02; // 0.0004 in normalised units
+    const isStable = prev
+      ? (nose.x - prev.x) ** 2 + (nose.y - prev.y) ** 2 < jitterThreshold
+      : false;
+    prevNosePosRef.current = { x: nose.x, y: nose.y };
+    return isStable;
+  }
 
   // ── Frame loop ───────────────────────────────────────────────────────────
   const frameLoop = useCallback(() => {
@@ -135,12 +156,13 @@ export function EnhancedMeasurementFlow({
         const quality = frame.quality;
         const phase   = capture.phase;
 
-        // Tick auto-capture state machines
+        // Tick auto-capture state machines — A-2 FIX: pass isStable for jitter gate
+        const isStable = isFrameStable(frame);
         if (phase === "front_aligning" || phase === "front_countdown") {
-          frontAutoCapture.tick(quality);
+          frontAutoCapture.tick(quality, isStable);
         }
         if (phase === "side_aligning" || phase === "side_countdown") {
-          sideAutoCapture.tick(quality);
+          sideAutoCapture.tick(quality, isStable);
         }
 
         // Voice coaching for distance + centering (debounced internally)
@@ -258,7 +280,7 @@ export function EnhancedMeasurementFlow({
               </ul>
 
               <button
-                onClick={() => capture.startCapture(initialHeightCm)}
+                onClick={() => capture.startCapture(initialHeightCm, initialAge ?? undefined)}
                 className="w-full rounded-xl bg-gradient-to-r from-[#2D6A4F] to-[#1B4332]
                            text-white font-semibold py-3 hover:from-[#1B4332] hover:to-[#0D2818]
                            transition flex items-center justify-center gap-2 shadow-lg shadow-[#2D6A4F]/25"
@@ -319,17 +341,12 @@ export function EnhancedMeasurementFlow({
               onRequestPermission={orientation.requestPermission}
             />
 
+            {/* A-1 FIX: Use capture.skipDeviceSetup() — replaces broken `as unknown as any` cast */}
             <button
               onClick={() => {
-                capture.startCapture === undefined
-                  ? undefined
-                  : (capture as unknown as { setPhaseSync: (p: string) => void }).setPhaseSync?.("positioning");
-                // Navigate to positioning using the exported advanceToSidePhase approach
-                // Since device_setup transitions to positioning directly:
-                void (async () => {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  (capture as unknown as any).setPhaseSync?.("positioning");
-                })();
+                if (orientation.isLevel || orientation.status === "unsupported") {
+                  capture.skipDeviceSetup();
+                }
               }}
               disabled={orientation.status === "bad"}
               className={cn(
@@ -347,10 +364,7 @@ export function EnhancedMeasurementFlow({
               Or use without orientation check →{" "}
               <button
                 className="underline text-white/40 hover:text-white/60"
-                onClick={() => {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  (capture as unknown as any).setPhaseSync?.("positioning");
-                }}
+                onClick={() => capture.skipDeviceSetup()}
               >
                 Skip
               </button>

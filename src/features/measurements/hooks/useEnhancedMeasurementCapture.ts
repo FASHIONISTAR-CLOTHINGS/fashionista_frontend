@@ -106,14 +106,21 @@ export interface UseEnhancedMeasurementCaptureReturn {
   isSidePosePhase:    boolean;
   hasFrontCapture:    boolean;
   // Actions
-  startCapture:       (heightCm?: number) => Promise<void>;
+  startCapture:       (heightCm?: number, ageyears?: number) => Promise<void>;
   processFrame:       () => EnhancedCaptureFrame | null;
   triggerFrontCapture: () => void;
   triggerSideCapture:  () => void;
   advanceToSidePhase:  () => void;
+  /**
+   * A-1 FIX: Skip device_setup orientation check and advance directly to
+   * positioning. Replaces the broken `(capture as unknown as any).setPhaseSync?("positioning")` hack.
+   */
+  skipDeviceSetup:    () => void;
   reset:              () => void;
   stopCamera:         () => void;
   userHeightCm:       number | null;
+  /** A-5 FIX: Age in years forwarded to backend for anthropometric anchoring. */
+  userAge:            number | null;
 }
 
 // ─── Landmark Buffer Averaging (TASK-011) ─────────────────────────────────────
@@ -204,6 +211,7 @@ export function useEnhancedMeasurementCapture(): UseEnhancedMeasurementCaptureRe
   const [phase, setPhase]               = useState<EnhancedCapturePhase>("idle");
   const [currentFrame, setCurrentFrame] = useState<EnhancedCaptureFrame | null>(null);
   const [userHeightCm, setUserHeightCm] = useState<number | null>(null);
+  const [userAge, setUserAge]           = useState<number | null>(null);   // A-5 FIX
   const [error, setError]               = useState<string | null>(null);
   const [hasFrontCapture, setHasFrontCapture] = useState(false);
   const [bufferProgress, setBufferProgress]   = useState(0);
@@ -267,7 +275,7 @@ export function useEnhancedMeasurementCapture(): UseEnhancedMeasurementCaptureRe
 
   // ── Start capture (begins with device_setup phase) ────────────────────────
   const startCapture = useCallback(
-    async (heightCm?: number) => {
+    async (heightCm?: number, ageYears?: number) => {
       setError(null);
       setPhaseSync("loading_model");
 
@@ -276,7 +284,8 @@ export function useEnhancedMeasurementCapture(): UseEnhancedMeasurementCaptureRe
         await startCamera();
         await scanSession.initiate("web");
 
-        if (heightCm) setUserHeightCm(heightCm);
+        if (heightCm)  setUserHeightCm(heightCm);
+        if (ageYears)  setUserAge(ageYears);   // A-5 FIX: store age for submit
 
         setPhaseSync("device_setup"); // Show phone orientation check first
       } catch (err: unknown) {
@@ -288,6 +297,19 @@ export function useEnhancedMeasurementCapture(): UseEnhancedMeasurementCaptureRe
     },
     [landmarker, scanSession, startCamera, stopCamera, setPhaseSync]
   );
+
+  // ── A-1 FIX: Skip device_setup orientation check ─────────────────────────
+  /**
+   * Advances from device_setup directly to positioning without requiring
+   * the phone orientation indicator to turn green. Exposed as a proper public
+   * API to replace the `(capture as unknown as any).setPhaseSync?.("positioning")`
+   * hack that was silently broken because setPhaseSync is not in the return type.
+   */
+  const skipDeviceSetup = useCallback(() => {
+    if (phaseRef.current === "device_setup" || phaseRef.current === "loading_model") {
+      setPhaseSync("positioning");
+    }
+  }, [setPhaseSync]);
 
   // ── Process frame (TASKS 011, 012) ────────────────────────────────────────
   const processFrame = useCallback((): EnhancedCaptureFrame | null => {
@@ -392,12 +414,14 @@ export function useEnhancedMeasurementCapture(): UseEnhancedMeasurementCaptureRe
     }
 
     // Submit both landmark sets to backend
+    // A-5 FIX: Include user_age in payload so backend anthropometric anchoring works
     await scanSession.submit({
       user_height_cm: height,
+      ...(userAge != null && { user_age: userAge }),
       landmarks: frontLms.map((l) => ({
         x: l.x, y: l.y, z: l.z, visibility: l.visibility ?? 0,
       })),
-      // side_landmarks passed as extra field — serializer accepts optional
+      // side_landmarks forwarded to backend for dual-pose fused pipeline
       ...(sideLms && {
         side_landmarks: sideLms.map((l) => ({
           x: l.x, y: l.y, z: l.z, visibility: l.visibility ?? 0,
@@ -407,7 +431,7 @@ export function useEnhancedMeasurementCapture(): UseEnhancedMeasurementCaptureRe
     });
 
     stopCamera();
-  }, [scanSession, userHeightCm, stopCamera, setPhaseSync]);
+  }, [scanSession, userHeightCm, userAge, stopCamera, setPhaseSync]);
 
   // ── Advance to side pose phase (manual trigger) ───────────────────────────
   const advanceToSidePhase = useCallback(() => {
@@ -428,6 +452,7 @@ export function useEnhancedMeasurementCapture(): UseEnhancedMeasurementCaptureRe
     setPhaseSync("idle");
     setCurrentFrame(null);
     setUserHeightCm(null);
+    setUserAge(null);
     setHasFrontCapture(false);
     setBufferProgress(0);
     setError(null);
@@ -452,8 +477,10 @@ export function useEnhancedMeasurementCapture(): UseEnhancedMeasurementCaptureRe
     triggerFrontCapture,
     triggerSideCapture,
     advanceToSidePhase,
+    skipDeviceSetup,   // A-1 FIX: proper public API instead of cast hack
     reset,
     stopCamera,
     userHeightCm,
+    userAge,           // A-5 FIX: exposed for any component that needs to display it
   };
 }
