@@ -18,7 +18,7 @@
  * self-contained and fast.
  */
 
-import { test, expect, Page } from "@playwright/test";
+import { test, expect, type Page, type Route } from "@playwright/test";
 import path from "path";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -51,7 +51,7 @@ const MOCK_INITIATE_RESPONSE = {
  * This prevents real DB session creation during tests.
  */
 async function mockInitiateEndpoint(page: Page) {
-  await page.route("**/api/v1/measurements/scan/initiate/**", async (route) => {
+  await page.route("**/api/v1/measurements/scan/initiate/**", async (route: Route) => {
     await route.fulfill({
       status:      201,
       contentType: "application/json",
