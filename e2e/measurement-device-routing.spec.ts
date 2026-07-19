@@ -18,7 +18,7 @@
  * self-contained and fast.
  */
 
-import { test, expect, Page, BrowserContext } from "@playwright/test";
+import { test, expect, Page } from "@playwright/test";
 import path from "path";
 
 // ─── Constants ────────────────────────────────────────────────────────────────

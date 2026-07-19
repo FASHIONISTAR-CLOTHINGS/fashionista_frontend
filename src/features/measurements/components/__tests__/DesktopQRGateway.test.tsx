@@ -14,8 +14,8 @@
  *   npx vitest run src/features/measurements/components/__tests__/DesktopQRGateway.test.tsx
  */
 
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { DesktopQRGateway } from "../DesktopQRGateway";
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
@@ -85,9 +85,8 @@ describe("DesktopQRGateway", () => {
       />
     );
 
-    const copyBtn = screen.getByTestId ? 
-      document.getElementById("qr-gateway-copy-btn") :
-      screen.getByRole("button", { name: /copy/i });
+    const copyBtn = document.getElementById("qr-gateway-copy-btn")
+      ?? screen.queryByRole("button", { name: /copy/i });
     
     if (copyBtn) {
       fireEvent.click(copyBtn);

@@ -41,6 +41,9 @@ const {
   requestPasswordReset,
 } = await import('@/features/auth/services/auth.service')
 
+// Import circuit breaker reset for test isolation
+const { resetCircuitBreaker } = await import('@/core/api/client.sync')
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MSW SERVER SETUP
 // ─────────────────────────────────────────────────────────────────────────────
@@ -169,7 +172,11 @@ const handlers = [
 
 const server = setupServer(...handlers)
 
-beforeEach(() => server.listen({ onUnhandledRequest: 'warn' }))
+beforeEach(() => {
+  server.listen({ onUnhandledRequest: 'warn' })
+  // Reset circuit breaker so 401/429 failures don't bleed between tests
+  resetCircuitBreaker()
+})
 afterEach(() => {
   server.resetHandlers()
   server.close()
