@@ -126,6 +126,108 @@ export interface ScanStatusResponse {
   completed_at?:           string;
 }
 
+// ─── C-2 FIX: Measurement key normalizer ─────────────────────────────────────
+
+/**
+ * Maps backend extracted_measurements keys → brand.ts MEASUREMENT_FIELDS keys.
+ *
+ * The backend geometry engine returns keys with `_cm` suffix and some alias
+ * names (e.g. `hip` instead of `hips`). MEASUREMENT_FIELDS in brand.ts uses
+ * plain names without suffix. This normalizer runs once at the API layer so
+ * every component that consumes ScanStatusResponse gets clean, consistent keys.
+ *
+ * Backend key          → Frontend MEASUREMENT_FIELDS key
+ * ────────────────────────────────────────────────────
+ * shoulder_width_cm    → shoulder_width
+ * shoulder_width       → shoulder_width
+ * chest_cm             → chest
+ * waist_cm             → waist
+ * hip_cm / hips_cm     → hips
+ * hip                  → hips
+ * arm_length_cm        → arm_length
+ * inseam_cm            → inseam
+ * thigh_cm             → thigh
+ * height_cm            → height
+ * neck_cm              → neck
+ * wrist_cm             → wrist
+ * knee_cm              → knee
+ * ankle_cm             → ankle
+ * upper_arm_cm         → upper_arm
+ * bust_cm              → bust  (front bust circumference)
+ * chest_cm             → chest (chest/pectoral — separate field from bust)
+ * belly_button_cm      → waist (equator proxy — only if waist_cm absent)
+ */
+const BACKEND_TO_FRONTEND_KEY_MAP: Record<string, string> = {
+  // With _cm suffix
+  shoulder_width_cm: "shoulder_width",
+  chest_cm:          "chest",          // chest/pectoral — distinct from bust
+  bust_cm:           "bust",           // front bust circumference
+  waist_cm:          "waist",
+  hip_cm:            "hips",
+  hips_cm:           "hips",
+  arm_length_cm:     "arm_length",
+  inseam_cm:         "inseam",
+  thigh_cm:          "thigh",
+  height_cm:         "height",
+  neck_cm:           "neck",
+  wrist_cm:          "wrist",
+  knee_cm:           "knee",
+  ankle_cm:          "ankle",
+  upper_arm_cm:      "upper_arm",
+  belly_button_cm:   "waist",          // equator proxy — overrides waist only if waist_cm absent
+  // Without _cm suffix (back-compat)
+  shoulder_width:    "shoulder_width",
+  chest:             "chest",
+  bust:              "bust",
+  waist:             "waist",
+  hip:               "hips",
+  hips:              "hips",
+  arm_length:        "arm_length",
+  inseam:            "inseam",
+  thigh:             "thigh",
+  height:            "height",
+  neck:              "neck",
+  wrist:             "wrist",
+  knee:              "knee",
+  ankle:             "ankle",
+  upper_arm:         "upper_arm",
+};
+
+/**
+ * Normalizes backend measurement keys to the canonical MEASUREMENT_FIELDS keys
+ * used by MeasurementReveal, MeasurementTimeline, and all frontend card components.
+ *
+ * Priority: if both `chest_cm` and `bust_cm` exist, `bust_cm` wins for "bust".
+ * If both `belly_button_cm` and `waist_cm` exist, `waist_cm` wins for "waist".
+ */
+export function normalizeScanMeasurements(
+  raw: Record<string, number | null> | undefined
+): Record<string, number | null> {
+  if (!raw) return {};
+
+  const out: Record<string, number | null> = {};
+
+  // Two-pass: low-priority aliases first, then canonical fields override
+  // Low-priority: belly_button (waist proxy) and hip aliases
+  const lowPriority  = ["belly_button_cm", "belly_button", "hip", "hip_cm"];
+  const highPriority = Object.keys(BACKEND_TO_FRONTEND_KEY_MAP).filter(
+    (k) => !lowPriority.includes(k)
+  );
+
+  for (const key of [...lowPriority, ...highPriority]) {
+    if (!(key in raw)) continue;
+    const frontendKey = BACKEND_TO_FRONTEND_KEY_MAP[key];
+    if (!frontendKey) continue;
+    const val = raw[key];
+    // Only override if not already set by a higher-priority key
+    if (!(frontendKey in out) || val != null) {
+      out[frontendKey] = val;
+    }
+  }
+
+  return out;
+}
+
 /** Response from GET /api/v1/ninja/ai/height-predict/ */
 export interface HeightPredictResponse {
   predicted_cm:   number;
@@ -215,6 +317,19 @@ export async function pollScanStatus(
   const raw = await apiAsync
     .get(`ai/scan/${sessionId}/status/`)
     .json<ScanStatusResponse>();
+
+  // C-2 FIX: Normalize measurement keys once at API layer
+  // After normalisation, measurements_cm contains brand.ts-compatible keys
+  const rawMeasurements = raw.extracted_measurements ?? raw.measurements_cm;
+  if (rawMeasurements) {
+    const normalised = normalizeScanMeasurements(rawMeasurements);
+    return {
+      ...raw,
+      measurements_cm:        normalised,  // canonical key for all frontend components
+      extracted_measurements: normalised,  // keep back-compat alias pointing to same object
+    };
+  }
+
   return raw;
 }
 
