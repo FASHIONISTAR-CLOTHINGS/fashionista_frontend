@@ -224,6 +224,10 @@ jobs:
             --exclude='*.mp4' --exclude='*.webm' --exclude='*.mov' --exclude='*.mp3' \
             --exclude='*.pdf' --exclude='*.doc' --exclude='*.docx' \
             --exclude='Satoshi_Complete' \
+            --exclude='*.tsbuildinfo' --exclude='*.network-response' \
+            --exclude='test-evidence' --exclude='REAL_LIVE_VISION*' \
+            --exclude='tests' --exclude='scripts' --exclude='database' \
+            --exclude='ngrok*' --exclude='*.html' \
             ./ "$DEPLOY_DIR/"
 
       - name: Inject HF Spaces Dockerfile and README
