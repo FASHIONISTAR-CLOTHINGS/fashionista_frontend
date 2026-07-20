@@ -209,18 +209,17 @@ jobs:
             --exclude='test-results' --exclude='.env.local' \
             --exclude='*.test.*' --exclude='*.spec.*' \
             --exclude='__tests__' --exclude='e2e' \
-            --exclude='Dockerfile.dev' \
+            --exclude='Dockerfile.dev' --exclude='deploy' \
+            --exclude='Makefile' --exclude='*.md' \
             ./ "$DEPLOY_DIR/"
 
       - name: Inject HF Spaces Dockerfile and README
         run: |
           cp deploy/huggingface-frontend/Dockerfile.production "$DEPLOY_DIR/Dockerfile"
           cp deploy/huggingface-frontend/README.md "$DEPLOY_DIR/README.md"
-          # Convert CRLF → LF (HF pre-receive hook rejects files with Windows line endings)
+          # Convert CRLF → LF for YAML-sensitive files (HF pre-receive hook validates README.md)
           sudo apt-get update -qq && sudo apt-get install -y -qq dos2unix
-          dos2unix "$DEPLOY_DIR/README.md" "$DEPLOY_DIR/Dockerfile"
-          # Also convert any text files that may have CRLF
-          find "$DEPLOY_DIR" -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.json" -o -name "*.mjs" -o -name "*.css" | xargs dos2unix 2>/dev/null || true
+          dos2unix -q "$DEPLOY_DIR/README.md" "$DEPLOY_DIR/Dockerfile"
           echo "✅ Frontend Dockerfile and README injected (CRLF→LF converted)"
 
       - name: Push to HF Space
