@@ -141,27 +141,26 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           echo "🔍 Checking if HF Space exists: ${SPACE_ID}"
-          HTTP=$(curl -sf -o /dev/null -w "%{http_code}" \
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
             -H "Authorization: Bearer ${HF_TOKEN}" \
-            "https://huggingface.co/api/spaces/${SPACE_ID}" || echo "000")
+            "https://huggingface.co/api/spaces/${SPACE_ID}" || true)
 
+          echo "  API returned HTTP $HTTP"
           if [ "$HTTP" = "404" ] || [ "$HTTP" = "000" ]; then
             echo "📦 Space does not exist (HTTP $HTTP). Creating Docker Space: ${SPACE_ID}"
-            curl -sf -X POST \
+            CREATE_RESP=$(curl -s -X POST \
               -H "Authorization: Bearer ${HF_TOKEN}" \
               -H "Content-Type: application/json" \
               "https://huggingface.co/api/repos/create" \
-              -d '{
-                "type": "space",
-                "name": "fashionistar-frontend",
-                "organization": "fashionistar",
-                "sdk": "docker",
-                "hardware": "cpu-basic",
-                "private": false,
-                "license": "mit"
-              }'
-            echo "✅ Space created: https://huggingface.co/spaces/${SPACE_ID}"
-            sleep 5
+              -d '{"type":"space","name":"fashionistar-frontend","organization":"fashionistar","sdk":"docker","hardware":"cpu-basic","private":false,"license":"mit"}')
+            echo "  API response: $CREATE_RESP"
+            if echo "$CREATE_RESP" | grep -q "url"; then
+              echo "✅ Space created: https://huggingface.co/spaces/${SPACE_ID}"
+              sleep 5
+            else
+              echo "❌ Space creation failed — check API response above"
+              exit 1
+            fi
           else
             echo "✅ Space already exists (HTTP $HTTP) — will update in-place"
           fi
