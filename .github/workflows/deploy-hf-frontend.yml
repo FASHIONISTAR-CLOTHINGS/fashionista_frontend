@@ -321,21 +321,39 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           echo "════════════════════════════════════════════════════════════"
-          echo "  📋 BUILD LOGS (last 100 lines)"
+          echo "  📋 BUILD LOGS"
           echo "════════════════════════════════════════════════════════════"
-          curl -sf -H "Authorization: Bearer ${HF_TOKEN}" \
+          curl -s -H "Authorization: Bearer ${HF_TOKEN}" \
             "https://huggingface.co/api/spaces/${SPACE_ID}/logs/build" 2>/dev/null | \
-            python3 -c "import sys; lines=sys.stdin.readlines(); print(''.join(lines[-100:]))" 2>/dev/null || \
-            echo "(Could not fetch build logs)"
+            python3 -c "
+          import sys, json
+          for line in sys.stdin:
+              line = line.strip()
+              if line.startswith('data:'):
+                  try:
+                      d = json.loads(line[5:].strip())
+                      if 'data' in d:
+                          print(d['data'], end='')
+                  except: pass
+          " 2>/dev/null || echo "(Could not fetch build logs)"
 
           echo ""
           echo "════════════════════════════════════════════════════════════"
-          echo "  📋 RUN LOGS (last 100 lines)"
+          echo "  📋 RUN LOGS"
           echo "════════════════════════════════════════════════════════════"
-          curl -sf -H "Authorization: Bearer ${HF_TOKEN}" \
+          curl -s -H "Authorization: Bearer ${HF_TOKEN}" \
             "https://huggingface.co/api/spaces/${SPACE_ID}/logs/run" 2>/dev/null | \
-            python3 -c "import sys; lines=sys.stdin.readlines(); print(''.join(lines[-100:]))" 2>/dev/null || \
-            echo "(Could not fetch run logs)"
+            python3 -c "
+          import sys, json
+          for line in sys.stdin:
+              line = line.strip()
+              if line.startswith('data:'):
+                  try:
+                      d = json.loads(line[5:].strip())
+                      if 'data' in d:
+                          print(d['data'], end='')
+                  except: pass
+          " 2>/dev/null || echo "(Could not fetch run logs)"
 
           echo ""
           echo "🔗 View full logs at: https://huggingface.co/spaces/${SPACE_ID}"

@@ -35,12 +35,12 @@ export interface ScanInitPayload {
   device_type?: "web" | "ios" | "android";
 }
 
-// ─── Submit Payload (V2 — dual pose) ─────────────────────────────────────────
+// ─── Submit Payload (V1 — dual pose) ─────────────────────────────────────────
 
 /**
  * Payload for POST /scan/{id}/submit-landmarks/
  *
- * V2 changes:
+ * V1 changes:
  *   - front_landmarks: primary pose (replaces the old 'landmarks' field)
  *   - side_landmarks:  optional 90° right-side pose (enables depth estimation → ±2.5cm)
  *   - user_age:        improves anthropometric ratio selection for <25 and >50 age groups
@@ -66,7 +66,7 @@ export interface LandmarkSubmitPayload {
 
   /**
    * Front-facing pose landmarks (33 MediaPipe BlazePose points).
-   * Named 'front_landmarks' in V2. The server still accepts 'landmarks' for back-compat.
+   * Named 'front_landmarks' in V1. The server still accepts 'landmarks' for back-compat.
    */
   front_landmarks?: LandmarkPoint[];
 
@@ -269,7 +269,7 @@ export async function initiateBodyScan(
 /**
  * POST /api/v1/measurements/scan/{sessionId}/submit-landmarks/
  *
- * V2: Sends front landmarks (+ optional side landmarks, weight, age) to the backend.
+ * V1: Sends front landmarks (+ optional side landmarks, weight, age) to the backend.
  * Triggers the Celery MeasurementWorkflow (returns immediately — poll for status).
  *
  * The payload is normalised here so both legacy `landmarks` and new `front_landmarks`
