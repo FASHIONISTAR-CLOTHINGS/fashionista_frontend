@@ -266,8 +266,10 @@ jobs:
           git commit -m "🛍️ Frontend Deploy: ${{ github.sha }} [GitHub Actions]"
           git remote add hf "https://__token__:${HF_TOKEN}@huggingface.co/spaces/${SPACE_ID}"
           echo "🚀 Pushing to HF Space..."
+          set +e
           git push hf main --force 2>&1 | tee push_output.txt
-          PUSH_EXIT=$?
+          PUSH_EXIT=${PIPESTATUS[0]}
+          set -e
           cat push_output.txt
           if [ $PUSH_EXIT -ne 0 ]; then
             echo "❌ Push failed with exit code $PUSH_EXIT"
