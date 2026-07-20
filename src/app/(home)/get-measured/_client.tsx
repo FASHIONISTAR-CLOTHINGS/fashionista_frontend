@@ -181,6 +181,7 @@ export function GetMeasuredClient({
       setIsScanMode(false);
       setIsModalOpen(false);
       if (profileId) {
+        // Attempt to navigate to the authenticated profile view
         router.push(`/client/dashboard/measurements/${profileId}`);
       }
     },

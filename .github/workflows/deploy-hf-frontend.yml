@@ -227,6 +227,24 @@ jobs:
           dos2unix -q "$DEPLOY_DIR/README.md" "$DEPLOY_DIR/Dockerfile"
           echo "✅ Frontend Dockerfile and README injected (CRLF→LF converted)"
 
+      - name: Scan for binary files (debug)
+        run: |
+          cd "$DEPLOY_DIR"
+          echo "🔍 Scanning for binary files..."
+          FOUND_BINARY=0
+          while IFS= read -r file; do
+            if file "$file" | grep -qv "text"; then
+              echo "  ⚠️  BINARY: $file ($(file "$file" | cut -d: -f2))"
+              FOUND_BINARY=1
+            fi
+          done < <(find . -type f -not -path "./.git/*")
+          if [ "$FOUND_BINARY" -eq 1 ]; then
+            echo "❌ Binary files found — HF will reject this push"
+          else
+            echo "✅ No binary files detected"
+          fi
+          echo "📋 Total files: $(find . -type f -not -path './.git/*' | wc -l)"
+
       - name: Push to HF Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
