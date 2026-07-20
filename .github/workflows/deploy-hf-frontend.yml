@@ -218,6 +218,7 @@ jobs:
             --exclude='*.png' --exclude='*.jpg' --exclude='*.jpeg' \
             --exclude='*.gif' --exclude='*.ico' --exclude='*.bmp' \
             --exclude='*.webp' --exclude='*.avif' --exclude='*.tiff' \
+            --exclude='*.svg' \
             --exclude='*.ttf' --exclude='*.eot' --exclude='*.woff' --exclude='*.woff2' \
             --exclude='*.otf' --exclude='*.zip' --exclude='*.tar' --exclude='*.gz' \
             --exclude='*.mp4' --exclude='*.webm' --exclude='*.mov' --exclude='*.mp3' \
