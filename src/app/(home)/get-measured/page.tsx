@@ -271,7 +271,7 @@ export default function GetMeasuredPage() {
         <div className="max-w-3xl mx-auto px-6 text-center">
           <h2 className="text-3xl font-bold text-white mb-3">Prepare for Best Results</h2>
           <p className="text-white/60 mb-10">
-            These 4 tips increase accuracy by up to 20%
+            These 4 tips increase accuracy by up to 80%
           </p>
 
           <div className="grid gap-4 sm:grid-cols-2 text-left mb-10">

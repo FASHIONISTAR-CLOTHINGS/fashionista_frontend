@@ -215,6 +215,14 @@ jobs:
             --exclude='*.log' --exclude='.eslintcache' \
             --exclude='.dockerignore' --exclude='.gitignore' \
             --exclude='.env*' \
+            --exclude='*.png' --exclude='*.jpg' --exclude='*.jpeg' \
+            --exclude='*.gif' --exclude='*.ico' --exclude='*.bmp' \
+            --exclude='*.webp' --exclude='*.avif' --exclude='*.tiff' \
+            --exclude='*.ttf' --exclude='*.eot' --exclude='*.woff' --exclude='*.woff2' \
+            --exclude='*.otf' --exclude='*.zip' --exclude='*.tar' --exclude='*.gz' \
+            --exclude='*.mp4' --exclude='*.webm' --exclude='*.mov' --exclude='*.mp3' \
+            --exclude='*.pdf' --exclude='*.doc' --exclude='*.docx' \
+            --exclude='Satoshi_Complete' \
             ./ "$DEPLOY_DIR/"
 
       - name: Inject HF Spaces Dockerfile and README
@@ -231,10 +239,6 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           cd "$DEPLOY_DIR"
-          # Install git-lfs for binary file support (HF Spaces uses Xet storage)
-          sudo apt-get install -y -qq git-lfs
-          git lfs install
-          git lfs track "*.png" "*.jpg" "*.jpeg" "*.gif" "*.svg" "*.ico" "*.ttf" "*.eot" "*.woff" "*.woff2" "*.webp" "*.bmp" "*.avif"
           git init
           git checkout -b main
           git config user.name "FASHIONISTAR CI/CD"
@@ -245,7 +249,7 @@ jobs:
           echo "📄 README.md content (first 15 lines):"
           head -15 README.md
           git add -A
-          git add -f Dockerfile .gitattributes
+          git add -f Dockerfile
           git status --short
           git commit -m "🛍️ Frontend Deploy: ${{ github.sha }} [GitHub Actions]"
           git remote add hf "https://__token__:${HF_TOKEN}@huggingface.co/spaces/${SPACE_ID}"
