@@ -20,7 +20,7 @@ export const metadata: Metadata = {
  * Wrapped in Suspense because AuthAwareSignInPage calls useSearchParams()
  * which requires a Suspense boundary in Next.js App Router.
  *
- * URL naming: Enterprise convention (Stripe / Vercel / Shopify standard).
+ * URL naming: Enterprise convention (Stripe / Shopify standard).
  * The legacy /auth/login route redirects here permanently.
  */
 export default function SignInPage() {

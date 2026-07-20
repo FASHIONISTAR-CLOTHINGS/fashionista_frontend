@@ -7,9 +7,6 @@ import { Providers } from "@/components/providers";
 import { Preloader } from "@/components/shared/preloader/Preloader";
 import { GlobalToastProvider } from "@/components";
 import { WebVitalsReporter } from "@/components/telemetry/WebVitalsReporter";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
-
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -325,9 +322,6 @@ export default function RootLayout({
           <GlobalToastProvider />
         </Providers>
 
-        {/* Vercel Web Analytics & Speed Insights — populate the Vercel dashboard */}
-        <Analytics />
-        <SpeedInsights />
       </body>
     </html>
   );

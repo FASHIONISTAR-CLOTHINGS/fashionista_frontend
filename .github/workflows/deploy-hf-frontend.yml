@@ -1,0 +1,188 @@
+name: 🛍️ FASHIONISTAR — Deploy Frontend to Hugging Face
+
+# =============================================================================
+# FASHIONISTAR — Frontend HF Space Deployment Workflow
+# =============================================================================
+# Deploys the Next.js frontend to Hugging Face Spaces:
+#
+#   fashionistar/fashionistar-frontend  — CPU Docker — Next.js 16 Standalone
+#
+# Trigger:     push to main branch OR manual dispatch from GitHub Actions UI
+# Secrets:     HF_TOKEN — Hugging Face write-access token (set in GitHub repo secrets)
+# =============================================================================
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.npmrc'
+      - 'next.config.mjs'
+      - 'tsconfig.json'
+      - 'postcss.config.mjs'
+      - 'tailwind.config.ts'
+      - 'Dockerfile*'
+      - 'deploy/huggingface-frontend/**'
+      - '.github/workflows/deploy-hf-frontend.yml'
+
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip build tests (emergency deploys only)'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['false', 'true']
+
+concurrency:
+  group: hf-frontend-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+
+  # ── Pre-flight: Build Test ──────────────────────────────────────────────────
+  build-test:
+    name: 🧪 Build Test (pre-deploy gate)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: ${{ github.event.inputs.skip_tests != 'true' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build
+        env:
+          NEXT_PUBLIC_BACKEND_URL: https://fashionistar-fashionistar-api-v1.hf.space
+          BACKEND_INTERNAL_URL: https://fashionistar-fashionistar-api-v1.hf.space
+          NEXT_PUBLIC_APP_URL: https://fashionistar-fashionistar-frontend.hf.space
+          NEXT_PUBLIC_APP_NAME: FASHIONISTAR_AI
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: 173651651078-9i9odkm33sc6dq7ukoicd91nlcjerqtv.apps.googleusercontent.com
+          NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: dgpdlknc1
+          NEXT_PUBLIC_CLOUDINARY_CLOUD: dgpdlknc1
+          NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: fashionista_ai
+          NEXT_TELEMETRY_DISABLED: 1
+          SENTRY_AUTH_TOKEN: ""
+        run: pnpm build
+
+      - name: Verify standalone output
+        run: |
+          test -f .next/standalone/server.js && echo "✅ Standalone server.js exists"
+          test -d .next/static && echo "✅ Static assets directory exists"
+
+  # ── Deploy to HF Space ──────────────────────────────────────────────────────
+  deploy-frontend:
+    name: 🚀 Frontend → fashionistar-frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [build-test]
+    if: |
+      always() &&
+      (needs.build-test.result == 'success' || needs.build-test.result == 'skipped')
+
+    env:
+      SPACE_ID: fashionistar/fashionistar-frontend
+      SPACE_URL: https://fashionistar-fashionistar-frontend.hf.space
+      DEPLOY_DIR: /tmp/hf_frontend_deploy
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          lfs: false
+
+      - name: Configure git
+        run: |
+          git config --global user.email "fashionistar.home.beauty@gmail.com"
+          git config --global user.name "FASHIONISTAR CI/CD"
+          git config --global init.defaultBranch main
+
+      - name: Prepare deploy directory
+        run: |
+          mkdir -p "$DEPLOY_DIR"
+          # Copy source, excluding dev-only and Vercel artifacts
+          rsync -av \
+            --exclude='.git' --exclude='.github' --exclude='node_modules' \
+            --exclude='.next' --exclude='.vercel' --exclude='vercel.json' \
+            --exclude='coverage' --exclude='playwright-report' \
+            --exclude='test-results' --exclude='.env.local' \
+            --exclude='*.test.*' --exclude='*.spec.*' \
+            --exclude='__tests__' --exclude='e2e' \
+            --exclude='Dockerfile.dev' \
+            ./ "$DEPLOY_DIR/"
+
+      - name: Inject HF Spaces Dockerfile and README
+        run: |
+          cp deploy/huggingface-frontend/Dockerfile.production "$DEPLOY_DIR/Dockerfile"
+          cp deploy/huggingface-frontend/README.md "$DEPLOY_DIR/README.md"
+          echo "✅ Frontend Dockerfile and README injected"
+
+      - name: Push to HF Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          cd "$DEPLOY_DIR"
+          git init
+          git checkout -b main
+          git config user.name "FASHIONISTAR CI/CD"
+          git config user.email "fashionistar.home.beauty@gmail.com"
+          git add -A
+          git add -f Dockerfile
+          git commit -m "🛍️ Frontend Deploy: ${{ github.sha }} [GitHub Actions]"
+          git remote add hf "https://__token__:${HF_TOKEN}@huggingface.co/spaces/${SPACE_ID}"
+          git push hf main --force
+          echo "✅ Frontend pushed to: https://huggingface.co/spaces/${SPACE_ID}"
+
+      - name: Poll build status & health check
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          echo "⏳ Polling HF for build completion (max 15min)..."
+          for i in $(seq 1 60); do
+            STATUS=$(curl -sf -H "Authorization: Bearer ${HF_TOKEN}" \
+              "https://huggingface.co/api/spaces/${SPACE_ID}" | \
+              python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('runtime',{}).get('stage','unknown'))" 2>/dev/null || echo "unknown")
+            echo "  [${i}/60] Build status: $STATUS"
+            if [ "$STATUS" = "RUNNING" ]; then
+              echo "🎉 Frontend is RUNNING!"
+              sleep 5
+              HTTP=$(curl -sf -o /dev/null -w "%{http_code}" --max-time 15 \
+                "${SPACE_URL}/" || echo "000")
+              echo "  Health check → HTTP $HTTP"
+              if [ "$HTTP" = "200" ]; then
+                echo "✅ Frontend is healthy and serving!"
+              else
+                echo "⚠️ Frontend returned HTTP $HTTP — may still be warming up"
+              fi
+              break
+            elif [ "$STATUS" = "BUILD_ERROR" ] || [ "$STATUS" = "RUNTIME_ERROR" ]; then
+              echo "❌ Build FAILED (status=$STATUS)"
+              echo "   Logs: https://huggingface.co/spaces/${SPACE_ID}"
+              exit 1
+            fi
+            sleep 15
+          done

@@ -62,6 +62,7 @@ const allowedDevOrigins = unique([
   "*.ngrok-free.app",
   "*.ngrok-free.dev",
   "*.trycloudflare.com",
+  "fashionistar-fashionistar-frontend.hf.space",
   normalizeDevOrigin(process.env.NEXT_PUBLIC_APP_URL),
   normalizeDevOrigin(process.env.NEXT_PUBLIC_FRONTEND_TUNNEL_URL),
   normalizeDevOrigin(backendUrl),
@@ -313,7 +314,7 @@ export default withSentryConfig(withBundleAnalyzer(nextConfig), {
     // See the following for more information:
     // https://docs.sentry.io/product/crons/
     // https://vercel.com/docs/cron-jobs
-    automaticVercelMonitors: true,
+    automaticVercelMonitors: false,
 
     // Tree-shaking options for reducing bundle size
     treeshake: {
