@@ -73,12 +73,12 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0
 
 # Create non-root user (UID 1000 — MANDATORY for HF Spaces)
-RUN addgroup --system --gid 1000 nodejs && \
-    adduser --system --uid 1000 --ingroup nodejs nextjs
+# node:24-alpine already has GID 1000, so we reuse it instead of creating a new group
+RUN adduser --system --uid 1000 --ingroup node nextjs
 
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:node /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:node /app/.next/static ./.next/static
 
 USER nextjs
 
