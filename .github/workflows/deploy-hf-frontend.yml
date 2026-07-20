@@ -256,19 +256,25 @@ jobs:
           git config user.email "fashionistar.home.beauty@gmail.com"
           git config core.autocrlf false
           echo "📋 Files to be pushed:"
-          ls -la
+          find . -type f -not -path './.git/*' | head -20
+          echo "📋 Total files: $(find . -type f -not -path './.git/*' | wc -l)"
           echo "📄 README.md content (first 15 lines):"
           head -15 README.md
           git add -A
           git add -f Dockerfile
-          git status --short
+          git status --short | head -20
           git commit -m "🛍️ Frontend Deploy: ${{ github.sha }} [GitHub Actions]"
           git remote add hf "https://__token__:${HF_TOKEN}@huggingface.co/spaces/${SPACE_ID}"
-          git push hf main --force --verbose 2>&1 || {
-            echo "❌ Push failed! Attempting to list remote refs..."
-            git ls-remote hf 2>&1 || true
+          echo "🚀 Pushing to HF Space..."
+          git push hf main --force 2>&1 | tee push_output.txt
+          PUSH_EXIT=$?
+          cat push_output.txt
+          if [ $PUSH_EXIT -ne 0 ]; then
+            echo "❌ Push failed with exit code $PUSH_EXIT"
+            echo "📋 Checking HF Space status..."
+            curl -s -H "Authorization: Bearer ${HF_TOKEN}" "https://huggingface.co/api/spaces/${SPACE_ID}" | python3 -m json.tool 2>/dev/null || true
             exit 1
-          }
+          fi
           echo "✅ Frontend pushed to: https://huggingface.co/spaces/${SPACE_ID}"
 
       # ── Poll build status & health check ──────────────────────────────────
