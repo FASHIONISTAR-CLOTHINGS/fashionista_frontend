@@ -205,8 +205,10 @@ jobs:
           # HF Spaces pre-receive hook rejects binary files — only push text source
           cp package.json pnpm-lock.yaml .npmrc next.config.mjs tsconfig.json "$DEPLOY_DIR/"
           cp -r src "$DEPLOY_DIR/src"
-          # Remove Satoshi_Complete fonts (binary TTF/EOT files)
+          # Remove binary font files and Satoshi_Complete fonts (HF rejects binary files)
           rm -rf "$DEPLOY_DIR/src/app/Satoshi_Complete"
+          rm -rf "$DEPLOY_DIR/src/app/fonts"
+          rm -f "$DEPLOY_DIR/src/app/favicon.ico"
           # Copy public dir but exclude all binary files
           mkdir -p "$DEPLOY_DIR/public"
           find public -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.json' -o -name '*.txt' -o -name '*.css' \) -exec cp --parents {} "$DEPLOY_DIR/" \; 2>/dev/null || true
