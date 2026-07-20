@@ -7,8 +7,18 @@ name: 🛍️ FASHIONISTAR — Deploy Frontend to Hugging Face
 #
 #   fashionistar/fashionistar-frontend  — CPU Docker — Next.js 16 Standalone
 #
+# Pipeline stages:
+#   1. Pre-flight build test (catches broken builds before deployment)
+#   2. Ensure HF Space exists (auto-creates if missing, updates if existing)
+#   3. Sync secrets to HF Space (idempotent PUT per key)
+#   4. Push code to HF Space git repo (triggers Docker build)
+#   5. Poll build status & health check
+#   6. Fetch build/run logs on failure for debugging
+#   7. Deployment summary
+#
 # Trigger:     push to main branch OR manual dispatch from GitHub Actions UI
 # Secrets:     HF_TOKEN — Hugging Face write-access token (set in GitHub repo secrets)
+#              Same token used for all 5 FASHIONISTAR HF Spaces
 # =============================================================================
 
 on:
@@ -48,6 +58,8 @@ permissions:
 jobs:
 
   # ── Pre-flight: Build Test ──────────────────────────────────────────────────
+  # Must pass before ANY deployment begins. Catches broken imports, missing
+  # dependencies, and build errors before they reach production HF Spaces.
   build-test:
     name: 🧪 Build Test (pre-deploy gate)
     runs-on: ubuntu-latest
@@ -121,10 +133,76 @@ jobs:
           git config --global user.name "FASHIONISTAR CI/CD"
           git config --global init.defaultBranch main
 
+      # ── Ensure HF Space exists (auto-create if missing) ───────────────────
+      # Mirrors the backend's AI Engine provisioning pattern (deploy-hf-all.yml lines 466-491)
+      # If the Space already exists, this is a no-op — it does NOT delete or recreate.
+      - name: Ensure HF Space exists (create if missing)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          echo "🔍 Checking if HF Space exists: ${SPACE_ID}"
+          HTTP=$(curl -sf -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${HF_TOKEN}" \
+            "https://huggingface.co/api/spaces/${SPACE_ID}" || echo "000")
+
+          if [ "$HTTP" = "404" ] || [ "$HTTP" = "000" ]; then
+            echo "📦 Space does not exist (HTTP $HTTP). Creating Docker Space: ${SPACE_ID}"
+            curl -sf -X POST \
+              -H "Authorization: Bearer ${HF_TOKEN}" \
+              -H "Content-Type: application/json" \
+              "https://huggingface.co/api/repos/create" \
+              -d '{
+                "type": "space",
+                "name": "fashionistar-frontend",
+                "organization": "fashionistar",
+                "sdk": "docker",
+                "hardware": "cpu-basic",
+                "private": false,
+                "license": "mit"
+              }'
+            echo "✅ Space created: https://huggingface.co/spaces/${SPACE_ID}"
+            sleep 5
+          else
+            echo "✅ Space already exists (HTTP $HTTP) — will update in-place"
+          fi
+
+      # ── Sync secrets to HF Space ──────────────────────────────────────────
+      # Mirrors the backend's AI Engine secrets pattern (deploy-hf-all.yml lines 505-529)
+      # Uses PUT to /api/spaces/{id}/secrets — idempotent, safe to re-run.
+      - name: Sync secrets to HF Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          push_secret() {
+            local key="$1" val="$2"
+            [ -z "$val" ] && echo "  ⏭  $key not set, skipping" && return
+            HTTP=$(curl -sf -o /dev/null -w "%{http_code}" -X PUT \
+              -H "Authorization: Bearer ${HF_TOKEN}" \
+              -H "Content-Type: application/json" \
+              "https://huggingface.co/api/spaces/${SPACE_ID}/secrets" \
+              -d "{\"key\":\"$key\",\"value\":\"$val\"}" || echo "000")
+            echo "  ${key}: HTTP $HTTP"
+          }
+
+          echo "🔑 Syncing secrets to HF Space: ${SPACE_ID}"
+          push_secret "NEXT_PUBLIC_BACKEND_URL"          "https://fashionistar-fashionistar-api-v1.hf.space"
+          push_secret "BACKEND_INTERNAL_URL"             "https://fashionistar-fashionistar-api-v1.hf.space"
+          push_secret "NEXT_PUBLIC_APP_URL"              "https://fashionistar-fashionistar-frontend.hf.space"
+          push_secret "NEXT_PUBLIC_APP_NAME"             "FASHIONISTAR_AI"
+          push_secret "NEXT_PUBLIC_GOOGLE_CLIENT_ID"     "173651651078-9i9odkm33sc6dq7ukoicd91nlcjerqtv.apps.googleusercontent.com"
+          push_secret "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME" "dgpdlknc1"
+          push_secret "NEXT_PUBLIC_CLOUDINARY_CLOUD"     "dgpdlknc1"
+          push_secret "NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET" "fashionista_ai"
+          push_secret "NEXTAUTH_SECRET"                  "fashionistar_dev_secret_key_32_chars_min"
+          push_secret "NEXTAUTH_URL"                     "https://fashionistar-fashionistar-frontend.hf.space"
+          push_secret "SENTRY_AUTH_TOKEN"                ""
+          push_secret "REVALIDATE_SECRET"                "fashionistar-internal-telemetry-2026"
+          echo "✅ Secrets synced"
+
       - name: Prepare deploy directory
         run: |
           mkdir -p "$DEPLOY_DIR"
-          # Copy source, excluding dev-only and Vercel artifacts
+          # Copy source, excluding dev-only and legacy Vercel artifacts
           rsync -av \
             --exclude='.git' --exclude='.github' --exclude='node_modules' \
             --exclude='.next' --exclude='.vercel' --exclude='vercel.json' \
@@ -157,11 +235,15 @@ jobs:
           git push hf main --force
           echo "✅ Frontend pushed to: https://huggingface.co/spaces/${SPACE_ID}"
 
+      # ── Poll build status & health check ──────────────────────────────────
+      # Mirrors backend's polling pattern (deploy-hf-all.yml lines 240-263)
       - name: Poll build status & health check
+        id: poll
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           echo "⏳ Polling HF for build completion (max 15min)..."
+          FINAL_STATUS="unknown"
           for i in $(seq 1 60); do
             STATUS=$(curl -sf -H "Authorization: Bearer ${HF_TOKEN}" \
               "https://huggingface.co/api/spaces/${SPACE_ID}" | \
@@ -169,6 +251,7 @@ jobs:
             echo "  [${i}/60] Build status: $STATUS"
             if [ "$STATUS" = "RUNNING" ]; then
               echo "🎉 Frontend is RUNNING!"
+              FINAL_STATUS="RUNNING"
               sleep 5
               HTTP=$(curl -sf -o /dev/null -w "%{http_code}" --max-time 15 \
                 "${SPACE_URL}/" || echo "000")
@@ -181,8 +264,72 @@ jobs:
               break
             elif [ "$STATUS" = "BUILD_ERROR" ] || [ "$STATUS" = "RUNTIME_ERROR" ]; then
               echo "❌ Build FAILED (status=$STATUS)"
+              FINAL_STATUS="$STATUS"
               echo "   Logs: https://huggingface.co/spaces/${SPACE_ID}"
-              exit 1
+              break
             fi
             sleep 15
           done
+          echo "final_status=$FINAL_STATUS" >> $GITHUB_OUTPUT
+
+      # ── Fetch build logs on failure for debugging ─────────────────────────
+      - name: Fetch build logs (on failure)
+        if: steps.poll.outputs.final_status == 'BUILD_ERROR' || steps.poll.outputs.final_status == 'RUNTIME_ERROR'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          echo "════════════════════════════════════════════════════════════"
+          echo "  📋 BUILD LOGS (last 100 lines)"
+          echo "════════════════════════════════════════════════════════════"
+          curl -sf -H "Authorization: Bearer ${HF_TOKEN}" \
+            "https://huggingface.co/api/spaces/${SPACE_ID}/logs/build" 2>/dev/null | \
+            python3 -c "import sys; lines=sys.stdin.readlines(); print(''.join(lines[-100:]))" 2>/dev/null || \
+            echo "(Could not fetch build logs)"
+
+          echo ""
+          echo "════════════════════════════════════════════════════════════"
+          echo "  📋 RUN LOGS (last 100 lines)"
+          echo "════════════════════════════════════════════════════════════"
+          curl -sf -H "Authorization: Bearer ${HF_TOKEN}" \
+            "https://huggingface.co/api/spaces/${SPACE_ID}/logs/run" 2>/dev/null | \
+            python3 -c "import sys; lines=sys.stdin.readlines(); print(''.join(lines[-100:]))" 2>/dev/null || \
+            echo "(Could not fetch run logs)"
+
+          echo ""
+          echo "🔗 View full logs at: https://huggingface.co/spaces/${SPACE_ID}"
+          exit 1
+
+  # ── Deployment Summary ─────────────────────────────────────────────────────
+  # Mirrors backend's summary job (deploy-hf-all.yml lines 582-613)
+  summary:
+    name: 📊 Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [build-test, deploy-frontend]
+    if: always()
+    steps:
+      - name: Print summary
+        run: |
+          echo ""
+          echo "══════════════════════════════════════════════════════════════"
+          echo "  🛍️ FASHIONISTAR — Frontend HF Space Deployment Summary"
+          echo "══════════════════════════════════════════════════════════════"
+          echo ""
+          echo "  PRODUCTION URL:"
+          echo "  ─────────────────────────────────────────────────────────"
+          echo "  Frontend:      https://fashionistar-fashionistar-frontend.hf.space"
+          echo "  Health Check:  https://fashionistar-fashionistar-frontend.hf.space/"
+          echo ""
+          echo "  BACKEND CONNECTION:"
+          echo "  ─────────────────────────────────────────────────────────"
+          echo "  API Gateway:   https://fashionistar-fashionistar-api-v1.hf.space"
+          echo "  API Docs:      https://fashionistar-fashionistar-api-v1.hf.space/api/docs/"
+          echo ""
+          echo "  PIPELINE RESULTS:"
+          echo "  ─────────────────────────────────────────────────────────"
+          echo "  Build Test:    ${{ needs.build-test.result }}"
+          echo "  Deploy:        ${{ needs.deploy-frontend.result }}"
+          echo ""
+          echo "  COMMIT:        ${{ github.sha }}"
+          echo "  TRIGGERED BY:  ${{ github.actor }}"
+          echo "  BRANCH:        ${{ github.ref_name }}"
+          echo "══════════════════════════════════════════════════════════════"

@@ -243,17 +243,27 @@ ci-e2e: ci test-e2e ## Run CI pipeline with E2E tests
 ##@ Deployment
 # ═══════════════════════════════════════════════════════════════
 
-deploy-vercel: ## Deploy to Vercel (production)
-	@echo "$(CYAN)Deploying to Vercel...$(NC)"
-	npx vercel --prod
-	@echo "$(GREEN)✓ Deployed to Vercel$(NC)"
+deploy-hf: ## Deploy to Hugging Face Spaces (via GitHub Actions CI/CD)
+	@echo "$(CYAN)Deploying to Hugging Face Spaces...$(NC)"
+	@echo "$(YELLOW)  Push to main triggers GitHub Actions → HF Space auto-build$(NC)"
+	@echo "$(YELLOW)  Space: https://huggingface.co/spaces/fashionistar/fashionistar-frontend$(NC)"
+	@echo "$(YELLOW)  URL:   https://fashionistar-fashionistar-frontend.hf.space$(NC)"
+	@git push origin main
+	@echo "$(GREEN)✓ Pushed to main — monitor CI/CD at GitHub Actions$(NC)"
 
-deploy-vercel-preview: ## Deploy to Vercel (preview)
-	@echo "$(CYAN)Deploying preview to Vercel...$(NC)"
-	npx vercel
-	@echo "$(GREEN)✓ Preview deployed$(NC)"
+deploy-hf-logs: ## Fetch HF Space build/run logs (requires HF_TOKEN env var)
+	@echo "$(CYAN)Fetching HF Space build logs...$(NC)"
+	@curl.exe -N -H "Authorization: Bearer $$HF_TOKEN" "https://huggingface.co/api/spaces/fashionistar/fashionistar-frontend/logs/build" 2>/dev/null || echo "$(RED)Set HF_TOKEN env var first$(NC)"
 
-deploy-docker: docker-build docker-up ## Deploy via Docker
+deploy-hf-run-logs: ## Fetch HF Space runtime logs (requires HF_TOKEN env var)
+	@echo "$(CYAN)Fetching HF Space runtime logs...$(NC)"
+	@curl.exe -N -H "Authorization: Bearer $$HF_TOKEN" "https://huggingface.co/api/spaces/fashionistar/fashionistar-frontend/logs/run" 2>/dev/null || echo "$(RED)Set HF_TOKEN env var first$(NC)"
+
+deploy-hf-status: ## Check HF Space build status (requires HF_TOKEN env var)
+	@echo "$(CYAN)Checking HF Space status...$(NC)"
+	@curl.exe -sf -H "Authorization: Bearer $$HF_TOKEN" "https://huggingface.co/api/spaces/fashionistar/fashionistar-frontend" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); r=d.get('runtime',{}); print(f'Stage: {r.get(\"stage\",\"unknown\")}'); print(f'Hardware: {r.get(\"hardware',{}).get('current','unknown')}')" 2>/dev/null || echo "$(RED)Set HF_TOKEN env var first$(NC)"
+
+deploy-docker: docker-build docker-up ## Deploy via Docker (local)
 	@echo "$(GREEN)✓ Deployed via Docker$(NC)"
 
 # ═══════════════════════════════════════════════════════════════
