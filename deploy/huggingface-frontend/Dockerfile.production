@@ -72,15 +72,12 @@ ENV NODE_ENV=production \
     PORT=7860 \
     HOSTNAME=0.0.0.0
 
-# Create non-root user (UID 1000 — MANDATORY for HF Spaces)
-# node:24-alpine already has GID 1000, so we reuse it instead of creating a new group
-RUN adduser --system --uid 1000 --ingroup node nextjs
-
+# node:24-alpine already has user "node" with UID 1000 — HF Spaces requires UID 1000
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:node /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:node /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
-USER nextjs
+USER node
 
 # Port 7860 — mandatory for HF Spaces
 EXPOSE 7860
