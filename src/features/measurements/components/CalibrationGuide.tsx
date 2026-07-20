@@ -53,21 +53,21 @@ export function CalibrationGuide({
         "absolute bottom-4 left-4 right-4 rounded-xl px-4 py-2.5 backdrop-blur-md",
         "transition-colors duration-500 flex items-center justify-between gap-2",
         isGood
-          ? "bg-[#2D6A4F]/20 border border-[#2D6A4F]/30"
+          ? "bg-[#2D6A4F]/20 border border-[#2D6A4F]/40"
           : isMedium
           ? "bg-[#F4C430]/20 border border-[#F4C430]/30"
           : "bg-[#DC2626]/15 border border-[#DC2626]/20",
       )}>
         <p className={cn(
           "text-xs font-medium",
-          isGood ? "text-[#52B788]" : isMedium ? "text-[#F4C430]" : "text-[#DC2626]/80",
+          isGood ? "text-[#2D6A4F]" : isMedium ? "text-[#F4C430]" : "text-[#DC2626]/80",
         )}>
           {instruction}
         </p>
         {/* Quality dot */}
         <div className={cn(
           "w-2 h-2 rounded-full flex-shrink-0",
-          isGood ? "bg-[#52B788] animate-pulse" : isMedium ? "bg-[#F4C430]" : "bg-[#DC2626]/60",
+          isGood ? "bg-[#2D6A4F] animate-pulse" : isMedium ? "bg-[#F4C430]" : "bg-[#DC2626]/60",
         )} />
       </div>
 
@@ -90,7 +90,7 @@ export function CalibrationGuide({
 type Corner = "tl" | "tr" | "bl" | "br";
 
 function CornerBracket({ corner, isGood, isMedium }: { corner: Corner; isGood: boolean; isMedium: boolean }) {
-  const color = isGood ? "#2D6A4F" : isMedium ? "#F4C430" : "#DC2626";
+  const color = isGood ? "#2D6A4F" /* forest green */ : isMedium ? "#F4C430" /* golden yellow */ : "#DC2626";
   const size  = 20;
   const thick = 2.5;
 
@@ -138,7 +138,7 @@ function SilhouetteGuide({ isGood }: { isGood: boolean }) {
             M60,130 L80,200 L85,270
           `}
           fill="none"
-          stroke={isGood ? "#2D6A4F" : "#6B7280"}
+          stroke={isGood ? "#2D6A4F" /* forest green */ : "#848484" /* gray */}
           strokeWidth="5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -154,7 +154,7 @@ function SilhouetteGuide({ isGood }: { isGood: boolean }) {
 function ScanLine() {
   return (
     <div
-      className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-green-400 to-transparent opacity-70"
+      className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-[#F4C430] to-transparent opacity-70"
       style={{
         animation: "scan-line 2s linear infinite",
         top: "0%",

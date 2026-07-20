@@ -189,8 +189,8 @@ export function AICameraCapture({
 
             <button
               onClick={handleStartCapture}
-              className="w-full rounded-xl bg-gradient-to-r from-[#2D6A4F] to-[#1B4332] text-white
-                         font-semibold py-3 hover:from-[#1B4332] hover:to-[#0D2818] transition
+              className="w-full rounded-xl bg-gradient-to-r from-[#2D6A4F] to-[#2D6A4F]/70 text-white
+                         font-semibold py-3 hover:from-[#2D6A4F]/90 hover:to-[#2D6A4F]/60 transition
                          flex items-center justify-center gap-2 shadow-lg shadow-[#2D6A4F]/25"
             >
               <IconCamera />
@@ -262,7 +262,7 @@ export function AICameraCapture({
               className={cn(
                 "flex-1 rounded-xl font-semibold py-3 transition flex items-center justify-center gap-2",
                 capture.currentFrame?.isGoodPose
-                  ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                  ? "bg-gradient-to-r from-[#2D6A4F] to-[#2D6A4F]/70 text-white shadow-lg shadow-[#2D6A4F]/25"
                   : "bg-white/10 text-white/30 cursor-not-allowed"
               )}
             >
@@ -317,8 +317,8 @@ export function AICameraCapture({
       {/* ── COMPLETED PHASE ── */}
       {capture.phase === "completed" && (
         <div className="flex flex-col items-center gap-5 py-12 max-w-sm mx-auto text-center">
-          <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center">
-            <svg className="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-20 h-20 rounded-full bg-[#2D6A4F]/20 flex items-center justify-center">
+            <svg className="w-10 h-10 text-[#2D6A4F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
@@ -331,7 +331,7 @@ export function AICameraCapture({
           {capture.sessionStatus?.scan_confidence != null && (
             <div className="text-xs text-white/40">
               Scan accuracy:{" "}
-              <span className="text-green-400 font-semibold">
+              <span className="text-[#2D6A4F] font-semibold">
                 {Math.round(capture.sessionStatus.scan_confidence * 100)}%
               </span>
             </div>
@@ -374,8 +374,8 @@ export function AICameraCapture({
 function QualityBar({ quality }: { quality: number }) {
   const pct = Math.round(quality * 100);
   const color =
-    pct >= 72 ? "bg-green-500" :
-    pct >= 50 ? "bg-amber-500" :
+    pct >= 72 ? "bg-[#2D6A4F]" :
+    pct >= 50 ? "bg-[#F4C430]" :
     "bg-red-500";
 
   return (
@@ -384,7 +384,7 @@ function QualityBar({ quality }: { quality: number }) {
         <span>Pose quality</span>
         <span className={cn(
           "font-semibold",
-          pct >= 72 ? "text-green-400" : pct >= 50 ? "text-amber-400" : "text-red-400"
+          pct >= 72 ? "text-[#2D6A4F]" : pct >= 50 ? "text-[#F4C430]" : "text-red-400"
         )}>
           {pct}%
         </span>

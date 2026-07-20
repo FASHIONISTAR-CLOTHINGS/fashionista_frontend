@@ -94,7 +94,7 @@ export function InHouseMeasurementFlow({
 
         {/* Header badge */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#2D6A4F]/15 flex items-center justify-center text-[#52B788] ring-1 ring-[#2D6A4F]/20">
+          <div className="w-12 h-12 rounded-2xl bg-[#2D6A4F]/15 flex items-center justify-center text-[#F4C430] ring-1 ring-[#2D6A4F]/20">
             <IconRuler />
           </div>
           <div>
@@ -130,7 +130,7 @@ export function InHouseMeasurementFlow({
           <ul className="flex flex-col gap-2">
             {REQUIREMENTS.map((req) => (
               <li key={req} className="flex items-start gap-2.5">
-                <span className="mt-0.5 text-emerald-400 shrink-0"><IconCheck /></span>
+                <span className="mt-0.5 text-[#F4C430] shrink-0"><IconCheck /></span>
                 <span className="text-sm text-white/70">{req}</span>
               </li>
             ))}
@@ -161,7 +161,7 @@ export function InHouseMeasurementFlow({
           )}
           <button
             onClick={() => setPhase("scanning")}
-            className="flex-1 rounded-xl bg-[#2D6A4F] hover:bg-[#1B4332] text-white
+            className="flex-1 rounded-xl bg-[#2D6A4F] hover:bg-[#2D6A4F]/90 text-white
                        font-semibold text-sm py-3 transition-colors flex items-center justify-center gap-2"
           >
             <IconCamera />
@@ -186,8 +186,8 @@ export function InHouseMeasurementFlow({
   // ── SUCCESS PHASE ───────────────────────────────────────────────────────────
   return (
     <div className={cn("flex flex-col items-center gap-6 py-8 text-center", className)}>
-      <div className="w-20 h-20 rounded-full bg-emerald-500/15 ring-4 ring-emerald-500/25
-                      flex items-center justify-center text-emerald-400 animate-bounce-once">
+      <div className="w-20 h-20 rounded-full bg-[#2D6A4F]/15 ring-4 ring-[#2D6A4F]/25
+                      flex items-center justify-center text-[#F4C430] animate-bounce-once">
         <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
         </svg>
@@ -208,7 +208,7 @@ export function InHouseMeasurementFlow({
         {profileId && (
           <a
             href={`/client/dashboard/measurements/${profileId}`}
-            className="rounded-xl bg-[#2D6A4F] hover:bg-[#1B4332] text-white font-semibold
+            className="rounded-xl bg-[#2D6A4F] hover:bg-[#2D6A4F]/90 text-white font-semibold
                        text-sm py-3 transition-colors text-center"
           >
             View My Measurements

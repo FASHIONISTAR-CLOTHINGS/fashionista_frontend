@@ -57,10 +57,10 @@ export function SizeRecommendation({
     return (
       <button
         onClick={() => mutate()}
-        className="flex items-center gap-2 text-xs text-amber-400 hover:text-amber-300 transition-colors group"
+        className="flex items-center gap-2 text-xs text-[#F4C430] hover:text-[#F9D84A] transition-colors group"
         id="size-recommendation-btn"
       >
-        <span className="w-5 h-5 rounded-full bg-amber-500/15 flex items-center justify-center text-[10px] group-hover:bg-amber-500/25 transition-colors">
+        <span className="w-5 h-5 rounded-full bg-[#F4C430]/15 flex items-center justify-center text-[10px] group-hover:bg-[#F4C430]/25 transition-colors">
           ✨
         </span>
         {measurementProfileId ? "Get AI Size Recommendation" : "Get Your Size"}
@@ -73,7 +73,7 @@ export function SizeRecommendation({
     return (
       <div className={`flex items-center gap-2 py-2 ${className}`}>
         <LoadingSpinner size="sm" />
-        <span className="text-xs text-slate-400">AI is calculating your best fit…</span>
+        <span className="text-xs text-white/40">AI is calculating your best fit…</span>
       </div>
     );
   }
@@ -112,23 +112,23 @@ export function SizeRecommendation({
 
         {/* Main size */}
         <div className="flex items-end gap-3">
-          <div className="text-4xl font-extrabold text-amber-400 leading-none">
+          <div className="text-4xl font-extrabold text-[#F4C430] leading-none">
             {result.recommended_size}
           </div>
-          <div className="text-xs text-slate-400 mb-1">
+          <div className="text-xs text-white/40 mb-1">
             {result.size_system} sizing
           </div>
         </div>
 
         {/* Fit notes */}
         {result.fit_notes && (
-          <p className="text-xs text-slate-400 leading-relaxed">{result.fit_notes}</p>
+          <p className="text-xs text-white/40 leading-relaxed">{result.fit_notes}</p>
         )}
 
         {/* Alternative sizes */}
         {result.alternative_sizes && result.alternative_sizes.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] text-slate-500 uppercase tracking-wide">Also fits:</span>
+            <span className="text-[10px] text-white/30 uppercase tracking-wide">Also fits:</span>
             {result.alternative_sizes.map((s) => (
               <Badge key={s} size="xs" color="default">{s}</Badge>
             ))}
@@ -138,12 +138,12 @@ export function SizeRecommendation({
         {/* Measurements used */}
         {result.measurements_used.length > 0 && (
           <div className="pt-2 border-t border-white/8">
-            <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1.5">
+            <p className="text-[10px] text-white/30 uppercase tracking-wide mb-1.5">
               Based on your
             </p>
             <div className="flex flex-wrap gap-1">
               {result.measurements_used.map((m) => (
-                <span key={m} className="text-[10px] bg-white/5 border border-white/10 rounded-md px-1.5 py-0.5 text-slate-400 capitalize">
+                <span key={m} className="text-[10px] bg-white/5 border border-white/10 rounded-md px-1.5 py-0.5 text-white/40 capitalize">
                   {m.replace(/_/g, " ")}
                 </span>
               ))}
@@ -153,7 +153,7 @@ export function SizeRecommendation({
 
         <button
           onClick={() => { setResult(null); mutate(); }}
-          className="text-[10px] text-slate-500 hover:text-amber-400 transition-colors"
+          className="text-[10px] text-white/30 hover:text-[#F4C430] transition-colors"
         >
           Recalculate ↻
         </button>
