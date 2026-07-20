@@ -216,7 +216,12 @@ jobs:
         run: |
           cp deploy/huggingface-frontend/Dockerfile.production "$DEPLOY_DIR/Dockerfile"
           cp deploy/huggingface-frontend/README.md "$DEPLOY_DIR/README.md"
-          echo "✅ Frontend Dockerfile and README injected"
+          # Convert CRLF → LF (HF pre-receive hook rejects files with Windows line endings)
+          sudo apt-get update -qq && sudo apt-get install -y -qq dos2unix
+          dos2unix "$DEPLOY_DIR/README.md" "$DEPLOY_DIR/Dockerfile"
+          # Also convert any text files that may have CRLF
+          find "$DEPLOY_DIR" -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.json" -o -name "*.mjs" -o -name "*.css" | xargs dos2unix 2>/dev/null || true
+          echo "✅ Frontend Dockerfile and README injected (CRLF→LF converted)"
 
       - name: Push to HF Space
         env:
@@ -227,6 +232,7 @@ jobs:
           git checkout -b main
           git config user.name "FASHIONISTAR CI/CD"
           git config user.email "fashionistar.home.beauty@gmail.com"
+          git config core.autocrlf false
           git add -A
           git add -f Dockerfile
           git commit -m "🛍️ Frontend Deploy: ${{ github.sha }} [GitHub Actions]"
