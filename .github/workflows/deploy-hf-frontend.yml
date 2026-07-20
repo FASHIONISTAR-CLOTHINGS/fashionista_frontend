@@ -201,34 +201,20 @@ jobs:
       - name: Prepare deploy directory
         run: |
           mkdir -p "$DEPLOY_DIR"
-          # Copy source, excluding dev-only and legacy Vercel artifacts
-          rsync -av \
-            --exclude='.git' --exclude='.github' --exclude='node_modules' \
-            --exclude='.next' --exclude='.vercel' --exclude='vercel.json' \
-            --exclude='coverage' --exclude='playwright-report' \
-            --exclude='test-results' --exclude='.env.local' \
-            --exclude='*.test.*' --exclude='*.spec.*' \
-            --exclude='__tests__' --exclude='e2e' \
-            --exclude='Dockerfile.dev' --exclude='deploy' \
-            --exclude='Makefile' --exclude='*.md' \
-            --exclude='GLOBAL_MAIN_BRANCH_ORIGINAL_CSS_STYLES_FONTS_AND_GUIDELINES' \
-            --exclude='*.log' --exclude='.eslintcache' \
-            --exclude='.dockerignore' --exclude='.gitignore' \
-            --exclude='.env*' \
-            --exclude='*.png' --exclude='*.jpg' --exclude='*.jpeg' \
-            --exclude='*.gif' --exclude='*.ico' --exclude='*.bmp' \
-            --exclude='*.webp' --exclude='*.avif' --exclude='*.tiff' \
-            --exclude='*.svg' \
-            --exclude='*.ttf' --exclude='*.eot' --exclude='*.woff' --exclude='*.woff2' \
-            --exclude='*.otf' --exclude='*.zip' --exclude='*.tar' --exclude='*.gz' \
-            --exclude='*.mp4' --exclude='*.webm' --exclude='*.mov' --exclude='*.mp3' \
-            --exclude='*.pdf' --exclude='*.doc' --exclude='*.docx' \
-            --exclude='Satoshi_Complete' \
-            --exclude='*.tsbuildinfo' --exclude='*.network-response' \
-            --exclude='test-evidence' --exclude='REAL_LIVE_VISION*' \
-            --exclude='tests' --exclude='scripts' --exclude='database' \
-            --exclude='ngrok*' --exclude='*.html' \
-            ./ "$DEPLOY_DIR/"
+          # Whitelist approach: only copy files needed for Docker build
+          # HF Spaces pre-receive hook rejects binary files — only push text source
+          cp package.json pnpm-lock.yaml .npmrc next.config.mjs tsconfig.json "$DEPLOY_DIR/"
+          cp -r src "$DEPLOY_DIR/src"
+          # Remove Satoshi_Complete fonts (binary TTF/EOT files)
+          rm -rf "$DEPLOY_DIR/src/app/Satoshi_Complete"
+          # Copy public dir but exclude all binary files
+          mkdir -p "$DEPLOY_DIR/public"
+          find public -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.json' -o -name '*.txt' -o -name '*.css' \) -exec cp --parents {} "$DEPLOY_DIR/" \; 2>/dev/null || true
+          # Copy tailwind config if it exists
+          [ -f tailwind.config.ts ] && cp tailwind.config.ts "$DEPLOY_DIR/"
+          [ -f postcss.config.mjs ] && cp postcss.config.mjs "$DEPLOY_DIR/"
+          [ -f postcss.config.cjs ] && cp postcss.config.cjs "$DEPLOY_DIR/"
+          echo "✅ Deploy directory prepared (whitelist mode — text files only)"
 
       - name: Inject HF Spaces Dockerfile and README
         run: |
