@@ -231,6 +231,10 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           cd "$DEPLOY_DIR"
+          # Install git-lfs for binary file support (HF Spaces uses Xet storage)
+          sudo apt-get install -y -qq git-lfs
+          git lfs install
+          git lfs track "*.png" "*.jpg" "*.jpeg" "*.gif" "*.svg" "*.ico" "*.ttf" "*.eot" "*.woff" "*.woff2" "*.webp" "*.bmp" "*.avif"
           git init
           git checkout -b main
           git config user.name "FASHIONISTAR CI/CD"
@@ -241,7 +245,7 @@ jobs:
           echo "📄 README.md content (first 15 lines):"
           head -15 README.md
           git add -A
-          git add -f Dockerfile
+          git add -f Dockerfile .gitattributes
           git status --short
           git commit -m "🛍️ Frontend Deploy: ${{ github.sha }} [GitHub Actions]"
           git remote add hf "https://__token__:${HF_TOKEN}@huggingface.co/spaces/${SPACE_ID}"
