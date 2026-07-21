@@ -191,7 +191,7 @@ export function MeasurementProfileCard({
       {/* ── Save bar (visible in edit mode) ─────────────────────────────────── */}
       {isEditing && (
         <div className="px-4 pb-4">
-          <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-2.5 mb-3 text-xs text-amber-300/80">
+          <div className="rounded-xl border border-[#F4C430]/20 bg-[#F4C430]/10 px-4 py-2.5 mb-3 text-xs text-[#F4C430]/90">
             Values entered in <strong>{unit}</strong> — stored in cm automatically.
           </div>
           <button

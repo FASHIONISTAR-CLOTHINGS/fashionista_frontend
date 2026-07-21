@@ -88,7 +88,7 @@ export function BodyDiagram({ points, activePoint, onPointClick, className = "" 
             >
               {/* Outer ring — animate if missing */}
               {isMissing && (
-                <circle cx={pt.cx} cy={pt.cy} r="10" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.5)" strokeWidth="1">
+                <circle cx={pt.cx} cy={pt.cy} r="10" fill="rgba(244,196,48,0.15)" stroke="rgba(244,196,48,0.5)" strokeWidth="1">
                   <animate attributeName="r" values="7;11;7" dur="2s" repeatCount="indefinite" />
                   <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite" />
                 </circle>
@@ -100,14 +100,14 @@ export function BodyDiagram({ points, activePoint, onPointClick, className = "" 
                 cy={pt.cy}
                 r={isActive || isHovered ? 7 : 5}
                 fill={
-                  isActive ? "rgba(245,158,11,0.9)"
-                    : hasValue ? "rgba(52,211,153,0.9)"
+                  isActive ? "rgba(244,196,48,0.9)"
+                    : hasValue ? "rgba(82,183,136,0.9)"
                     : "rgba(255,255,255,0.15)"
                 }
                 stroke={
-                  isActive ? "#F59E0B"
-                    : isMissing ? "#F59E0B"
-                    : hasValue ? "#34D399"
+                  isActive ? "#F4C430"
+                    : isMissing ? "#F4C430"
+                    : hasValue ? "#52B788"
                     : "rgba(255,255,255,0.3)"
                 }
                 strokeWidth="1.5"
@@ -145,12 +145,12 @@ export function BodyDiagram({ points, activePoint, onPointClick, className = "" 
       </svg>
 
       {/* Legend */}
-      <div className="flex items-center justify-center gap-4 mt-3 text-xs text-slate-400">
+      <div className="flex items-center justify-center gap-4 mt-3 text-xs text-white/40">
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/80" />Measured
+          <span className="w-2.5 h-2.5 rounded-full bg-[#52B788]/80" />Measured
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-amber-400/80" />Required
+          <span className="w-2.5 h-2.5 rounded-full bg-[#F4C430]/80" />Required
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-white/25" />Optional
