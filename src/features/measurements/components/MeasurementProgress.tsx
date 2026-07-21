@@ -197,27 +197,27 @@ const STEP_LABELS = ["Load", "Camera", "Pose", "Upload", "Save"];
 
 function phaseColorHex(phase: ScanProgressPhase): string {
   const map: Partial<Record<ScanProgressPhase, string>> = {
-    loading:      "#8b5cf6",
-    initialising: "#8b5cf6",
-    detecting:    "#3b82f6",
-    submitting:   "#0ea5e9",
-    processing:   "#f59e0b",
-    saving:       "#22c55e",
-    completed:    "#4ade80",
-    failed:       "#ef4444",
+    loading:      "#2D6A4F",
+    initialising: "#2D6A4F",
+    detecting:    "#52B788",
+    submitting:   "#F4C430",
+    processing:   "#F4C430",
+    saving:       "#2D6A4F",
+    completed:    "#52B788",
+    failed:       "#DC2626",
   };
   return map[phase] ?? "#ffffff20";
 }
 
 function phaseGradient(phase: ScanProgressPhase): string {
-  if (phase === "completed") return "linear-gradient(90deg, #22c55e, #4ade80)";
-  if (phase === "failed")    return "#ef4444";
+  if (phase === "completed") return "linear-gradient(90deg, #2D6A4F, #52B788)";
+  if (phase === "failed")    return "#DC2626";
   if (["loading", "initialising"].includes(phase))
-    return "linear-gradient(90deg, #7c3aed, #8b5cf6)";
-  if (phase === "detecting")   return "linear-gradient(90deg, #1d4ed8, #3b82f6)";
-  if (phase === "submitting")  return "linear-gradient(90deg, #0369a1, #0ea5e9)";
-  if (phase === "processing")  return "linear-gradient(90deg, #b45309, #f59e0b)";
-  if (phase === "saving")      return "linear-gradient(90deg, #15803d, #22c55e)";
+    return "linear-gradient(90deg, #1B4332, #2D6A4F)";
+  if (phase === "detecting")   return "linear-gradient(90deg, #2D6A4F, #52B788)";
+  if (phase === "submitting")  return "linear-gradient(90deg, #C9A227, #F4C430)";
+  if (phase === "processing")  return "linear-gradient(90deg, #C9A227, #F4C430)";
+  if (phase === "saving")      return "linear-gradient(90deg, #1B4332, #2D6A4F)";
   return "rgba(255,255,255,0.1)";
 }
 
