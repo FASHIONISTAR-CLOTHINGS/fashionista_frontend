@@ -25,7 +25,7 @@ NGROK ?= $(PNPM) dlx --package ngrok@4 ngrok
 NEXT_DEV_HOST ?= 0.0.0.0
 NEXT_DEV_PORT ?= 3000
 NEXT_DEV_MEMORY_MB ?= 3072
-NEXT_DEV_ENV = NODE_OPTIONS=--max-old-space-size=$(NEXT_DEV_MEMORY_MB)
+NEXT_DEV_ENV = set NODE_OPTIONS=--max-old-space-size=$(NEXT_DEV_MEMORY_MB) &&
 
 # Detect if running on Windows and inside OneDrive to fallback to webpack automatically
 USE_WEBPACK :=
