@@ -25,7 +25,14 @@ NGROK ?= $(PNPM) dlx --package ngrok@4 ngrok
 NEXT_DEV_HOST ?= 0.0.0.0
 NEXT_DEV_PORT ?= 3000
 NEXT_DEV_MEMORY_MB ?= 3072
-NEXT_DEV_ENV = set NODE_OPTIONS=--max-old-space-size=$(NEXT_DEV_MEMORY_MB) &&
+
+ifeq ($(OS),Windows_NT)
+  NEXT_DEV_ENV = set "NODE_OPTIONS=--max-old-space-size=$(NEXT_DEV_MEMORY_MB)" &&
+  NEXT_BIN = node_modules\.bin\next.CMD
+else
+  NEXT_DEV_ENV = NODE_OPTIONS=--max-old-space-size=$(NEXT_DEV_MEMORY_MB)
+  NEXT_BIN = $(PNPM) exec next
+endif
 
 # Detect if running on Windows and inside OneDrive to fallback to webpack automatically
 USE_WEBPACK :=
@@ -62,11 +69,11 @@ dev: ## Start Next.js development server (Webpack fallback on Windows OneDrive)
 ifneq ($(USE_WEBPACK),)
 	@echo "$(YELLOW)⚠ Detected Windows + OneDrive. Falling back to Webpack to prevent Turbopack watch-state deadlocks.$(NC)"
 endif
-	$(NEXT_DEV_ENV) $(PNPM) exec next dev $(USE_WEBPACK) --hostname $(NEXT_DEV_HOST) --port $(NEXT_DEV_PORT)
+	$(NEXT_DEV_ENV) $(NEXT_BIN) dev $(USE_WEBPACK) --hostname $(NEXT_DEV_HOST) --port $(NEXT_DEV_PORT)
 
 dev-webpack: ## Start Next.js dev server with Webpack (fallback — use --webpack flag)
 	@echo "$(CYAN)Starting Next.js dev server with Webpack (Turbopack disabled)...$(NC)"
-	$(NEXT_DEV_ENV) $(PNPM) exec next dev --webpack --hostname $(NEXT_DEV_HOST) --port $(NEXT_DEV_PORT)
+	$(NEXT_DEV_ENV) $(NEXT_BIN) dev --webpack --hostname $(NEXT_DEV_HOST) --port $(NEXT_DEV_PORT)
 
 build: ## Build production bundle (auto-clears .next cache to prevent Windows/OneDrive EPERM)
 	@echo "$(CYAN)Building for production...$(NC)"
