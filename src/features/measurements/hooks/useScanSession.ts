@@ -14,7 +14,7 @@
  */
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -89,34 +89,15 @@ function getAccessToken(): string | null {
 export function useScanSession(): UseScanSessionReturn {
   const qc = useQueryClient();
 
-  const [phase, setPhase]         = useState<ScanPhase>("idle");
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [error, setError]         = useState<string | null>(null);
+  const [manualPhase, setManualPhase] = useState<ScanPhase>("idle");
+  const [sessionId, setSessionId]     = useState<string | null>(null);
+  const [manualError, setManualError] = useState<string | null>(null);
 
-  const pollingEnabled  = phase === "processing";
-  const accessToken     = getAccessToken();
+  const pollingEnabled = manualPhase === "processing";
+  const accessToken    = getAccessToken();
 
-  // ── Shared completion handler ─────────────────────────────────────────────
-
+  // Track the last status we toasted/invalidated for to avoid duplicates
   const prevStatusRef = useRef<string | undefined>(undefined);
-
-  const handleStatusUpdate = useCallback(
-    (data: ScanStatusResponse) => {
-      if (data.status === prevStatusRef.current) return;
-      prevStatusRef.current = data.status;
-
-      if (data.status === "completed" && phase === "processing") {
-        setPhase("completed");
-        void qc.invalidateQueries({ queryKey: measurementKeys.all });
-        toast.success("Body measurements captured successfully! 🎉");
-      } else if (data.status === "failed" && phase === "processing") {
-        setPhase("failed");
-        setError(data.error_message ?? "Scan processing failed.");
-        toast.error(data.error_message ?? "Scan failed. Please try again.");
-      }
-    },
-    [phase, qc]
-  );
 
   // ── D-2: WebSocket real-time progress ─────────────────────────────────────
 
@@ -124,18 +105,7 @@ export function useScanSession(): UseScanSessionReturn {
     status:           wsStatus,
     isConnected:      isWebSocketConnected,
     isWebSocketError: wsError,
-  } = useScanWebSocket(pollingEnabled ? sessionId : null, {
-    accessToken,
-    onStatusUpdate: handleStatusUpdate,
-    onCompleted:    handleStatusUpdate,
-    onFailed: (msg) => {
-      if (phase === "processing") {
-        setPhase("failed");
-        setError(msg);
-        toast.error(msg);
-      }
-    },
-  });
+  } = useScanWebSocket(pollingEnabled ? sessionId : null, { accessToken });
 
   // ── Polling fallback (only when WebSocket is unavailable) ─────────────────
 
@@ -151,43 +121,65 @@ export function useScanSession(): UseScanSessionReturn {
     refetchIntervalInBackground: false,
   });
 
-  // Apply polled status updates through the shared handler
-  useEffect(() => {
-    if (polledStatus && useFallbackPolling) {
-      handleStatusUpdate(polledStatus);
-    }
-  }, [polledStatus, useFallbackPolling, handleStatusUpdate]);
-
   // Active session status: prefer WebSocket, fall back to polling
   const sessionStatus = wsStatus ?? polledStatus ?? null;
+
+  // ── Derive public phase/error from manual state + external status ─────────
+
+  const phase = useMemo<ScanPhase>(() => {
+    if (sessionStatus?.status === "completed") return "completed";
+    if (sessionStatus?.status === "failed")    return "failed";
+    return manualPhase;
+  }, [sessionStatus, manualPhase]);
+
+  const error = useMemo<string | null>(() => {
+    if (sessionStatus?.status === "failed") {
+      return sessionStatus.error_message ?? "Scan failed.";
+    }
+    return manualError;
+  }, [sessionStatus, manualError]);
+
+  // Notify + invalidate cache when external status reaches a terminal state
+  useEffect(() => {
+    const status = sessionStatus?.status;
+    if (!status || status === prevStatusRef.current) return;
+    prevStatusRef.current = status;
+
+    if (status === "completed") {
+      void qc.invalidateQueries({ queryKey: measurementKeys.all });
+      toast.success("Body measurements captured successfully! 🎉");
+    } else if (status === "failed") {
+      toast.error(sessionStatus?.error_message ?? "Scan failed. Please try again.");
+    }
+  }, [sessionStatus, qc]);
 
   // ── Initiate scan session ────────────────────────────────────────────────
 
   const initiate = useCallback(
     async (deviceType: "web" | "ios" | "android" = "web"): Promise<string | null> => {
-      if (phase !== "idle") {
-        console.warn("[useScanSession] initiate() called in non-idle phase:", phase);
+      if (manualPhase !== "idle") {
+        console.warn("[useScanSession] initiate() called in non-idle phase:", manualPhase);
         return sessionId;
       }
 
-      setPhase("initiating");
-      setError(null);
+      setManualPhase("initiating");
+      setManualError(null);
 
       try {
         const response: ScanSessionResponse = await initiateBodyScan({ device_type: deviceType });
         const sid = response.session_id;
         setSessionId(sid);
-        setPhase("ready");
+        setManualPhase("ready");
         return sid;
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Failed to start scan session.";
-        setError(msg);
-        setPhase("failed");
+        setManualError(msg);
+        setManualPhase("failed");
         toast.error(msg);
         return null;
       }
     },
-    [phase, sessionId]
+    [manualPhase, sessionId]
   );
 
   // ── Submit landmarks ─────────────────────────────────────────────────────
@@ -198,36 +190,36 @@ export function useScanSession(): UseScanSessionReturn {
         toast.error("No active scan session. Please start a new scan.");
         return;
       }
-      if (phase !== "ready") {
-        console.warn("[useScanSession] submit() called in unexpected phase:", phase);
+      if (manualPhase !== "ready") {
+        console.warn("[useScanSession] submit() called in unexpected phase:", manualPhase);
         return;
       }
 
-      setPhase("submitting");
-      setError(null);
+      setManualPhase("submitting");
+      setManualError(null);
 
       try {
         await submitLandmarks(sessionId, payload);
         // Backend returns 202 Accepted — WebSocket or Celery polling begins
-        setPhase("processing");
+        setManualPhase("processing");
         prevStatusRef.current = undefined; // reset for fresh transition detection
       } catch (err: unknown) {
         const msg =
           err instanceof Error ? err.message : "Failed to submit scan data.";
-        setError(msg);
-        setPhase("failed");
+        setManualError(msg);
+        setManualPhase("failed");
         toast.error(msg);
       }
     },
-    [sessionId, phase]
+    [sessionId, manualPhase]
   );
 
   // ── Reset ────────────────────────────────────────────────────────────────
 
   const reset = useCallback(() => {
-    setPhase("idle");
+    setManualPhase("idle");
     setSessionId(null);
-    setError(null);
+    setManualError(null);
     prevStatusRef.current = undefined;
   }, []);
 

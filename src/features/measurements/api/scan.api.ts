@@ -260,10 +260,10 @@ export async function initiateBodyScan(
   const session = response.data ?? response;
   // Ensure QR fields always exist (graceful if backend is on older version)
   return {
-    measurement_url: "",
-    qr_code_b64:     "",
-    qr_code_url:     "",
     ...session,
+    measurement_url: session.measurement_url ?? "",
+    qr_code_b64:     session.qr_code_b64 ?? "",
+    qr_code_url:     session.qr_code_url ?? "",
   };
 }
 

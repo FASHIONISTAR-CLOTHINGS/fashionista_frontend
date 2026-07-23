@@ -37,7 +37,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEnhancedMeasurementCapture } from "../hooks/useEnhancedMeasurementCapture";
 import { useAutoCapture } from "../hooks/useAutoCapture";
 import { useVoiceCoach } from "../hooks/useVoiceCoach";
-import { usePhoneOrientation } from "../hooks/usePhoneOrientation";
+import { usePhoneOrientation, type OrientationStatus } from "../hooks/usePhoneOrientation";
 import { PoseOverlay } from "./PoseOverlay";
 import { CalibrationGuide } from "./CalibrationGuide";
 import { VoiceCoachDisplay } from "./VoiceCoachDisplay";
@@ -241,7 +241,7 @@ export function EnhancedMeasurementFlow({
 
   // ── Phone orientation voice coaching ─────────────────────────────────────
   const handleOrientationChange = useCallback(
-    (status: typeof orientation.status) => {
+    (status: OrientationStatus) => {
       if (status === "good") speak("phoneReady", { priority: false });
       if (status === "bad")  speak("phoneNotLevel");
     },

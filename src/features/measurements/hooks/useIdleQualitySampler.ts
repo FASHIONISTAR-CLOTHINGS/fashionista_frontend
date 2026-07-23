@@ -107,7 +107,7 @@ export function useIdleQualitySampler(
 
     isPendingRef.current = true;
 
-    cancelIdleRef.current = scheduleIdle((_) => {
+    cancelIdleRef.current = scheduleIdle(() => {
       isPendingRef.current = false;
       lastInferenceRef.current = performance.now();
 
