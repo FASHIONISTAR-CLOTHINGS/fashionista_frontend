@@ -63,9 +63,10 @@ interface UseScanWebSocketReturn {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8001";
 const WS_BASE_URL =
-  (process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:8000")
-    .replace(/^http/, "ws")
+  (process.env.NEXT_PUBLIC_WS_URL ?? BACKEND_URL)
+    .replace(/^http(s?)/, "ws$1")
     .replace(/\/$/, "");
 
 const MAX_RECONNECT_ATTEMPTS = 3;

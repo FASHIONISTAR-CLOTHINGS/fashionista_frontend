@@ -24,6 +24,7 @@ import {
 } from "../api/scan.api";
 import { useScanWebSocket } from "./useScanWebSocket";
 import { measurementKeys } from "./use-measurements";
+import { readAccessToken } from "@/features/auth/lib/auth-session.client";
 import type {
   LandmarkSubmitPayload,
   ScanSessionResponse,
@@ -70,18 +71,9 @@ export interface UseScanSessionReturn {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-/** JWT access token source — reads from localStorage (set by auth store). */
+/** JWT access token source — reads from the same sessionStorage key the auth store uses. */
 function getAccessToken(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    // Auth store persists to "fashionistar-auth-storage" per auth.store.ts
-    const raw = localStorage.getItem("fashionistar-auth-storage");
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as { state?: { access?: string } };
-    return parsed?.state?.access ?? null;
-  } catch {
-    return null;
-  }
+  return readAccessToken();
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
