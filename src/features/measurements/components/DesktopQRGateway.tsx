@@ -28,6 +28,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -326,13 +327,14 @@ export function DesktopQRGateway({
                 className="rounded-xl overflow-hidden p-2"
                 style={{ background: "#0A0A0A", border: "2px solid #2D6A4F50" }}
               >
-                <img
+                <Image
                   id="qr-code-image"
                   src={`data:image/png;base64,${qrCodeB64}`}
                   alt="QR Code — scan with your phone to start body measurement"
                   width={200}
                   height={200}
                   className="block"
+                  unoptimized
                 />
               </div>
 

@@ -11,7 +11,7 @@
  * - Skip button for returning users who somehow see it again
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ─── Tutorial Slides ──────────────────────────────────────────────────────────
@@ -152,19 +152,21 @@ interface ScanTutorialOverlayProps {
 }
 
 export function ScanTutorialOverlay({ forceShow = false, onComplete }: ScanTutorialOverlayProps) {
-  const [visible,     setVisible]     = useState(false);
+  const [visible, setVisible] = useState(() => {
+    if (typeof window === "undefined") return false;
+    if (forceShow) return true;
+    return localStorage.getItem(STORAGE_KEY) !== "1";
+  });
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  const didAutoCompleteRef = useRef(false);
+
   useEffect(() => {
-    // Show only if not seen before (or forced for testing)
-    const seen = typeof window !== "undefined" && localStorage.getItem(STORAGE_KEY) === "1";
-    if (!seen || forceShow) {
-      setVisible(true);
-    } else {
-      // Already seen — call onComplete immediately so the scan can start
+    if (!visible && !didAutoCompleteRef.current) {
+      didAutoCompleteRef.current = true;
       onComplete();
     }
-  }, [forceShow, onComplete]);
+  }, [visible, onComplete]);
 
   const handleDismiss = useCallback(() => {
     if (typeof window !== "undefined") {

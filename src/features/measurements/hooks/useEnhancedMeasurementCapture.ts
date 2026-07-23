@@ -40,6 +40,7 @@ import {
   useCallback,
   useRef,
   useEffect,
+  useMemo,
   MutableRefObject,
 } from "react";
 import {
@@ -97,8 +98,6 @@ export interface UseEnhancedMeasurementCaptureReturn {
   sessionId:          string | null;
   sessionStatus:      import("../api/scan.api").ScanStatusResponse | null;
   error:              string | null;
-  videoRef:           MutableRefObject<HTMLVideoElement | null>;
-  canvasRef:          MutableRefObject<HTMLCanvasElement | null>;
   // Buffer state
   landmarkBufferSize: number;
   bufferProgress:     number;  // 0-1 progress toward stabilityFramesRequired
@@ -204,21 +203,21 @@ function estimateHeightFromLandmarks(worldLandmarks: Landmark[]): number | null 
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useEnhancedMeasurementCapture(): UseEnhancedMeasurementCaptureReturn {
+export function useEnhancedMeasurementCapture(
+  videoRef: MutableRefObject<HTMLVideoElement | null>
+): UseEnhancedMeasurementCaptureReturn {
   const landmarker  = usePoseLandmarker();
   const scanSession = useScanSession();
 
-  const [phase, setPhase]               = useState<EnhancedCapturePhase>("idle");
+  const [localPhase, setLocalPhase]       = useState<EnhancedCapturePhase>("idle");
   const [currentFrame, setCurrentFrame] = useState<EnhancedCaptureFrame | null>(null);
   const [userHeightCm, setUserHeightCm] = useState<number | null>(null);
   const [userAge, setUserAge]           = useState<number | null>(null);   // A-5 FIX
-  const [error, setError]               = useState<string | null>(null);
+  const [localError, setLocalError]     = useState<string | null>(null);
   const [hasFrontCapture, setHasFrontCapture] = useState(false);
   const [bufferProgress, setBufferProgress]   = useState(0);
 
-  // Camera
-  const videoRef  = useRef<HTMLVideoElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  // Camera stream ref
   const streamRef = useRef<MediaStream | null>(null);
 
   // Landmark buffers (TASK-011) — refs to avoid re-render costs per frame
@@ -230,21 +229,21 @@ export function useEnhancedMeasurementCapture(): UseEnhancedMeasurementCaptureRe
 
   const phaseRef = useRef<EnhancedCapturePhase>("idle");
 
+  // ── Derive phase from scan session final states + local state ─────────────
+  const phase = useMemo<EnhancedCapturePhase>(() => {
+    if (scanSession.phase === "submitting") return "submitting";
+    if (scanSession.phase === "processing") return "processing";
+    if (scanSession.phase === "completed")  return "completed";
+    if (scanSession.phase === "failed")     return "failed";
+    return localPhase;
+  }, [scanSession.phase, localPhase]);
+
+  const error = localError ?? (scanSession.phase === "failed" ? scanSession.error : null);
+
   const setPhaseSync = useCallback((next: EnhancedCapturePhase) => {
     phaseRef.current = next;
-    setPhase(next);
+    setLocalPhase(next);
   }, []);
-
-  // ── Sync with scan session phase ──────────────────────────────────────────
-  useEffect(() => {
-    if (scanSession.phase === "submitting") setPhaseSync("submitting");
-    if (scanSession.phase === "processing") setPhaseSync("processing");
-    if (scanSession.phase === "completed")  setPhaseSync("completed");
-    if (scanSession.phase === "failed") {
-      setPhaseSync("failed");
-      setError(scanSession.error);
-    }
-  }, [scanSession.phase, scanSession.error, setPhaseSync]);
 
   // ── Camera start/stop ────────────────────────────────────────────────────
   const startCamera = useCallback(async () => {
@@ -265,18 +264,18 @@ export function useEnhancedMeasurementCapture(): UseEnhancedMeasurementCaptureRe
       });
       await videoRef.current.play();
     }
-  }, []);
+  }, [videoRef]);
 
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
-  }, []);
+  }, [videoRef]);
 
   // ── Start capture (begins with device_setup phase) ────────────────────────
   const startCapture = useCallback(
     async (heightCm?: number, ageYears?: number) => {
-      setError(null);
+      setLocalError(null);
       setPhaseSync("loading_model");
 
       try {
@@ -290,13 +289,15 @@ export function useEnhancedMeasurementCapture(): UseEnhancedMeasurementCaptureRe
         setPhaseSync("device_setup"); // Show phone orientation check first
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Failed to start capture.";
-        setError(msg);
+        setLocalError(msg);
         setPhaseSync("failed");
         stopCamera();
       }
     },
     [landmarker, scanSession, startCamera, stopCamera, setPhaseSync]
   );
+
+  // (setLocalError omitted from deps because setter identity is stable)
 
   // ── A-1 FIX: Skip device_setup orientation check ─────────────────────────
   /**
@@ -381,7 +382,7 @@ export function useEnhancedMeasurementCapture(): UseEnhancedMeasurementCaptureRe
     };
     setCurrentFrame(frame);
     return frame;
-  }, [landmarker, userHeightCm, setPhaseSync]);
+  }, [landmarker, userHeightCm, videoRef, setPhaseSync]);
 
   // ── Front capture (TASK-013) ───────────────────────────────────────────────
   const triggerFrontCapture = useCallback(() => {
@@ -408,7 +409,7 @@ export function useEnhancedMeasurementCapture(): UseEnhancedMeasurementCaptureRe
     const height   = userHeightCm;
 
     if (!frontLms || !height) {
-      setError("Missing front pose data. Please restart the scan.");
+      setLocalError("Missing front pose data. Please restart the scan.");
       setPhaseSync("failed");
       return;
     }
@@ -455,7 +456,7 @@ export function useEnhancedMeasurementCapture(): UseEnhancedMeasurementCaptureRe
     setUserAge(null);
     setHasFrontCapture(false);
     setBufferProgress(0);
-    setError(null);
+    setLocalError(null);
   }, [stopCamera, landmarker, scanSession, setPhaseSync]);
 
   useEffect(() => () => stopCamera(), [stopCamera]);
@@ -466,8 +467,6 @@ export function useEnhancedMeasurementCapture(): UseEnhancedMeasurementCaptureRe
     sessionId:      scanSession.sessionId,
     sessionStatus:  scanSession.sessionStatus,
     error,
-    videoRef,
-    canvasRef,
     landmarkBufferSize: CAPTURE_CONFIG.landmarkBufferSize,
     bufferProgress,
     isSidePosePhase:   phase.startsWith("side_"),

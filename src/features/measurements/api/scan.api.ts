@@ -256,7 +256,8 @@ export async function initiateBodyScan(
     "v1/measurements/scan/initiate/",
     payload
   );
-  const session = (data as any)?.data ?? data;
+  const response = data as unknown as { data?: ScanSessionResponse } & ScanSessionResponse;
+  const session = response.data ?? response;
   // Ensure QR fields always exist (graceful if backend is on older version)
   return {
     measurement_url: "",
@@ -301,7 +302,8 @@ export async function submitLandmarks(
     `v1/measurements/scan/${sessionId}/submit-landmarks/`,
     normalised
   );
-  return (data as any)?.data ?? data;
+  const response = data as unknown as { data?: ScanSessionResponse } & ScanSessionResponse;
+  return response.data ?? response;
 }
 
 /**

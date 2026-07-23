@@ -17,16 +17,17 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { DesktopQRGateway } from "../DesktopQRGateway";
+import type { PropsWithChildren, HTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
 vi.mock("framer-motion", () => ({
   motion: {
-    div:    ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
-    span:   ({ children, ...props }: any) => <span {...props}>{children}</span>,
+    div:    ({ children, ...props }: PropsWithChildren<HTMLAttributes<HTMLDivElement>>) => <div {...props}>{children}</div>,
+    button: ({ children, ...props }: PropsWithChildren<ButtonHTMLAttributes<HTMLButtonElement>>) => <button {...props}>{children}</button>,
+    span:   ({ children, ...props }: PropsWithChildren<HTMLAttributes<HTMLSpanElement>>) => <span {...props}>{children}</span>,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: { children?: ReactNode }) => <>{children}</>,
 }));
 
 const SAMPLE_SESSION_ID  = "3fa85f64-5717-4562-b3fc-2c963f66afa6";

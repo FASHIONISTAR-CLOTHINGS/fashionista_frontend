@@ -152,9 +152,11 @@ export function useScanSession(): UseScanSessionReturn {
   });
 
   // Apply polled status updates through the shared handler
-  if (polledStatus && useFallbackPolling) {
-    handleStatusUpdate(polledStatus);
-  }
+  useEffect(() => {
+    if (polledStatus && useFallbackPolling) {
+      handleStatusUpdate(polledStatus);
+    }
+  }, [polledStatus, useFallbackPolling, handleStatusUpdate]);
 
   // Active session status: prefer WebSocket, fall back to polling
   const sessionStatus = wsStatus ?? polledStatus ?? null;

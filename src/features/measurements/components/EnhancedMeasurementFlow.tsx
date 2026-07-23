@@ -91,7 +91,10 @@ export function EnhancedMeasurementFlow({
   initialAge,
   className,
 }: EnhancedMeasurementFlowProps) {
-  const capture     = useEnhancedMeasurementCapture();
+  // Camera refs owned by the component (avoids React Compiler ref-during-render warnings)
+  const videoRef  = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const capture     = useEnhancedMeasurementCapture(videoRef);
   const voice       = useVoiceCoach();
   const orientation = usePhoneOrientation();
   const haptic      = useHapticFeedback();
@@ -118,10 +121,17 @@ export function EnhancedMeasurementFlow({
     enabled: capture.phase === "side_aligning",
   });
 
-  // RAF ref
+  // RAF refs
   const rafRef = useRef<number | null>(null);
+  const frameLoopRef = useRef<() => void>(() => {});
   // A-2 FIX: Track previous frame's landmarks for jitter / stability detection
   const prevNosePosRef = useRef<{ x: number; y: number } | null>(null);
+
+  // Destructure stable callbacks/values used inside the frame loop
+  const { processFrame, phase: capturePhase } = capture;
+  const { tick: frontTick } = frontAutoCapture;
+  const { tick: sideTick }   = sideAutoCapture;
+  const { speak } = voice;
 
   // ── Jitter / Stability helper ─────────────────────────────────────────────
   /**
@@ -143,7 +153,7 @@ export function EnhancedMeasurementFlow({
 
   // ── Frame loop ───────────────────────────────────────────────────────────
   const frameLoop = useCallback(() => {
-    const videoEl = capture.videoRef.current;
+    const videoEl = videoRef.current;
     const ready   =
       videoEl !== null &&
       videoEl.readyState >= 2 &&
@@ -151,25 +161,25 @@ export function EnhancedMeasurementFlow({
       videoEl.videoHeight > 0;
 
     if (ready) {
-      const frame = capture.processFrame();
+      const frame = processFrame();
       if (frame) {
         const quality = frame.quality;
-        const phase   = capture.phase;
+        const phase   = capturePhase;
 
         // Tick auto-capture state machines — A-2 FIX: pass isStable for jitter gate
         const isStable = isFrameStable(frame);
         if (phase === "front_aligning" || phase === "front_countdown") {
-          frontAutoCapture.tick(quality, isStable);
+          frontTick(quality, isStable);
         }
         if (phase === "side_aligning" || phase === "side_countdown") {
-          sideAutoCapture.tick(quality, isStable);
+          sideTick(quality, isStable);
         }
 
         // Voice coaching for distance + centering (debounced internally)
-        if (frame.distanceStatus === "too_close") voice.speak("tooClose");
-        if (frame.distanceStatus === "too_far")   voice.speak("tooFar");
-        if (frame.centeringStatus === "too_left")  voice.speak("centerLeft", { minIntervalMs: 5000 });
-        if (frame.centeringStatus === "too_right") voice.speak("centerRight", { minIntervalMs: 5000 });
+        if (frame.distanceStatus === "too_close") speak("tooClose");
+        if (frame.distanceStatus === "too_far")   speak("tooFar");
+        if (frame.centeringStatus === "too_left")  speak("centerLeft", { minIntervalMs: 5000 });
+        if (frame.centeringStatus === "too_right") speak("centerRight", { minIntervalMs: 5000 });
       }
     }
 
@@ -177,26 +187,30 @@ export function EnhancedMeasurementFlow({
       "positioning", "front_aligning", "front_countdown",
       "side_positioning", "side_aligning", "side_countdown",
     ];
-    if (activePhases.includes(capture.phase)) {
-      rafRef.current = requestAnimationFrame(frameLoop);
+    if (activePhases.includes(capturePhase)) {
+      rafRef.current = requestAnimationFrame(() => frameLoopRef.current());
     }
-  }, [capture, frontAutoCapture, sideAutoCapture, voice]);
+  }, [processFrame, capturePhase, frontTick, sideTick, speak, videoRef]);
+
+  useEffect(() => {
+    frameLoopRef.current = frameLoop;
+  }, [frameLoop]);
 
   useEffect(() => {
     const activePhases = [
       "positioning", "front_aligning", "front_countdown",
       "side_positioning", "side_aligning", "side_countdown",
     ];
-    if (activePhases.includes(capture.phase)) {
-      rafRef.current = requestAnimationFrame(frameLoop);
+    if (activePhases.includes(capturePhase)) {
+      rafRef.current = requestAnimationFrame(() => frameLoopRef.current());
     }
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [capture.phase, frameLoop]);
+  }, [capturePhase]);
 
   // ── Voice coaching on phase transitions ──────────────────────────────────
   useEffect(() => {
     const phase = capture.phase;
-    const map: Partial<Record<typeof phase, Parameters<typeof voice.speak>[0]>> = {
+    const map: Partial<Record<typeof phase, Parameters<typeof speak>[0]>> = {
       device_setup:     "placePhone",
       positioning:      "stepIntoFrame",
       front_aligning:   "standStraight",
@@ -208,16 +222,14 @@ export function EnhancedMeasurementFlow({
       completed:        "complete",
     };
     const key = map[phase as keyof typeof map];
-    if (key) voice.speak(key, { priority: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [capture.phase]);
+    if (key) speak(key, { priority: true });
+  }, [capture.phase, speak]);
 
   // ── Speak welcome on first mount ──────────────────────────────────────────
   useEffect(() => {
-    const timer = setTimeout(() => voice.speak("welcome", { priority: true }), 500);
+    const timer = setTimeout(() => speak("welcome", { priority: true }), 500);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [speak]);
 
   // ── On completion ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -230,10 +242,10 @@ export function EnhancedMeasurementFlow({
   // ── Phone orientation voice coaching ─────────────────────────────────────
   const handleOrientationChange = useCallback(
     (status: typeof orientation.status) => {
-      if (status === "good") voice.speak("phoneReady", { priority: false });
-      if (status === "bad")  voice.speak("phoneNotLevel");
+      if (status === "good") speak("phoneReady", { priority: false });
+      if (status === "bad")  speak("phoneNotLevel");
     },
-    [voice]
+    [speak]
   );
 
 
@@ -384,19 +396,19 @@ export function EnhancedMeasurementFlow({
             {/* Camera viewport */}
             <div className="relative rounded-2xl overflow-hidden bg-black aspect-[3/4] max-h-[70vh] mx-auto w-full max-w-sm shadow-2xl">
               <video
-                ref={capture.videoRef}
+                ref={videoRef}
                 playsInline
                 muted
                 className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
               />
               <canvas
-                ref={capture.canvasRef}
+                ref={canvasRef}
                 className="absolute inset-0 w-full h-full scale-x-[-1]"
               />
               <PoseOverlay
                 frame={capture.currentFrame}
-                canvasRef={capture.canvasRef}
-                videoRef={capture.videoRef}
+                canvasRef={canvasRef}
+                videoRef={videoRef}
               />
               <CalibrationGuide
                 phase={capture.phase}

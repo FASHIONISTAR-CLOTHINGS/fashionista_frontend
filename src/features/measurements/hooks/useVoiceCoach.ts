@@ -20,7 +20,7 @@
  */
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { VOICE_SCRIPTS, CAPTURE_CONFIG, type VoiceScriptKey } from "@/lib/brand";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -54,10 +54,18 @@ const VOLUME     = 1.0;
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
+function getIsSupported() {
+  return typeof window !== "undefined" && "speechSynthesis" in window;
+}
+
 export function useVoiceCoach(): UseVoiceCoachReturn {
   const [isSpeaking, setIsSpeaking]   = useState(false);
   const [currentText, setCurrentText] = useState<string | null>(null);
-  const [isSupported, setIsSupported] = useState(false);
+  const isSupported = useSyncExternalStore(
+    () => () => {},
+    getIsSupported,
+    () => false
+  );
 
   // Track last-spoken timestamps per key for debouncing
   const lastSpokenRef = useRef<Partial<Record<VoiceScriptKey, number>>>({});
@@ -69,12 +77,10 @@ export function useVoiceCoach(): UseVoiceCoachReturn {
   // ── Detect support + select preferred voice ─────────────────────────────────
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!("speechSynthesis" in window)) {
+    if (!isSupported) {
       console.info("[VoiceCoach] Web Speech API not supported — text-only mode.");
       return;
     }
-
-    setIsSupported(true);
 
     const selectVoice = () => {
       const voices = window.speechSynthesis.getVoices();
@@ -111,7 +117,7 @@ export function useVoiceCoach(): UseVoiceCoachReturn {
     return () => {
       window.speechSynthesis.removeEventListener("voiceschanged", selectVoice);
     };
-  }, []);
+  }, [isSupported]);
 
   // ── Speak ───────────────────────────────────────────────────────────────────
   const speak = useCallback(

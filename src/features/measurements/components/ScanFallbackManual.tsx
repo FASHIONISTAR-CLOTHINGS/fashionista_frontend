@@ -49,7 +49,7 @@ export function ScanFallbackManual({
         >
           <span className="text-3xl">📋</span>
         </div>
-        <h3 className="text-lg font-black text-white">Can't use the camera?</h3>
+        <h3 className="text-lg font-black text-white">Can&apos;t use the camera?</h3>
         <p className="text-sm text-white/50 mt-1">
           No problem — enter your measurements manually in under 2 minutes.
         </p>
@@ -75,7 +75,7 @@ export function ScanFallbackManual({
         style={{ background: "rgba(45,106,79,0.08)", border: "1px solid rgba(45,106,79,0.2)" }}
       >
         <p className="text-xs font-semibold text-[#52B788] mb-2 uppercase tracking-wider">
-          You'll fill in:
+          You&apos;ll fill in:
         </p>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
           {["Bust / Chest", "Waist", "Hips", "Shoulder Width",
