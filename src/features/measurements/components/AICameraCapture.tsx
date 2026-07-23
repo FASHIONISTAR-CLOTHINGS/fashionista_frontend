@@ -45,22 +45,26 @@ export function AICameraCapture({
   onCancel,
   className,
 }: AICameraCaptureProps) {
-  const capture = useMeasurementCapture();
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const capture = useMeasurementCapture(videoRef);
 
   // Height input state
   const [heightInput, setHeightInput]     = useState("");
   const [heightUnit, setHeightUnit]       = useState<"cm" | "inch">("cm");
   const [heightError, setHeightError]     = useState("");
 
-  // Animation frame ref
+  // Animation frame refs
   const rafRef = useRef<number | null>(null);
+  const frameLoopRef = useRef<() => void>(() => {});
 
   // ── Frame loop ──────────────────────────────────────────────────────────────
+  const { processFrame, phase: capturePhase } = capture;
   const frameLoop = useCallback(() => {
     // Secondary guard: only process when the video element has actual dimensions.
     // Primary guard is inside usePoseLandmarker.detectFromVideo.
     // Both guards together prevent the MediaPipe "ROI width/height > 0" assertion.
-    const videoEl = capture.videoRef.current;
+    const videoEl = videoRef.current;
     const videoReady =
       videoEl !== null &&
       videoEl.readyState >= 2 &&
@@ -68,23 +72,26 @@ export function AICameraCapture({
       videoEl.videoHeight > 0;
 
     if (videoReady) {
-      capture.processFrame();
+      processFrame();
     }
 
-    if (capture.phase === "capturing" || capture.phase === "awaiting_height") {
-      rafRef.current = requestAnimationFrame(frameLoop);
+    if (capturePhase === "capturing" || capturePhase === "awaiting_height") {
+      rafRef.current = requestAnimationFrame(() => frameLoopRef.current());
     }
-  }, [capture]);
-
+  }, [processFrame, capturePhase]);
 
   useEffect(() => {
-    if (capture.phase === "capturing" || capture.phase === "awaiting_height") {
-      rafRef.current = requestAnimationFrame(frameLoop);
+    frameLoopRef.current = frameLoop;
+  }, [frameLoop]);
+
+  useEffect(() => {
+    if (capturePhase === "capturing" || capturePhase === "awaiting_height") {
+      rafRef.current = requestAnimationFrame(() => frameLoopRef.current());
     }
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [capture.phase, frameLoop]);
+  }, [capturePhase]);
 
   // ── On completion ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -226,20 +233,20 @@ export function AICameraCapture({
           {/* Camera viewport */}
           <div className="relative rounded-2xl overflow-hidden bg-black aspect-[3/4] max-h-[70vh] mx-auto w-full max-w-sm shadow-2xl">
             <video
-              ref={capture.videoRef}
+              ref={videoRef}
               playsInline
               muted
               className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
             />
             <canvas
-              ref={capture.canvasRef}
+              ref={canvasRef}
               className="absolute inset-0 w-full h-full scale-x-[-1]"
             />
             {/* Pose overlay */}
             <PoseOverlay
               frame={capture.currentFrame}
-              canvasRef={capture.canvasRef}
-              videoRef={capture.videoRef}
+              canvasRef={canvasRef}
+              videoRef={videoRef}
             />
             {/* Calibration guide overlay */}
             <CalibrationGuide

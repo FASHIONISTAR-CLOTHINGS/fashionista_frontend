@@ -13,9 +13,9 @@
  *        → submitting → processing → completed | failed
  *
  * Usage:
- *   const capture = useMeasurementCapture();
+ *   const videoRef = useRef<HTMLVideoElement | null>(null);
+ *   const capture = useMeasurementCapture(videoRef);
  *   await capture.startCapture();
- *   // mount <AICameraCapture /> and pass capture.videoRef + capture.onFrame
  */
 "use client";
 
@@ -24,6 +24,7 @@ import {
   useCallback,
   useRef,
   useEffect,
+  useMemo,
   MutableRefObject,
 } from "react";
 import { usePoseLandmarker, type Landmark, type PoseLandmarkerResult } from "./usePoseLandmarker";
@@ -57,8 +58,6 @@ export interface UseMeasurementCaptureReturn {
   sessionId:      string | null;
   sessionStatus:  import("../api/scan.api").ScanStatusResponse | null;
   error:          string | null;
-  videoRef:       MutableRefObject<HTMLVideoElement | null>;
-  canvasRef:      MutableRefObject<HTMLCanvasElement | null>;
 
   /** Step 1: Load MediaPipe model + open camera. */
   startCapture:   (heightCm?: number) => Promise<void>;
@@ -101,30 +100,30 @@ function estimateHeightFromLandmarks(worldLandmarks: Landmark[]): number | null 
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useMeasurementCapture(): UseMeasurementCaptureReturn {
+export function useMeasurementCapture(
+  videoRef: MutableRefObject<HTMLVideoElement | null>,
+): UseMeasurementCaptureReturn {
   const landmarker = usePoseLandmarker();
   const scanSession = useScanSession();
 
-  const [phase, setPhase]                 = useState<CapturePhase>("idle");
+  const [localPhase, setLocalPhase]       = useState<CapturePhase>("idle");
   const [currentFrame, setCurrentFrame]   = useState<CaptureFrame | null>(null);
   const [userHeightCm, setUserHeightCm]   = useState<number | null>(null);
   const [capturedLandmarks, setCapturedLandmarks] = useState<Landmark[] | null>(null);
-  const [error, setError]                 = useState<string | null>(null);
+  const [localError, setLocalError]       = useState<string | null>(null);
 
-  const videoRef  = useRef<HTMLVideoElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // ── Sync phases with scan session ──────────────────────────────────────────
-  useEffect(() => {
-    if (scanSession.phase === "submitting") setPhase("submitting");
-    if (scanSession.phase === "processing") setPhase("processing");
-    if (scanSession.phase === "completed")  setPhase("completed");
-    if (scanSession.phase === "failed") {
-      setPhase("failed");
-      setError(scanSession.error);
-    }
-  }, [scanSession.phase, scanSession.error]);
+  // ── Derive phase from scan session final states + local state ─────────────
+  const phase = useMemo<CapturePhase>(() => {
+    if (scanSession.phase === "submitting") return "submitting";
+    if (scanSession.phase === "processing") return "processing";
+    if (scanSession.phase === "completed") return "completed";
+    if (scanSession.phase === "failed") return "failed";
+    return localPhase;
+  }, [scanSession.phase, localPhase]);
+
+  const error = localError ?? (scanSession.phase === "failed" ? scanSession.error : null);
 
   // ── Start camera ────────────────────────────────────────────────────────────
   const startCamera = useCallback(async () => {
@@ -177,7 +176,7 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
       const msg = err instanceof Error ? err.message : "Camera access denied.";
       throw new Error(`Camera error: ${msg}`);
     }
-  }, []);
+  }, [videoRef]);
 
 
   // ── Stop camera ─────────────────────────────────────────────────────────────
@@ -189,13 +188,13 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
-  }, []);
+  }, [videoRef]);
 
   // ── Start capture flow ──────────────────────────────────────────────────────
   const startCapture = useCallback(
     async (heightCm?: number) => {
-      setError(null);
-      setPhase("loading_model");
+      setLocalError(null);
+      setLocalPhase("loading_model");
 
       try {
         // 1. Load MediaPipe model
@@ -210,11 +209,11 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
         // 4. Store provided height (can be updated or auto-estimated later)
         if (heightCm) setUserHeightCm(heightCm);
 
-        setPhase(heightCm ? "capturing" : "awaiting_height");
+        setLocalPhase(heightCm ? "capturing" : "awaiting_height");
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Failed to start capture.";
-        setError(msg);
-        setPhase("failed");
+        setLocalError(msg);
+        setLocalPhase("failed");
         stopCamera();
       }
     },
@@ -248,7 +247,7 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
       const estimated = estimateHeightFromLandmarks(worldLms);
       if (estimated) {
         setUserHeightCm(estimated);
-        if (phase === "awaiting_height") setPhase("capturing");
+        if (phase === "awaiting_height") setLocalPhase("capturing");
       }
     }
 
@@ -265,33 +264,33 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
     };
     setCurrentFrame(frame);
     return frame;
-  }, [landmarker, phase, userHeightCm]);
+  }, [landmarker, phase, userHeightCm, videoRef]);
 
   // ── Capture + submit ────────────────────────────────────────────────────────
   const captureAndSubmit = useCallback(
     async (heightCm?: number) => {
       const lms = capturedLandmarks;
       if (!lms) {
-        setError("No valid pose detected. Please stand fully visible in the frame.");
+        setLocalError("No valid pose detected. Please stand fully visible in the frame.");
         return;
       }
 
       const height = heightCm ?? userHeightCm;
       if (!height || height < 100 || height > 250) {
-        setError("Unable to determine your height. Please enter it manually.");
+        setLocalError("Unable to determine your height. Please enter it manually.");
         return;
       }
 
-      setPhase("validating");
+      setLocalPhase("validating");
 
       // Basic client-side validation (backend does the full validation)
       const quality = landmarker.computeQualityScore(lms);
       if (quality < 0.60) {
-        setError(
+        setLocalError(
           `Pose quality too low (${Math.round(quality * 100)}%). ` +
           "Please ensure you are fully visible and well-lit."
         );
-        setPhase("failed");
+        setLocalPhase("failed");
         return;
       }
 
@@ -318,11 +317,11 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
     stopCamera();
     landmarker.cleanup();
     scanSession.reset();
-    setPhase("idle");
+    setLocalPhase("idle");
     setCurrentFrame(null);
     setUserHeightCm(null);
     setCapturedLandmarks(null);
-    setError(null);
+    setLocalError(null);
   }, [stopCamera, landmarker, scanSession]);
 
   // Auto-cleanup on unmount
@@ -337,8 +336,6 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
     sessionId:     scanSession.sessionId,
     sessionStatus: scanSession.sessionStatus,
     error,
-    videoRef,
-    canvasRef,
     startCapture,
     processFrame,
     captureAndSubmit,
