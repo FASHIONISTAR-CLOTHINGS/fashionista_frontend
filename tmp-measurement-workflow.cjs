@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const BASE_URL = 'http://localhost:3000';
-const API_URL = 'http://localhost:8001';
+const API_URL = 'http://127.0.0.1:8001';
 const EVIDENCE_DIR = path.join(__dirname, 'test-evidence', 'e2e');
 
 const EMAIL = 'email-reset.1779305773712.a8cot8@playwright.fashionistar.io';
