@@ -20,7 +20,7 @@ ENV PNPM_HOME="/pnpm" \
     PATH="/pnpm:$PATH" \
     NEXT_TELEMETRY_DISABLED=1
 
-RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
+RUN corepack enable && corepack prepare pnpm@10.34.5 --activate
 
 # ── Stage 2: builder (install + build) ───────────────────────────────────────
 # Note: We use --no-frozen-lockfile because binary assets (fonts, favicon) are
@@ -33,6 +33,9 @@ COPY package.json pnpm-lock.yaml .npmrc ./
 RUN pnpm install --no-frozen-lockfile
 
 COPY . .
+
+# Decode base64-encoded font files (binary fonts can't be pushed to HF git)
+RUN if [ -f setup-fonts.sh ]; then sh setup-fonts.sh; fi
 
 # Build-time public env vars (HF Spaces injects secrets as build args)
 ARG NEXT_PUBLIC_BACKEND_URL=https://fashionistar-ai-fashionistar-api-v1.hf.space
@@ -73,6 +76,7 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0
 
 # node:24-alpine already has user "node" with UID 1000 — HF Spaces requires UID 1000
+RUN mkdir -p /app/public /app/.next/static
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static

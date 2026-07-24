@@ -74,7 +74,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.33.0
+          version: 10.34.5
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -231,22 +231,40 @@ jobs:
           rm -rf "$DEPLOY_DIR/src/app/Satoshi_Complete"
           rm -rf "$DEPLOY_DIR/src/app/fonts"
           rm -f "$DEPLOY_DIR/src/app/favicon.ico"
-          # Create empty placeholder font files so Next.js build doesn't fail
-          mkdir -p "$DEPLOY_DIR/src/app/fonts"
-          touch "$DEPLOY_DIR/src/app/fonts/Bon-Foyage-Demo.otf"
-          touch "$DEPLOY_DIR/src/app/fonts/Satoshi-Regular.otf"
-          # Copy public dir including SVGs (text-based, HF accepts them)
+          # Encode font files as base64 for Docker build (binary fonts can't be pushed to HF git)
+          # layout.tsx uses: Bon-Foyage-Demo.otf, Satoshi-Regular.otf, Satoshi-Medium.otf, Satoshi-Bold.otf, Satoshi-BoldItalic.otf
+          FONT_DIR="src/app/fonts"
+          SETUP_SCRIPT="$DEPLOY_DIR/setup-fonts.sh"
+          echo "#!/bin/sh" > "$SETUP_SCRIPT"
+          echo "mkdir -p /app/src/app/fonts" >> "$SETUP_SCRIPT"
+          for f in Bon-Foyage-Demo.otf Satoshi-Regular.otf Satoshi-Medium.otf Satoshi-Bold.otf Satoshi-BoldItalic.otf; do
+            if [ -f "$FONT_DIR/$f" ]; then
+              echo "echo 'Encoding $f...'" >> "$SETUP_SCRIPT"
+              B64=$(base64 -w 0 "$FONT_DIR/$f")
+              echo "echo '$B64' | base64 -d > /app/src/app/fonts/$f" >> "$SETUP_SCRIPT"
+              echo "  ✅ Encoded font: $f ($(echo -n "$B64" | wc -c) bytes b64)"
+            else
+              echo "  ⚠️ Font not found: $f"
+            fi
+          done
+          chmod +x "$SETUP_SCRIPT"
+          # Copy public dir — ONLY text-based files (SVG, CSS, JS, JSON)
+          # HF Spaces pre-receive hook REJECTS binary files (PNG, WebP, ICO, JPG, GIF)
+          # Binary images are served from Cloudinary CDN at runtime
           mkdir -p "$DEPLOY_DIR/public"
-          find public -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.json' -o -name '*.txt' -o -name '*.css' -o -name '*.svg' -o -name '*.webp' -o -name '*.png' -o -name '*.ico' \) -exec cp --parents {} "$DEPLOY_DIR/" \; 2>/dev/null || true
-          # Copy Sentry config files if they exist
-          [ -f sentry.server.config.ts ] && cp sentry.server.config.ts "$DEPLOY_DIR/"
-          [ -f sentry.edge.config.ts ] && cp sentry.edge.config.ts "$DEPLOY_DIR/"
-          [ -f sentry.client.config.ts ] && cp sentry.client.config.ts "$DEPLOY_DIR/"
-          # Copy tailwind config if it exists
-          [ -f tailwind.config.ts ] && cp tailwind.config.ts "$DEPLOY_DIR/"
-          [ -f postcss.config.mjs ] && cp postcss.config.mjs "$DEPLOY_DIR/"
-          [ -f postcss.config.cjs ] && cp postcss.config.cjs "$DEPLOY_DIR/"
-          echo "✅ Deploy directory prepared (whitelist mode — text files only)"
+          find public -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.json' -o -name '*.txt' -o -name '*.css' -o -name '*.svg' \) | while read f; do
+            mkdir -p "$DEPLOY_DIR/$(dirname "$f")"
+            cp "$f" "$DEPLOY_DIR/$f"
+          done
+          # Always copy Sentry config files (build fails without them)
+          cp sentry.server.config.ts "$DEPLOY_DIR/" 2>/dev/null || echo '// Sentry server config placeholder' > "$DEPLOY_DIR/sentry.server.config.ts"
+          cp sentry.edge.config.ts "$DEPLOY_DIR/" 2>/dev/null || echo '// Sentry edge config placeholder' > "$DEPLOY_DIR/sentry.edge.config.ts"
+          cp sentry.client.config.ts "$DEPLOY_DIR/" 2>/dev/null || echo '// Sentry client config placeholder' > "$DEPLOY_DIR/sentry.client.config.ts"
+          # Copy tailwind and postcss configs
+          cp tailwind.config.ts "$DEPLOY_DIR/" 2>/dev/null || true
+          cp postcss.config.mjs "$DEPLOY_DIR/" 2>/dev/null || true
+          cp postcss.config.cjs "$DEPLOY_DIR/" 2>/dev/null || true
+          echo "✅ Deploy directory prepared (whitelist mode — text files only, fonts as base64)"
 
       - name: Inject HF Spaces Dockerfile and README
         run: |
