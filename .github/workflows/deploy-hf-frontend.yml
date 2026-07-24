@@ -231,9 +231,17 @@ jobs:
           rm -rf "$DEPLOY_DIR/src/app/Satoshi_Complete"
           rm -rf "$DEPLOY_DIR/src/app/fonts"
           rm -f "$DEPLOY_DIR/src/app/favicon.ico"
-          # Copy public dir but exclude all binary files
+          # Create empty placeholder font files so Next.js build doesn't fail
+          mkdir -p "$DEPLOY_DIR/src/app/fonts"
+          touch "$DEPLOY_DIR/src/app/fonts/Bon-Foyage-Demo.otf"
+          touch "$DEPLOY_DIR/src/app/fonts/Satoshi-Regular.otf"
+          # Copy public dir including SVGs (text-based, HF accepts them)
           mkdir -p "$DEPLOY_DIR/public"
-          find public -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.json' -o -name '*.txt' -o -name '*.css' \) -exec cp --parents {} "$DEPLOY_DIR/" \; 2>/dev/null || true
+          find public -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.json' -o -name '*.txt' -o -name '*.css' -o -name '*.svg' -o -name '*.webp' -o -name '*.png' -o -name '*.ico' \) -exec cp --parents {} "$DEPLOY_DIR/" \; 2>/dev/null || true
+          # Copy Sentry config files if they exist
+          [ -f sentry.server.config.ts ] && cp sentry.server.config.ts "$DEPLOY_DIR/"
+          [ -f sentry.edge.config.ts ] && cp sentry.edge.config.ts "$DEPLOY_DIR/"
+          [ -f sentry.client.config.ts ] && cp sentry.client.config.ts "$DEPLOY_DIR/"
           # Copy tailwind config if it exists
           [ -f tailwind.config.ts ] && cp tailwind.config.ts "$DEPLOY_DIR/"
           [ -f postcss.config.mjs ] && cp postcss.config.mjs "$DEPLOY_DIR/"
