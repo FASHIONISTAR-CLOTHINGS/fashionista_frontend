@@ -5,7 +5,7 @@ name: 🛍️ FASHIONISTAR — Deploy Frontend to Hugging Face
 # =============================================================================
 # Deploys the Next.js frontend to Hugging Face Spaces:
 #
-#   fashionistar/fashionistar-frontend  — CPU Docker — Next.js 16 Standalone
+#   fashionistar-ai/fashionistar-frontend  — CPU Docker — Next.js 16 Standalone
 #
 # Pipeline stages:
 #   1. Pre-flight build test (catches broken builds before deployment)
@@ -87,9 +87,9 @@ jobs:
 
       - name: Build
         env:
-          NEXT_PUBLIC_BACKEND_URL: https://fashionistar-fashionistar-api-v1.hf.space
-          BACKEND_INTERNAL_URL: https://fashionistar-fashionistar-api-v1.hf.space
-          NEXT_PUBLIC_APP_URL: https://fashionistar-fashionistar-frontend.hf.space
+          NEXT_PUBLIC_BACKEND_URL: https://fashionistar-ai-fashionistar-api-v1.hf.space
+          BACKEND_INTERNAL_URL: https://fashionistar-ai-fashionistar-api-v1.hf.space
+          NEXT_PUBLIC_APP_URL: https://fashionistar-ai-fashionistar-frontend.hf.space
           NEXT_PUBLIC_APP_NAME: FASHIONISTAR_AI
           NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: dgpdlknc1
@@ -115,8 +115,8 @@ jobs:
       (needs.build-test.result == 'success' || needs.build-test.result == 'skipped')
 
     env:
-      SPACE_ID: fashionistar/fashionistar-frontend
-      SPACE_URL: https://fashionistar-fashionistar-frontend.hf.space
+      SPACE_ID: fashionistar-ai/fashionistar-frontend
+      SPACE_URL: https://fashionistar-ai-fashionistar-frontend.hf.space
       DEPLOY_DIR: /tmp/hf_frontend_deploy
 
     steps:
@@ -151,7 +151,7 @@ jobs:
               -H "Authorization: Bearer ${HF_TOKEN}" \
               -H "Content-Type: application/json" \
               "https://huggingface.co/api/repos/create" \
-              -d '{"type":"space","name":"fashionistar-frontend","organization":"fashionistar","sdk":"docker","hardware":"cpu-basic","private":false,"license":"mit"}')
+              -d '{"type":"space","name":"fashionistar-frontend","organization":"fashionistar-ai","sdk":"docker","hardware":"cpu-basic","private":false,"license":"mit"}')
             echo "  API response: $CREATE_RESP"
             if echo "$CREATE_RESP" | grep -q "url"; then
               echo "✅ Space created: https://huggingface.co/spaces/${SPACE_ID}"
@@ -183,22 +183,22 @@ jobs:
           }
 
           echo "🔑 Syncing secrets to HF Space: ${SPACE_ID}"
-          push_secret "NEXT_PUBLIC_BACKEND_URL"          "https://fashionistar-fashionistar-api-v1.hf.space"
-          push_secret "BACKEND_INTERNAL_URL"             "https://fashionistar-fashionistar-api-v1.hf.space"
-          push_secret "NEXT_PUBLIC_APP_URL"              "https://fashionistar-fashionistar-frontend.hf.space"
+          push_secret "NEXT_PUBLIC_BACKEND_URL"          "https://fashionistar-ai-fashionistar-api-v1.hf.space"
+          push_secret "BACKEND_INTERNAL_URL"             "https://fashionistar-ai-fashionistar-api-v1.hf.space"
+          push_secret "NEXT_PUBLIC_APP_URL"              "https://fashionistar-ai-fashionistar-frontend.hf.space"
           push_secret "NEXT_PUBLIC_APP_NAME"             "FASHIONISTAR_AI"
           push_secret "NEXT_PUBLIC_GOOGLE_CLIENT_ID"     "${{ secrets.GOOGLE_CLIENT_ID }}"
           push_secret "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME" "dgpdlknc1"
           push_secret "NEXT_PUBLIC_CLOUDINARY_CLOUD"     "dgpdlknc1"
           push_secret "NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET" "fashionista_ai"
           push_secret "NEXTAUTH_SECRET"                  "${{ secrets.NEXTAUTH_SECRET }}"
-          push_secret "NEXTAUTH_URL"                     "https://fashionistar-fashionistar-frontend.hf.space"
+          push_secret "NEXTAUTH_URL"                     "https://fashionistar-ai-fashionistar-frontend.hf.space"
           push_secret "JWT_SECRET"                       "${{ secrets.JWT_SECRET }}"
           push_secret "GOOGLE_CLIENT_ID"                 "${{ secrets.GOOGLE_CLIENT_ID }}"
           push_secret "GOOGLE_CLIENT_SECRET"             "${{ secrets.GOOGLE_CLIENT_SECRET }}"
-          push_secret "NEXT_PUBLIC_API_V1_URL"            "https://fashionistar-fashionistar-api-v1.hf.space/api"
-          push_secret "NEXT_PUBLIC_API_V2_URL"            "https://fashionistar-fashionistar-api-v1.hf.space/api/v1/ninja"
-          push_secret "NEXT_PUBLIC_WS_URL"               "wss://fashionistar-fashionistar-api-v1.hf.space"
+          push_secret "NEXT_PUBLIC_API_V1_URL"            "https://fashionistar-ai-fashionistar-api-v1.hf.space/api"
+          push_secret "NEXT_PUBLIC_API_V2_URL"            "https://fashionistar-ai-fashionistar-api-v1.hf.space/api/v1/ninja"
+          push_secret "NEXT_PUBLIC_WS_URL"               "wss://fashionistar-ai-fashionistar-api-v1.hf.space"
           push_secret "NEXT_PUBLIC_GOOGLE_ANALYTICS_ID"   "G_MEASUREMENT_ID"
           push_secret "NEXT_PUBLIC_SENTRY_DSN"           "https://d1f4dea7757d1689e46d16d347efb97c@o4511717534138368.ingest.de.sentry.io/4511717542264912"
           push_secret "SENTRY_DSN"                       "https://d1f4dea7757d1689e46d16d347efb97c@o4511717534138368.ingest.de.sentry.io/4511717542264912"
@@ -209,7 +209,7 @@ jobs:
           push_secret "NEXT_PUBLIC_SCAN_QUALITY_THRESHOLD" "0.85"
           push_secret "NEXT_PUBLIC_SCAN_STABILITY_FRAMES" "30"
           push_secret "NEXT_PUBLIC_SCAN_COUNTDOWN_SECONDS" "3"
-          push_secret "NEXT_PUBLIC_SCAN_BASE_URL"        "https://fashionistar-fashionistar-frontend.hf.space/scan"
+          push_secret "NEXT_PUBLIC_SCAN_BASE_URL"        "https://fashionistar-ai-fashionistar-frontend.hf.space/scan"
           push_secret "NEXT_PUBLIC_QR_SESSION_EXPIRY_HOURS" "24"
           push_secret "NEXT_PUBLIC_DEFAULT_LOCALE"       "en"
           push_secret "NEXT_PUBLIC_SUPPORTED_LOCALES"    "en,fr,es,pt,ar"
@@ -368,13 +368,13 @@ jobs:
           echo ""
           echo "  PRODUCTION URL:"
           echo "  ─────────────────────────────────────────────────────────"
-          echo "  Frontend:      https://fashionistar-fashionistar-frontend.hf.space"
-          echo "  Health Check:  https://fashionistar-fashionistar-frontend.hf.space/"
+          echo "  Frontend:      https://fashionistar-ai-fashionistar-frontend.hf.space"
+          echo "  Health Check:  https://fashionistar-ai-fashionistar-frontend.hf.space/"
           echo ""
           echo "  BACKEND CONNECTION:"
           echo "  ─────────────────────────────────────────────────────────"
-          echo "  API Gateway:   https://fashionistar-fashionistar-api-v1.hf.space"
-          echo "  API Docs:      https://fashionistar-fashionistar-api-v1.hf.space/api/docs/"
+          echo "  API Gateway:   https://fashionistar-ai-fashionistar-api-v1.hf.space"
+          echo "  API Docs:      https://fashionistar-ai-fashionistar-api-v1.hf.space/api/docs/"
           echo ""
           echo "  PIPELINE RESULTS:"
           echo "  ─────────────────────────────────────────────────────────"

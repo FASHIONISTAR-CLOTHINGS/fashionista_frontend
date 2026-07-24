@@ -5,7 +5,7 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
-const FALLBACK_BACKEND_URL = "https://fashionistar-fashionistar-api-v1.hf.space";
+const FALLBACK_BACKEND_URL = "https://fashionistar-ai-fashionistar-api-v1.hf.space";
 const backendUrl = (() => {
   const raw =
     process.env.BACKEND_INTERNAL_URL ||
@@ -62,7 +62,7 @@ const allowedDevOrigins = unique([
   "*.ngrok-free.app",
   "*.ngrok-free.dev",
   "*.trycloudflare.com",
-  "fashionistar-fashionistar-frontend.hf.space",
+  "fashionistar-ai-fashionistar-frontend.hf.space",
   normalizeDevOrigin(process.env.NEXT_PUBLIC_APP_URL),
   normalizeDevOrigin(process.env.NEXT_PUBLIC_FRONTEND_TUNNEL_URL),
   normalizeDevOrigin(backendUrl),

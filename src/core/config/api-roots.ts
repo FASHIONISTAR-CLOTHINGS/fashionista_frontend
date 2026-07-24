@@ -1,4 +1,4 @@
-const DEFAULT_BACKEND_ROOT = "https://fashionistar-fashionistar-api-v1.hf.space";
+const DEFAULT_BACKEND_ROOT = "https://fashionistar-ai-fashionistar-api-v1.hf.space";
 
 function stripTrailingSlash(value: string): string {
   return value.replace(/\/+$/, "");
