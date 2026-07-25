@@ -5,6 +5,8 @@ import NewMobileNav from "@/components/shared/navigation/NewMobileNav";
 import { MobileBottomTabBar } from "@/components/shared/navigation/MobileBottomTabBar";
 import { WishlistNudgeClient } from "./_components/WishlistNudgeClient";
 import { getPublicPlatformSettings } from "@/features/public-engagement";
+import { AnnouncementBanner } from "@/components/shared/ui/AnnouncementBanner";
+import { BackToTopButton } from "@/components/shared/ui/BackToTopButton";
 
 export default function Home({
   children,
@@ -17,6 +19,8 @@ export default function Home({
     <>
       <main className="flex min-h-screen pb-16 md:pb-10 flex-col md:px-0 bg-[#FFF]">
         <header>
+          {/* S21: Promotional announcement bar — dismissible, 24h localStorage suppression */}
+          <AnnouncementBanner />
           <TopBar platformSettingsPromise={platformSettingsPromise} />
           {/* B6: Removed 160+ lines of dead legacy navbar/topbar/search comments */}
           <NewMobileNav />
@@ -30,6 +34,8 @@ export default function Home({
       <WishlistNudgeClient />
       {/* ── MC10: Mobile bottom tab bar (Home/Shop/Measure/Cart/Account) ── */}
       <MobileBottomTabBar />
+      {/* ── S17: Back to top floating button — appears after 300px scroll ── */}
+      <BackToTopButton />
     </>
   );
 }
