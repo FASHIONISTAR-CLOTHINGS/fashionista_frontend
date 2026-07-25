@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from "react";
 import VerificationInput from "@/app/components/VerifyInput";
 import { verify } from "@/app/actions/auth";

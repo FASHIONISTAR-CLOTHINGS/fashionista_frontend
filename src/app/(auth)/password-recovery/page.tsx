@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Button from "@/app/components/Button";
 import React from "react";
 

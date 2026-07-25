@@ -26,7 +26,7 @@ import { BadgeCheck, Star, Package, Ruler } from "lucide-react";
 // ─── Single vendor card ───────────────────────────────────────────────────────
 
 function VendorCard({ vendor }: { vendor: CatalogVendorCard }) {
-  const storeUrl = `/vendors/${vendor.slug}`;
+  const storeUrl = `/vendors/${vendor.store_slug}`;
   const bannerUrl =
     (vendor as unknown as Record<string, string | null>).banner_image_url ||
     (vendor as unknown as Record<string, string | null>).cloudinary_banner_url ||
@@ -48,7 +48,7 @@ function VendorCard({ vendor }: { vendor: CatalogVendorCard }) {
   return (
     <article
       className="group flex flex-col rounded-2xl overflow-hidden border border-border bg-card shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
-      data-testid={`vendor-card-${vendor.slug}`}
+      data-testid={`vendor-card-${vendor.store_slug}`}
     >
       {/* Banner */}
       <div className="relative h-28 w-full bg-gradient-to-br from-[#01454A] to-[#016B73] overflow-hidden">
@@ -125,14 +125,14 @@ function VendorCard({ vendor }: { vendor: CatalogVendorCard }) {
         <div className="mt-auto flex gap-2 pt-2">
           <Link
             href={storeUrl}
-            data-testid={`vendor-view-store-${vendor.slug}`}
+            data-testid={`vendor-view-store-${vendor.store_slug}`}
             className="flex-1 text-center text-[10px] font-bold font-raleway py-1.5 rounded-full bg-[#01454A] text-white hover:bg-[#FDA600] hover:text-black transition-all duration-150"
           >
             View Store
           </Link>
           <Link
-            href={`/get-measured?vendor=${vendor.slug}`}
-            data-testid={`vendor-get-measured-${vendor.slug}`}
+            href={`/get-measured?vendor=${vendor.store_slug}`}
+            data-testid={`vendor-get-measured-${vendor.store_slug}`}
             className="flex items-center gap-0.5 text-[10px] font-bold font-raleway py-1.5 px-2 rounded-full border border-[#01454A]/30 text-[#01454A] hover:bg-[#01454A] hover:text-white transition-all duration-150"
           >
             <Ruler size={9} aria-hidden="true" />
@@ -213,7 +213,7 @@ export function VendorSpotlightSection() {
           aria-label="Featured vendors"
         >
           {vendors.slice(0, 4).map((vendor) => (
-            <div key={vendor.slug} role="listitem">
+            <div key={vendor.store_slug} role="listitem">
               <VendorCard vendor={vendor} />
             </div>
           ))}
