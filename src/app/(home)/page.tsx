@@ -1,17 +1,21 @@
 /**
- * app/(home)/page.tsx — Fashionistar Homepage (v2 — Phase C1 + D2)
+ * app/(home)/page.tsx — Fashionistar Homepage (v3 — APEX Sprint)
  *
  * Production Architecture 2026–2027:
- *   - Single RSC with ONE server fetch: getHomepageBundle() (v1 compatible)
- *     OR getHomepageBundleV2() for 6-section bundle with banners.
+ *   - Single RSC with ONE server fetch: getHomepageBundleV2() (v1 compatible)
  *   - Backend: 5–6 parallel DB queries via asyncio.gather() < 30ms p95
  *   - Frontend: ISR revalidate 300s — matches backend Redis TTL
  *   - ALL sections receive data as props — ZERO additional HTTP round-trips
  *   - Suspense boundaries with pixel-perfect skeleton fallbacks
  *   - data-testid on every section for Playwright E2E tests
  *
- * C1 Fix: CatalogCategoryGrid and CatalogCollectionGrid now receive
- *   bundle.categories and bundle.collections as props → zero double-fetch.
+ * APEX Sprint Changes (v3):
+ *   + TrustBar — 4 trust signals immediately below hero
+ *   + MeasurementCTABanner — full-width AI measurement conversion section
+ *   + StickyMobileCTA — 30s delayed mobile bottom bar
+ *   + 6 hot deals (was 4)
+ *   + Psychological funnel: Hero → Trust → Shop by Category → Measure or Buy →
+ *       Featured Products → Collections → Deals → Reviews → Newsletter → Sticky CTA
  *
  * Data flow:
  *   getHomepageBundleV2() → HomepageBundle →
@@ -31,6 +35,9 @@ import { NewsletterForm } from "./_components/NewsletterForm";
 import { HomepageHotDealsSection } from "./_components/HomepageHotDealsSection";
 import { HomepageReviewsSection } from "./_components/HomepageReviewsSection";
 import { WaitlistMobileForm } from "./_components/WaitlistMobileForm";
+import { TrustBar } from "./_components/TrustBar";
+import { MeasurementCTABanner } from "./_components/MeasurementCTABanner";
+import { StickyMobileCTA } from "./_components/StickyMobileCTA";
 import { Hero } from "@/components";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
 import {
@@ -69,7 +76,22 @@ export const metadata = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Main Homepage Page — Single bundle fetch → all sections receive props
+// Main Homepage Page — APEX Sprint Psychological Funnel
+//
+// Section order (conversion-optimised):
+//   1. Hero (CMS banner or static)
+//   2. TrustBar — instant credibility
+//   3. Mobile email waitlist (mobile only)
+//   4. Shop by Category
+//   5. MeasurementCTABanner — "Measure or Buy" binary choice
+//   6. Featured Products (limit 8)
+//   7. Recently Viewed
+//   8. Collections
+//   9. Campaign Banner (highlighted collection promo)
+//   10. Deals of the Week (6 cards, was 4)
+//   11. Customer Reviews
+//   12. Newsletter CTA
+//   13. StickyMobileCTA (30s delayed, dismissible)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default async function Home() {
@@ -87,43 +109,48 @@ export default async function Home() {
   return (
     <div className="flex flex-col gap-0" data-testid="homepage">
 
-      {/* ── Hero: CMS Banner if available, else static Hero ──────────────── */}
+      {/* ── 1. Hero: CMS Banner if available, else static Hero ─────────────── */}
       {bundle.banners.length > 0 ? (
         <CatalogBannerHero banners={bundle.banners} />
       ) : (
         <Hero />
       )}
 
-      {/* ── Mobile email waitlist ───────────────────────────────────── */}
+      {/* ── 2. Trust Bar — instant credibility below hero ──────────────────── */}
+      <TrustBar />
+
+      {/* ── 3. Mobile email waitlist (mobile only) ─────────────────────────── */}
       <div className="mt-8 md:hidden flex z-30 px-4" data-testid="mobile-email-waitlist">
-        {/* WaitlistMobileForm is a client component — form action handled there */}
         <WaitlistMobileForm />
       </div>
 
-      {/* ── Live Category Grid (C1 FIX: no internal fetch — uses bundle.categories) ── */}
+      {/* ── 4. Shop by Category (C1 FIX: no internal fetch — uses bundle) ──── */}
       <div data-testid="category-grid-section">
         <CatalogCategoryGrid categories={bundle.categories} />
       </div>
 
-      {/* ── Featured Products (C2: premium RSC card grid) ──────────────── */}
+      {/* ── 5. AI Measurement CTA Banner — "Measure or Buy" funnel ─────────── */}
+      <MeasurementCTABanner />
+
+      {/* ── 6. Featured Products (APEX: limit 8, RSC cards) ─────────────────── */}
       <Suspense fallback={<HomepageFeaturedProductsSkeleton count={8} />}>
         <HomepageFeaturedProducts bundle={bundle} limit={8} />
       </Suspense>
 
-      {/* ── Recently Viewed Rail (client-side, localStorage) ─────────────── */}
+      {/* ── 7. Recently Viewed Rail (client-side, localStorage) ─────────────── */}
       <RecentlyViewedSection />
 
-      {/* ── Live Collection Grid (C1 FIX: no internal fetch — uses bundle.collections) ── */}
+      {/* ── 8. Collections (C1 FIX: no internal fetch — uses bundle) ────────── */}
       <div data-testid="collection-grid-section">
         <CatalogCollectionGrid collections={bundle.collections} />
       </div>
 
-      {/* ── Honest Live Promo Surface ─────────────────────────────────────── */}
+      {/* ── 9. Campaign Banner ──────────────────────────────────────────────── */}
       <div
         className="w-full bg-[#fda600] relative p-8 md:p-14 lg:p-24 overflow-hidden"
         data-testid="campaign-banner"
       >
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/10 via-transparent to-[#01454A]/10" />
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/10 via-transparent to-[#01454A]/10" aria-hidden="true" />
         <div className="relative z-10 grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
           <div className="space-y-5">
             <p className="font-raleway font-semibold text-sm md:text-base text-black/70 tracking-[0.25em] uppercase">
@@ -146,10 +173,11 @@ export default async function Home() {
                 {highlightedCollection ? "Explore Collection" : "Browse Collections"}
               </Link>
               <Link
-                href="/products"
+                href="/get-measured"
                 className="px-10 py-3 md:py-4 rounded-[100px] border border-[#01454A]/20 bg-white/60 text-[#01454A] font-raleway font-semibold text-base hover:bg-white transition-all duration-300 min-h-[44px] inline-flex items-center"
+                data-testid="campaign-get-measured-cta"
               >
-                Shop Products
+                Get Measured Free
               </Link>
             </div>
           </div>
@@ -176,7 +204,7 @@ export default async function Home() {
         </div>
       </div>
 
-      {/* ── Deals of the Week (live from hot_deals in bundle) ────────────── */}
+      {/* ── 10. Deals of the Week (APEX: 6 cards, was 4) ──────────────────── */}
       <div
         className="px-5 py-10 md:px-10 lg:px-20 space-y-6 md:space-y-10"
         data-testid="deals-section"
@@ -191,15 +219,16 @@ export default async function Home() {
         </div>
 
         {/* Hot deal cards — live from homepage bundle (zero extra fetch) */}
-        <HomepageHotDealsSection products={bundle.hot_deals} />
+        {/* APEX: pass limit=6 to show 6 deals instead of 4 */}
+        <HomepageHotDealsSection products={bundle.hot_deals.slice(0, 6)} />
       </div>
 
-      {/* ── Customer Reviews (from homepage bundle) ──────────────────────── */}
+      {/* ── 11. Customer Reviews ────────────────────────────────────────────── */}
       <div data-testid="reviews-section">
         <HomepageReviewsSection reviews={bundle.reviews} />
       </div>
 
-      {/* ── Newsletter CTA ────────────────────────────────────────────────── */}
+      {/* ── 12. Newsletter CTA ──────────────────────────────────────────────── */}
       <div
         className="mx-5 md:mx-10 lg:mx-20 mb-10 rounded-3xl bg-gradient-to-r from-[#01454A] to-[#01454A]/80 p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8"
         data-testid="newsletter-section"
@@ -215,7 +244,10 @@ export default async function Home() {
         <NewsletterForm />
       </div>
 
-      {/* ── JSON-LD Structured Data — WebSite + ItemList ─────────────── */}
+      {/* ── 13. Sticky Mobile CTA (30s delay, 24h dismissal) ───────────────── */}
+      <StickyMobileCTA />
+
+      {/* ── JSON-LD Structured Data — WebSite + ItemList ───────────────────── */}
       <JsonLdScript
         id="website-ld"
         data={generateWebSiteSchema()}

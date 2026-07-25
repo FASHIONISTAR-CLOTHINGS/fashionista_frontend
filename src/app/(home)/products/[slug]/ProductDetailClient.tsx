@@ -30,6 +30,9 @@ import {
   AlertTriangle,
   ArrowLeft,
   Package,
+  BadgeCheck,
+  Flame,
+  Leaf,
 } from "lucide-react";
 import {
   useProductDetail,
@@ -307,14 +310,24 @@ export function ProductDetailClient({
 
         {/* ── Details panel ─────────────────────────────────────────────── */}
         <div className="w-full lg:max-w-[480px] space-y-5">
-          {/* Vendor + category */}
+          {/* Vendor + category + verification */}
           <div className="flex items-center justify-between">
-            <Link
-              href={`/vendors/${product.vendor_slug ?? ""}`}
-              className="text-xs font-bold uppercase tracking-widest text-[hsl(var(--primary))] hover:opacity-80"
-            >
-              {product.vendor_name}
-            </Link>
+            <div className="flex items-center gap-1.5">
+              <Link
+                href={`/vendors/${product.vendor_slug ?? ""}`}
+                className="text-xs font-bold uppercase tracking-widest text-[hsl(var(--primary))] hover:opacity-80"
+              >
+                {product.vendor_name}
+              </Link>
+              {/* Vendor verification badge — rendered when backend exposes it */}
+              {(product as unknown as Record<string, unknown>).vendor_is_verified && (
+                <BadgeCheck
+                  size={14}
+                  className="text-[#01454A]"
+                  aria-label="Verified vendor"
+                />
+              )}
+            </div>
             <span className="text-xs text-muted-foreground">
               {product.category_name}
             </span>
@@ -342,6 +355,33 @@ export function ProductDetailClient({
               {product.computed_avg_rating.toFixed(1)} ({product.computed_review_count} reviews)
             </span>
           </div>
+
+          {/* Trending + Eco signal badges */}
+          {(() => {
+            const p = product as unknown as Record<string, unknown>;
+            const trendScore = p.ai_trend_score as number | undefined;
+            const sustainScore = p.sustainability_score as number | undefined;
+            const badges: React.ReactNode[] = [];
+            if (trendScore && trendScore > 0.7) {
+              badges.push(
+                <span key="trending" className="inline-flex items-center gap-1 rounded-full bg-[#FDA600]/10 border border-[#FDA600]/30 px-2.5 py-0.5 text-[10px] font-bold text-[#B87800] uppercase tracking-wide">
+                  <Flame size={9} className="text-[#FDA600]" />
+                  Trending
+                </span>
+              );
+            }
+            if (sustainScore && sustainScore >= 75) {
+              badges.push(
+                <span key="eco" className="inline-flex items-center gap-1 rounded-full bg-[#059669]/10 border border-[#059669]/30 px-2.5 py-0.5 text-[10px] font-bold text-[#059669] uppercase tracking-wide">
+                  <Leaf size={9} />
+                  Eco Friendly
+                </span>
+              );
+            }
+            return badges.length > 0 ? (
+              <div className="flex flex-wrap gap-2">{badges}</div>
+            ) : null;
+          })()}
 
           {/* Target Demographic */}
           {(product.gender_target || product.age_group) && (
@@ -382,16 +422,28 @@ export function ProductDetailClient({
             </div>
           )}
 
-          {/* Measurement warning */}
+          {/* ── Measurement Gate — Full CTA Card ──────────────────────────── */}
           {product.requires_measurement && (
-            <div className="flex items-start gap-2 rounded-xl border border-[hsl(var(--warning))/30] bg-[hsl(var(--warning-bg))] px-4 py-3">
-              <AlertTriangle size={15} className="mt-0.5 shrink-0 text-[hsl(var(--warning))]" />
-              <p className="text-xs text-foreground">
-                This item requires a measurement profile.{" "}
-                <Link href="/get-measured" className="font-semibold underline">
-                  Get measured →
-                </Link>
-              </p>
+            <div className="rounded-2xl border-2 border-[#FDA600]/40 bg-gradient-to-r from-[#FDA600]/8 via-[#FDA600]/5 to-transparent p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#FDA600]/15">
+                  <Ruler size={18} className="text-[#B87800]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-[#141414] mb-0.5">Measurements Required for Perfect Fit</p>
+                  <p className="text-xs text-[#6B5E3A] leading-relaxed">
+                    This item is tailored to your body. You need an AI measurement profile before ordering.
+                  </p>
+                  <Link
+                    href="/get-measured"
+                    className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#FDA600] px-4 py-2 text-xs font-bold text-black hover:bg-[#F0A000] transition-colors duration-200"
+                    data-testid="pdp-get-measured-cta"
+                  >
+                    <Ruler size={11} />
+                    Get Measured — Free
+                  </Link>
+                </div>
+              </div>
             </div>
           )}
 

@@ -57,13 +57,7 @@ function CollectionsSkeleton() {
 // Paginated Collections RSC
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function PaginatedCollections({
-  page,
-  searchParams,
-}: {
-  page: number;
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
+async function PaginatedCollections({ page }: { page: number }) {
   const allCollections = await getCatalogCollections();
   const totalCount = allCollections.length;
   const start = (page - 1) * COLLECTIONS_PAGE_SIZE;
@@ -73,7 +67,6 @@ async function PaginatedCollections({
     <div className="space-y-10">
       <CatalogCollectionGrid
         collections={pageCollections}
-        searchParams={searchParams}
         showCta={false}
       />
       {totalCount > COLLECTIONS_PAGE_SIZE && (
@@ -166,7 +159,7 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
         </div>
 
         <Suspense fallback={<CollectionsSkeleton />}>
-          <PaginatedCollections page={page} searchParams={params} />
+          <PaginatedCollections page={page} />
         </Suspense>
       </section>
 
