@@ -61,6 +61,7 @@ function writeBuffer(items: RecentlyViewedItem[]): void {
 export function useRecentlyViewed(): {
   items: RecentlyViewedItem[];
   trackView: (product: Omit<RecentlyViewedItem, "viewedAt">) => void;
+  clearAll: () => void;
 } {
   const [items, setItems] = useState<RecentlyViewedItem[]>([]);
 
@@ -86,5 +87,14 @@ export function useRecentlyViewed(): {
     [],
   );
 
-  return { items, trackView };
+  const clearAll = useCallback(() => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // noop
+    }
+    setItems([]);
+  }, []);
+
+  return { items, trackView, clearAll };
 }

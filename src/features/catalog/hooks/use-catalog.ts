@@ -50,7 +50,7 @@ export function useCatalogCollections() {
 export function useCatalogBlogPosts() {
   return useQuery({
     queryKey: ["catalog", "blog"],
-    queryFn: catalogApi.getBlogPosts,
+    queryFn: () => catalogApi.getBlogPosts(),
     staleTime: STALE_5MIN,
   });
 }

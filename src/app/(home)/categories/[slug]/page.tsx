@@ -25,6 +25,7 @@ import {
   getCatalogBrands,
   getCatalogCategories,
 } from "@/features/catalog";
+import { generateBreadcrumbSchema } from "@/components/seo/schemas";
 import { ProductGridSkeleton } from "@/features/product";
 import CategoryProductsClient from "./CategoryProductsClient";
 
@@ -205,9 +206,21 @@ export default async function CategorySlugPage({
 
   return (
     <>
+      {/* JSON-LD Schemas */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            generateBreadcrumbSchema([
+              { name: "Categories", slug: "categories" },
+              { name: category.title || category.name, slug: category.slug },
+            ])
+          ),
+        }}
       />
 
       <div className="bg-background text-foreground" data-testid="category-detail-page">
