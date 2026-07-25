@@ -26,15 +26,7 @@ import { useCartBadge } from "@/features/cart/hooks/use-cart-badge";
 
 // ─── Static nav link data ──────────────────────────────────────────────────────
 
-const SIMPLE_NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/vendors", label: "Vendors" },
-  { href: "/products", label: "Shop" },
-  { href: "/blog", label: "Blog" },
-  { href: "/contact-us", label: "Contact" },
-] as const;
-
-// Mega-menu data — categories panel
+// ─── Mega-menu data — categories panel
 const MEGA_CATEGORIES = [
   { href: "/categories/dresses", label: "Dresses" },
   { href: "/categories/men-native", label: "Men's Native" },

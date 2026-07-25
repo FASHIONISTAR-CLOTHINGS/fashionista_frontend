@@ -27,7 +27,6 @@ import {
   Plus,
   ChevronDown,
   ChevronUp,
-  AlertTriangle,
   ArrowLeft,
   Package,
   BadgeCheck,
@@ -378,9 +377,8 @@ export function ProductDetailClient({
                 </span>
               );
             }
-            return badges.length > 0 ? (
-              <div className="flex flex-wrap gap-2">{badges}</div>
-            ) : null;
+            if (badges.length === 0) return null;
+            return <div className="flex flex-wrap gap-2">{badges}</div>;
           })()}
 
           {/* Target Demographic */}
