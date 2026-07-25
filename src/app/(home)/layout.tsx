@@ -2,6 +2,7 @@ import Link from "next/link";
 import NewNavbar from "@/components/shared/navigation/NewNavbar";
 import NewFooter from "@/components/shared/feedback/NewFooter";
 import NewMobileNav from "@/components/shared/navigation/NewMobileNav";
+import { MobileBottomTabBar } from "@/components/shared/navigation/MobileBottomTabBar";
 import { WishlistNudgeClient } from "./_components/WishlistNudgeClient";
 import { getPublicPlatformSettings } from "@/features/public-engagement";
 
@@ -16,7 +17,7 @@ export default function Home({
 
   return (
     <>
-      <main className="flex min-h-screen pb-10 flex-col md:px-0  bg-[#FFF]">
+      <main className="flex min-h-screen pb-16 md:pb-10 flex-col md:px-0 bg-[#FFF]">
         <header className="">
           <TopBar platformSettingsPromise={platformSettingsPromise} />
           {/* <div className="bg-[#01454a] text-white relative py-4 md:py-6 md:px-10  lg:px-20  md:flex md:flex-wrap-reverse lg:flex-nowrap justify-between items-center text-sm ">
@@ -191,6 +192,8 @@ export default function Home({
       <FooterBridge platformSettingsPromise={platformSettingsPromise} />
       {/* ── Revenue: Wishlist Nudge sticky bar (60s delay, 24h suppression) ── */}
       <WishlistNudgeClient />
+      {/* ── MC10: Mobile bottom tab bar (Home/Shop/Measure/Cart/Account) ── */}
+      <MobileBottomTabBar />
     </>
   );
 }
