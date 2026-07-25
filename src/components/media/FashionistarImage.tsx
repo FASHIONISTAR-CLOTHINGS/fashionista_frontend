@@ -198,6 +198,8 @@ export interface FashionistarImageProps {
   className?: string;
   /** Class names applied directly to the `<img>` element. */
   imgClassName?: string;
+  /** Inline styles applied directly to the `<img>` element (e.g. for transform-origin zoom). */
+  imgStyle?: React.CSSProperties;
   /** Priority load (disables lazy loading — use for LCP images). */
   priority?: boolean;
   /** Callback when image fully loads. */
@@ -250,6 +252,7 @@ export function FashionistarImage({
   onDragStart,
   style,
   objectFit = "cover",
+  imgStyle,
 }: FashionistarImageProps) {
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
@@ -454,6 +457,7 @@ export function FashionistarImage({
             loaded ? "opacity-100" : "opacity-0",
             imgClassName,
           )}
+          style={imgStyle}
         />
       )}
     </div>

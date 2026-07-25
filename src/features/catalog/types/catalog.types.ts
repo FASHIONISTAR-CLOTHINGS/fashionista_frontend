@@ -98,6 +98,8 @@ export interface CatalogCollection {
   meta_title?: string;
   meta_description?: string;
   cached_product_count?: number;
+  /** Number of distinct vendors with products in this collection */
+  vendor_count?: number;
   is_active_now?: boolean;
 }
 
@@ -200,6 +202,8 @@ export interface HomepageProductCard {
   // Social proof signals
   orders_count: number;
   views: number;
+  /** AI trend score from backend (0–1 float). Used by TabbedFeaturedProducts trending tab. */
+  ai_trend_score?: number;
   sizes?: { id: string; name: string }[];
   colors?: { id: string; name: string; hex_code: string }[];
   created_at?: string | null;

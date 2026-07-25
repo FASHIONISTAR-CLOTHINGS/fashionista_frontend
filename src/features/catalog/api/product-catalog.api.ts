@@ -35,6 +35,7 @@ export interface CatalogProductCard {
   discount_percentage: number;
   currency: string;
   image_url: string | null;
+  cloudinary_url?: string | null;
   in_stock: boolean;
   stock_qty: number;
   featured: boolean;
@@ -51,6 +52,10 @@ export interface CatalogProductCard {
   vendor_slug: string | null;
   requires_measurement: boolean;
   is_customisable: boolean;
+  is_pre_order?: boolean;
+  condition?: string;
+  ai_trend_score?: number;
+  gender_target?: string;
   sizes: { id: string; name: string }[];
   colors: { id: string; name: string; hex_code: string }[];
   created_at: string;
@@ -142,8 +147,3 @@ export const productCatalogApi = {
     }
   },
 };
-  ProductCatalogParams,
-  CatalogProductCard,
-  PaginatedProductsResponse,
-  ViewLogPayload,
-} from "./catalog.api";

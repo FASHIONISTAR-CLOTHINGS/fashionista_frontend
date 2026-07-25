@@ -46,15 +46,14 @@ import type { ProductDetail } from "@/features/product";
 import { useAddCartItem } from "@/features/cart/hooks/use-cart";
 import { productCatalogApi } from "@/features/catalog";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { SocialProofBadge } from "@/features/product/components/SocialProofBadge";
 import { useRecentlyViewed } from "@/features/catalog/hooks/use-recently-viewed";
-import { FashionistarImage, FashionistarVideo } from "@/components/media";
+import { FashionistarImage } from "@/components/media";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProductStickyAddToCartBar } from "@/features/product/components/pdp/ProductStickyAddToCartBar";
 import { RelatedProductsCarousel } from "@/features/product/components/pdp/RelatedProductsCarousel";
+import { GallerySection } from "@/features/product/components/pdp/GallerySection";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
-
 
 interface ProductDetailClientProps {
   slug: string;
@@ -106,7 +105,6 @@ export function ProductDetailClient({
   const { trackView } = useRecentlyViewed();
   const product = liveProduct ?? initialProduct;
 
-  const [activeImg, setActiveImg] = useState(0);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const mainButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -208,6 +206,10 @@ export function ProductDetailClient({
   };
 
   const reviews = reviewsData?.results ?? [];
+  const [reviewStarFilter, setReviewStarFilter] = useState<number | null>(null);
+  const filteredReviews = reviewStarFilter !== null
+    ? reviews.filter((r) => r.rating === reviewStarFilter)
+    : reviews;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 lg:px-20">
@@ -224,94 +226,15 @@ export function ProductDetailClient({
       />
 
       <div className="flex flex-col gap-10 lg:flex-row">
-        {/* ── Gallery ──────────────────────────────────────────────────── */}
-        <div className="flex-1">
-          {/* Main image */}
-          <div className="relative h-[420px] w-full overflow-hidden rounded-2xl bg-[hsl(var(--brand-cream))] md:h-[520px]">
-            {mediaItems[activeImg].type === "video" ? (
-              <FashionistarVideo
-                src={mediaItems[activeImg].url}
-                autoPlay={false}
-                muted={true}
-                showControls={true}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <FashionistarImage
-                src={mediaItems[activeImg].url}
-                alt={product.title}
-                fill
-                sizes="(max-width:768px) 100vw, 50vw"
-                className="h-full w-full"
-                imgClassName="object-contain p-4 transition-opacity duration-300"
-                priority
-              />
-            )}
-            {product.requires_measurement && (
-              <span className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-[hsl(var(--primary))] px-3 py-1.5 text-xs font-semibold text-primary-foreground">
-                <Ruler size={12} /> Custom Fit Required
-              </span>
-            )}
-            {/* Revenue: Social proof urgency overlay (view count + last purchased) */}
-            <SocialProofBadge
-              viewersCount={
-                // view_count is a backend field not yet in the TS schema — optional
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (product as unknown as Record<string, unknown>).view_count as number | undefined
-              }
-              lastPurchasedAt={
-                // last_ordered_at is a backend field not yet in the TS schema — optional
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (product as unknown as Record<string, unknown>).last_ordered_at as string | null | undefined
-              }
-              className="absolute bottom-4 left-4 z-10"
-            />
-            {/* Wishlist float */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => toggleWishlist(product.slug)}
-              aria-label="Toggle wishlist"
-              className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md text-[hsl(var(--primary))] transition hover:scale-110 p-0 min-w-0 min-h-0"
-            >
-              <Heart size={18} strokeWidth={2} />
-            </Button>
-          </div>
-
-          {/* Thumbnails */}
-          {mediaItems.length > 1 && (
-            <div className="mt-3 grid grid-cols-5 gap-2">
-              {mediaItems.map((item, idx: number) => (
-                <Button
-                  key={idx}
-                  variant="ghost"
-                  onClick={() => setActiveImg(idx)}
-                  className={`relative h-20 overflow-hidden rounded-xl border-2 transition p-0 min-w-0 min-h-0 w-full block ${
-                    activeImg === idx
-                      ? "border-[hsl(var(--accent))]"
-                      : "border-transparent hover:border-border"
-                  }`}
-                >
-                  <FashionistarImage
-                    src={item.url}
-                    alt={`${product.title} gallery thumbnail ${idx + 1}`}
-                    fill
-                    sizes="80px"
-                    className="h-full w-full"
-                    imgClassName="object-cover"
-                  />
-                  {item.type === "video" && (
-                    <span className="absolute inset-0 flex items-center justify-center bg-black/20 text-white z-10">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <polygon points="5 3 19 12 5 21 5 3" />
-                      </svg>
-                    </span>
-                  )}
-                </Button>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* ── Gallery (extracted GallerySection component) ─────────────── */}
+        <GallerySection
+          mediaItems={mediaItems}
+          productTitle={product.title}
+          requiresMeasurement={product.requires_measurement}
+          viewCount={(product as unknown as Record<string, unknown>).view_count as number | undefined}
+          lastOrderedAt={(product as unknown as Record<string, unknown>).last_ordered_at as string | null | undefined}
+          onWishlistToggle={() => toggleWishlist(product.slug)}
+        />
 
         {/* ── Details panel ─────────────────────────────────────────────── */}
         <div className="w-full lg:max-w-[480px] space-y-5">
@@ -940,9 +863,57 @@ export function ProductDetailClient({
             </div>
           </div>
 
+          {/* ── Star filter chips ─────────────────────────────────────── */}
+          {reviews.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 pb-2">
+              <span className="text-xs font-medium text-muted-foreground">Filter:</span>
+              <button
+                type="button"
+                onClick={() => setReviewStarFilter(null)}
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+                  reviewStarFilter === null
+                    ? "bg-[#01454A] text-white"
+                    : "bg-muted text-muted-foreground hover:bg-[#01454A]/10"
+                }`}
+              >
+                All ({reviews.length})
+              </button>
+              {[5, 4, 3, 2, 1].map((star) => {
+                const cnt = reviews.filter((r) => r.rating === star).length;
+                if (cnt === 0) return null;
+                return (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setReviewStarFilter(reviewStarFilter === star ? null : star)}
+                    className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+                      reviewStarFilter === star
+                        ? "bg-[#FDA600] text-black"
+                        : "bg-muted text-muted-foreground hover:bg-[#FDA600]/20"
+                    }`}
+                  >
+                    {star}★ ({cnt})
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {/* Reviews grid */}
           <div className="grid gap-4 md:grid-cols-2">
-            {reviews.map((r) => (
+            {filteredReviews.length === 0 && reviewStarFilter !== null ? (
+              <div className="col-span-2 py-10 text-center text-sm text-muted-foreground">
+                No {reviewStarFilter}★ reviews yet.
+                <button
+                  type="button"
+                  onClick={() => setReviewStarFilter(null)}
+                  className="ml-2 underline text-[#01454A] hover:opacity-80"
+                >
+                  Show all reviews
+                </button>
+              </div>
+            ) : (
+              filteredReviews.map((r) => (
               <div
                 key={r.id}
                 className="rounded-2xl border border-border bg-card p-5 shadow-[var(--card-shadow)]"
@@ -981,7 +952,8 @@ export function ProductDetailClient({
                 </div>
                 <p className="text-sm leading-6 text-foreground">{r.review}</p>
               </div>
-            ))}
+            ))
+            )}
           </div>
         </section>
       )}

@@ -6,8 +6,6 @@
 
 "use client";
 
-import React from "react";
-
 interface VerificationInputProps {
   length?: number;
   onChange?: (value: string) => void;

@@ -41,10 +41,8 @@ export { default as CatalogCategoryGrid, CatalogCategoryGridSkeleton } from "./c
 export { default as CatalogCollectionGrid, CatalogCollectionGridSkeleton } from "./components/CatalogCollectionGrid";
 // Phase 3 — Premium shared product card (used across all catalog pages)
 export { default as ProductCard } from "./components/ProductCard";
-// Phase C2 — extracted FeaturedProducts RSC
-export { default as HomepageFeaturedProducts, HomepageFeaturedProductsSkeleton } from "./components/HomepageFeaturedProducts";
-// Phase C2b — Tabbed Featured Products client (Featured | New | Trending | Best Sellers)
-export { TabbedFeaturedProducts } from "./components/TabbedFeaturedProducts";
+// Phase C2 — Skeleton exported from TabbedFeaturedProducts (merged, HomepageFeaturedProducts deleted)
+export { HomepageFeaturedProductsSkeleton, TabbedFeaturedProducts } from "./components/TabbedFeaturedProducts";
 // Phase D4 — CMS-driven banner hero carousel
 export { CatalogBannerHero } from "./components/CatalogBannerHero";
 // Phase C5 — Trending tags horizontal scroll rail

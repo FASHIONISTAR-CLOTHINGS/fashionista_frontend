@@ -6,7 +6,7 @@
 
 "use server";
 
-export async function login(prevState: unknown, formData: FormData) {
+export async function login(_prevState: unknown, formData: FormData) {
   // Legacy stub — actual login is handled by /api/auth/[...nextauth]/route.ts
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
@@ -19,7 +19,7 @@ export async function login(prevState: unknown, formData: FormData) {
   return { error: "Please use the main login page." };
 }
 
-export async function verify(prevState: unknown, formData: FormData) {
+export async function verify(_prevState: unknown, _formData: FormData) {
   // Legacy stub — actual verification is handled by the auth feature
   return { error: "Please use the verification flow." };
 }

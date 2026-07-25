@@ -22,6 +22,43 @@ import ProductCard from "@/features/catalog/components/ProductCard";
 import type { HomepageProductCard } from "@/features/catalog/types/catalog.types";
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Skeleton — exported for Suspense fallback in app/(home)/page.tsx
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function HomepageFeaturedProductsSkeleton({ count = 8 }: { count?: number }) {
+  return (
+    <section className="section-wrapper" aria-busy="true" aria-label="Loading featured products">
+      <div className="flex items-end justify-between mb-8">
+        <div>
+          <div className="shimmer h-4 w-32 rounded mb-2" />
+          <div className="shimmer h-8 w-64 rounded" />
+        </div>
+        <div className="shimmer h-4 w-20 rounded" />
+      </div>
+      {/* Tab bar skeleton */}
+      <div className="flex gap-2 mb-6">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="shimmer h-9 w-24 rounded-full" />
+        ))}
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+        {Array.from({ length: count }).map((_, i) => (
+          <div key={i} className="flex flex-col gap-2 rounded-2xl overflow-hidden">
+            <div className="shimmer aspect-[4/5] rounded-2xl" />
+            <div className="p-3 flex flex-col gap-2">
+              <div className="shimmer h-2.5 w-20 rounded" />
+              <div className="shimmer h-3.5 w-full rounded" />
+              <div className="shimmer h-3 w-3/4 rounded" />
+              <div className="shimmer h-4 w-16 rounded mt-1" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Tabs definition
 // ─────────────────────────────────────────────────────────────────────────────
 

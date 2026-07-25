@@ -16,7 +16,7 @@ import { X, Heart, ShoppingBag, Ruler, Check, Star, ShieldCheck, ArrowRight } fr
 import { Button } from "@/components/ui/button";
 import { FashionistarImage } from "@/components/media";
 import { formatCurrency } from "@/lib/formatting";
-import { useCartStore } from "@/features/cart";
+import { useAddCartItem } from "@/features/cart/hooks/use-cart";
 import { toast } from "sonner";
 import type { HomepageProductCard } from "@/features/catalog/types/catalog.types";
 import type { ProductListItem } from "@/features/product/types/product.types";
@@ -38,7 +38,7 @@ export function QuickViewModal({
 }: QuickViewModalProps) {
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
   const [selectedSize, setSelectedSize] = React.useState<string | null>(null);
-  const addItem = useCartStore((state) => state.addItem);
+  const { mutate: addToCart, isPending: cartPending } = useAddCartItem();
 
   React.useEffect(() => {
     if (product) {
@@ -74,25 +74,18 @@ export function QuickViewModal({
   const activeImage = selectedImage || images[0];
 
   const handleAddToCart = () => {
-    addItem(
+    addToCart(
+      { product_id: String(product.id), product_slug: product.slug, quantity: 1 },
       {
-        id: String(product.id),
-        slug: product.slug,
-        title: title,
-        cover_image_url: activeImage,
-        requires_measurement: requiresMeasurement,
-        vendor_name: vendorName,
+        onSuccess: () => {
+          toast.success(`${title} added to cart`, {
+            description: selectedSize ? `Size: ${selectedSize}` : undefined,
+          });
+          onClose();
+        },
+        onError: () => toast.error("Could not add to cart — please try again."),
       },
-      null, // variantId
-      selectedSize || null, // sizeLabel
-      null, // colorLabel
-      1, // quantity
-      String(price) // unitPrice
     );
-    toast.success(`${title} added to cart`, {
-      description: selectedSize ? `Size: ${selectedSize}` : undefined,
-    });
-    onClose();
   };
 
   const handleWishlist = () => {
@@ -167,10 +160,12 @@ export function QuickViewModal({
               <span className="text-xs font-bold uppercase tracking-widest text-[#01454A]">
                 {vendorName}
               </span>
-              <div className="flex items-center gap-1 text-amber-500 text-xs font-medium">
-                <Star size={14} className="fill-amber-500" />
-                <span>4.9 (42 reviews)</span>
-              </div>
+              {(rawObj.rating || rawObj.computed_avg_rating) ? (
+                <div className="flex items-center gap-1 text-amber-500 text-xs font-medium">
+                  <Star size={14} className="fill-amber-500" />
+                  <span>{Number(rawObj.rating ?? rawObj.computed_avg_rating ?? 0).toFixed(1)}</span>
+                </div>
+              ) : null}
             </div>
 
             <h2 className="font-bon_foyage text-2xl md:text-3xl text-foreground mb-3 leading-snug">
@@ -237,11 +232,11 @@ export function QuickViewModal({
             <div className="flex gap-3">
               <Button
                 onClick={handleAddToCart}
-                disabled={!inStock}
-                className="flex-1 h-12 rounded-xl bg-[#01454A] text-white font-bold font-raleway hover:bg-[#01454A]/90 transition-all shadow-md gap-2"
+                disabled={!inStock || cartPending}
+                className="flex-1 h-12 rounded-xl bg-[#01454A] text-white font-bold font-raleway hover:bg-[#01454A]/90 transition-all shadow-md gap-2 disabled:opacity-60"
               >
                 <ShoppingBag size={18} />
-                {inStock ? "Add to Shopping Cart" : "Out of Stock"}
+                {cartPending ? "Adding…" : inStock ? "Add to Shopping Cart" : "Out of Stock"}
               </Button>
 
               <Button
