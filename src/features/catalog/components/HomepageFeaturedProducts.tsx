@@ -16,6 +16,7 @@
 import Link from "next/link";
 import ProductCard from "./ProductCard";
 import type { HomepageBundle } from "../types/catalog.types";
+import { EmptyState } from "@/components/commerce/EmptyState";
 
 interface Props {
   bundle: HomepageBundle;
@@ -65,7 +66,20 @@ export function HomepageFeaturedProductsSkeleton({ count = 8 }: { count?: number
 export default function HomepageFeaturedProducts({ bundle, limit = 12 }: Props) {
   const products = bundle.featured_products.slice(0, limit);
 
-  if (products.length === 0) return null;
+  if (products.length === 0) {
+    return (
+      <section className="section-wrapper" aria-label="Featured products">
+        <EmptyState
+          variant="products"
+          title="No featured products yet"
+          description="Our curated collection is being updated. Browse all products to discover great fashion."
+          primaryAction={{ label: "Browse All Products", href: "/products", variant: "primary" }}
+          secondaryAction={{ label: "Shop Deals", href: "/products?filter=hot_deals", variant: "secondary" }}
+          testId="featured-products-empty"
+        />
+      </section>
+    );
+  }
 
   return (
     <section

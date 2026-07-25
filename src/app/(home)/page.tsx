@@ -38,6 +38,9 @@ import { WaitlistMobileForm } from "./_components/WaitlistMobileForm";
 import { TrustBar } from "./_components/TrustBar";
 import { MeasurementCTABanner } from "./_components/MeasurementCTABanner";
 import { StickyMobileCTA } from "./_components/StickyMobileCTA";
+import { TrendingProductsRail } from "./_components/TrendingProductsRail";
+import { VendorSpotlightSection } from "./_components/VendorSpotlightSection";
+import { BlogStyleGuideRail } from "./_components/BlogStyleGuideRail";
 import { Hero } from "@/components";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
 import {
@@ -121,6 +124,7 @@ export default async function Home() {
 
       {/* ── 3. Mobile email waitlist (mobile only) ─────────────────────────── */}
       <div className="mt-8 md:hidden flex z-30 px-4" data-testid="mobile-email-waitlist">
+        {/* WaitlistMobileForm is a client component — form action handled there */}
         <WaitlistMobileForm />
       </div>
 
@@ -137,10 +141,13 @@ export default async function Home() {
         <HomepageFeaturedProducts bundle={bundle} limit={8} />
       </Suspense>
 
-      {/* ── 7. Recently Viewed Rail (client-side, localStorage) ─────────────── */}
+      {/* ── 7. R20: Trending Now Rail — AI trend score powered ──────────────── */}
+      <TrendingProductsRail />
+
+      {/* ── 8. Recently Viewed Rail (client-side, localStorage) ─────────────── */}
       <RecentlyViewedSection />
 
-      {/* ── 8. Collections (C1 FIX: no internal fetch — uses bundle) ────────── */}
+      {/* ── 9. Collections (C1 FIX: no internal fetch — uses bundle) ────────── */}
       <div data-testid="collection-grid-section">
         <CatalogCollectionGrid collections={bundle.collections} />
       </div>
@@ -223,10 +230,16 @@ export default async function Home() {
         <HomepageHotDealsSection products={bundle.hot_deals.slice(0, 6)} />
       </div>
 
-      {/* ── 11. Customer Reviews ────────────────────────────────────────────── */}
+      {/* ── 11. Customer Reviews ─────────────────────────────────────── */}
       <div data-testid="reviews-section">
         <HomepageReviewsSection reviews={bundle.reviews} />
       </div>
+
+      {/* ── 12. R19: Blog Style Guide Rail — 3 latest posts ────────────── */}
+      <BlogStyleGuideRail />
+
+      {/* ── 13. Vendor Spotlight — Meet Our Vendors (4 cards) ──────────── */}
+      <VendorSpotlightSection />
 
       {/* ── 12. Newsletter CTA ──────────────────────────────────────────────── */}
       <div

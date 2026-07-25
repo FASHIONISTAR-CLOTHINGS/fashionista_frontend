@@ -1062,3 +1062,63 @@ button[aria-invalid="true"] {
     transform: none !important;
   }
 }
+
+/* ── S21: Announcement banner slide-down entrance ───────────────────────── */
+@keyframes fadeSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── AS4: Skip to main content accessible link ───────────────────────────── */
+.skip-to-main {
+  position: absolute;
+  top: -9999px;
+  left: 1rem;
+  z-index: 9999;
+  padding: 0.75rem 1.5rem;
+  background: #FDA600;
+  color: #141414;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border-radius: 9999px;
+  text-decoration: none;
+  transition: top 0.1s;
+}
+.skip-to-main:focus {
+  top: 1rem;
+}
+
+/* ── S17: Back-to-top safe area (above bottom tab bar on iPhone) ─────────── */
+.mb-safe {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── DS9: Print stylesheet — hide chrome, show product content ───────────── */
+@media print {
+  header,
+  footer,
+  nav,
+  [data-testid="announcement-banner"],
+  [data-testid="back-to-top-btn"],
+  [data-testid="sticky-mobile-cta"],
+  [data-testid="mobile-bottom-tab-bar"],
+  [data-testid="deals-countdown"],
+  [data-testid="newsletter-section"] {
+    display: none !important;
+  }
+  body {
+    font-size: 12pt;
+    background: white;
+    color: black;
+  }
+  a {
+    text-decoration: underline;
+    color: black;
+  }
+}
