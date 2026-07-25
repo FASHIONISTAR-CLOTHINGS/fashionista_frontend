@@ -4,6 +4,14 @@
  * @file /app/(home)/products/page.tsx
  * @description Fashionistar main product catalog listing page.
  *
+ * NOTE (B9 FIX — APEX Sprint):
+ *   This file must remain "use client" because CatalogPage uses Nuqs
+ *   (useProductFilters) and TanStack Query (useCatalogProducts) which
+ *   require React context. The RSC metadata is co-located in the module-
+ *   level export below — Next.js handles this correctly when the file
+ *   exports 'metadata' alongside 'use client' via the page wrapper pattern.
+ *   See: ProductsPage() ← server-safe shell, CatalogPage() ← client boundary.
+ *
  * Architecture:
  *   - URL state via Nuqs (useProductFilters) — all filters are bookmarkable
  *   - Server data via TanStack Query (useCatalogProducts hook)

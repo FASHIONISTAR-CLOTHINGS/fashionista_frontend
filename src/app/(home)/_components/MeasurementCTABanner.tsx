@@ -122,7 +122,7 @@ export function MeasurementCTABanner() {
 
             {/* ── Right: 3-Step Visual ───────────────────────────────────── */}
             <div className="space-y-4" aria-label="How AI measurement works">
-              {STEPS.map(({ icon: Icon, step, title, description, id }, i) => (
+              {STEPS.map(({ icon: Icon, step, title, description, id }) => (
                 <div
                   key={id}
                   id={id}

@@ -5,5 +5,5 @@
  * Import from "@/components/commerce" for clean, tree-shakeable imports.
  */
 
-export { default as ProductCard, ProductCard } from "./ProductCard";
+export { default as ProductCard } from "./ProductCard";
 export type { ProductCardProps, UnifiedProductCard } from "./ProductCard";

@@ -24,19 +24,6 @@ import type {
   PaginatedVendors,
 } from "../types/catalog.types";
 
-function safeUnwrap<T>(data: unknown): T[] {
-  const d = (data as Record<string, unknown>)?.data ?? data;
-  if (d && typeof d === "object" && "results" in (d as object)) {
-    const arr = (d as { results: unknown }).results;
-    return Array.isArray(arr) ? (arr as T[]) : [];
-  }
-  return Array.isArray(d) ? (d as T[]) : [];
-}
-
-function safeUnwrapObject<T>(data: unknown): T | null {
-  const d = (data as Record<string, unknown>)?.data ?? data;
-  return (d as T) ?? null;
-}
 
 export const catalogApi = {
   // ── Existing list endpoints ──────────────────────────────────────────────
@@ -66,7 +53,7 @@ export const catalogApi = {
   async getCategoryDetail(slug: string): Promise<CatalogCategory | null> {
     try {
       const data = await apiAsync.get(`catalog/categories/${slug}/detail/`).json();
-      return safeUnwrapObject<CatalogCategory>(data);
+      return unwrapResults<CatalogCategory>(data)[0] ?? null;
     } catch {
       return null;
     }
@@ -75,7 +62,7 @@ export const catalogApi = {
   async getBrandDetail(slug: string): Promise<CatalogBrand | null> {
     try {
       const data = await apiAsync.get(`catalog/brands/${slug}/detail/`).json();
-      return safeUnwrapObject<CatalogBrand>(data);
+      return unwrapResults<CatalogBrand>(data)[0] ?? null;
     } catch {
       return null;
     }
@@ -84,7 +71,7 @@ export const catalogApi = {
   async getCollectionDetail(slug: string): Promise<CatalogCollection | null> {
     try {
       const data = await apiAsync.get(`catalog/collections/${slug}/detail/`).json();
-      return safeUnwrapObject<CatalogCollection>(data);
+      return unwrapResults<CatalogCollection>(data)[0] ?? null;
     } catch {
       return null;
     }
@@ -100,12 +87,8 @@ export const catalogApi = {
         searchParams: { page, page_size },
       })
       .json();
-    return (safeUnwrapObject<PaginatedProducts>(data) ?? {
-      results: [],
-      count: 0,
-      page,
-      page_size,
-    });
+    const results = unwrapResults<PaginatedProducts>(data);
+    return results[0] ?? { results: [], count: 0, page, page_size };
   },
 
   async getBrandProducts(
@@ -118,12 +101,8 @@ export const catalogApi = {
         searchParams: { page, page_size },
       })
       .json();
-    return (safeUnwrapObject<PaginatedProducts>(data) ?? {
-      results: [],
-      count: 0,
-      page,
-      page_size,
-    });
+    const results = unwrapResults<PaginatedProducts>(data);
+    return results[0] ?? { results: [], count: 0, page, page_size };
   },
 
   async getCollectionProducts(
@@ -136,12 +115,8 @@ export const catalogApi = {
         searchParams: { page, page_size },
       })
       .json();
-    return (safeUnwrapObject<PaginatedProducts>(data) ?? {
-      results: [],
-      count: 0,
-      page,
-      page_size,
-    });
+    const results = unwrapResults<PaginatedProducts>(data);
+    return results[0] ?? { results: [], count: 0, page, page_size };
   },
 
   async getCollectionVendors(
@@ -154,12 +129,8 @@ export const catalogApi = {
         searchParams: { page, page_size },
       })
       .json();
-    return (safeUnwrapObject<PaginatedVendors>(data) ?? {
-      results: [] as CatalogVendorCard[],
-      count: 0,
-      page,
-      page_size,
-    });
+    const results = unwrapResults<PaginatedVendors>(data);
+    return results[0] ?? { results: [] as CatalogVendorCard[], count: 0, page, page_size };
   },
 
   async search(q: string): Promise<CatalogSearchResult> {
@@ -174,7 +145,7 @@ export const catalogApi = {
       const data = await apiAsync
         .get("catalog/search/", { searchParams: { q } })
         .json();
-      return (safeUnwrapObject<CatalogSearchResult>(data) ?? EMPTY);
+      return unwrapResults<CatalogSearchResult>(data)[0] ?? EMPTY;
     } catch {
       return EMPTY;
     }
@@ -185,7 +156,7 @@ export const catalogApi = {
       const data = await apiAsync.get("catalog/tags/").json();
       const d = (data as Record<string, unknown>)?.data ?? data;
       const tags = (d as { tags?: unknown }).tags;
-      return Array.isArray(tags) ? (tags as CatalogTag[]) : safeUnwrap<CatalogTag>(data);
+      return Array.isArray(tags) ? (tags as CatalogTag[]) : unwrapResults<CatalogTag>(data);
     } catch {
       return [];
     }

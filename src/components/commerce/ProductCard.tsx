@@ -265,7 +265,6 @@ export default function ProductCard({
       className={`
         group relative flex flex-col h-full rounded-2xl overflow-hidden cursor-pointer
         product-card-glass animate-card-enter ${staggerClass}
-        ${variant === "horizontal" ? "flex-row" : ""}
       `}
       aria-label={`Product: ${card.title}`}
       data-testid={`product-card-${card.slug}`}
