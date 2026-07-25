@@ -2,7 +2,10 @@
 
 /**
  * @file use-catalog-products.ts
- * @description TanStack Query hook for the catalog product listing.
+ * @description TanStack Query hooks for the catalog product listing.
+ *
+ * U5: Now imports from canonical catalogApi (catalog.api.ts).
+ *     product-catalog.api.ts is deprecated — all calls go through catalogApi.
  *
  * Features:
  *   - Auto-refetches when any filter param changes (queryKey includes all params)
@@ -14,30 +17,21 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { productCatalogApi } from "../api/product-catalog.api";
+import { catalogApi } from "../api/catalog.api";
 
-export interface ProductCatalogParams {
-  page?: number;
-  page_size?: number;
-  q?: string;
-  category?: string;
-  brand?: string;
-  vendor?: string;
-  in_stock?: boolean;
-  featured?: boolean;
-  min_price?: string;
-  max_price?: string;
-  ordering?: string;
-}
+// Re-export the params type so existing callers keep working
+export type { ProductCatalogParams } from "../api/catalog.api";
 
-const PRODUCT_LIST_STALE_MS = 60 * 1000; // 60 seconds
+const PRODUCT_LIST_STALE_MS = 5 * 60 * 1000; // TP5: 5 minutes (was 60s)
 
-export function useCatalogProducts(params: ProductCatalogParams = {}) {
+export function useCatalogProducts(
+  params: Parameters<typeof catalogApi.listProducts>[0] = {},
+) {
   return useQuery({
     queryKey: ["catalog", "products", params],
-    queryFn: () => productCatalogApi.listProducts(params),
+    queryFn: () => catalogApi.listProducts(params),
     staleTime: PRODUCT_LIST_STALE_MS,
-    placeholderData: (prev) => prev, // keepPreviousData equivalent in TanStack Query v5
+    placeholderData: (prev) => prev, // keepPreviousData in TanStack Query v5
     refetchOnWindowFocus: false,
   });
 }
@@ -45,8 +39,9 @@ export function useCatalogProducts(params: ProductCatalogParams = {}) {
 export function useFeaturedProducts(limit = 8) {
   return useQuery({
     queryKey: ["catalog", "products", "featured", limit],
-    queryFn: () => productCatalogApi.listProducts({ featured: true, page_size: limit }),
-    staleTime: PRODUCT_LIST_STALE_MS * 5,
+    queryFn: () =>
+      catalogApi.listProducts({ featured: true, page_size: limit }),
+    staleTime: PRODUCT_LIST_STALE_MS * 2,
     refetchOnWindowFocus: false,
   });
 }
@@ -54,7 +49,7 @@ export function useFeaturedProducts(limit = 8) {
 export function useProductSearchSuggest(q: string, enabled = true) {
   return useQuery({
     queryKey: ["catalog", "products", "suggest", q],
-    queryFn: () => productCatalogApi.searchSuggest(q),
+    queryFn: () => catalogApi.searchSuggest(q),
     enabled: enabled && q.trim().length >= 2,
     staleTime: 30 * 1000,
     refetchOnWindowFocus: false,

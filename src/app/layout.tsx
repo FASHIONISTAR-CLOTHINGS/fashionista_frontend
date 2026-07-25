@@ -259,7 +259,7 @@ export default function RootLayout({
 
   return (
     <html
-      lang="en"
+      lang="en-NG"
       suppressHydrationWarning // Required for next-themes
       data-scroll-behavior="smooth"
       className={cn(bonFoyage.variable, satoshi.variable, "font-sans")}
