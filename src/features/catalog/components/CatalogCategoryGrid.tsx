@@ -168,6 +168,17 @@ export default async function CatalogCategoryGrid({
                   {item.title || item.name}
                 </p>
 
+                {/* Product count badge */}
+                {(() => {
+                  const count = (item as unknown as { cached_product_count?: number }).cached_product_count;
+                  if (!count || count <= 0) return null;
+                  return (
+                    <span className="text-[9px] font-bold text-[var(--BV-green)]/70 bg-[var(--BV-green)]/8 rounded-full px-1.5 py-0.5">
+                      {count > 999 ? `${Math.floor(count / 1000)}k+` : count} items
+                    </span>
+                  );
+                })()}
+
                 {/* Gold underline accent on hover */}
                 <span
                   className="block h-0.5 w-0 group-hover:w-8 bg-[var(--BV-gold)] rounded-full transition-all duration-300"
@@ -186,15 +197,21 @@ export default async function CatalogCategoryGrid({
         </div>
       )}
 
-      {/* ── CTA Button ────────────────────────────────────────────────────── */}
+      {/* ── CTA Button ────────────────────────────────────────────────── */}
       {showCta && items.length > 0 && (
-        <div className="flex justify-center mt-10">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-10">
           <Link
             href="/categories"
             className="btn-primary px-10 py-3 text-sm"
             aria-label="Browse all product categories"
           >
-            Explore All Categories
+            Shop All Categories
+          </Link>
+          <Link
+            href="/products"
+            className="rounded-full border border-[#01454A]/30 px-8 py-3 text-sm font-semibold text-[#01454A] hover:bg-[#01454A] hover:text-white transition-all duration-200"
+          >
+            Browse All Products →
           </Link>
         </div>
       )}

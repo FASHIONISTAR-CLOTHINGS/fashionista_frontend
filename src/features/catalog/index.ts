@@ -3,13 +3,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Client API ───────────────────────────────────────────────────────────────
-export { catalogApi } from "./api/catalog.api";
-export { productCatalogApi } from "./api/product-catalog.api";
+export { catalogApi, productCatalogApi } from "./api/catalog.api";
 export type {
+  ProductCatalogParams,
   CatalogProductCard,
   PaginatedProductsResponse,
+  SearchSuggestResponse,
   ViewLogPayload,
-} from "./api/product-catalog.api";
+} from "./api/catalog.api";
 
 // ── Server functions (RSC only) ───────────────────────────────────────────────
 export {
@@ -42,6 +43,8 @@ export { default as CatalogCollectionGrid, CatalogCollectionGridSkeleton } from 
 export { default as ProductCard } from "./components/ProductCard";
 // Phase C2 — extracted FeaturedProducts RSC
 export { default as HomepageFeaturedProducts, HomepageFeaturedProductsSkeleton } from "./components/HomepageFeaturedProducts";
+// Phase C2b — Tabbed Featured Products client (Featured | New | Trending | Best Sellers)
+export { TabbedFeaturedProducts } from "./components/TabbedFeaturedProducts";
 // Phase D4 — CMS-driven banner hero carousel
 export { CatalogBannerHero } from "./components/CatalogBannerHero";
 // Phase C5 — Trending tags horizontal scroll rail

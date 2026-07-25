@@ -4,47 +4,42 @@
  * @file /app/(home)/products/page.tsx
  * @description Fashionistar main product catalog listing page.
  *
- * NOTE (B9 FIX — APEX Sprint):
- *   This file must remain "use client" because CatalogPage uses Nuqs
- *   (useProductFilters) and TanStack Query (useCatalogProducts) which
- *   require React context. The RSC metadata is co-located in the module-
- *   level export below — Next.js handles this correctly when the file
- *   exports 'metadata' alongside 'use client' via the page wrapper pattern.
- *   See: ProductsPage() ← server-safe shell, CatalogPage() ← client boundary.
- *
- * Architecture:
- *   - URL state via Nuqs (useProductFilters) — all filters are bookmarkable
- *   - Server data via TanStack Query (useCatalogProducts hook)
- *   - Responsive: sidebar on desktop, bottom-sheet drawer on mobile
- *   - SEO: dynamic <title> + <meta> tags via useMetadata pattern
- *   - Accessible: ARIA landmarks, live regions for result count
- *
- * Data flow:
- *   URL params → useProductFilters → builds API query string
- *   → useCatalogProducts (TanStack Query) → ProductGrid
- */
-"use client";
-
-/**
- * @file /app/(home)/products/page.tsx
- * @description Fashionistar main product catalog listing page.
- *
  * Architecture:
  *   - URL state via Nuqs (useProductFilters) — all filters are bookmarkable
  *   - Server data via TanStack Query (useCatalogProducts hook)
  *   - Canonical ProductCard component from @/components/commerce/ProductCard
  *   - Responsive: sidebar on desktop, bottom-sheet drawer on mobile
- *   - Dynamic result count & active filter chips
+ *   - Dynamic result count & active filter chips with removable X
+ *   - Sort dropdown synced to URL
+ *   - Grid / List view toggle
+ *
+ * Data flow:
+ *   URL params → useProductFilters → builds API query string
+ *   → useCatalogProducts (TanStack Query) → ProductGrid
  */
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useCallback, useRef, useEffect } from "react";
 import { useProductFilters } from "@/features/product/hooks/use-product-filters";
 import ProductFilterPanel from "@/features/product/components/ProductFilterPanel";
-import { SlidersHorizontal, X, PackageSearch, Loader2 } from "lucide-react";
+import {
+  SlidersHorizontal,
+  X,
+  PackageSearch,
+  Loader2,
+  LayoutGrid,
+  LayoutList,
+  ArrowUpDown,
+  ChevronRight,
+} from "lucide-react";
 import { useCatalogProducts } from "@/features/catalog/hooks/use-catalog-products";
 import ProductCard, { type UnifiedProductCard } from "@/components/commerce/ProductCard";
 import { FashionistarPagination } from "@/components/ui/FashionistarPagination";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface CatalogProduct {
   id: string;
@@ -62,22 +57,53 @@ interface CatalogProduct {
   review_count: number;
   brand_name?: string | null;
   vendor_name?: string | null;
+  vendor_slug?: string | null;
   requires_measurement?: boolean;
   is_pre_order?: boolean;
+  discount_percentage?: number;
+  stock_qty?: number;
+  ai_trend_score?: number;
+  gender_target?: string;
+  condition?: string;
+  sizes?: { id: string; name: string }[];
+  colors?: { id: string; name: string; hex_code: string }[];
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sort Options
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SORT_OPTIONS = [
+  { value: "-created_at", label: "Newest First" },
+  { value: "price",       label: "Price: Low to High" },
+  { value: "-price",      label: "Price: High to Low" },
+  { value: "-rating",     label: "Highest Rated" },
+  { value: "-orders_count", label: "Best Selling" },
+] as const;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Product Grid (skeleton + results)
+// ─────────────────────────────────────────────────────────────────────────────
 
 function ProductGrid({
   products,
   isLoading,
   isFetching,
+  viewMode,
 }: {
   products: CatalogProduct[];
   isLoading: boolean;
   isFetching: boolean;
+  viewMode: "grid" | "list";
 }) {
+  const gridClass =
+    viewMode === "list"
+      ? "flex flex-col gap-3"
+      : "grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4";
+
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <div className={gridClass}>
         {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="flex flex-col gap-2 rounded-2xl overflow-hidden">
             <div className="shimmer aspect-[4/5] rounded-2xl bg-muted/40" />
@@ -95,536 +121,28 @@ function ProductGrid({
 
   if (products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <PackageSearch size={64} className="mb-4 text-muted-foreground/30" />
-        <h3 className="text-lg font-semibold text-foreground">No products found</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Try adjusting your filters or search query.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative">
-      {isFetching && !isLoading && (
-        <div className="absolute right-0 top-0 flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary z-10">
-          <Loader2 size={11} className="animate-spin" />
-          Updating…
-        </div>
-      )}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {products.map((product, idx) => {
-          const card: UnifiedProductCard = {
-            id: product.id,
-            title: product.title,
-            slug: product.slug,
-            sku: (product as unknown as { sku?: string }).sku ?? product.id,
-            price: product.price,
-            old_price: product.old_price ?? null,
-            discount_percentage: 0,
-            currency: product.currency ?? "NGN",
-            image_url: product.image_url ?? null,
-            cloudinary_url: product.cloudinary_url ?? null,
-            in_stock: product.in_stock ?? true,
-            stock_qty: 10,
-            featured: product.featured ?? false,
-            hot_deal: product.hot_deal ?? false,
-            rating: product.rating ?? 0,
-            review_count: product.review_count ?? 0,
-            computed_review_count: product.review_count ?? 0,
-            computed_avg_rating: product.rating ?? 0,
-            category_name: null,
-            category_slug: null,
-            vendor_name: product.vendor_name ?? product.brand_name ?? "FASHIONISTAR",
-            vendor_slug: null,
-            store_name: product.vendor_name ?? product.brand_name ?? "FASHIONISTAR",
-            store_slug: null,
-            requires_measurement: product.requires_measurement ?? false,
-            is_customisable: false,
-            gender_target: "",
-            age_group: "",
-            condition: "new",
-            is_pre_order: product.is_pre_order ?? false,
-            orders_count: 0,
-            views: 0,
-          };
-          return <ProductCard key={product.id} card={card} index={idx + 1} />;
-        })}
-      </div>
-    </div>
-  );
-}
-
-function CatalogPage() {
-  const {
-    search,
-    category,
-    brand,
-    minPrice,
-    maxPrice,
-    sortBy,
-    page,
-    hasActiveFilters,
-  } = useProductFilters();
-
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-
-  const { data, isLoading, isFetching } = useCatalogProducts({
-    page,
-    q: search,
-    category: category ?? undefined,
-    brand: brand ?? undefined,
-    min_price: minPrice > 0 ? String(minPrice) : undefined,
-    max_price: maxPrice > 0 ? String(maxPrice) : undefined,
-    ordering: sortBy ?? "-created_at",
-    page_size: 24,
-  });
-
-  const products: CatalogProduct[] = data?.results ?? [];
-  const totalCount: number = data?.count ?? 0;
-
-  return (
-    <>
-      <main className="min-h-screen bg-background">
-        {/* Page header */}
-        <div className="border-b border-border/40 bg-muted/20 px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-screen-2xl">
-            <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-              {search ? `Results for "${search}"` : category ? `${category}` : "All Products"}
-            </h1>
-            <p
-              className="mt-1 text-sm text-muted-foreground"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              {isLoading
-                ? "Loading products…"
-                : `${totalCount.toLocaleString()} product${totalCount !== 1 ? "s" : ""} found`}
-            </p>
-
-            {/* Active filter chips */}
-            {hasActiveFilters && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {search && (
-                  <span className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                    Search: {search}
-                  </span>
-                )}
-                {category && (
-                  <span className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                    Category: {category}
-                  </span>
-                )}
-                {brand && (
-                  <span className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                    Brand: {brand}
-                  </span>
-                )}
-                {(minPrice > 0 || maxPrice > 0) && (
-                  <span className="flex items-center gap-1 rounded-full bg-accent/20 px-3 py-1 text-xs font-medium text-foreground">
-                    ₦{minPrice.toLocaleString()} — ₦{maxPrice.toLocaleString()}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Body */}
-        <div className="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex gap-6">
-            {/* Sidebar — desktop only */}
-            <div className="hidden lg:block">
-              <ProductFilterPanel />
-            </div>
-
-            {/* Main content */}
-            <div className="flex-1 min-w-0">
-              {/* Mobile filter button */}
-              <div className="mb-4 flex items-center justify-between lg:hidden">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setMobileFiltersOpen(true)}
-                  className="flex items-center gap-2 rounded-xl border border-border/40 px-4 py-2 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-muted/30 h-auto"
-                  aria-expanded={mobileFiltersOpen}
-                  aria-controls="mobile-filter-drawer"
-                >
-                  <SlidersHorizontal size={15} />
-                  Filters
-                  {hasActiveFilters && (
-                    <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                      •
-                    </span>
-                  )}
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  {totalCount.toLocaleString()} results
-                </p>
-              </div>
-
-              <ProductGrid
-                products={products}
-                isLoading={isLoading}
-                isFetching={isFetching}
-              />
-
-              <FashionistarPagination
-                currentPage={page}
-                totalCount={totalCount}
-                pageSize={24}
-                baseHref="/products"
-              />
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* Mobile filter drawer */}
-      {mobileFiltersOpen && (
-        <div
-          className="fixed inset-0 z-50 lg:hidden"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Product filters"
-          id="mobile-filter-drawer"
-        >
-          <div
-            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
-            onClick={() => setMobileFiltersOpen(false)}
-          />
-          <div className="absolute bottom-0 left-0 right-0 max-h-[85vh] overflow-y-auto rounded-t-2xl border-t border-border/40 bg-card shadow-2xl">
-            <div className="sticky top-0 flex items-center justify-between border-b border-border/40 bg-card px-4 py-3">
-              <span className="font-semibold text-foreground">Filters</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setMobileFiltersOpen(false)}
-                className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground h-auto w-auto"
-              >
-                <X size={18} />
-              </Button>
-            </div>
-            <ProductFilterPanel
-              compact
-              onClose={() => setMobileFiltersOpen(false)}
-            />
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-export default function ProductsPage() {
-  return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 size={32} className="animate-spin text-primary" />
-      </div>
-    }>
-      <CatalogPage />
-    </Suspense>
-  );
-}
-
-import { Suspense, useState } from "react";
-import { useProductFilters } from "@/features/product/hooks/use-product-filters";
-import { useToggleWishlist } from "@/features/product/hooks/use-product";
-import { useWishlistItemIds } from "@/features/client/hooks/use-client-wishlist";
-import ProductFilterPanel from "@/features/product/components/ProductFilterPanel";
-import { SlidersHorizontal, X, PackageSearch, Loader2, Heart, ShoppingBag } from "lucide-react";
-import { useCatalogProducts } from "@/features/catalog/hooks/use-catalog-products";
-import Link from "next/link";
-import { FashionistarImage } from "@/components/media";
-import { FashionistarPagination } from "@/components/ui/FashionistarPagination";
-import { Button } from "@/components/ui/button";
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Premium Product Card (mirrors shared ProductCard design — brand tokens)
-// ─────────────────────────────────────────────────────────────────────────────
-
-function CatalogProductCard({ product, index = 1 }: { product: CatalogProduct; index?: number }) {
-  const hasDiscount = product.old_price && parseFloat(product.old_price) > parseFloat(product.price);
-  const discountPct = hasDiscount
-    ? Math.round((1 - parseFloat(product.price) / parseFloat(product.old_price!)) * 100)
-    : 0;
-  const { mutate: toggleWishlist, isPending: wishlistLoading } = useToggleWishlist();
-  const wishlistIds = useWishlistItemIds();
-  const isWishlisted = wishlistIds.has(product.id) || wishlistIds.has(product.slug);
-
-  const [addedToCart, setAddedToCart] = useState(false);
-
-  const handleWishlist = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    toggleWishlist(product.slug);
-  };
-
-  const handleQuickAdd = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 1800);
-  };
-
-  const staggerClass = `stagger-${Math.min(index, 12)}`;
-
-  return (
-    <article
-      className={`group relative flex flex-col rounded-2xl overflow-hidden cursor-pointer product-card-glass animate-card-enter ${staggerClass}`}
-      aria-label={`Product: ${product.title}`}
-    >
-      {/* ── Image Container ─────────────────────────────────────────────── */}
-      <Link
-        href={`/products/${product.slug}`}
-        className="block relative overflow-hidden"
-        aria-label={`View ${product.title}`}
-        prefetch={false}
-      >
-        {/* 4:5 aspect ratio — fashion industry standard */}
-        <div className="relative w-full aspect-[4/5] bg-[#F8F5ED]">
-          {product.image_url ? (
-            <FashionistarImage
-              src={product.image_url}
-              alt={product.title}
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              imgClassName="transition-transform duration-500 group-hover:scale-105 object-cover object-top"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#F8F5ED] to-[#01454A]/5">
-              <PackageSearch size={40} className="text-[#01454A]/20" />
-            </div>
-          )}
-
-          {/* Glimmer sweep on mount */}
-          <div className="glimmer-overlay" aria-hidden="true" />
-
-          {/* Hover gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1A1208]/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        </div>
-
-        {/* ── Badges (top-left) ─────────────────────────────────────────── */}
-        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10">
-          {product.featured && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] tracking-wide uppercase bg-[#01454A] text-white font-bold animate-card-pop">
-              Featured
-            </span>
-          )}
-          {product.hot_deal && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] tracking-wide uppercase bg-red-500 text-white font-bold animate-card-pop">
-              🔥 Hot
-            </span>
-          )}
-          {hasDiscount && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] tracking-wide uppercase bg-[#FDA600] text-[#1A1208] font-bold animate-card-pop">
-              -{discountPct}%
-            </span>
-          )}
-        </div>
-
-        {/* ── Out-of-stock overlay ──────────────────────────────────────── */}
-        {!product.in_stock && (
-          <div className="absolute inset-0 bg-[#1A1208]/50 backdrop-blur-[1px] flex items-center justify-center z-20">
-            <span className="bg-white/90 text-[#1A1208] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
-              Sold Out
-            </span>
-          </div>
-        )}
-
-        {/* ── Wishlist button (top-right) ───────────────────────────────── */}
-        <button
-          type="button"
-          data-testid="wishlist-btn"
-          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          aria-pressed={isWishlisted}
-          onClick={handleWishlist}
-          disabled={wishlistLoading}
-          className={`absolute top-2.5 right-2.5 z-10 p-2 rounded-full transition-all duration-200 active:scale-90 disabled:cursor-not-allowed disabled:opacity-60 ${
-            isWishlisted
-              ? "bg-[#FDA600] text-[#1A1208] shadow-lg"
-              : "bg-white/80 text-[#01454A] backdrop-blur-sm hover:bg-white"
-          }`}
-        >
-          {wishlistLoading ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <Heart size={16} fill={isWishlisted ? "currentColor" : "none"} />
-          )}
-        </button>
-
-        {/* ── Quick-add (appears on hover) ──────────────────────────────── */}
-        {product.in_stock && (
-          <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-10">
-            <button
-              type="button"
-              onClick={handleQuickAdd}
-              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 active:scale-95 ${
-                addedToCart
-                  ? "bg-[#01454A] text-white"
-                  : "bg-[#FDA600] text-[#1A1208] hover:bg-[#e09500]"
-              }`}
-            >
-              {addedToCart ? "✓ Added!" : (
-                <>
-                  <ShoppingBag size={15} />
-                  Quick Add
-                </>
-              )}
-            </button>
-          </div>
-        )}
-      </Link>
-
-      {/* ── Card Body ─────────────────────────────────────────────────────── */}
-      <Link
-        href={`/products/${product.slug}`}
-        className="flex flex-col gap-1.5 p-3 flex-1"
-        aria-label={`View details for ${product.title}`}
-        prefetch={false}
-      >
-        {/* Brand name */}
-        {product.brand_name && (
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#01454A] truncate">
-            {product.brand_name}
+      <div className="flex flex-col items-center justify-center py-24 text-center gap-6">
+        <PackageSearch size={72} className="text-[#01454A]/20" />
+        <div>
+          <h3 className="text-xl font-semibold text-[#1A1208]">No products found</h3>
+          <p className="mt-2 text-sm text-[#01454A]/60 max-w-xs mx-auto">
+            Try adjusting your filters or search query. Browse our categories to discover more styles.
           </p>
-        )}
-
-        {/* Product title */}
-        <h3 className="text-sm font-semibold text-[#1A1208] line-clamp-2 leading-snug group-hover:text-[#01454A] transition-colors duration-200">
-          {product.title}
-        </h3>
-
-        {/* Rating */}
-        {product.review_count > 0 && (
-          <div className="flex items-center gap-1">
-            <div className="flex">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <svg
-                  key={star}
-                  className={`h-3 w-3 ${star <= Math.round(product.rating) ? "text-[#FDA600]" : "text-gray-200"}`}
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                  aria-hidden="true"
-                >
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              ))}
-            </div>
-            <span className="text-[10px] text-[#01454A]/60">({product.review_count})</span>
-          </div>
-        )}
-
-        {/* Price */}
-        <div className="flex items-baseline gap-2 mt-auto pt-1">
-          <span className="text-base font-bold text-[#FDA600]">
-            ₦{parseFloat(product.price).toLocaleString("en-NG")}
-          </span>
-          {hasDiscount && (
-            <span className="text-xs text-[#01454A]/50 line-through">
-              ₦{parseFloat(product.old_price!).toLocaleString("en-NG")}
-            </span>
-          )}
         </div>
-
-        {/* Color swatches */}
-        {product.colors && product.colors.length > 0 && (
-          <div className="flex items-center gap-1 flex-wrap">
-            {product.colors.slice(0, 5).map((c) => (
-              <span
-                key={c.id}
-                className="color-swatch"
-                style={{ backgroundColor: c.hex_code }}
-                title={c.name}
-                aria-label={`Color: ${c.name}`}
-              />
-            ))}
-            {product.colors.length > 5 && (
-              <span className="text-[9px] text-[#01454A]/60">+{product.colors.length - 5}</span>
-            )}
-          </div>
-        )}
-
-        {/* Size chips */}
-        {product.sizes && product.sizes.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-0.5">
-            {product.sizes.slice(0, 5).map((s) => (
-              <span
-                key={s.id}
-                className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium border border-[#01454A]/20 text-[#01454A]/70 bg-white/70"
-              >
-                {s.name}
-              </span>
-            ))}
-            {product.sizes.length > 5 && (
-              <span className="text-[9px] text-[#01454A]/60">+{product.sizes.length - 5}</span>
-            )}
-          </div>
-        )}
-      </Link>
-    </article>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Product Grid
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface CatalogProduct {
-  id: string;
-  title: string;
-  slug: string;
-  price: string;
-  old_price?: string | null;
-  currency: string;
-  image_url?: string | null;
-  in_stock: boolean;
-  featured: boolean;
-  hot_deal: boolean;
-  rating: number;
-  review_count: number;
-  brand_name?: string | null;
-  sizes?: { id: string; name: string }[];
-  colors?: { id: string; name: string; hex_code: string }[];
-}
-
-function ProductGrid({
-  products,
-  isLoading,
-  isFetching,
-}: {
-  products: CatalogProduct[];
-  isLoading: boolean;
-  isFetching: boolean;
-}) {
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="flex flex-col gap-2 rounded-2xl overflow-hidden">
-            <div className="shimmer aspect-[4/5] rounded-2xl" />
-            <div className="p-3 flex flex-col gap-2">
-              <div className="shimmer h-2.5 w-20 rounded" />
-              <div className="shimmer h-3.5 w-full rounded" />
-              <div className="shimmer h-3 w-3/4 rounded" />
-              <div className="shimmer h-4 w-16 rounded mt-1" />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (products.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <PackageSearch size={64} className="mb-4 text-[#01454A]/20" />
-        <h3 className="text-lg font-semibold text-[#1A1208]">No products found</h3>
-        <p className="mt-1 text-sm text-[#01454A]/60">
-          Try adjusting your filters or search query.
-        </p>
+        <div className="flex flex-wrap gap-3 justify-center">
+          <Link
+            href="/categories"
+            className="flex items-center gap-1.5 rounded-xl bg-[#01454A] text-white px-4 py-2.5 text-sm font-semibold hover:bg-[#01454A]/90 transition-colors min-h-[44px]"
+          >
+            Browse Categories <ChevronRight size={14} />
+          </Link>
+          <Link
+            href="/collections"
+            className="flex items-center gap-1.5 rounded-xl border border-[#01454A]/20 text-[#01454A] px-4 py-2.5 text-sm font-semibold hover:bg-[#01454A]/5 transition-colors min-h-[44px]"
+          >
+            View Collections <ChevronRight size={14} />
+          </Link>
+        </div>
       </div>
     );
   }
@@ -637,23 +155,153 @@ function ProductGrid({
           Updating…
         </div>
       )}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {products.map((product, idx) => (
-          <CatalogProductCard key={product.id} product={product} index={idx + 1} />
-        ))}
+      <div className={gridClass}>
+        {products.map((product, idx) => {
+          const card: UnifiedProductCard = {
+            id: product.id,
+            title: product.title,
+            slug: product.slug,
+            sku: product.id,
+            price: product.price,
+            old_price: product.old_price ?? null,
+            discount_percentage: product.discount_percentage ?? 0,
+            currency: product.currency ?? "NGN",
+            image_url: product.image_url ?? null,
+            cloudinary_url: product.cloudinary_url ?? null,
+            in_stock: product.in_stock ?? true,
+            stock_qty: product.stock_qty ?? 10,
+            featured: product.featured ?? false,
+            hot_deal: product.hot_deal ?? false,
+            rating: product.rating ?? 0,
+            review_count: product.review_count ?? 0,
+            computed_review_count: product.review_count ?? 0,
+            computed_avg_rating: product.rating ?? 0,
+            category_name: null,
+            category_slug: null,
+            vendor_name: product.vendor_name ?? product.brand_name ?? "FASHIONISTAR",
+            vendor_slug: product.vendor_slug ?? null,
+            store_name: product.vendor_name ?? product.brand_name ?? "FASHIONISTAR",
+            store_slug: product.vendor_slug ?? null,
+            requires_measurement: product.requires_measurement ?? false,
+            is_customisable: false,
+            gender_target: product.gender_target ?? "",
+            age_group: "",
+            condition: product.condition ?? "new",
+            is_pre_order: product.is_pre_order ?? false,
+            orders_count: 0,
+            views: 0,
+            sizes: product.sizes ?? [],
+            colors: product.colors ?? [],
+            ai_trend_score: product.ai_trend_score,
+          };
+          return (
+            <ProductCard
+              key={product.id}
+              card={card}
+              index={idx + 1}
+              priority={idx < 4}
+              variant={viewMode === "list" ? "horizontal" : "default"}
+            />
+          );
+        })}
       </div>
     </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Pagination Controls
+// Active Filter Chip (removable)
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Unused Pagination component replaced by global FashionistarPagination
+function FilterChip({
+  label,
+  onRemove,
+}: {
+  label: string;
+  onRemove: () => void;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#01454A]/10 px-3 py-1 text-xs font-medium text-[#01454A]">
+      {label}
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Remove ${label} filter`}
+        className="flex-shrink-0 rounded-full hover:bg-[#01454A]/20 p-0.5 transition-colors"
+      >
+        <X size={10} />
+      </button>
+    </span>
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Main Page
+// Sort Dropdown
+// ─────────────────────────────────────────────────────────────────────────────
+
+function SortDropdown({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const current = SORT_OPTIONS.find((o) => o.value === value) ?? SORT_OPTIONS[0];
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-2 rounded-xl border border-[#01454A]/20 bg-white px-3 py-2 text-xs font-medium text-[#01454A] hover:border-[#01454A]/40 transition-colors min-h-[36px]"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <ArrowUpDown size={13} />
+        <span className="hidden sm:inline">{current.label}</span>
+        <span className="sm:hidden">Sort</span>
+      </button>
+      {open && (
+        <div
+          className="absolute right-0 top-full mt-1 z-50 w-52 rounded-xl border border-[#01454A]/10 bg-white shadow-xl overflow-hidden"
+          role="listbox"
+        >
+          {SORT_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              role="option"
+              aria-selected={value === opt.value}
+              type="button"
+              onClick={() => {
+                onChange(opt.value);
+                setOpen(false);
+              }}
+              className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-[#01454A]/5 ${
+                value === opt.value ? "font-semibold text-[#01454A] bg-[#01454A]/5" : "text-[#1A1208]"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main Catalog Page (client component — uses Nuqs + TanStack Query)
 // ─────────────────────────────────────────────────────────────────────────────
 
 function CatalogPage() {
@@ -666,33 +314,65 @@ function CatalogPage() {
     sortBy,
     page,
     hasActiveFilters,
+    setSearch,
+    setCategory,
+    setBrand,
+    setMinPrice,
+    setMaxPrice,
+    setSortBy,
+    setPage,
+    resetFilters,
   } = useProductFilters();
 
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  // Count active filters for badge
+  const activeFilterCount = [
+    !!search,
+    !!category,
+    !!brand,
+    minPrice > 0,
+    maxPrice > 0 && maxPrice < 500_000,
+  ].filter(Boolean).length;
 
   const { data, isLoading, isFetching } = useCatalogProducts({
     page,
-    q: search,
-    category: category ?? undefined,
-    brand: brand ?? undefined,
+    q: search || undefined,
+    category: category || undefined,
+    brand: brand || undefined,
     min_price: minPrice > 0 ? String(minPrice) : undefined,
-    max_price: maxPrice > 0 ? String(maxPrice) : undefined,
+    max_price: maxPrice > 0 && maxPrice < 500_000 ? String(maxPrice) : undefined,
     ordering: sortBy ?? "-created_at",
     page_size: 24,
   });
 
-  const products: CatalogProduct[] = data?.results ?? [];
+  const products: CatalogProduct[] = (data?.results ?? []) as CatalogProduct[];
   const totalCount: number = data?.count ?? 0;
+
+  const currentSortLabel =
+    SORT_OPTIONS.find((o) => o.value === sortBy)?.label ?? "Newest First";
+
+  const handleSortChange = useCallback(
+    (val: string) => {
+      void setSortBy(val);
+      void setPage(1);
+    },
+    [setSortBy, setPage],
+  );
 
   return (
     <>
-      {/* SEO head (static — layout.tsx handles the base title) */}
       <main className="min-h-screen bg-background">
-        {/* Page header */}
+        {/* ── Page Header ──────────────────────────────────────────────── */}
         <div className="border-b border-[#01454A]/10 bg-[#F8F5ED]/60 px-4 py-6 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-screen-2xl">
             <h1 className="text-2xl font-bold text-[#1A1208] sm:text-3xl">
-              {search ? `Results for "${search}"` : category ? `${category}` : "All Products"}
+              {search
+                ? `Results for "${search}"`
+                : category
+                ? `${category}`
+                : "All Products"}
             </h1>
             <p
               className="mt-1 text-sm text-[#01454A]/60"
@@ -701,74 +381,116 @@ function CatalogPage() {
             >
               {isLoading
                 ? "Loading products…"
-                : `${totalCount.toLocaleString()} product${totalCount !== 1 ? "s" : ""} found`}
+                : `${totalCount.toLocaleString()} product${totalCount !== 1 ? "s" : ""} found · Sorted by: ${currentSortLabel}`}
             </p>
 
-            {/* Active filter chips */}
+            {/* Active filter chips — removable */}
             {hasActiveFilters && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {search && (
-                  <span className="flex items-center gap-1 rounded-full bg-[#01454A]/10 px-3 py-1 text-xs font-medium text-[#01454A]">
-                    Search: {search}
-                  </span>
+                  <FilterChip label={`Search: ${search}`} onRemove={() => { void setSearch(null); void setPage(1); }} />
                 )}
                 {category && (
-                  <span className="flex items-center gap-1 rounded-full bg-[#01454A]/10 px-3 py-1 text-xs font-medium text-[#01454A]">
-                    Category: {category}
-                  </span>
+                  <FilterChip label={`Category: ${category}`} onRemove={() => { void setCategory(null); void setPage(1); }} />
                 )}
                 {brand && (
-                  <span className="flex items-center gap-1 rounded-full bg-[#01454A]/10 px-3 py-1 text-xs font-medium text-[#01454A]">
-                    Brand: {brand}
-                  </span>
+                  <FilterChip label={`Brand: ${brand}`} onRemove={() => { void setBrand(null); void setPage(1); }} />
                 )}
-                {(minPrice > 0 || maxPrice > 0) && (
-                  <span className="flex items-center gap-1 rounded-full bg-[#FDA600]/20 px-3 py-1 text-xs font-medium text-[#1A1208]">
-                    ₦{minPrice.toLocaleString()} — ₦{maxPrice.toLocaleString()}
-                  </span>
+                {(minPrice > 0 || (maxPrice > 0 && maxPrice < 500_000)) && (
+                  <FilterChip
+                    label={`₦${minPrice.toLocaleString()} — ₦${maxPrice.toLocaleString()}`}
+                    onRemove={() => { void setMinPrice(null); void setMaxPrice(null); void setPage(1); }}
+                  />
                 )}
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="text-xs text-[#01454A]/60 underline underline-offset-2 hover:text-[#01454A] transition-colors"
+                >
+                  Clear all
+                </button>
               </div>
             )}
           </div>
         </div>
 
-        {/* Body */}
+        {/* ── Body ─────────────────────────────────────────────────────── */}
         <div className="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex gap-6">
             {/* Sidebar — desktop only */}
-            <div className="hidden lg:block">
+            <div className="hidden lg:block flex-shrink-0">
               <ProductFilterPanel />
             </div>
 
             {/* Main content */}
             <div className="flex-1 min-w-0">
-              {/* Mobile filter button */}
-              <div className="mb-4 flex items-center justify-between lg:hidden">
+              {/* Toolbar: mobile filter + sort + view toggle */}
+              <div className="mb-4 flex items-center gap-2 justify-between">
+                {/* Mobile filter button */}
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setMobileFiltersOpen(true)}
-                  className="flex items-center gap-2 rounded-xl border border-border/40 px-4 py-2 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-muted/30 h-auto"
+                  className="flex items-center gap-2 rounded-xl border border-[#01454A]/20 px-4 py-2 text-sm font-medium hover:border-[#01454A]/40 hover:bg-[#01454A]/5 h-auto lg:hidden"
                   aria-expanded={mobileFiltersOpen}
                   aria-controls="mobile-filter-drawer"
+                  data-testid="mobile-filter-btn"
                 >
                   <SlidersHorizontal size={15} />
                   Filters
-                  {hasActiveFilters && (
-                    <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                      •
+                  {activeFilterCount > 0 && (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#01454A] text-[10px] font-bold text-white">
+                      {activeFilterCount}
                     </span>
                   )}
                 </Button>
-                <p className="text-xs text-muted-foreground">
-                  {totalCount.toLocaleString()} results
-                </p>
+
+                {/* Right-side toolbar */}
+                <div className="ml-auto flex items-center gap-2">
+                  <p className="hidden sm:block text-xs text-[#01454A]/60">
+                    {totalCount.toLocaleString()} results
+                  </p>
+
+                  {/* Sort dropdown */}
+                  <SortDropdown value={sortBy ?? "-created_at"} onChange={handleSortChange} />
+
+                  {/* View mode toggle */}
+                  <div className="flex items-center rounded-xl border border-[#01454A]/20 bg-white overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("grid")}
+                      aria-label="Grid view"
+                      aria-pressed={viewMode === "grid"}
+                      className={`p-2.5 transition-colors min-h-[36px] ${
+                        viewMode === "grid"
+                          ? "bg-[#01454A] text-white"
+                          : "text-[#01454A]/60 hover:bg-[#01454A]/5"
+                      }`}
+                    >
+                      <LayoutGrid size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("list")}
+                      aria-label="List view"
+                      aria-pressed={viewMode === "list"}
+                      className={`p-2.5 transition-colors min-h-[36px] ${
+                        viewMode === "list"
+                          ? "bg-[#01454A] text-white"
+                          : "text-[#01454A]/60 hover:bg-[#01454A]/5"
+                      }`}
+                    >
+                      <LayoutList size={14} />
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <ProductGrid
                 products={products}
                 isLoading={isLoading}
                 isFetching={isFetching}
+                viewMode={viewMode}
               />
 
               <FashionistarPagination
@@ -782,7 +504,7 @@ function CatalogPage() {
         </div>
       </main>
 
-      {/* Mobile filter drawer */}
+      {/* ── Mobile filter drawer ──────────────────────────────────────── */}
       {mobileFiltersOpen && (
         <div
           className="fixed inset-0 z-50 lg:hidden"
@@ -793,27 +515,32 @@ function CatalogPage() {
         >
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-[#1A1208]/40 backdrop-blur-sm"
             onClick={() => setMobileFiltersOpen(false)}
           />
           {/* Drawer */}
-          <div className="absolute bottom-0 left-0 right-0 max-h-[85vh] overflow-y-auto rounded-t-2xl border-t border-border/40 bg-card shadow-2xl">
-            <div className="sticky top-0 flex items-center justify-between border-b border-border/40 bg-card px-4 py-3">
-              <span className="font-semibold text-foreground">Filters</span>
+          <div className="absolute bottom-0 left-0 right-0 max-h-[85vh] overflow-y-auto rounded-t-2xl border-t border-[#01454A]/10 bg-card shadow-2xl">
+            <div className="sticky top-0 flex items-center justify-between border-b border-[#01454A]/10 bg-card px-4 py-3">
+              <span className="font-semibold text-[#1A1208]">
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#01454A] text-[10px] font-bold text-white">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </span>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => setMobileFiltersOpen(false)}
-                className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground h-auto w-auto"
+                className="rounded-lg p-1.5 text-[#01454A]/60 hover:bg-[#01454A]/5 hover:text-[#01454A] h-auto w-auto"
+                aria-label="Close filters"
               >
                 <X size={18} />
               </Button>
             </div>
-            <ProductFilterPanel
-              compact
-              onClose={() => setMobileFiltersOpen(false)}
-            />
+            <ProductFilterPanel compact onClose={() => setMobileFiltersOpen(false)} />
           </div>
         </div>
       )}
@@ -821,13 +548,19 @@ function CatalogPage() {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Page export (Suspense wraps Nuqs + TanStack Query contexts)
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function ProductsPage() {
   return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 size={32} className="animate-spin text-primary" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <Loader2 size={32} className="animate-spin text-[#01454A]" />
+        </div>
+      }
+    >
       <CatalogPage />
     </Suspense>
   );

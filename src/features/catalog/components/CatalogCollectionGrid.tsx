@@ -16,7 +16,7 @@
  */
 
 import Link from "next/link";
-import { Clock, Package, ChevronRight, Sparkles } from "lucide-react";
+import { Clock, Package, ChevronRight, Sparkles, Users } from "lucide-react";
 import { FashionistarImage } from "@/components/media";
 import { getCatalogCollections } from "../api/catalog.server";
 import type { HomepageCollectionCard, CatalogCollection } from "../types/catalog.types";
@@ -118,6 +118,7 @@ function EditorialCollectionCard({
   const seasonalBadge = getSeasonalBadge(item);
   const staggerClass = `stagger-${Math.min(index + 1, 12)}`;
   const productCount = (item as CatalogCollection).cached_product_count;
+  const vendorCount = (item as CatalogCollection).vendor_count ?? (item as unknown as { vendors_count?: number }).vendors_count;
   const ctaText = (item as CatalogCollection).banner_cta_text || "Explore Collection";
   const subTitle = (item as CatalogCollection).sub_title;
   const isFeatured = (item as CatalogCollection).is_featured;
@@ -184,6 +185,14 @@ function EditorialCollectionCard({
           <span className="inline-flex items-center gap-1 self-start rounded-full bg-white/15 backdrop-blur-sm border border-white/20 px-2.5 py-0.5 text-[10px] font-semibold text-white/90">
             <Package size={9} />
             {productCount.toLocaleString()} piece{productCount !== 1 ? "s" : ""}
+          </span>
+        )}
+
+        {/* Vendor count chip */}
+        {vendorCount != null && vendorCount > 0 && (
+          <span className="inline-flex items-center gap-1 self-start rounded-full bg-white/15 backdrop-blur-sm border border-white/20 px-2.5 py-0.5 text-[10px] font-semibold text-white/90">
+            <Users size={9} />
+            {vendorCount} vendor{vendorCount !== 1 ? "s" : ""}
           </span>
         )}
 

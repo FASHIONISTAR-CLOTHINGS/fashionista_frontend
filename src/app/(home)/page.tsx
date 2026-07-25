@@ -28,6 +28,7 @@ import { Suspense } from "react";
 import { CatalogCategoryGrid, CatalogCollectionGrid } from "@/features/catalog";
 import { getHomepageBundleV2 } from "@/features/catalog/api/catalog.server";
 import HomepageFeaturedProducts, { HomepageFeaturedProductsSkeleton } from "@/features/catalog/components/HomepageFeaturedProducts";
+import TabbedFeaturedProducts from "@/features/catalog/components/TabbedFeaturedProducts";
 import { CatalogBannerHero } from "@/features/catalog/components/CatalogBannerHero";
 import { RecentlyViewedSection } from "./_components/RecentlyViewedSection";
 import { DealsCountdown } from "./_components/DealsCountdown";
@@ -136,9 +137,9 @@ export default async function Home() {
       {/* ── 5. AI Measurement CTA Banner — "Measure or Buy" funnel ─────────── */}
       <MeasurementCTABanner />
 
-      {/* ── 6. Featured Products (APEX: limit 8, RSC cards) ─────────────────── */}
+      {/* ── 6. Featured Products — Tabbed Rails (Featured | New | Trending | Best Sellers) */}
       <Suspense fallback={<HomepageFeaturedProductsSkeleton count={8} />}>
-        <HomepageFeaturedProducts bundle={bundle} limit={8} />
+        <TabbedFeaturedProducts products={bundle.featured_products} limit={8} />
       </Suspense>
 
       {/* ── 7. R20: Trending Now Rail — AI trend score powered ──────────────── */}

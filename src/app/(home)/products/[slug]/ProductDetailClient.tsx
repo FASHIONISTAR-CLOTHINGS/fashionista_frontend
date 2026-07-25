@@ -32,6 +32,10 @@ import {
   BadgeCheck,
   Flame,
   Leaf,
+  Shield,
+  Truck,
+  RotateCcw,
+  Zap,
 } from "lucide-react";
 import {
   useProductDetail,
@@ -490,7 +494,7 @@ export function ProductDetailClient({
             </div>
           )}
 
-          {/* Quantity stepper */}
+          {/* Quantity stepper + Stock urgency */}
           <div className="flex items-center gap-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Qty
@@ -510,42 +514,92 @@ export function ProductDetailClient({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setQuantity((q) => q + 1)}
+                onClick={() => setQuantity((q) => Math.min((product as unknown as { stock_qty?: number }).stock_qty ?? 99, q + 1))}
                 className="flex h-8 w-8 items-center justify-center rounded-lg transition hover:bg-muted p-0 min-w-0 min-h-0"
               >
                 <Plus size={14} />
               </Button>
             </div>
-            {!inStock && (
+            {!inStock ? (
               <span className="text-xs font-semibold text-destructive">Out of stock</span>
+            ) : (() => {
+              const qty = (product as unknown as { stock_qty?: number }).stock_qty;
+              if (qty !== undefined && qty > 0 && qty <= 5) {
+                return (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-red-50 border border-red-200 px-2.5 py-0.5 text-[10px] font-bold text-red-600">
+                    🔥 Only {qty} left!
+                  </span>
+                );
+              }
+              return null;
+            })()}
+          </div>
+
+          {/* CTA buttons — Add to Cart + Buy Now + Wishlist */}
+          <div className="space-y-3">
+            <div className="flex gap-3">
+              <Button
+                ref={mainButtonRef}
+                onClick={handleAddToCart}
+                disabled={!inStock || cartLoading}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[hsl(var(--accent))] py-4 text-sm font-bold text-[hsl(var(--accent-foreground))] shadow-md transition hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {cartLoading ? (
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-black/20 border-t-black" />
+                ) : (
+                  <>
+                    <ShoppingBag size={16} />
+                    Add to Cart
+                  </>
+                )}
+              </Button>
+
+              <Button
+                onClick={() => toggleWishlist(product.slug)}
+                aria-label="Toggle wishlist"
+                className="flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-card text-[hsl(var(--primary))] transition hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))/5] cursor-pointer"
+              >
+                <Heart size={20} />
+              </Button>
+            </div>
+
+            {/* Buy Now — express checkout */}
+            {inStock && (
+              <Button
+                onClick={() => {
+                  handleAddToCart();
+                  // Navigate to checkout after a short delay to allow cart state to update
+                  setTimeout(() => { window.location.href = "/checkout"; }, 300);
+                }}
+                disabled={cartLoading}
+                className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-[#01454A] bg-white py-3.5 text-sm font-bold text-[#01454A] hover:bg-[#01454A] hover:text-white transition-all duration-200 cursor-pointer"
+                data-testid="pdp-buy-now-btn"
+              >
+                <Zap size={16} />
+                Buy Now — Express Checkout
+              </Button>
             )}
           </div>
 
-          {/* CTA buttons */}
-          <div className="flex gap-3">
-            <Button
-              ref={mainButtonRef}
-              onClick={handleAddToCart}
-              disabled={!inStock || cartLoading}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[hsl(var(--accent))] py-4 text-sm font-bold text-[hsl(var(--accent-foreground))] shadow-md transition hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
-            >
-              {cartLoading ? (
-                <span className="h-5 w-5 animate-spin rounded-full border-2 border-black/20 border-t-black" />
-              ) : (
-                <>
-                  <ShoppingBag size={16} />
-                  Add to Cart
-                </>
-              )}
-            </Button>
-
-            <Button
-              onClick={() => toggleWishlist(product.slug)}
-              aria-label="Toggle wishlist"
-              className="flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-card text-[hsl(var(--primary))] transition hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))/5] cursor-pointer"
-            >
-              <Heart size={20} />
-            </Button>
+          {/* Trust badges */}
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            {([
+              { icon: Shield, label: "Secure Payment", sub: "256-bit SSL" },
+              { icon: Truck, label: "Fast Delivery", sub: "2–5 business days" },
+              { icon: RotateCcw, label: "Easy Returns", sub: "Within 14 days" },
+              { icon: BadgeCheck, label: "100% Authentic", sub: "Vendor verified" },
+            ] as const).map(({ icon: Icon, label, sub }) => (
+              <div
+                key={label}
+                className="flex items-center gap-2 rounded-xl border border-[#01454A]/10 bg-[#01454A]/3 px-3 py-2"
+              >
+                <Icon size={14} className="text-[#01454A] shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-foreground leading-tight truncate">{label}</p>
+                  <p className="text-[9px] text-muted-foreground truncate">{sub}</p>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Accordion: Description / Specs / FAQs */}
@@ -800,6 +854,53 @@ export function ProductDetailClient({
       {reviews.length > 0 && (
         <section className="mt-16">
           <h2 className="mb-6 font-bon_foyage text-3xl text-foreground">Customer Reviews</h2>
+
+          {/* Star rating breakdown */}
+          <div className="mb-8 rounded-2xl border border-border bg-card p-5 flex flex-col sm:flex-row gap-6">
+            {/* Overall score */}
+            <div className="flex flex-col items-center justify-center sm:border-r sm:border-border sm:pr-6 sm:w-36 shrink-0">
+              <span className="text-5xl font-bold text-foreground">
+                {product.computed_avg_rating.toFixed(1)}
+              </span>
+              <div className="flex items-center gap-0.5 mt-1">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    size={14}
+                    fill={i < Math.round(product.computed_avg_rating) ? "hsl(var(--accent))" : "none"}
+                    stroke="hsl(var(--accent))"
+                    strokeWidth={1.5}
+                  />
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {product.computed_review_count} review{product.computed_review_count !== 1 ? "s" : ""}
+              </p>
+            </div>
+
+            {/* Breakdown bars */}
+            <div className="flex-1 space-y-2">
+              {[5, 4, 3, 2, 1].map((star) => {
+                const count = reviews.filter((r) => r.rating === star).length;
+                const pct = reviews.length > 0 ? Math.round((count / reviews.length) * 100) : 0;
+                return (
+                  <div key={star} className="flex items-center gap-3">
+                    <span className="text-xs font-semibold text-muted-foreground w-3 text-right">{star}</span>
+                    <Star size={10} fill="hsl(var(--accent))" stroke="hsl(var(--accent))" className="shrink-0" />
+                    <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-[#FDA600] transition-all duration-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-muted-foreground w-8 text-right">{pct}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Reviews grid */}
           <div className="grid gap-4 md:grid-cols-2">
             {reviews.map((r) => (
               <div
