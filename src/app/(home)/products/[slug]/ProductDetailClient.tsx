@@ -319,7 +319,7 @@ export function ProductDetailClient({
                 {product.vendor_name}
               </Link>
               {/* Vendor verification badge — rendered when backend exposes it */}
-              {(product as unknown as Record<string, unknown>).vendor_is_verified && (
+              {Boolean((product as unknown as Record<string, unknown>).vendor_is_verified) && (
                 <BadgeCheck
                   size={14}
                   className="text-[#01454A]"

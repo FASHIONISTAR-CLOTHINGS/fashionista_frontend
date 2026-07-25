@@ -26,9 +26,10 @@ export default function Home({
           <NewMobileNav />
           <NewNavbar />
         </header>
-        <section>{children}</section>
+        <section id="main-content">{children}</section>
         {/* Canonical auth now always renders on dedicated /auth/* pages. */}
       </main>
+      {/* <Footer /> */}
       <FooterBridge platformSettingsPromise={platformSettingsPromise} />
       {/* ── Revenue: Wishlist Nudge sticky bar (60s delay, 24h suppression) ── */}
       <WishlistNudgeClient />

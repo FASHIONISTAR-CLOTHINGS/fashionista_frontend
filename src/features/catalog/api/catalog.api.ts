@@ -148,13 +148,6 @@ export const catalogApi = {
     );
   },
 
-  async getBlogPosts(): Promise<CatalogBlogPost[]> {
-    const data = await apiAsync.get("catalog/blog/").json();
-    return CatalogBlogPostListSchema.parse(
-      unwrapResults<CatalogBlogPost>(data),
-    );
-  },
-
   // ── Detail + paginated endpoints ──────────────────────────────────────────
 
   async getCategoryDetail(slug: string): Promise<CatalogCategory | null> {
@@ -355,6 +348,25 @@ export const catalogApi = {
       return results[0] ?? { results: [] as CatalogVendorCard[], count: 0 };
     } catch {
       return { results: [] as CatalogVendorCard[], count: 0 };
+    }
+  },
+
+  /**
+   * GET /api/ninja/blog/?limit={limit}
+   * Latest blog posts for the Style Guide rail (R19).
+   * Returns empty array on error — rail renders null if no posts.
+   */
+  async getBlogPosts(limit = 3): Promise<CatalogBlogPost[]> {
+    try {
+      const data = await apiAsync
+        .get("blog/", { searchParams: { limit: String(limit) } })
+        .json();
+      const parsed = CatalogBlogPostListSchema.safeParse(
+        (data as { results?: unknown })?.results ?? data
+      );
+      return parsed.success ? parsed.data : [];
+    } catch {
+      return [];
     }
   },
 };

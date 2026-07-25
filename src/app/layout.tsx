@@ -296,6 +296,11 @@ export default function RootLayout({
       </head>
 
       <body className="min-h-screen bg-background font-raleway antialiased" suppressHydrationWarning>
+        {/* AS4 — Skip to main content (keyboard accessibility) */}
+        <a href="#main-content" className="skip-to-main">
+          Skip to main content
+        </a>
+
         {gaId ? (
           <>
             <Script
