@@ -96,22 +96,21 @@ interface SubCategoryChild {
   color_hex?: string;
 }
 
+// ─── Sub-category horizontal scroll rail item ─────────────────────────────────
+
 function SubCategoryCard({ child }: { child: SubCategoryChild }) {
-  const bgColor = child.color_hex
-    ? `${child.color_hex}18`
-    : "rgba(1, 69, 74, 0.08)";
-  const borderColor = child.color_hex
-    ? `${child.color_hex}40`
-    : "rgba(1, 69, 74, 0.15)";
+  const accentColor = child.color_hex || "#01454A";
+  const bgColor = child.color_hex ? `${child.color_hex}14` : "rgba(1, 69, 74, 0.08)";
 
   return (
     <Link
       href={`/categories/${child.slug}`}
-      className="group flex flex-col items-center gap-3 rounded-2xl border p-4 text-center transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
-      style={{ backgroundColor: bgColor, borderColor }}
+      className="group flex-shrink-0 flex flex-col items-center gap-2.5 w-24 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FDA600] rounded-2xl"
+      title={child.name}
     >
+      {/* Image circle */}
       <div
-        className="relative h-14 w-14 overflow-hidden rounded-full flex items-center justify-center"
+        className="relative h-[72px] w-[72px] overflow-hidden rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg"
         style={{ backgroundColor: bgColor }}
       >
         {child.image ? (
@@ -119,23 +118,32 @@ function SubCategoryCard({ child }: { child: SubCategoryChild }) {
             src={child.image}
             alt={child.name}
             fill
-            sizes="56px"
-            className="object-contain p-1.5 group-hover:scale-110 transition-transform duration-300"
+            sizes="72px"
+            className="object-cover group-hover:scale-110 transition-transform duration-500"
           />
         ) : child.icon_class ? (
-          <span className="text-2xl">{child.icon_class}</span>
+          <span className="text-3xl" aria-hidden="true">{child.icon_class}</span>
         ) : (
           <span
-            className="text-xl font-bold"
-            style={{ color: child.color_hex || "#01454A" }}
+            className="text-2xl font-bold font-bon_foyage"
+            style={{ color: accentColor }}
           >
             {child.name[0]?.toUpperCase()}
           </span>
         )}
+        {/* Hover ring */}
+        <div
+          className="absolute inset-0 rounded-2xl ring-2 ring-transparent group-hover:ring-[#FDA600]/60 transition-all duration-200"
+        />
       </div>
-      <p className="text-xs font-semibold text-foreground capitalize leading-snug">
+
+      {/* Name */}
+      <span
+        className="text-center text-[11px] font-semibold font-raleway text-foreground capitalize leading-tight line-clamp-2 group-hover:text-[#01454A] transition-colors duration-150"
+        style={{ maxWidth: "5.5rem" }}
+      >
         {child.name}
-      </p>
+      </span>
     </Link>
   );
 }
@@ -275,19 +283,39 @@ export default async function CategorySlugPage({
           </div>
         </section>
 
-        {/* ── Sub-categories grid ──────────────────────────────────────────── */}
+        {/* ── P1: Sub-categories horizontal scroll rail ──────────────────── */}
         {children.length > 0 && (
           <section
-            className="px-5 py-10 md:px-10 lg:px-20 border-b border-border"
-            data-testid="sub-category-grid"
+            className="border-b border-border/50 bg-card/50"
+            data-testid="sub-category-rail"
+            aria-label={`Sub-categories of ${category.title || category.name}`}
           >
-            <h2 className="font-bon_foyage text-2xl text-foreground mb-6 md:text-3xl">
-              Shop by Type
-            </h2>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-              {children.map((child) => (
-                <SubCategoryCard key={child.id} child={child} />
-              ))}
+            {/* Rail header */}
+            <div className="flex items-center justify-between px-5 pt-7 pb-4 md:px-10 lg:px-20">
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-1 rounded-full bg-[#FDA600]" aria-hidden="true" />
+                <h2 className="font-bon_foyage text-xl text-foreground md:text-2xl">
+                  Shop by Type
+                </h2>
+              </div>
+              <span className="text-xs font-medium text-muted-foreground font-raleway">
+                {children.length} categories
+              </span>
+            </div>
+
+            {/* Scroll container */}
+            <div
+              className="overflow-x-auto branded-scroll pb-6"
+              role="list"
+              aria-label="Sub-categories"
+            >
+              <div className="flex gap-3 px-5 md:px-10 lg:px-20 w-max">
+                {children.map((child) => (
+                  <div key={child.id} role="listitem">
+                    <SubCategoryCard child={child} />
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
         )}

@@ -761,6 +761,38 @@ export function ProductDetailClient({
         </div>
       </div>
 
+      {/* ── R19: Blog Style Guide commerce CTA ──────────────────────────────── */}
+      <div className="mt-10 rounded-2xl border border-[#01454A]/20 bg-gradient-to-r from-[#01454A]/5 via-[#FDA600]/3 to-[#01454A]/5 p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="flex-1">
+          <p className="font-raleway text-xs font-bold uppercase tracking-widest text-[#01454A] mb-1">
+            Style Intelligence
+          </p>
+          <h3 className="font-bon_foyage text-lg text-foreground leading-tight">
+            How to Style This Piece
+          </h3>
+          <p className="font-raleway text-xs text-muted-foreground mt-1 leading-relaxed">
+            Read our curated guides on how to wear, layer, and accessorise this style — from casual
+            daywear to formal occasions.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+          <Link
+            href="/blog"
+            data-testid="pdp-blog-style-guide-link"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#01454A]/30 bg-[#01454A]/8 px-4 py-2.5 font-raleway text-xs font-bold text-[#01454A] hover:bg-[#01454A] hover:text-white transition-all duration-150"
+          >
+            Read Style Guide →
+          </Link>
+          <Link
+            href="/get-measured"
+            data-testid="pdp-blog-measure-link"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#FDA600] px-4 py-2.5 font-raleway text-xs font-bold text-black hover:bg-[#F0A000] transition-all duration-150"
+          >
+            Get Measured Free
+          </Link>
+        </div>
+      </div>
+
       {/* ── Reviews section ─────────────────────────────────────────────── */}
       {reviews.length > 0 && (
         <section className="mt-16">
