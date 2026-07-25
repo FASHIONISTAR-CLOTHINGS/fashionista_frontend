@@ -242,7 +242,7 @@ async function BrandGrid({ page }: { page: number }) {
   let allBrands: BrandRecord[] = [];
   try {
     const raw = await getCatalogBrands();
-    allBrands = raw as BrandRecord[];
+    allBrands = raw as unknown as BrandRecord[];
   } catch {
     allBrands = [];
   }

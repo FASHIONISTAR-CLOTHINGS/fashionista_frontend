@@ -15,6 +15,7 @@
  */
 "use client";
 
+import type { ComponentType } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -24,7 +25,16 @@ import { useCartBadge } from "@/features/cart/hooks/use-cart-badge";
 
 // ─── Tab definitions ──────────────────────────────────────────────────────────
 
-const TABS = [
+interface TabDefinition {
+  href: "/" | "/products" | "/get-measured" | "/cart" | "/account";
+  label: string;
+  icon: ComponentType<{ size?: number; strokeWidth?: number; className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
+  exact?: boolean;
+  highlight?: boolean;
+  showBadge?: boolean;
+}
+
+const TABS: TabDefinition[] = [
   {
     href: "/",
     label: "Home",
@@ -42,7 +52,7 @@ const TABS = [
     label: "Measure",
     icon: Ruler,
     exact: false,
-    highlight: true, // Gold CTA tab
+    highlight: true, // Gold CTA tab — always draws the eye to the measurement funnel
   },
   {
     href: "/cart",
@@ -57,7 +67,7 @@ const TABS = [
     icon: UserRound,
     exact: false,
   },
-] as const;
+];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 

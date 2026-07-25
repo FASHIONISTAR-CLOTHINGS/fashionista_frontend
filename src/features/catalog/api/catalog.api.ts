@@ -345,9 +345,9 @@ export const catalogApi = {
         .get("vendors/", { searchParams: { page: String(page), ...filters } })
         .json();
       const results = unwrapResults<PaginatedVendors>(data);
-      return results[0] ?? { results: [] as CatalogVendorCard[], count: 0 };
+      return results[0] ?? { results: [] as CatalogVendorCard[], count: 0, page: 1, page_size: 4 };
     } catch {
-      return { results: [] as CatalogVendorCard[], count: 0 };
+      return { results: [] as CatalogVendorCard[], count: 0, page: 1, page_size: 4 };
     }
   },
 
