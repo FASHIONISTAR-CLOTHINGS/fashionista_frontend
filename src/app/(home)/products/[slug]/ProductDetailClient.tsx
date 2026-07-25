@@ -52,6 +52,8 @@ import { FashionistarImage, FashionistarVideo } from "@/components/media";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProductStickyAddToCartBar } from "@/features/product/components/pdp/ProductStickyAddToCartBar";
+import { RelatedProductsCarousel } from "@/features/product/components/pdp/RelatedProductsCarousel";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 
 interface ProductDetailClientProps {
@@ -210,18 +212,16 @@ export function ProductDetailClient({
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 lg:px-20">
       {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-2 text-xs text-muted-foreground">
-        <Link href="/" className="hover:text-foreground transition">Home</Link>
-        <span>/</span>
-        <Link
-              href={`/categories/${product.category_slug ?? ""}`}
-              className="hover:text-foreground transition"
-            >
-              {product.category_name ?? "Categories"}
-            </Link>
-        <span>/</span>
-        <span className="text-foreground line-clamp-1">{product.title}</span>
-      </nav>
+      <Breadcrumb
+        withSchema
+        className="mb-6"
+        items={[
+          ...(product.category_name && product.category_slug
+            ? [{ label: product.category_name, href: `/categories/${product.category_slug}` }]
+            : [{ label: "Products", href: "/products" }]),
+          { label: product.title },
+        ]}
+      />
 
       <div className="flex flex-col gap-10 lg:flex-row">
         {/* ── Gallery ──────────────────────────────────────────────────── */}
@@ -602,8 +602,48 @@ export function ProductDetailClient({
             ))}
           </div>
 
+          {/* ── Vendor mini-profile card ─────────────────────────────────────── */}
+          {product.vendor_name && (
+            <div className="flex items-center gap-3 rounded-2xl border border-[#01454A]/10 bg-gradient-to-r from-[#01454A]/4 to-transparent p-3">
+              {/* Avatar */}
+              <div className="relative h-11 w-11 shrink-0">
+                <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-[#01454A] to-[#0a6b72] flex items-center justify-center text-sm font-bold text-white shadow-sm">
+                  {(product.vendor_name ?? "V").slice(0, 2).toUpperCase()}
+                </div>
+                {product.vendor_is_verified && (
+                  <span
+                    className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#01454A] border-2 border-white shadow"
+                    title="Verified Vendor"
+                  >
+                    <BadgeCheck size={11} className="text-[#FDA600]" />
+                  </span>
+                )}
+              </div>
+
+              {/* Vendor info */}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-foreground truncate">{product.vendor_name}</p>
+                {product.vendor_is_verified && (
+                  <p className="text-[10px] text-[#01454A] font-semibold">✓ Verified Designer</p>
+                )}
+              </div>
+
+              {/* Visit store CTA */}
+              {product.vendor_slug && (
+                <Link
+                  href={`/vendors/${product.vendor_slug}`}
+                  className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-[#01454A]/25 bg-white px-3 py-1.5 text-[10px] font-bold text-[#01454A] hover:bg-[#01454A] hover:text-white transition-all duration-150"
+                  data-testid="pdp-visit-vendor-store"
+                >
+                  Visit Store →
+                </Link>
+              )}
+            </div>
+          )}
+
           {/* Accordion: Description / Specs / FAQs */}
           <div className="mt-2 rounded-2xl border border-border bg-card p-4">
+
             {product.description && (
               <AccordionItem title="Description">
                 <p className="whitespace-pre-wrap">{product.description}</p>
@@ -945,6 +985,13 @@ export function ProductDetailClient({
           </div>
         </section>
       )}
+
+      {/* ── Related products carousel ─────────────────────────────────────── */}
+      <RelatedProductsCarousel
+        currentSlug={slug}
+        categorySlug={product.category_slug}
+        categoryName={product.category_name}
+      />
 
       <ProductStickyAddToCartBar
         title={product.title}

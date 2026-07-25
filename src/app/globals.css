@@ -245,8 +245,10 @@
   .card-shadow-hover:hover { box-shadow: var(--card-hover-shadow, 0px 8px 40px 0px rgba(1, 69, 74, 0.15)); }
 
   /* ── Hide Scrollbar ──────────────────────────────────────────────────────── */
-  .scroll-hide { scrollbar-width: none; -ms-overflow-style: none; }
-  .scroll-hide::-webkit-scrollbar { display: none; }
+  .scroll-hide,
+  .scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
+  .scroll-hide::-webkit-scrollbar,
+  .scrollbar-none::-webkit-scrollbar { display: none; }
 
   /* ── Shimmer Loading ─────────────────────────────────────────────────────── */
   .shimmer {
