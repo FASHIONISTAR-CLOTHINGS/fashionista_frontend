@@ -33,20 +33,33 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   ShoppingBag, Star, Heart, Zap, Eye, Ruler,
-  BadgeCheck, Flame, Clock, Package2
+  BadgeCheck, Flame, Clock, Package2, Check
 } from "lucide-react";
 import { FashionistarImage } from "@/components/media/FashionistarImage";
 import { QuickViewModal } from "@/components/commerce/QuickViewModal";
+import { useToggleWishlist } from "@/features/product/hooks/use-product";
+import { useWishlistItemIds } from "@/features/client/hooks/use-client-wishlist";
+import { useAddCartItem, useIsInCart } from "@/features/cart/hooks/use-cart";
+import { formatCurrency } from "@/lib/utils";
 import type { HomepageProductCard } from "@/features/catalog/types/catalog.types";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Extended card type — includes new B3-fix fields from backend
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type UnifiedProductCard = HomepageProductCard & {
-  /** Added by B3 fix in product_views.py */
+export type UnifiedProductCard = Record<string, any> & {
+  id: string;
+  title: string;
+  slug: string;
+  price: string;
+  old_price?: string | null;
+  currency?: string;
+  image_url?: string | null;
+  cloudinary_url?: string | null;
+  vendor_name?: string | null;
   vendor_id?: string;
   vendor_is_verified?: boolean;
   /** Trending AI score (0–1) */
@@ -83,16 +96,11 @@ export interface ProductCardProps {
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  NGN: "₦", USD: "$", GBP: "£", EUR: "€",
-};
-
 function formatPrice(value: string | null | undefined, currency = "NGN"): string {
   if (!value) return "";
-  const sym = CURRENCY_SYMBOLS[currency] ?? currency;
   const num = parseFloat(value);
   if (isNaN(num)) return "";
-  return `${sym}${num.toLocaleString("en-NG", { minimumFractionDigits: 0 })}`;
+  return formatCurrency(num, currency);
 }
 
 function resolveImageSrc(card: UnifiedProductCard): string {
@@ -184,9 +192,16 @@ export default function ProductCard({
   showQuickAdd = true,
   variant = "default",
 }: ProductCardProps) {
-  const [wishlisted, setWishlisted] = useState(false);
-  const [addedToCart, setAddedToCart] = useState(false);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+
+  // ── Real wishlist state (optimistic TanStack Query) ───────────────────────
+  const { mutate: toggleWishlist, isPending: wishlistLoading } = useToggleWishlist();
+  const wishlistIds = useWishlistItemIds();
+  const isWishlisted = wishlistIds.has(card.id) || wishlistIds.has(card.slug);
+
+  // ── Real cart state (Zustand-backed) ──────────────────────────────────────
+  const { mutate: addToCart, isPending: cartAddLoading } = useAddCartItem();
+  const inCart = useIsInCart(card.id);
 
   const src = resolveImageSrc(card);
   const price = formatPrice(card.price, card.currency);
@@ -194,14 +209,15 @@ export default function ProductCard({
   const hasDiscount = !!card.discount_percentage && card.discount_percentage > 0;
   const staggerClass = `stagger-${Math.min(index, 12)}`;
   const isTrending = (card.ai_trend_score ?? 0) > 0.7;
-  const isLowStock = card.in_stock && card.stock_qty > 0 && card.stock_qty <= 5;
+  const stockQty = card.stock_qty ?? 0;
+  const isLowStock = Boolean(card.in_stock && stockQty > 0 && stockQty <= 5);
 
   // Demographic badge
   let genderBadge: { variant: BadgeVariant; label: string } | null = null;
   if (card.gender_target === "men")   genderBadge = { variant: "men",   label: "Men" };
   if (card.gender_target === "women") genderBadge = { variant: "women", label: "Women" };
   if (card.gender_target === "unisex") genderBadge = { variant: "unisex", label: "Unisex" };
-  if (["kids", "boys", "girls"].includes(card.gender_target))
+  if (card.gender_target && ["kids", "boys", "girls"].includes(card.gender_target))
     genderBadge = { variant: "kids", label: "Kids" };
 
   const conditionBadge: { variant: BadgeVariant; label: string } | null =
@@ -213,14 +229,20 @@ export default function ProductCard({
 
   const handleAddToCart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 1800);
-  }, []);
+    e.stopPropagation();
+    addToCart(
+      { product_id: card.id, product_slug: card.slug, quantity: 1 },
+      {
+        onError: () => toast.error("Could not add item — please try again."),
+      },
+    );
+  }, [addToCart, card.id, card.slug]);
 
   const handleWishlist = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    setWishlisted((w) => !w);
-  }, []);
+    e.stopPropagation();
+    toggleWishlist(card.slug);
+  }, [toggleWishlist, card.slug]);
 
   if (variant === "horizontal") {
     // ── Horizontal (cart preview) ─────────────────────────────────────────
@@ -345,11 +367,12 @@ export default function ProductCard({
             <button
               type="button"
               onClick={handleWishlist}
-              aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-              aria-pressed={wishlisted}
+              aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+              aria-pressed={isWishlisted}
+              disabled={wishlistLoading}
               className={`
-                p-2 rounded-full transition-all duration-200 active:scale-90 shadow-md
-                ${wishlisted
+                p-2 rounded-full transition-all duration-200 active:scale-90 shadow-md disabled:opacity-50
+                ${isWishlisted
                   ? "bg-[var(--BV-gold)] text-[var(--BV-ink)]"
                   : "bg-white/80 text-[var(--BV-slate)] backdrop-blur-sm hover:bg-white hover:text-rose-500"
                 }
@@ -357,7 +380,7 @@ export default function ProductCard({
               data-testid={`wishlist-btn-${card.slug}`}
             >
               <Heart
-                className={`w-4 h-4 ${wishlisted ? "fill-[var(--BV-ink)]" : "fill-transparent"}`}
+                className={`w-4 h-4 ${isWishlisted ? "fill-[var(--BV-ink)]" : "fill-transparent"}`}
               />
             </button>
           )}
@@ -380,11 +403,11 @@ export default function ProductCard({
 
         {/* Quick View Modal */}
         <QuickViewModal
-          product={card}
+          product={card as unknown as HomepageProductCard}
           isOpen={isQuickViewOpen}
           onClose={() => setIsQuickViewOpen(false)}
-          onWishlistToggle={() => setWishlisted((v) => !v)}
-          isWishlisted={wishlisted}
+          onWishlistToggle={() => toggleWishlist(card.slug)}
+          isWishlisted={isWishlisted}
         />
 
         {/* ── Quick-add (hover reveal / always on mobile) ─────────────────── */}
@@ -393,20 +416,21 @@ export default function ProductCard({
             <button
               type="button"
               onClick={handleAddToCart}
+              disabled={cartAddLoading}
               className={`
                 w-full flex items-center justify-center gap-2
                 py-2.5 rounded-xl text-sm font-semibold tracking-wide
-                transition-all duration-200 active:scale-95 shadow-lg
-                ${addedToCart
+                transition-all duration-200 active:scale-95 shadow-lg disabled:opacity-60
+                ${inCart
                   ? "bg-[var(--BV-green)] text-white"
                   : "bg-[var(--BV-gold)] text-[var(--BV-ink)] hover:bg-[var(--BV-gold-dark)]"
                 }
               `}
-              aria-label={addedToCart ? "Added to cart!" : "Quick add to cart"}
+              aria-label={inCart ? "In cart" : "Quick add to cart"}
               data-testid={`quick-add-btn-${card.slug}`}
             >
-              {addedToCart ? (
-                <>✓ Added!</>
+              {inCart ? (
+                <><Check className="w-4 h-4" aria-hidden="true" /> In Cart</>
               ) : (
                 <>
                   <ShoppingBag className="w-4 h-4" aria-hidden="true" />
@@ -453,17 +477,17 @@ export default function ProductCard({
         </h3>
 
         {/* Rating */}
-        {(card.computed_avg_rating > 0 || card.rating > 0) && (
+        {((card.computed_avg_rating ?? 0) > 0 || (card.rating ?? 0) > 0) && (
           <StarRating
-            rating={card.computed_avg_rating || card.rating}
-            count={card.computed_review_count || card.review_count}
+            rating={card.computed_avg_rating ?? card.rating ?? 0}
+            count={card.computed_review_count ?? card.review_count ?? 0}
           />
         )}
 
         {/* Color swatches */}
-        {card.colors.length > 0 && (
+        {(card.colors?.length ?? 0) > 0 && (
           <div className="flex items-center gap-1 flex-wrap" aria-label="Available colors">
-            {card.colors.slice(0, 5).map((c) => (
+            {card.colors?.slice(0, 5).map((c: { id: string; name: string; hex_code: string }) => (
               <span
                 key={c.id}
                 className="color-swatch"
@@ -472,28 +496,28 @@ export default function ProductCard({
                 aria-label={`Color: ${c.name}`}
               />
             ))}
-            {card.colors.length > 5 && (
+            {(card.colors?.length ?? 0) > 5 && (
               <span className="text-[9px] text-[var(--BV-muted)]">
-                +{card.colors.length - 5}
+                +{(card.colors?.length ?? 0) - 5}
               </span>
             )}
           </div>
         )}
 
         {/* Social proof: sold count + views */}
-        {(card.orders_count > 0 || card.views > 0) && (
+        {((card.orders_count ?? 0) > 0 || (card.views ?? 0) > 0) && (
           <div className="flex items-center gap-2 text-[10px] text-[var(--BV-muted)]">
-            {card.orders_count > 0 && (
+            {(card.orders_count ?? 0) > 0 && (
               <span className="flex items-center gap-0.5">
                 <ShoppingBag className="w-2.5 h-2.5" aria-hidden="true" />
-                {card.orders_count.toLocaleString()} sold
+                {(card.orders_count ?? 0).toLocaleString()} sold
               </span>
             )}
-            {card.views > 100 && (
+            {(card.views ?? 0) > 100 && (
               <span className="flex items-center gap-0.5">
                 <Eye className="w-2.5 h-2.5" aria-hidden="true" />
-                {card.views > 999
-                  ? `${Math.round(card.views / 1000)}k`
+                {(card.views ?? 0) > 999
+                  ? `${Math.round((card.views ?? 0) / 1000)}k`
                   : card.views}{" "}
                 views
               </span>
@@ -518,9 +542,9 @@ export default function ProductCard({
         </div>
 
         {/* Sizes */}
-        {card.sizes.length > 0 && (
+        {(card.sizes?.length ?? 0) > 0 && (
           <div className="flex flex-wrap gap-1 mt-0.5" aria-label="Available sizes">
-            {card.sizes.slice(0, 5).map((s) => (
+            {card.sizes?.slice(0, 5).map((s: { id: string; name: string }) => (
               <span
                 key={s.id}
                 className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium border border-[var(--BV-border)] text-[var(--BV-slate)] bg-white/70"
@@ -528,9 +552,9 @@ export default function ProductCard({
                 {s.name}
               </span>
             ))}
-            {card.sizes.length > 5 && (
+            {(card.sizes?.length ?? 0) > 5 && (
               <span className="text-[9px] text-[var(--BV-muted)]">
-                +{card.sizes.length - 5}
+                +{(card.sizes?.length ?? 0) - 5}
               </span>
             )}
           </div>
@@ -542,6 +566,24 @@ export default function ProductCard({
             <Zap className="w-2.5 h-2.5" aria-hidden="true" />
             Custom fit — measurements needed
           </p>
+        )}
+
+        {/* Wishlist / Cart quick-status pills */}
+        {(isWishlisted || inCart) && (
+          <div className="flex items-center gap-2 pt-1">
+            {isWishlisted && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-600">
+                <Heart size={9} fill="currentColor" />
+                Wishlisted
+              </span>
+            )}
+            {inCart && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                <Check size={9} />
+                In Cart
+              </span>
+            )}
+          </div>
         )}
       </Link>
     </article>

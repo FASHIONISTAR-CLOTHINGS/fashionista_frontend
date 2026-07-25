@@ -142,3 +142,8 @@ export const productCatalogApi = {
     }
   },
 };
+  ProductCatalogParams,
+  CatalogProductCard,
+  PaginatedProductsResponse,
+  ViewLogPayload,
+} from "./catalog.api";

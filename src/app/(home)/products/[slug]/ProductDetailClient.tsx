@@ -47,6 +47,7 @@ import { useRecentlyViewed } from "@/features/catalog/hooks/use-recently-viewed"
 import { FashionistarImage, FashionistarVideo } from "@/components/media";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ProductStickyAddToCartBar } from "@/features/product/components/pdp/ProductStickyAddToCartBar";
 
 
 interface ProductDetailClientProps {
@@ -102,6 +103,7 @@ export function ProductDetailClient({
   const [activeImg, setActiveImg] = useState(0);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const mainButtonRef = useRef<HTMLButtonElement | null>(null);
 
   // ── Fire-and-forget view-log analytics ─────────────────────────────────
   // Fires once per slug, never blocks render, never throws to the user.
@@ -522,6 +524,7 @@ export function ProductDetailClient({
           {/* CTA buttons */}
           <div className="flex gap-3">
             <Button
+              ref={mainButtonRef}
               onClick={handleAddToCart}
               disabled={!inStock || cartLoading}
               className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[hsl(var(--accent))] py-4 text-sm font-bold text-[hsl(var(--accent-foreground))] shadow-md transition hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
@@ -841,6 +844,17 @@ export function ProductDetailClient({
           </div>
         </section>
       )}
+
+      <ProductStickyAddToCartBar
+        title={product.title}
+        price={displayPrice}
+        currency={product.currency ?? "NGN"}
+        inStock={inStock}
+        cartLoading={cartLoading}
+        mainButtonRef={mainButtonRef}
+        onAddToCart={handleAddToCart}
+        onToggleWishlist={() => toggleWishlist(product.slug)}
+      />
     </div>
   );
 }

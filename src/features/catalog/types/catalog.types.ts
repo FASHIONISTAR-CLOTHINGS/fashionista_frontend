@@ -200,9 +200,9 @@ export interface HomepageProductCard {
   // Social proof signals
   orders_count: number;
   views: number;
-  sizes: { id: string; name: string }[];
-  colors: { id: string; name: string; hex_code: string }[];
-  created_at: string | null;
+  sizes?: { id: string; name: string }[];
+  colors?: { id: string; name: string; hex_code: string }[];
+  created_at?: string | null;
 }
 
 /** Public review card for homepage social proof section. */
