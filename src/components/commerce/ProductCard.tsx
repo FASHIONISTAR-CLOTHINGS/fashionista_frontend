@@ -38,6 +38,7 @@ import {
   BadgeCheck, Flame, Clock, Package2
 } from "lucide-react";
 import { FashionistarImage } from "@/components/media/FashionistarImage";
+import { QuickViewModal } from "@/components/commerce/QuickViewModal";
 import type { HomepageProductCard } from "@/features/catalog/types/catalog.types";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -185,6 +186,7 @@ export default function ProductCard({
 }: ProductCardProps) {
   const [wishlisted, setWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
 
   const src = resolveImageSrc(card);
   const price = formatPrice(card.price, card.currency);
@@ -337,28 +339,53 @@ export default function ProductCard({
           </div>
         )}
 
-        {/* ── Wishlist button ──────────────────────────────────────────────── */}
-        {showWishlist && (
+        {/* ── Action buttons top-right (Wishlist + Quick View) ────────────────── */}
+        <div className="absolute top-2.5 right-2.5 z-10 flex flex-col gap-1.5">
+          {showWishlist && (
+            <button
+              type="button"
+              onClick={handleWishlist}
+              aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+              aria-pressed={wishlisted}
+              className={`
+                p-2 rounded-full transition-all duration-200 active:scale-90 shadow-md
+                ${wishlisted
+                  ? "bg-[var(--BV-gold)] text-[var(--BV-ink)]"
+                  : "bg-white/80 text-[var(--BV-slate)] backdrop-blur-sm hover:bg-white hover:text-rose-500"
+                }
+              `}
+              data-testid={`wishlist-btn-${card.slug}`}
+            >
+              <Heart
+                className={`w-4 h-4 ${wishlisted ? "fill-[var(--BV-ink)]" : "fill-transparent"}`}
+              />
+            </button>
+          )}
+
+          {/* Quick View Button */}
           <button
             type="button"
-            onClick={handleWishlist}
-            aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-            aria-pressed={wishlisted}
-            className={`
-              absolute top-2.5 right-2.5 z-10 p-2 rounded-full
-              transition-all duration-200 active:scale-90
-              ${wishlisted
-                ? "bg-[var(--BV-gold)] text-[var(--BV-ink)] shadow-lg"
-                : "bg-white/80 text-[var(--BV-slate)] backdrop-blur-sm hover:bg-white"
-              }
-            `}
-            data-testid={`wishlist-btn-${card.slug}`}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsQuickViewOpen(true);
+            }}
+            aria-label={`Quick view ${card.title}`}
+            className="p-2 rounded-full bg-white/80 text-[var(--BV-slate)] backdrop-blur-sm hover:bg-white hover:text-[var(--BV-green)] transition-all duration-200 shadow-md opacity-0 group-hover:opacity-100 hidden md:flex items-center justify-center"
+            data-testid={`quick-view-btn-${card.slug}`}
           >
-            <Heart
-              className={`w-4 h-4 ${wishlisted ? "fill-[var(--BV-ink)]" : "fill-transparent"}`}
-            />
+            <Eye className="w-4 h-4" />
           </button>
-        )}
+        </div>
+
+        {/* Quick View Modal */}
+        <QuickViewModal
+          product={card}
+          isOpen={isQuickViewOpen}
+          onClose={() => setIsQuickViewOpen(false)}
+          onWishlistToggle={() => setWishlisted((v) => !v)}
+          isWishlisted={wishlisted}
+        />
 
         {/* ── Quick-add (hover reveal / always on mobile) ─────────────────── */}
         {showQuickAdd && card.in_stock && (

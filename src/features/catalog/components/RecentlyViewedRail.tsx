@@ -84,11 +84,11 @@ export interface RecentlyViewedRailProps {
  *   className:  Container className overrides.
  */
 export function RecentlyViewedRail({
-  heading = "Recently Viewed",
+  heading = "Continue Shopping — Recently Viewed",
   maxVisible = 8,
   className,
 }: RecentlyViewedRailProps) {
-  const { items } = useRecentlyViewed();
+  const { items, clearAll } = useRecentlyViewed();
   const [hydrated, setHydrated] = useState(false);
 
   // Prevent SSR/client mismatch
@@ -119,18 +119,27 @@ export function RecentlyViewedRail({
     <section className={cn("space-y-3", className)} aria-label={heading}>
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+        <h2 className="flex items-center gap-2 text-base font-bold font-raleway text-foreground">
+          <Clock className="h-4 w-4 text-[#01454A]" aria-hidden="true" />
           {heading}
         </h2>
-        {items.length > maxVisible && (
-          <Link
-            href="/products"
-            className="flex items-center gap-1 text-xs text-[hsl(var(--accent))] hover:underline"
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => clearAll()}
+            className="text-xs text-muted-foreground hover:text-rose-500 transition-colors font-medium font-raleway"
           >
-            See all <ChevronRight className="h-3 w-3" aria-hidden="true" />
-          </Link>
-        )}
+            Clear History
+          </button>
+          {items.length > maxVisible && (
+            <Link
+              href="/products"
+              className="flex items-center gap-1 text-xs font-semibold text-[#01454A] dark:text-[#FDA600] hover:underline"
+            >
+              See all <ChevronRight className="h-3 w-3" aria-hidden="true" />
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Horizontal scroll rail */}
