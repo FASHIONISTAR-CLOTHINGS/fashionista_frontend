@@ -2023,10 +2023,13 @@ export function VendorProductComposerView() {
   );
 }
 
+import { formatCurrency } from "@/lib/utils";
+
 // ── Catalog View ──────────────────────────────────────────────────────────────
 function formatPrice(v: number) {
-  return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(v);
+  return formatCurrency(v);
 }
+
 
 // formatDate unused and removed
 

@@ -255,7 +255,7 @@ export default function ProductCard({
         <Link
           href={`/products/${card.slug}`}
           className="flex-shrink-0 relative w-20 h-20 rounded-lg overflow-hidden bg-[var(--BV-surface)]"
-          prefetch={false}
+          prefetch={true}
         >
           {src ? (
             <FashionistarImage
@@ -298,7 +298,7 @@ export default function ProductCard({
         href={`/products/${card.slug}`}
         className="block relative overflow-hidden"
         aria-label={`View ${card.title}`}
-        prefetch={false}
+        prefetch={true}
         data-testid={`product-card-img-link-${card.slug}`}
       >
         <div className={`relative w-full ${ASPECT_RATIO[variant]} bg-[var(--BV-surface)]`}>

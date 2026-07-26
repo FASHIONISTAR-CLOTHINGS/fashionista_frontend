@@ -47,12 +47,13 @@ import { useAddCartItem } from "@/features/cart/hooks/use-cart";
 import { productCatalogApi } from "@/features/catalog";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { useRecentlyViewed } from "@/features/catalog/hooks/use-recently-viewed";
-import { FashionistarImage } from "@/components/media";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProductStickyAddToCartBar } from "@/features/product/components/pdp/ProductStickyAddToCartBar";
 import { RelatedProductsCarousel } from "@/features/product/components/pdp/RelatedProductsCarousel";
 import { GallerySection } from "@/features/product/components/pdp/GallerySection";
+import { VariantSelector } from "@/features/product/components/pdp/VariantSelector";
+import { ReviewSection } from "@/features/product/components/pdp/ReviewSection";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 interface ProductDetailClientProps {
@@ -207,10 +208,6 @@ export function ProductDetailClient({
   };
 
   const reviews = reviewsData?.results ?? [];
-  const [reviewStarFilter, setReviewStarFilter] = useState<number | null>(null);
-  const filteredReviews = reviewStarFilter !== null
-    ? reviews.filter((r) => r.rating === reviewStarFilter)
-    : reviews;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 lg:px-20">
@@ -377,48 +374,20 @@ export function ProductDetailClient({
             </div>
           )}
 
-          {/* Color / Size variant selector (based on gallery color swatches) */}
-          {galleryItems.length > 0 && galleryItems.some((v) => (v as { color_name?: string }).color_name) && (
-            <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Select Colour
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {galleryItems
-                  .filter((v: typeof galleryItems[0]): v is typeof galleryItems[0] & { color_name: string; color_hex: string } =>
-                    !!(v as { color_name?: string }).color_name
-                  )
-                  .map((v: { color_name: string; color_hex?: string }, i: number) => {
-                    const cn_ = v.color_name;
-                    const hex = v.color_hex ?? "";
-
-                    return (
-                      <Button
-                        key={i}
-                        variant={selectedVariantId === String(i) ? "default" : "outline"}
-                        onClick={() => {
-                          setSelectedVariantId(String(i));
-                          const idx = galleryItems.findIndex((item) => (item as { color_name?: string }).color_name === cn_);
-                          if (idx !== -1) {
-                            setActiveImg(idx);
-                          }
-                        }}
-                        className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition h-auto min-h-0`}
-                        title={cn_}
-                      >
-                        {hex && (
-                          <span
-                            className="inline-block h-4 w-4 rounded-full border border-black/10 flex-shrink-0"
-                            style={{ background: hex }}
-                          />
-                        )}
-                        {cn_}
-                      </Button>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
+          {/* Color / Size variant selector (extracted VariantSelector component) */}
+          <VariantSelector
+            galleryItems={galleryItems}
+            selectedVariantId={selectedVariantId}
+            onSelectVariant={(id, colorName) => {
+              setSelectedVariantId(id);
+              const idx = galleryItems.findIndex(
+                (item) => (item as { color_name?: string }).color_name === colorName
+              );
+              if (idx !== -1) {
+                setActiveImg(idx);
+              }
+            }}
+          />
 
           {/* Quantity stepper + Stock urgency */}
           <div className="flex items-center gap-4">
@@ -816,150 +785,12 @@ export function ProductDetailClient({
         </div>
       </div>
 
-      {/* ── Reviews section ─────────────────────────────────────────────── */}
-      {reviews.length > 0 && (
-        <section className="mt-16">
-          <h2 className="mb-6 font-bon_foyage text-3xl text-foreground">Customer Reviews</h2>
-
-          {/* Star rating breakdown */}
-          <div className="mb-8 rounded-2xl border border-border bg-card p-5 flex flex-col sm:flex-row gap-6">
-            {/* Overall score */}
-            <div className="flex flex-col items-center justify-center sm:border-r sm:border-border sm:pr-6 sm:w-36 shrink-0">
-              <span className="text-5xl font-bold text-foreground">
-                {product.computed_avg_rating.toFixed(1)}
-              </span>
-              <div className="flex items-center gap-0.5 mt-1">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    size={14}
-                    fill={i < Math.round(product.computed_avg_rating) ? "hsl(var(--accent))" : "none"}
-                    stroke="hsl(var(--accent))"
-                    strokeWidth={1.5}
-                  />
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {product.computed_review_count} review{product.computed_review_count !== 1 ? "s" : ""}
-              </p>
-            </div>
-
-            {/* Breakdown bars */}
-            <div className="flex-1 space-y-2">
-              {[5, 4, 3, 2, 1].map((star) => {
-                const count = reviews.filter((r) => r.rating === star).length;
-                const pct = reviews.length > 0 ? Math.round((count / reviews.length) * 100) : 0;
-                return (
-                  <div key={star} className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-muted-foreground w-3 text-right">{star}</span>
-                    <Star size={10} fill="hsl(var(--accent))" stroke="hsl(var(--accent))" className="shrink-0" />
-                    <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-[#FDA600] transition-all duration-500"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-muted-foreground w-8 text-right">{pct}%</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* ── Star filter chips ─────────────────────────────────────── */}
-          {reviews.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 pb-2">
-              <span className="text-xs font-medium text-muted-foreground">Filter:</span>
-              <button
-                type="button"
-                onClick={() => setReviewStarFilter(null)}
-                className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-                  reviewStarFilter === null
-                    ? "bg-[#01454A] text-white"
-                    : "bg-muted text-muted-foreground hover:bg-[#01454A]/10"
-                }`}
-              >
-                All ({reviews.length})
-              </button>
-              {[5, 4, 3, 2, 1].map((star) => {
-                const cnt = reviews.filter((r) => r.rating === star).length;
-                if (cnt === 0) return null;
-                return (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => setReviewStarFilter(reviewStarFilter === star ? null : star)}
-                    className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-                      reviewStarFilter === star
-                        ? "bg-[#FDA600] text-black"
-                        : "bg-muted text-muted-foreground hover:bg-[#FDA600]/20"
-                    }`}
-                  >
-                    {star}★ ({cnt})
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Reviews grid */}
-          <div className="grid gap-4 md:grid-cols-2">
-            {filteredReviews.length === 0 && reviewStarFilter !== null ? (
-              <div className="col-span-2 py-10 text-center text-sm text-muted-foreground">
-                No {reviewStarFilter}★ reviews yet.
-                <button
-                  type="button"
-                  onClick={() => setReviewStarFilter(null)}
-                  className="ml-2 underline text-[#01454A] hover:opacity-80"
-                >
-                  Show all reviews
-                </button>
-              </div>
-            ) : (
-              filteredReviews.map((r) => (
-              <div
-                key={r.id}
-                className="rounded-2xl border border-border bg-card p-5 shadow-[var(--card-shadow)]"
-              >
-                <div className="mb-3 flex items-start gap-3">
-                  {r.reviewer_avatar_url ? (
-                    <FashionistarImage
-                      src={r.reviewer_avatar_url}
-                      alt={r.reviewer_display}
-                      width={40}
-                      height={40}
-                      className="h-10 w-10 overflow-hidden rounded-full"
-                      imgClassName="h-10 w-10 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--primary))] text-sm font-bold text-primary-foreground">
-                      {r.reviewer_display[0]}
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{r.reviewer_display}</p>
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          size={11}
-                          fill={i < r.rating ? "hsl(var(--accent))" : "none"}
-                          stroke="hsl(var(--accent))"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <span className="ml-auto text-xs text-muted-foreground">
-                    {formatDate(r.created_at)}
-                  </span>
-                </div>
-                <p className="text-sm leading-6 text-foreground">{r.review}</p>
-              </div>
-            ))
-            )}
-          </div>
-        </section>
-      )}
+      {/* ── Reviews section (extracted ReviewSection component) ─────────── */}
+      <ReviewSection
+        reviews={reviews}
+        avgRating={product.computed_avg_rating}
+        reviewCount={product.computed_review_count}
+      />
 
       {/* ── Related products carousel ─────────────────────────────────────── */}
       <RelatedProductsCarousel

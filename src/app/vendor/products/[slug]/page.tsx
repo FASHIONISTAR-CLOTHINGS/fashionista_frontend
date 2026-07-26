@@ -53,8 +53,10 @@ function isVideoUrl(url: string | null): boolean {
   return clean.endsWith(".mp4") || clean.endsWith(".webm") || clean.endsWith(".mov") || url.includes("/video/upload/");
 }
 
+import { formatCurrency } from "@/lib/utils";
+
 function formatPrice(v: number) {
-  return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(v);
+  return formatCurrency(v);
 }
 
 type VendorDetailMedia = {

@@ -38,13 +38,10 @@ interface CartItemsProps {
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
+import { formatCurrency } from "@/lib/utils";
+
 function formatPrice(amount: number | string): string {
-  const n = typeof amount === "string" ? parseFloat(amount) : amount;
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    minimumFractionDigits: 0,
-  }).format(isNaN(n) ? 0 : n);
+  return formatCurrency(amount);
 }
 
 // ─── Cart Item Row ──────────────────────────────────────────────────────────────

@@ -221,7 +221,11 @@ export default async function Home() {
             Deals of the Week
           </h2>
           <div data-testid="deals-countdown">
-            <DealsCountdown />
+            <DealsCountdown
+              targetDate={
+                bundle.hot_deals.find((p) => p.discount_countdown)?.discount_countdown as string | undefined
+              }
+            />
           </div>
         </div>
 

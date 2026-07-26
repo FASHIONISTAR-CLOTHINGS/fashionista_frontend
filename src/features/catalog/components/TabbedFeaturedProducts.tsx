@@ -201,10 +201,11 @@ export function TabbedFeaturedProducts({
 
       {/* ── Product Grid ──────────────────────────────────────────────── */}
       <div
+        key={activeTab}
         id={`tabpanel-${activeTab}`}
         role="tabpanel"
         aria-label={`${currentTab.label} products`}
-        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 items-stretch"
+        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 items-stretch animate-in fade-in slide-in-from-bottom-2 duration-300"
       >
         {tabProducts.length > 0 ? (
           tabProducts.map((card, idx) => (

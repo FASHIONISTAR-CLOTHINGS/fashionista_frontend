@@ -204,6 +204,7 @@ export interface HomepageProductCard {
   views: number;
   /** AI trend score from backend (0–1 float). Used by TabbedFeaturedProducts trending tab. */
   ai_trend_score?: number;
+  discount_countdown?: string | null;
   sizes?: { id: string; name: string }[];
   colors?: { id: string; name: string; hex_code: string }[];
   created_at?: string | null;
