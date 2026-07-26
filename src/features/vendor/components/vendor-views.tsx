@@ -85,6 +85,7 @@ import type {
 } from "@/features/vendor/types/vendor.types";
 import type { ProductListItem } from "@/features/product";
 import { buildProductWritePayload } from "@/features/product/builder/utils/product-builder-payload";
+import { formatCurrency } from "@/lib/utils";
 import { useCatalogCollections } from "@/features/catalog/hooks/use-catalog";
 import {
   useNinjaKycStatus,
@@ -980,7 +981,7 @@ export function VendorDashboardView() {
               style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(8px)" }}
             >
               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">Wallet</p>
-              <p className="mt-1.5 text-2xl font-bold text-[#FDA600]">₦{walletBal.toLocaleString()}</p>
+              <p className="mt-1.5 text-2xl font-bold text-[#FDA600]">{formatCurrency(walletBal)}</p>
               <Link href="/vendor/payouts"
                 className="mt-3 flex items-center gap-1 text-[10px] font-bold text-[#FDA600]/60 hover:text-[#FDA600] transition-colors"
               >
@@ -1026,7 +1027,7 @@ export function VendorDashboardView() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <KpiCard title="Products"  value={String(stats.products)} hint="Catalog items" icon={ShoppingBag} accent="gold" />
         <KpiCard title="Sales"     value={String(stats.sales)}    hint="Orders recorded" icon={ShoppingCart} accent="green" />
-        <KpiCard title="Revenue"   value={`₦${stats.revenue.toLocaleString()}`} hint="Gross value" icon={TrendingUp} accent="gold" />
+        <KpiCard title="Revenue"   value={formatCurrency(stats.revenue)} hint="Gross value" icon={TrendingUp} accent="gold" />
         <KpiCard title="Rating"    value={stats.rating.toFixed(1)} hint={`${stats.reviews} review${stats.reviews === 1 ? "" : "s"}`} icon={Star} accent="gold" />
         <KpiCard title="Status"    value={dashboard?.profile.is_verified ? "Verified" : "Pending"}
           hint={dashboard?.profile.is_verified ? "KYC approved" : "Pending review"}
@@ -1035,7 +1036,7 @@ export function VendorDashboardView() {
 
       {/* ── SECONDARY KPIs (3 finance) ── */}
       <div className="grid gap-4 md:grid-cols-3">
-        <KpiCard title="Wallet Balance" value={`₦${walletBal.toLocaleString()}`} hint="Available balance" icon={Wallet} accent="gold" />
+        <KpiCard title="Wallet Balance" value={formatCurrency(walletBal)} hint="Available balance" icon={Wallet} accent="gold" />
         <KpiCard title="Active Coupons" value={String(couponStats.active)}
           hint={`${couponStats.inactive} inactive`} icon={Tag} accent="blue" />
         <KpiCard title="Payout Status" value={payoutReady ? "Ready" : "Not set up"}
@@ -1071,8 +1072,8 @@ export function VendorDashboardView() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F5F3EE" vertical={false} />
                 <XAxis dataKey="label" stroke="#7A6B44" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="#7A6B44" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `₦${v.toLocaleString()}`} />
-                <Tooltip formatter={(value: any) => [`₦${value.toLocaleString()}`, "Revenue"]} contentStyle={{ background: "#FFF", borderRadius: "12px", border: "1px solid #ECE6D6" }} labelStyle={{ fontWeight: "bold", color: "#1A1208" }} />
+                <YAxis stroke="#7A6B44" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => formatCurrency(v)} />
+                <Tooltip formatter={(value: any) => [formatCurrency(value), "Revenue"]} contentStyle={{ background: "#FFF", borderRadius: "12px", border: "1px solid #ECE6D6" }} labelStyle={{ fontWeight: "bold", color: "#1A1208" }} />
                 <Area type="monotone" dataKey="value" stroke="#FDA600" strokeWidth={2.5} fillOpacity={1} fill="url(#goldGradient)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -1244,7 +1245,7 @@ export function VendorDashboardView() {
                       <StatusBadge status={order.payment_status} />
                     </td>
                     <td className="px-6 py-4 text-right text-sm font-bold text-[#1A1208]">
-                      ₦{(order.total_price ?? order.total ?? 0).toLocaleString()}
+                      {formatCurrency(order.total_price ?? order.total ?? 0)}
                     </td>
                     <td className="px-6 py-4 text-xs text-[#7A6B44]">
                       {new Date(order.date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
@@ -1303,7 +1304,7 @@ function VendorTopProductsWidget() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-[#1A1208] truncate">{p.title}</p>
-                <p className="text-xs text-[#7A6B44]">{(p.total_qty ?? 0)} sold · ₦{Number(p.price).toLocaleString()}</p>
+                <p className="text-xs text-[#7A6B44]">{(p.total_qty ?? 0)} sold · {formatCurrency(Number(p.price))}</p>
               </div>
               <div className="text-xs font-semibold text-[#01454A] flex items-center gap-1">
                 <Package className="h-3 w-3" /> {p.stock_qty}
@@ -1466,7 +1467,7 @@ export function VendorOrdersView() {
                     <td className="px-6 py-4"><StatusBadge status={order.order_status} /></td>
                     <td className="px-6 py-4"><StatusBadge status={String(order.payment_status ?? "pending")} /></td>
                     <td className="px-6 py-4 text-right text-sm font-bold text-[#1A1208]">
-                      ₦{Number(order.total_price ?? 0).toLocaleString()}
+                      {formatCurrency(Number(order.total_price ?? 0))}
                     </td>
                     <td className="px-6 py-4 text-xs text-[#7A6B44]">
                       {new Date(order.date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
@@ -1583,7 +1584,7 @@ export function VendorOrderDetailView({ orderOid }: { orderOid: string }) {
             <div className="rounded-2xl bg-white border border-[#ECE6D6] p-5 shadow-sm">
               <p className="text-xs font-bold uppercase tracking-widest text-[#7A6B44] mb-2">Total</p>
               <p className="text-3xl font-bold text-[#1A1208]">
-                ₦{Number(displayOrder.total_price ?? (displayOrder as { total?: number }).total ?? 0).toLocaleString()}
+                {formatCurrency(Number(displayOrder.total_price ?? (displayOrder as { total?: number }).total ?? 0))}
               </p>
             </div>
           </div>
@@ -1612,10 +1613,10 @@ export function VendorOrderDetailView({ orderOid }: { orderOid: string }) {
                     <div className="flex items-center gap-4">
                       <div className="text-right">
                         <p className="text-sm font-bold text-[#1A1208]">
-                          ₦{Number(item.line_total ?? (Number(item.unit_price) * item.quantity)).toLocaleString()}
+                          {formatCurrency(Number(item.line_total ?? (Number(item.unit_price) * item.quantity)))}
                         </p>
                         <p className="text-[10px] text-[#7A6B44]">
-                          ₦{Number(item.unit_price).toLocaleString()} each
+                          {formatCurrency(Number(item.unit_price))} each
                         </p>
                       </div>
 
@@ -2023,12 +2024,7 @@ export function VendorProductComposerView() {
   );
 }
 
-import { formatCurrency } from "@/lib/utils";
-
 // ── Catalog View ──────────────────────────────────────────────────────────────
-function formatPrice(v: number) {
-  return formatCurrency(v);
-}
 
 
 // formatDate unused and removed
@@ -2114,7 +2110,7 @@ function CatalogProductCard({ product }: { product: ProductListItem }) {
 
         <div className="flex items-center justify-between text-xs gap-2 flex-wrap mt-auto">
           <div>
-            <span className="font-extrabold text-[#01454A]">{formatPrice(Number(product.price))}</span>
+            <span className="font-extrabold text-[#01454A]">{formatCurrency(Number(product.price))}</span>
             <span className="text-[10px] text-[#7A6B44]/70 ml-2">
               Stock: <strong className="text-[#1A1208]">{product.stock_qty ?? 0}</strong>
             </span>
@@ -2293,7 +2289,7 @@ export function VendorAnalyticsView() {
           <KpiCard
             title="Total Revenue"
             icon={TrendingUp}
-            value={isLoading ? "—" : `₦${(summary?.total_revenue ?? analytics?.total_revenue ?? 0).toLocaleString()}`}
+            value={isLoading ? "—" : formatCurrency(summary?.total_revenue ?? analytics?.total_revenue ?? 0)}
             hint="Gross revenue tracked"
             trend={summary?.revenue_trend}
             accent="gold"
@@ -2301,21 +2297,21 @@ export function VendorAnalyticsView() {
           <KpiCard
             title="Today's Sales"
             icon={Clock}
-            value={isLoading ? "—" : `₦${(summary?.todays_sales ?? 0).toLocaleString()}`}
+            value={isLoading ? "—" : formatCurrency(summary?.todays_sales ?? 0)}
             hint="Sales recorded today"
             accent="green"
           />
           <KpiCard
             title="This Month"
             icon={ShoppingBag}
-            value={isLoading ? "—" : `₦${(summary?.this_month_sales ?? 0).toLocaleString()}`}
+            value={isLoading ? "—" : formatCurrency(summary?.this_month_sales ?? 0)}
             hint="Sales recorded this month"
             accent="blue"
           />
           <KpiCard
             title="Year to Date"
             icon={Store}
-            value={isLoading ? "—" : `₦${(summary?.year_to_date_sales ?? 0).toLocaleString()}`}
+            value={isLoading ? "—" : formatCurrency(summary?.year_to_date_sales ?? 0)}
             hint="Sales recorded this year"
             accent="gold"
           />
@@ -2339,7 +2335,7 @@ export function VendorAnalyticsView() {
           <KpiCard
             title="Avg. Order Value"
             icon={CreditCard}
-            value={isLoading ? "—" : `₦${(summary?.avg_order_value ?? 0).toLocaleString()}`}
+            value={isLoading ? "—" : formatCurrency(summary?.avg_order_value ?? 0)}
             hint="Per transaction average"
             accent="gold"
           />
@@ -2384,7 +2380,7 @@ export function VendorAnalyticsView() {
           <KpiCard
             title="Wallet Balance"
             icon={Wallet}
-            value={isLoading ? "—" : `₦${(summary?.wallet_balance ?? 0).toLocaleString()}`}
+            value={isLoading ? "—" : formatCurrency(summary?.wallet_balance ?? 0)}
             hint="Available payout balance"
             accent="green"
           />
@@ -2510,12 +2506,12 @@ function VendorRevenueAreaChart() {
         <CartesianGrid strokeDasharray="3 3" stroke="#F0EDE4" vertical={false} />
         <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#7A6B44" }} axisLine={false} tickLine={false} />
         <YAxis tick={{ fontSize: 11, fill: "#7A6B44" }} axisLine={false} tickLine={false}
-          tickFormatter={(v: number) => v >= 1000 ? `₦${(v/1000).toFixed(0)}k` : `₦${v}`} />
+          tickFormatter={(v: number) => v >= 1000 ? `${formatCurrency(v/1000).replace(/\.00$/, "")}k` : formatCurrency(v)} />
         <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #ECE6D6", fontSize: "12px" }}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           formatter={(value: any) => {
             const num = Number(value ?? 0);
-            return [`₦${isNaN(num) ? String(value ?? "") : num.toLocaleString()}`, "Revenue"] as [string, string];
+            return [isNaN(num) ? String(value ?? "") : formatCurrency(num), "Revenue"] as [string, string];
           }} />
         <Area type="monotone" dataKey="revenue" stroke="#FDA600" strokeWidth={2.5}
           fill="url(#revGrad)" dot={false} activeDot={{ r: 5, fill: "#FDA600" }} />
@@ -2671,7 +2667,7 @@ function VendorTopCategoriesChart() {
           tick={{ fontSize: 11, fill: "#7A6B44" }}
           axisLine={false}
           tickLine={false}
-          tickFormatter={(v: number) => v >= 1000 ? `₦${(v/1000).toFixed(0)}k` : String(v)}
+          tickFormatter={(v: number) => v >= 1000 ? `${formatCurrency(v/1000).replace(/\.00$/, "")}k` : String(v)}
         />
         <YAxis
           type="category"
@@ -2686,7 +2682,7 @@ function VendorTopCategoriesChart() {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           formatter={(value: any) => {
             const num = Number(value ?? 0);
-            return [`₦${isNaN(num) ? String(value) : num.toLocaleString()}`, "Revenue"];
+            return [isNaN(num) ? String(value) : formatCurrency(num), "Revenue"];
           }}
         />
         <Bar dataKey="revenue" fill="#01454A" radius={[0, 6, 6, 0]} maxBarSize={20} />
@@ -2726,7 +2722,7 @@ export function VendorWalletView() {
             <div>
               <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30">Available Balance</p>
               <p className="mt-2 text-4xl font-bold text-[#FDA600] md:text-5xl">
-                {isLoading ? "—" : `₦${balance.toLocaleString()}`}
+                {isLoading ? "—" : formatCurrency(balance)}
               </p>
               <p className="mt-1.5 text-xs text-white/30">
                 {txCount} recent transaction{txCount !== 1 ? "s" : ""}
@@ -2754,7 +2750,7 @@ export function VendorWalletView() {
       {/* KPI row */}
       <div className="grid gap-4 md:grid-cols-3">
         <KpiCard title="Balance" icon={Wallet}
-          value={isLoading ? "—" : `₦${balance.toLocaleString()}`}
+          value={isLoading ? "—" : formatCurrency(balance)}
           hint="Available wallet balance" accent="gold" />
         <KpiCard title="Payout Status" icon={Zap}
           value={isVerified ? "Ready" : "Not set up"}
@@ -3404,10 +3400,10 @@ export function VendorPaymentsView() {
         description="Payment records and invoice history for your store." />
       <div className="grid gap-4 md:grid-cols-3">
         <KpiCard title="Wallet balance" icon={Wallet}
-          value={isLoading ? "—" : `₦${(wallet?.balance ?? 0).toLocaleString()}`}
+          value={isLoading ? "—" : formatCurrency(wallet?.balance ?? 0)}
           hint="Current wallet balance" />
         <KpiCard title="Revenue" icon={TrendingUp}
-          value={isLoading ? "—" : `₦${(dashboard?.analytics.total_revenue ?? 0).toLocaleString()}`}
+          value={isLoading ? "—" : formatCurrency(dashboard?.analytics.total_revenue ?? 0)}
           hint="Total gross revenue" />
         <KpiCard title="Orders paid" icon={PackageCheck}
           value={isLoading ? "—" : String(dashboard?.analytics.total_sales ?? 0)}
@@ -3439,7 +3435,7 @@ export function VendorPaymentsView() {
                   <td className="px-6 py-4"><StatusBadge status={tx.transaction_type} /></td>
                   <td className="px-6 py-4 text-xs text-[#7A6B44]">{tx.date}</td>
                   <td className="px-6 py-4 text-right text-sm font-bold text-[#1A1208]">
-                    ₦{tx.amount.toLocaleString()}
+                    {formatCurrency(tx.amount)}
                   </td>
                 </tr>
               ))}

@@ -16,7 +16,7 @@
  * Used by: /app/(home)/products/page.tsx
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { catalogApi } from "../api/catalog.api";
 
 // Re-export the params type so existing callers keep working
@@ -52,6 +52,28 @@ export function useProductSearchSuggest(q: string, enabled = true) {
     queryFn: () => catalogApi.searchSuggest(q),
     enabled: enabled && q.trim().length >= 2,
     staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+/**
+ * Infinite scroll variant of useCatalogProducts.
+ * Uses useInfiniteQuery to fetch pages on demand as the user scrolls.
+ */
+export function useInfiniteCatalogProducts(
+  params: Parameters<typeof catalogApi.listProducts>[0] = {},
+) {
+  return useInfiniteQuery({
+    queryKey: ["catalog", "products", "infinite", params],
+    queryFn: ({ pageParam }) =>
+      catalogApi.listProducts({ ...params, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const totalPages = Math.ceil(lastPage.count / (params.page_size ?? 24));
+      const currentPage = lastPage.page ?? 1;
+      return currentPage < totalPages ? currentPage + 1 : undefined;
+    },
+    staleTime: PRODUCT_LIST_STALE_MS,
     refetchOnWindowFocus: false,
   });
 }

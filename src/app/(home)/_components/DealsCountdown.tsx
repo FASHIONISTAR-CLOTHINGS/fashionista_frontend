@@ -28,9 +28,11 @@ interface TimeLeft {
 export interface DealsCountdownProps {
   /**
    * ISO timestamp for countdown target date from backend discount_countdown field.
-   * Defaults to midnight tonight if omitted.
+   * Can also be passed as `endsAt` alias. Defaults to 7 days from now if omitted.
    */
   targetDate?: string | Date;
+  /** Alias for targetDate — semantically clearer when passing backend `ends_at`. */
+  endsAt?: string | Date;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -41,10 +43,10 @@ function getTargetDate(target?: string | Date): Date {
   if (target) {
     return target instanceof Date ? target : new Date(target);
   }
-  // Default: midnight tonight
-  const midnight = new Date();
-  midnight.setHours(24, 0, 0, 0);
-  return midnight;
+  // Default: 7 days from now (weekly deals cycle)
+  const fallback = new Date();
+  fallback.setDate(fallback.getDate() + 7);
+  return fallback;
 }
 
 function calculateTimeLeft(target?: string | Date): TimeLeft {
@@ -96,19 +98,20 @@ function Separator() {
 // Main Component
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function DealsCountdown({ targetDate }: DealsCountdownProps) {
+export function DealsCountdown({ targetDate, endsAt }: DealsCountdownProps) {
+  const resolvedTarget = targetDate ?? endsAt;
   const [mounted, setMounted] = useState(false);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>(() =>
-    calculateTimeLeft(targetDate),
+    calculateTimeLeft(resolvedTarget),
   );
 
   useEffect(() => {
     setMounted(true);
     // Sync immediately after hydration to avoid stale initial value
-    setTimeLeft(calculateTimeLeft(targetDate));
+    setTimeLeft(calculateTimeLeft(resolvedTarget));
 
     const timer = setInterval(() => {
-      const next = calculateTimeLeft(targetDate);
+      const next = calculateTimeLeft(resolvedTarget);
       setTimeLeft(next);
       // Stop the timer when countdown is zero
       if (
@@ -122,11 +125,11 @@ export function DealsCountdown({ targetDate }: DealsCountdownProps) {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [targetDate]);
+  }, [resolvedTarget]);
 
   // Use the calculated value for both SSR and hydrated states — eliminates
   // the 00:00:00 flash on first render.
-  const display = mounted ? timeLeft : calculateTimeLeft(targetDate);
+  const display = mounted ? timeLeft : calculateTimeLeft(resolvedTarget);
 
   return (
     <div

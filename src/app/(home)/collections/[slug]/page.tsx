@@ -20,7 +20,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getCollectionDetail, getCatalogCollections } from "@/features/catalog";
-import CollectionVendorClient from "./CollectionVendorClient";
+import CollectionTabsClient from "./CollectionTabsClient";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -271,18 +271,17 @@ export default async function CollectionDetailPage({
           </div>
         </section>
 
-        {/* ── Vendors Section ──────────────────────────────────────────────── */}
+        {/* ── Vendors & Products Tabbed Section ──────────────────────────── */}
         <section
           className="px-5 py-12 md:px-10 lg:px-20"
-          data-testid="collection-vendors-section"
+          data-testid="collection-content-section"
         >
           <div className="mb-8">
             <h2 className="font-bon_foyage text-2xl text-foreground md:text-4xl">
-              Vendors in this Collection
+              {collection.title}
             </h2>
             <p className="text-sm text-muted-foreground mt-2 max-w-xl font-raleway">
-              These expert fashion stores specialise in the {collection.title}{" "}
-              collection — browse their curated shops to find your perfect look.
+              Browse vendors and products in the {collection.title} collection — find your perfect look.
             </p>
           </div>
 
@@ -299,7 +298,10 @@ export default async function CollectionDetailPage({
               </div>
             }
           >
-            <CollectionVendorClient collectionSlug={slug} />
+            <CollectionTabsClient
+              collectionSlug={slug}
+              collectionTitle={collection.title}
+            />
           </Suspense>
         </section>
 

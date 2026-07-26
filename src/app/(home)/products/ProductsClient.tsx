@@ -1,23 +1,43 @@
+"use client";
+
 /**
- * @file /app/(home)/products/page.tsx
- * @description Fashionistar main product catalog listing page — RSC wrapper.
+ * @file /app/(home)/products/ProductsClient.tsx
+ * @description Client component for the product catalog listing.
+ *
+ * Extracted from page.tsx to allow RSC-level generateMetadata for SEO.
+ * All interactive logic (filters, sort, grid/list, infinite scroll) lives here.
  *
  * Architecture:
- *   - RSC: generateMetadata for SEO (dynamic title/description based on search params)
- *   - Client interactivity delegated to ProductsClient.tsx
- *   - Suspense boundary wraps the client component for streaming
- *
- * SEO:
- *   - Dynamic title based on search query or category filter
- *   - Canonical URL with query params preserved
- *   - OpenGraph metadata for social sharing
- *   - JSON-LD ItemList structured data
+ *   - URL state via Nuqs (useProductFilters) — all filters are bookmarkable
+ *   - Server data via TanStack Query (useCatalogProducts hook)
+ *   - Canonical ProductCard component from @/components/commerce/ProductCard
+ *   - Responsive: sidebar on desktop, bottom-sheet drawer on mobile
+ *   - Dynamic result count & active filter chips with removable X
+ *   - Sort dropdown synced to URL
+ *   - Grid / List view toggle
+ *   - Infinite scroll toggle with IntersectionObserver sentinel
  */
 
-import type { Metadata } from "next";
-import { Suspense } from "react";
-import { Loader2 } from "lucide-react";
-import ProductsClient from "./ProductsClient";
+import { Suspense, useState, useCallback, useRef, useEffect } from "react";
+import { useProductFilters } from "@/features/product/hooks/use-product-filters";
+import ProductFilterPanel from "@/features/product/components/ProductFilterPanel";
+import {
+  SlidersHorizontal,
+  X,
+  PackageSearch,
+  Loader2,
+  LayoutGrid,
+  LayoutList,
+  ArrowUpDown,
+  ChevronRight,
+} from "lucide-react";
+import { useCatalogProducts, useInfiniteCatalogProducts } from "@/features/catalog/hooks/use-catalog-products";
+import ProductCard, { type UnifiedProductCard } from "@/components/commerce/ProductCard";
+import { FashionistarPagination } from "@/components/ui/FashionistarPagination";
+import { Button } from "@/components/ui/button";
+import { useInfiniteScroll } from "@/components/hooks/use-infinite-scroll";
+import { formatCurrency } from "@/lib/utils";
+import Link from "next/link";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -371,8 +391,17 @@ function CatalogPage() {
   return (
     <>
       <main className="min-h-screen bg-background">
+        {/* ── Breadcrumb ──────────────────────────────────────────────── */}
+        <nav className="mx-auto max-w-screen-2xl px-4 pt-4 sm:px-6 lg:px-8" aria-label="Breadcrumb">
+          <ol className="flex items-center gap-1.5 text-xs text-[#01454A]/60">
+            <li><Link href="/" className="hover:text-[#01454A] transition-colors">Home</Link></li>
+            <li aria-hidden="true">/</li>
+            <li className="text-[#01454A] font-medium">Products</li>
+          </ol>
+        </nav>
+
         {/* ── Page Header ──────────────────────────────────────────────── */}
-        <div className="border-b border-[#01454A]/10 bg-[#F8F5ED]/60 px-4 py-6 sm:px-6 lg:px-8">
+        <div className="border-b border-[#01454A]/10 bg-[#F8F5ED]/60 px-4 py-6 sm:px-6 lg:px-8 mt-4">
           <div className="mx-auto max-w-screen-2xl">
             <h1 className="text-2xl font-bold text-[#1A1208] sm:text-3xl">
               {search
@@ -533,7 +562,7 @@ function CatalogPage() {
                   </div>
                   {!infiniteQuery.hasNextPage && products.length > 0 && (
                     <p className="text-center py-6 text-xs text-[#01454A]/40">
-                      You've reached the end — {totalCount.toLocaleString()} products total
+                      You&apos;ve reached the end — {totalCount.toLocaleString()} products total
                     </p>
                   )}
                 </>
@@ -598,10 +627,10 @@ function CatalogPage() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Page export (Suspense wraps Nuqs + TanStack Query contexts)
+// Export (Suspense wraps Nuqs + TanStack Query contexts)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function ProductsPage() {
+export default function ProductsClient() {
   return (
     <Suspense
       fallback={

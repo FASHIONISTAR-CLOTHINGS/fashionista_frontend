@@ -9,6 +9,7 @@
 import { useState } from "react";
 import type { VendorMetrics, VendorProfile } from "../types/vendor.types";
 import { Card, Badge, LoadingSpinner } from "@/components";
+import { formatCurrency } from "@/lib/utils";
 
 // ── Metric Card ───────────────────────────────────────────────────────────────
 
@@ -70,7 +71,7 @@ function RevenueSparkline({ data }: { data: { month: string; revenue: number }[]
             <div
               className="w-full rounded-t-md bg-gradient-to-t from-amber-600/40 to-amber-400/80 hover:from-amber-600/60 hover:to-amber-400 transition-all cursor-default"
               style={{ height: `${(d.revenue / max) * 96}px` }}
-              title={`${d.month}: ₦${d.revenue.toLocaleString()}`}
+              title={`${d.month}: ${formatCurrency(d.revenue)}`}
             />
             <span className="text-[9px] text-slate-500 truncate w-full text-center">{d.month.slice(0, 3)}</span>
           </div>
@@ -100,7 +101,7 @@ function TopProductsTable({ products }: { products: VendorMetrics["topProducts"]
             <div className="flex items-center gap-3 flex-shrink-0">
               <span className="text-xs text-slate-400">{p.sales} sold</span>
               <span className="text-xs font-semibold text-amber-400">
-                ₦{p.revenue.toLocaleString()}
+                {formatCurrency(p.revenue)}
               </span>
             </div>
           </div>

@@ -36,6 +36,7 @@ import { useVendorDashboard } from "@/features/vendor/hooks/use-vendor-setup";
 import { useUnreadBadgeCount } from "@/features/notification/hooks/use-notification";
 import { useConversations } from "@/features/chat/hooks/use-chat";
 import { UserAvatar } from "@/components/UserAvatar/UserAvatar";
+import { formatCurrency } from "@/lib/utils";
 
 // ── Brand Palette ─────────────────────────────────────────────────────────────
 const C = {
@@ -271,7 +272,7 @@ function VendorSidebar({
             <div className="text-right flex-shrink-0">
               <p className="text-[9px] text-white/30 leading-none">Balance</p>
               <p className="text-xs font-bold text-[#FDA600] leading-none mt-0.5">
-                ₦{walletBalance.toLocaleString()}
+                {formatCurrency(walletBalance)}
               </p>
             </div>
           </div>
