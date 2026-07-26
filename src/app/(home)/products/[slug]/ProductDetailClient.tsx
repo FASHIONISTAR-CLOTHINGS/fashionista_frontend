@@ -105,6 +105,7 @@ export function ProductDetailClient({
   const { trackView } = useRecentlyViewed();
   const product = liveProduct ?? initialProduct;
 
+  const [activeImg, setActiveImg] = useState(0);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const mainButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -234,6 +235,8 @@ export function ProductDetailClient({
           viewCount={(product as unknown as Record<string, unknown>).view_count as number | undefined}
           lastOrderedAt={(product as unknown as Record<string, unknown>).last_ordered_at as string | null | undefined}
           onWishlistToggle={() => toggleWishlist(product.slug)}
+          activeIndex={activeImg}
+          onActiveIndexChange={setActiveImg}
         />
 
         {/* ── Details panel ─────────────────────────────────────────────── */}

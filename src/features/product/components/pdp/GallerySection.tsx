@@ -37,6 +37,8 @@ interface GallerySectionProps {
   viewCount?: number;
   lastOrderedAt?: string | null;
   onWishlistToggle: () => void;
+  activeIndex?: number;
+  onActiveIndexChange?: (index: number) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -50,11 +52,24 @@ export function GallerySection({
   viewCount,
   lastOrderedAt,
   onWishlistToggle,
+  activeIndex,
+  onActiveIndexChange,
 }: GallerySectionProps) {
-  const [activeImg, setActiveImg] = useState(0);
+  const [internalActiveImg, setInternalActiveImg] = useState(0);
   const [zoomPos, setZoomPos] = useState<{ x: number; y: number } | null>(null);
 
+  const activeImg = activeIndex !== undefined ? activeIndex : internalActiveImg;
+
+  const setActiveImg = (idx: number) => {
+    if (onActiveIndexChange) {
+      onActiveIndexChange(idx);
+    } else {
+      setInternalActiveImg(idx);
+    }
+  };
+
   const activeItem = mediaItems[activeImg] ?? { url: "/gown.svg", type: "image" };
+
 
   return (
     <div className="flex-1">
