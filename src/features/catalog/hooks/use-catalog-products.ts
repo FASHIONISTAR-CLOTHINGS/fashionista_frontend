@@ -68,10 +68,9 @@ export function useInfiniteCatalogProducts(
     queryFn: ({ pageParam }) =>
       catalogApi.listProducts({ ...params, page: pageParam }),
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      const totalPages = Math.ceil(lastPage.count / (params.page_size ?? 24));
-      const currentPage = lastPage.page ?? 1;
-      return currentPage < totalPages ? currentPage + 1 : undefined;
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage.next) return undefined;
+      return allPages.length + 1;
     },
     staleTime: PRODUCT_LIST_STALE_MS,
     refetchOnWindowFocus: false,

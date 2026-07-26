@@ -1,4 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────────────
+/// ─────────────────────────────────────────────────────────────────────────────
 // Catalog Entity Types  (read-side, from Django-Ninja async API)
 //
 // Single source of truth: these interfaces mirror the backend Django models
