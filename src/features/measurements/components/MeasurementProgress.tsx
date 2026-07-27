@@ -36,11 +36,11 @@ interface PhaseConfig {
 
 const PHASE_CONFIG: Record<ScanProgressPhase, PhaseConfig> = {
   idle:          { label: "Ready",                    sublabel: "Press start to begin scan",        pct: 0,   color: "white/20"   },
-  loading:       { label: "Loading AI Model",         sublabel: "Downloading pose detector...",      pct: 12,  color: "violet-500" },
-  initialising:  { label: "Initialising Camera",      sublabel: "Starting pose detection engine...", pct: 28,  color: "violet-500" },
+  loading:       { label: "Loading AI Model",         sublabel: "Downloading pose detector...",      pct: 12,  color: "brand-green" },
+  initialising:  { label: "Initialising Camera",      sublabel: "Starting pose detection engine...", pct: 28,  color: "brand-green" },
   detecting:     { label: "Detecting Pose",            sublabel: "Hold still — capturing landmarks",  pct: 50,  color: "blue-500"   },
   submitting:    { label: "Uploading Measurements",   sublabel: "Sending body data to server...",    pct: 68,  color: "sky-500"    },
-  processing:    { label: "AI Processing",            sublabel: "Computing body measurements...",    pct: 82,  color: "amber-500"  },
+  processing:    { label: "AI Processing",            sublabel: "Computing body measurements...",    pct: 82,  color: "brand-gold"  },
   saving:        { label: "Saving Profile",           sublabel: "Creating your measurement profile", pct: 95,  color: "green-500"  },
   completed:     { label: "Complete",                 sublabel: "Measurements saved successfully",   pct: 100, color: "green-400"  },
   failed:        { label: "Scan Failed",              sublabel: "Please try again",                  pct: 0,   color: "red-500"    },

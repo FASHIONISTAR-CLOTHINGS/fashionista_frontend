@@ -61,6 +61,13 @@ export { MeasurementProgress, MeasurementProgressPill }
 export { MeasurementProfileCard }    from "./components/MeasurementProfileCard";
 export { ScanResultCard }            from "./components/ScanResultCard";
 
+// ── Voice Guidance + Device Orientation ────────────────────────────────────────
+export { useVoiceGuidance }          from "./hooks/useVoiceGuidance";
+export { useDeviceOrientation }      from "./hooks/useDeviceOrientation";
+
+// ── Height Prediction Utility ──────────────────────────────────────────────────
+export { predictHeightCm }           from "./utils/predictHeight";
+
 // ── AI Scan Hooks ──────────────────────────────────────────────────────────────
 export { usePoseLandmarker }         from "./hooks/usePoseLandmarker";
 export { useMeasurementCapture }     from "./hooks/useMeasurementCapture";

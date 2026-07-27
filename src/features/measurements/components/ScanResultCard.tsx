@@ -98,15 +98,15 @@ export function ScanResultCard({ result, onSaveEdit, className }: ScanResultCard
         <div className={cn(
           "flex items-center justify-between gap-3 px-4 py-3 rounded-xl border",
           confidence >= 80
-            ? "bg-green-500/10 border-green-500/20"
+            ? "bg-brand-gold/10 border-brand-gold/20"
             : confidence >= 60
-            ? "bg-amber-500/10 border-amber-500/20"
+            ? "bg-brand-gold/10 border-brand-gold/20"
             : "bg-red-500/10 border-red-500/20",
         )}>
           <div className="flex items-center gap-2">
             <div className={cn(
               "w-2.5 h-2.5 rounded-full",
-              confidence >= 80 ? "bg-green-400" : confidence >= 60 ? "bg-amber-400" : "bg-red-400"
+              confidence >= 80 ? "bg-brand-gold" : confidence >= 60 ? "bg-brand-gold/70" : "bg-red-400"
             )} />
             <span className="text-sm font-medium text-white/80">
               Scan Accuracy
@@ -115,7 +115,7 @@ export function ScanResultCard({ result, onSaveEdit, className }: ScanResultCard
           <div className="text-right">
             <span className={cn(
               "text-lg font-bold",
-              confidence >= 80 ? "text-green-400" : confidence >= 60 ? "text-amber-400" : "text-red-400",
+              confidence >= 80 ? "text-brand-gold" : confidence >= 60 ? "text-brand-gold/70" : "text-red-400",
             )}>
               {confidence}%
             </span>
@@ -132,7 +132,7 @@ export function ScanResultCard({ result, onSaveEdit, className }: ScanResultCard
 
       {/* ── Measurement grid (reuses MeasurementProfileCard) ── */}
       <MeasurementProfileCard
-        profile={profileForDisplay as any}
+        profile={profileForDisplay as Record<string, unknown>}
         onSave={onSaveEdit && result.measurement_profile_id
           ? (id, updates) => onSaveEdit(id, updates)
           : undefined
@@ -154,7 +154,7 @@ export function ScanResultCard({ result, onSaveEdit, className }: ScanResultCard
           className={cn(
             "flex-1 rounded-xl border px-4 py-2.5 text-sm font-medium transition flex items-center justify-center gap-2",
             copied
-              ? "border-green-500/30 bg-green-500/10 text-green-400"
+              ? "border-brand-gold/30 bg-brand-gold/10 text-brand-gold"
               : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white",
           )}
         >

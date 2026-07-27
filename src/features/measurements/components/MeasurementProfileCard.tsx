@@ -136,7 +136,7 @@ export function MeasurementProfileCard({
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-white truncate">{profile.name}</h3>
             {profile.is_default && (
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/20 uppercase tracking-wide">
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-brand-green/20 text-brand-green border border-brand-green/20 uppercase tracking-wide">
                 Default
               </span>
             )}
@@ -191,14 +191,14 @@ export function MeasurementProfileCard({
       {/* ── Save bar (visible in edit mode) ─────────────────────────────────── */}
       {isEditing && (
         <div className="px-4 pb-4">
-          <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-2.5 mb-3 text-xs text-amber-300/80">
+          <div className="rounded-xl border border-brand-gold/20 bg-brand-gold/10 px-4 py-2.5 mb-3 text-xs text-brand-gold/80">
             Values entered in <strong>{unit}</strong> — stored in cm automatically.
           </div>
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-white
-                       font-semibold py-3 hover:from-violet-700 hover:to-purple-700 transition
+            className="w-full rounded-xl bg-gradient-to-r from-brand-green to-brand-green/80 text-white
+                       font-semibold py-3 hover:from-brand-green hover:to-brand-green/80 transition
                        disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSaving ? "Saving..." : "Save Changes"}
@@ -232,7 +232,7 @@ function UnitToggle({
       title={`Switch to ${unit === "cm" ? "inches" : "centimetres"}`}
       className={cn(
         "relative flex rounded-xl overflow-hidden border transition-all duration-200",
-        "border-white/10 hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-violet-500",
+        "border-white/10 hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-brand-green",
       )}
     >
       {(["cm", "inch"] as const).map((u) => (
@@ -241,7 +241,7 @@ function UnitToggle({
           className={cn(
             "px-3 py-1.5 text-xs font-bold transition-all duration-200 uppercase tracking-wider",
             unit === u
-              ? "bg-violet-600 text-white shadow-sm shadow-violet-500/50"
+              ? "bg-brand-green text-white shadow-sm shadow-brand-green/50"
               : "bg-transparent text-white/40 hover:text-white/60",
           )}
         >
@@ -297,7 +297,7 @@ function MeasurementRow({
             onChange={(e) => onEditChange(e.target.value)}
             placeholder="—"
             className="w-full bg-white/10 border border-white/10 rounded-lg px-2 py-1 text-sm
-                       text-white font-semibold focus:outline-none focus:border-violet-500 transition"
+                       text-white font-semibold focus:outline-none focus:border-brand-green transition"
           />
           <span className="text-white/30 text-xs flex-shrink-0">
             {unit === "inch" ? "in" : "cm"}

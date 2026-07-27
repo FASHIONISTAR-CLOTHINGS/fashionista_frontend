@@ -38,19 +38,19 @@ export function MeasurementCard({ profile, onEdit, onStartScan, className = "" }
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-brand-green/20 flex items-center justify-center">
             <span className="text-base">📐</span>
           </div>
           <div>
             <h3 className="text-sm font-semibold text-white">My Measurements</h3>
-            <p className="text-xs text-slate-400">{completedFields.length}/{fields.length} fields complete</p>
+            <p className="text-xs text-brand-gray">{completedFields.length}/{fields.length} fields complete</p>
           </div>
         </div>
         <div className="flex gap-2">
           {onStartScan && (
             <button
               onClick={onStartScan}
-              className="text-xs px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white transition-colors"
+              className="text-xs px-3 py-1.5 rounded-lg bg-brand-green hover:bg-brand-green/90 text-white transition-colors"
               id="start-body-scan-btn"
             >
               📷 AI Scan
@@ -59,7 +59,7 @@ export function MeasurementCard({ profile, onEdit, onStartScan, className = "" }
           {onEdit && (
             <button
               onClick={onEdit}
-              className="text-xs px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-slate-300 transition-colors"
+              className="text-xs px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-white/70 transition-colors"
               id="edit-measurements-btn"
             >
               Edit
@@ -71,21 +71,21 @@ export function MeasurementCard({ profile, onEdit, onStartScan, className = "" }
       {/* Completion progress */}
       <div className="px-5 py-3 bg-white/3">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-xs text-slate-400">Profile Completion</span>
-          <span className={`text-xs font-semibold ${completion >= 80 ? "text-emerald-400" : completion >= 50 ? "text-amber-400" : "text-red-400"}`}>
+          <span className="text-xs text-brand-gray">Profile Completion</span>
+          <span className={`text-xs font-semibold ${completion >= 80 ? "text-green-400" : completion >= 50 ? "text-brand-gold" : "text-red-400"}`}>
             {completion}%
           </span>
         </div>
         <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-700 ${
-              completion >= 80 ? "bg-emerald-500" : completion >= 50 ? "bg-amber-500" : "bg-red-500"
+              completion >= 80 ? "bg-green-500" : completion >= 50 ? "bg-brand-gold" : "bg-red-500"
             }`}
             style={{ width: `${completion}%` }}
           />
         </div>
         {missingRequired.length > 0 && (
-          <p className="text-xs text-amber-400/70 mt-1.5">
+          <p className="text-xs text-brand-gold/70 mt-1.5">
             Missing required: {missingRequired.map((f) => f.label).join(", ")}
           </p>
         )}
@@ -104,10 +104,10 @@ export function MeasurementCard({ profile, onEdit, onStartScan, className = "" }
                   : "bg-white/3 border border-white/8"
             }`}
           >
-            <div className={`text-base font-bold ${field.value !== null ? "text-white" : "text-slate-600"}`}>
+            <div className={`text-base font-bold ${field.value !== null ? "text-white" : "text-brand-gray"}`}>
               {field.value !== null ? `${field.value}${unit}` : "—"}
             </div>
-            <div className="text-[10px] text-slate-500 mt-0.5">{field.label}</div>
+            <div className="text-[10px] text-brand-gray mt-0.5">{field.label}</div>
           </div>
         ))}
       </div>
@@ -129,8 +129,8 @@ export function BodyDiagram({ profile, highlightField, className = "" }: BodyDia
 
   const hotspotClass = (field: keyof MeasurementProfile) =>
     hasValue(field)
-      ? "fill-emerald-500/70 stroke-emerald-400"
-      : "fill-slate-700/50 stroke-slate-600";
+      ? "fill-green-500/70 stroke-green-400"
+      : "fill-brand-gray/50 stroke-brand-gray";
 
   return (
     <div className={`relative flex items-center justify-center ${className}`} aria-label="Body measurement diagram">
@@ -182,12 +182,12 @@ export function BodyDiagram({ profile, highlightField, className = "" }: BodyDia
       </svg>
 
       {/* Legend */}
-      <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 text-[10px] text-slate-500">
+      <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 text-[10px] text-brand-gray">
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" />Measured
+          <span className="w-2 h-2 rounded-full bg-green-500" />Measured
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-slate-600" />Missing
+          <span className="w-2 h-2 rounded-full bg-brand-gray" />Missing
         </span>
       </div>
     </div>

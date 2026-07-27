@@ -35,9 +35,17 @@ export interface LandmarkSubmitPayload {
   user_height_cm: number;
   /** Optional user-provided weight in kg — improves circumference estimates. */
   user_weight_kg?: number;
+  /** Optional user age — improves anthropometric ratio selection. */
+  user_age?: number;
   device_type?: "web" | "ios" | "android";
-  /** Exactly 33 MediaPipe world landmarks from PoseLandmarker. */
-  landmarks: LandmarkPoint[];
+  /** 33 MediaPipe world landmarks from front-facing pose. (legacy alias for landmarks_front) */
+  landmarks?: LandmarkPoint[];
+  /** 33 MediaPipe world landmarks from front-facing pose (preferred key). */
+  landmarks_front?: LandmarkPoint[];
+  /** Optional 33 MediaPipe world landmarks from 90° side pose for depth estimation. */
+  landmarks_side?: LandmarkPoint[];
+  /** Orientation confidence 0-1 from device orientation sensor (observational). */
+  orientation_confidence?: number;
 }
 
 /** Response from initiate / submit-landmarks endpoints. */

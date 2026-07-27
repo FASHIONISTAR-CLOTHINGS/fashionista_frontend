@@ -215,8 +215,8 @@ export function MeasurementCapture({ profileName = "My Measurements", onComplete
   if (isPending) {
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-4">
-        <div className="w-16 h-16 rounded-full border-4 border-amber-500/30 border-t-amber-500 animate-spin" />
-        <p className="text-sm text-slate-400">Saving your measurements…</p>
+        <div className="w-16 h-16 rounded-full border-4 border-brand-gold/30 border-t-brand-gold animate-spin" />
+        <p className="text-sm text-brand-gray">Saving your measurements…</p>
       </div>
     );
   }
@@ -225,13 +225,13 @@ export function MeasurementCapture({ profileName = "My Measurements", onComplete
     <div className="space-y-6">
       {/* Progress bar */}
       <div className="space-y-1.5">
-        <div className="flex justify-between text-xs text-slate-500">
+        <div className="flex justify-between text-xs text-brand-gray">
           <span>Step {currentStep + 1} of {totalSteps}</span>
           <span>{progress}% complete</span>
         </div>
         <div className="h-1.5 bg-white/8 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-500"
+            className="h-full bg-gradient-to-r from-brand-gold to-brand-gold/80 rounded-full transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -243,7 +243,7 @@ export function MeasurementCapture({ profileName = "My Measurements", onComplete
         <div className="text-center">
           <div className="text-5xl mb-3">{step.icon}</div>
           <h3 className="text-lg font-bold text-white">{step.label}</h3>
-          <p className="text-xs text-slate-400 mt-1 leading-relaxed max-w-xs mx-auto">
+          <p className="text-xs text-brand-gray mt-1 leading-relaxed max-w-xs mx-auto">
             {step.instruction}
           </p>
         </div>
@@ -261,11 +261,11 @@ export function MeasurementCapture({ profileName = "My Measurements", onComplete
               onChange={(e) => { setInputValue(e.target.value); setError(null); }}
               onKeyDown={(e) => e.key === "Enter" && handleNext()}
               placeholder={`${step.min}–${step.max}`}
-              className="w-36 h-14 text-center text-2xl font-bold bg-white/8 border border-white/15 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/60 focus:bg-white/12 transition-all tabular-nums"
+              className="w-36 h-14 text-center text-2xl font-bold bg-white/8 border border-white/15 rounded-xl text-white placeholder-brand-gray focus:outline-none focus:border-brand-gold/60 focus:bg-white/12 transition-all tabular-nums"
               id={`measurement-input-${step.key}`}
               autoFocus
             />
-            <span className="text-sm font-medium text-slate-400">{step.unit}</span>
+            <span className="text-sm font-medium text-brand-gray">{step.unit}</span>
           </div>
 
           {error && (
@@ -273,7 +273,7 @@ export function MeasurementCapture({ profileName = "My Measurements", onComplete
           )}
 
           {!step.required && (
-            <p className="text-[10px] text-slate-500">Optional — you can skip this</p>
+            <p className="text-[10px] text-brand-gray">Optional — you can skip this</p>
           )}
         </div>
       </Card>
@@ -300,9 +300,9 @@ export function MeasurementCapture({ profileName = "My Measurements", onComplete
             key={s.key}
             className={`w-2 h-2 rounded-full transition-all ${
               i < currentStep
-                ? "bg-emerald-400"
+                ? "bg-brand-gold"
                 : i === currentStep
-                ? "bg-amber-400 scale-125"
+                ? "bg-brand-gold scale-125"
                 : "bg-white/15"
             }`}
             title={s.label}

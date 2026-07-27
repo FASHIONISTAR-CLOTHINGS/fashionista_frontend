@@ -4,8 +4,8 @@ import { GetMeasuredClient } from "./_client";
 export const metadata: Metadata = {
   title: "Get Measured — FASHIONISTAR",
   description:
-    "Measure your body in 30 seconds using your device camera. " +
-    "Our in-house AI accurately captures 14 body measurements for perfect fit.",
+    "Measure your body in 60 seconds with voice-guided AI. " +
+    "Dual-pose capture (front + side) delivers 14 precise measurements for perfect fit.",
 };
 
 /**
@@ -23,7 +23,8 @@ export default function GetMeasuredPage() {
         {/* Left: Tutorial video */}
         <section className="space-y-4">
           <p className="font-raleway text-2xl text-black">
-            Watch the guide before starting your In-House AI measurement session.
+            Watch the guide, then start your voice-guided AI measurement session —
+            front and side poses for maximum accuracy.
           </p>
           <div
             className="relative h-[468px] w-full rounded-[8px] border-4 border-[#F4F5FB]"
@@ -42,8 +43,9 @@ export default function GetMeasuredPage() {
         {/* Right: AI Scan flow (client component — needs browser camera APIs) */}
         <section className="space-y-4">
           <div className="rounded-[8px] bg-[#F4F5FB] px-4 py-3 font-satoshi text-base text-[#475367] md:text-lg">
-            Save your measurements once and reuse them across custom fashion orders
-            for a smoother, more accurate fitting experience.
+            Save your measurements once with our dual-pose AI scan and reuse them
+            across custom fashion orders for a smoother, more accurate fitting
+            experience. Voice guidance walks you through every step.
           </div>
           {/* Client boundary wraps InHouseMeasurementFlow */}
           <GetMeasuredClient />

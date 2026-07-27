@@ -75,15 +75,15 @@ export function MeasurementGate({
 
   // ── Blocker UI ─────────────────────────────────────────────────────────────
   return (
-    <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6 space-y-4" role="alert">
+    <div className="rounded-2xl border border-brand-gold/30 bg-brand-gold/5 p-6 space-y-4" role="alert">
       {/* Header */}
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-brand-gold/15 flex items-center justify-center flex-shrink-0">
           <span className="text-xl">📏</span>
         </div>
         <div>
-          <h3 className="text-sm font-bold text-amber-300">Measurements Required</h3>
-          <p className="text-xs text-slate-400 mt-1">
+          <h3 className="text-sm font-bold text-brand-gold">Measurements Required</h3>
+          <p className="text-xs text-brand-gray mt-1">
             {itemsNeedingMeasurement.length === 1
               ? `"${itemsNeedingMeasurement[0].product_name ?? "This item"}" requires your body measurements for a custom fit.`
               : `${itemsNeedingMeasurement.length} items in your cart require custom fit measurements.`
@@ -96,8 +96,8 @@ export function MeasurementGate({
       {itemsNeedingMeasurement.length <= 4 && (
         <ul className="space-y-1.5 pl-2">
           {itemsNeedingMeasurement.map((item) => (
-            <li key={item.id} className="flex items-center gap-2 text-xs text-slate-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500/60" />
+            <li key={item.id} className="flex items-center gap-2 text-xs text-brand-gray">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-gold/60" />
               {item.product_name ?? `Item ${item.id}`}
             </li>
           ))}
@@ -113,7 +113,7 @@ export function MeasurementGate({
         ].map(({ icon, label }) => (
           <div key={label} className="text-center">
             <div className="text-xl mb-1">{icon}</div>
-            <p className="text-[10px] text-slate-500">{label}</p>
+            <p className="text-[10px] text-brand-gray">{label}</p>
           </div>
         ))}
       </div>

@@ -17,6 +17,9 @@
 
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useMeasurementCapture } from "../hooks/useMeasurementCapture";
+import { useVoiceGuidance, type GuidanceKey } from "../hooks/useVoiceGuidance";
+import { useDeviceOrientation } from "../hooks/useDeviceOrientation";
+import { predictHeightCm } from "../utils/predictHeight";
 import { PoseOverlay }      from "./PoseOverlay";
 import { CalibrationGuide } from "./CalibrationGuide";
 import { cn } from "@/lib/utils";
@@ -46,14 +49,18 @@ export function AICameraCapture({
   className,
 }: AICameraCaptureProps) {
   const capture = useMeasurementCapture();
+  const voice   = useVoiceGuidance();
+  const orientation = useDeviceOrientation();
 
   // Height input state
   const [heightInput, setHeightInput]     = useState("");
   const [heightUnit, setHeightUnit]       = useState<"cm" | "inch">("cm");
   const [heightError, setHeightError]     = useState("");
+  const [userAge, setUserAge]             = useState("");
 
   // Animation frame ref
   const rafRef = useRef<number | null>(null);
+  const frameLoopRef = useRef<() => void>(() => {});
 
   // ── Frame loop ──────────────────────────────────────────────────────────────
   const frameLoop = useCallback(() => {
@@ -71,20 +78,46 @@ export function AICameraCapture({
       capture.processFrame();
     }
 
-    if (capture.phase === "capturing" || capture.phase === "awaiting_height") {
-      rafRef.current = requestAnimationFrame(frameLoop);
+    if (capture.phase === "capturing_front" || capture.phase === "awaiting_height" || capture.phase === "capturing_side") {
+      rafRef.current = requestAnimationFrame(frameLoopRef.current);
     }
   }, [capture]);
 
+  // Keep ref in sync so the recursive rAF call always uses the latest closure
+  useEffect(() => {
+    frameLoopRef.current = frameLoop;
+  }, [frameLoop]);
 
   useEffect(() => {
-    if (capture.phase === "capturing" || capture.phase === "awaiting_height") {
+    if (capture.phase === "capturing_front" || capture.phase === "awaiting_height" || capture.phase === "capturing_side") {
       rafRef.current = requestAnimationFrame(frameLoop);
     }
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [capture.phase, frameLoop]);
+
+  // ── Voice guidance phase mapping ──────────────────────────────────────────
+  useEffect(() => {
+    const phaseToGuidance: Partial<Record<string, GuidanceKey>> = {
+      awaiting_height:  "POSITION_PHONE",
+      capturing_front:  "HOLD_STILL",
+      side_prompt:      "TURN_SIDEWAYS",
+      capturing_side:   "HOLD_STILL_SIDE",
+      submitting:       "PROCESSING",
+      processing:       "PROCESSING",
+      completed:        "DONE",
+    };
+    const key = phaseToGuidance[capture.phase];
+    if (key) voice.speak(key);
+  }, [capture.phase, voice]);
+
+  // ── Request device orientation permission on camera start ───────────────────
+  useEffect(() => {
+    if (capture.phase === "capturing_front" || capture.phase === "awaiting_height") {
+      orientation.requestPermission();
+    }
+  }, [capture.phase, orientation]);
 
   // ── On completion ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -118,8 +151,24 @@ export function AICameraCapture({
   };
 
   const handleSubmit = async () => {
-    const height = parsedHeightCm() ?? capture.userHeightCm ?? undefined;
-    await capture.captureAndSubmit(height);
+    if (capture.phase === "capturing_side") {
+      const height = parsedHeightCm() ?? capture.userHeightCm ?? undefined;
+      await capture.captureSideAndSubmit(height);
+    } else {
+      capture.captureFront();
+    }
+  };
+
+  // ── Age-based height prediction ─────────────────────────────────────────────
+  const handleAgeChange = (age: string) => {
+    setUserAge(age);
+    const ageNum = parseInt(age, 10);
+    if (!isNaN(ageNum) && ageNum >= 5 && ageNum <= 120) {
+      const predicted = predictHeightCm(ageNum);
+      if (!heightInput) {
+        setHeightInput(String(predicted));
+      }
+    }
   };
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -132,7 +181,7 @@ export function AICameraCapture({
           <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6 flex flex-col gap-5">
 
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-violet-500/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-brand-gold/20 flex items-center justify-center">
                 <IconRuler />
               </div>
               <div>
@@ -154,7 +203,7 @@ export function AICameraCapture({
                   value={heightInput}
                   onChange={(e) => setHeightInput(e.target.value)}
                   className="flex-1 rounded-xl bg-white/10 border border-white/10 text-white px-4 py-2.5 text-sm
-                             placeholder:text-white/30 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                             placeholder:text-white/30 focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition"
                 />
                 {/* CM / INCH toggle */}
                 <div className="flex rounded-xl overflow-hidden border border-white/10">
@@ -165,7 +214,7 @@ export function AICameraCapture({
                       className={cn(
                         "px-3 py-2 text-xs font-semibold transition",
                         heightUnit === unit
-                          ? "bg-violet-600 text-white"
+                          ? "bg-brand-gold text-white"
                           : "bg-white/5 text-white/50 hover:bg-white/10"
                       )}
                     >
@@ -179,6 +228,22 @@ export function AICameraCapture({
               )}
             </div>
 
+            {/* Age input (optional — for AI height prediction) */}
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-white/70">
+                Your Age
+                <span className="text-white/40 text-xs ml-1">(optional — improves height estimate)</span>
+              </label>
+              <input
+                type="number"
+                placeholder="e.g. 28"
+                value={userAge}
+                onChange={(e) => handleAgeChange(e.target.value)}
+                className="flex-1 rounded-xl bg-white/10 border border-white/10 text-white px-4 py-2.5 text-sm
+                           placeholder:text-white/30 focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition"
+              />
+            </div>
+
             {/* Instructions */}
             <ul className="text-xs text-white/50 space-y-1 list-disc list-inside">
               <li>Stand 1.5–2 metres from camera</li>
@@ -189,9 +254,9 @@ export function AICameraCapture({
 
             <button
               onClick={handleStartCapture}
-              className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-white
-                         font-semibold py-3 hover:from-violet-700 hover:to-purple-700 transition
-                         flex items-center justify-center gap-2 shadow-lg shadow-violet-500/25"
+              className="w-full rounded-xl bg-gradient-to-r from-brand-gold to-brand-gold/80 text-white
+                         font-semibold py-3 hover:from-brand-gold hover:to-brand-gold/80 transition
+                         flex items-center justify-center gap-2 shadow-lg shadow-brand-gold/25"
             >
               <IconCamera />
               Start Body Scan
@@ -212,7 +277,7 @@ export function AICameraCapture({
       {/* ── LOADING MODEL PHASE ── */}
       {capture.phase === "loading_model" && (
         <div className="flex flex-col items-center gap-4 py-12">
-          <div className="w-16 h-16 rounded-full bg-violet-500/20 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-brand-gold/20 flex items-center justify-center">
             <IconLoader />
           </div>
           <p className="text-white/70 font-medium">Loading AI pose detection model...</p>
@@ -220,9 +285,29 @@ export function AICameraCapture({
         </div>
       )}
 
-      {/* ── CAMERA ACTIVE PHASES (awaiting_height + capturing) ── */}
-      {(capture.phase === "capturing" || capture.phase === "awaiting_height") && (
+      {/* ── CAMERA ACTIVE PHASES (awaiting_height + capturing_front + capturing_side) ── */}
+      {(capture.phase === "capturing_front" || capture.phase === "awaiting_height" || capture.phase === "capturing_side") && (
         <div className="flex flex-col gap-4">
+          {/* Voice mute toggle + caption */}
+          {voice.isSupported && (
+            <div className="flex items-center justify-between max-w-sm mx-auto w-full">
+              <p className="text-xs text-white/50 truncate flex-1">
+                {voice.currentCaption ?? ""}
+              </p>
+              <button
+                onClick={voice.toggleMute}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-xs font-medium transition shrink-0 ml-2",
+                  voice.muted
+                    ? "bg-white/10 text-white/50 hover:bg-white/20"
+                    : "bg-brand-gold/20 text-brand-gold"
+                )}
+              >
+                {voice.muted ? "🔇 Muted" : "🔊 Voice On"}
+              </button>
+            </div>
+          )}
+
           {/* Camera viewport */}
           <div className="relative rounded-2xl overflow-hidden bg-black aspect-[3/4] max-h-[70vh] mx-auto w-full max-w-sm shadow-2xl">
             <video
@@ -246,12 +331,14 @@ export function AICameraCapture({
               phase={capture.phase}
               qualityScore={capture.currentFrame?.quality ?? 0}
               estimatedHeight={capture.userHeightCm}
+              tiltStatus={orientation.tiltStatus}
+              caption={voice.currentCaption}
             />
           </div>
 
           {/* Quality indicator */}
           <div className="max-w-sm mx-auto w-full">
-            <QualityBar quality={capture.currentFrame?.quality ?? 0} />
+            <QualityBar quality={capture.currentFrame?.quality ?? 0} phase={capture.phase} />
           </div>
 
           {/* Capture button */}
@@ -262,18 +349,77 @@ export function AICameraCapture({
               className={cn(
                 "flex-1 rounded-xl font-semibold py-3 transition flex items-center justify-center gap-2",
                 capture.currentFrame?.isGoodPose
-                  ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                  ? "bg-gradient-to-r from-brand-green to-brand-gold text-white shadow-lg shadow-brand-green/25"
                   : "bg-white/10 text-white/30 cursor-not-allowed"
               )}
             >
               <IconCheck />
-              {capture.currentFrame?.isGoodPose ? "Capture Measurements" : "Hold Still..."}
+              {capture.currentFrame?.isGoodPose
+                ? capture.phase === "capturing_side" ? "Capture Side Pose" : "Capture Front Pose"
+                : "Hold Still..."}
+            </button>
+            {capture.phase === "side_prompt" ? (
+              <button
+                onClick={capture.proceedToSideCapture}
+                className="px-4 py-3 rounded-xl bg-brand-gold text-white hover:bg-brand-gold/90 transition text-sm font-semibold"
+              >
+                Start Side Capture
+              </button>
+            ) : capture.phase === "capturing_side" ? (
+              <button
+                onClick={() => capture.skipSideCapture()}
+                className="px-4 py-3 rounded-xl bg-white/10 text-white/60 hover:bg-white/20 transition text-sm"
+              >
+                Skip Side
+              </button>
+            ) : (
+              <button
+                onClick={capture.reset}
+                className="px-4 py-3 rounded-xl bg-white/10 text-white/60 hover:bg-white/20 transition text-sm"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── SIDE PROMPT PHASE (front captured, asking user to turn) ── */}
+      {capture.phase === "side_prompt" && (
+        <div className="flex flex-col items-center gap-6 py-12 max-w-sm mx-auto text-center">
+          <div className="w-20 h-20 rounded-full bg-brand-gold/20 flex items-center justify-center">
+            <svg className="w-10 h-10 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-white font-bold text-xl">Front Pose Captured!</h3>
+            <p className="text-white/50 text-sm mt-1">
+              Now turn 90° to your right so we can capture your side profile.
+              This improves measurement accuracy by ~30%.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 w-full">
+            <button
+              onClick={capture.proceedToSideCapture}
+              className="w-full rounded-xl bg-brand-green hover:bg-brand-green/90 text-white
+                         font-semibold py-3 transition flex items-center justify-center gap-2"
+            >
+              <IconCamera />
+              Capture Side Pose
+            </button>
+            <button
+              onClick={capture.skipSideCapture}
+              className="w-full rounded-xl border border-white/10 bg-white/5 text-white/60
+                         hover:bg-white/10 font-semibold text-sm py-3 transition"
+            >
+              Skip — Submit Front Only
             </button>
             <button
               onClick={capture.reset}
-              className="px-4 py-3 rounded-xl bg-white/10 text-white/60 hover:bg-white/20 transition text-sm"
+              className="text-xs text-white/40 hover:text-white/70 transition"
             >
-              Cancel
+              Start Over
             </button>
           </div>
         </div>
@@ -283,8 +429,8 @@ export function AICameraCapture({
       {(capture.phase === "submitting" || capture.phase === "processing") && (
         <div className="flex flex-col items-center gap-6 py-12 max-w-sm mx-auto">
           <div className="relative w-24 h-24">
-            <div className="absolute inset-0 rounded-full border-4 border-violet-500/20" />
-            <div className="absolute inset-0 rounded-full border-4 border-t-violet-500 animate-spin" />
+            <div className="absolute inset-0 rounded-full border-4 border-brand-gold/20" />
+            <div className="absolute inset-0 rounded-full border-4 border-t-brand-gold animate-spin" />
             <div className="absolute inset-0 flex items-center justify-center">
               <IconRuler />
             </div>
@@ -303,9 +449,9 @@ export function AICameraCapture({
               <div key={step} className="flex items-center gap-2">
                 <div className={cn(
                   "w-4 h-4 rounded-full border flex items-center justify-center",
-                  i === 0 ? "border-violet-500 bg-violet-500/20" : "border-white/10"
+                  i === 0 ? "border-brand-gold bg-brand-gold/20" : "border-white/10"
                 )}>
-                  {i === 0 && <div className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />}
+                  {i === 0 && <div className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse" />}
                 </div>
                 <span>{step}</span>
               </div>
@@ -317,8 +463,8 @@ export function AICameraCapture({
       {/* ── COMPLETED PHASE ── */}
       {capture.phase === "completed" && (
         <div className="flex flex-col items-center gap-5 py-12 max-w-sm mx-auto text-center">
-          <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center">
-            <svg className="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-20 h-20 rounded-full bg-brand-gold/20 flex items-center justify-center">
+            <svg className="w-10 h-10 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
@@ -331,7 +477,7 @@ export function AICameraCapture({
           {capture.sessionStatus?.scan_confidence != null && (
             <div className="text-xs text-white/40">
               Scan accuracy:{" "}
-              <span className="text-green-400 font-semibold">
+              <span className="text-brand-gold font-semibold">
                 {Math.round(capture.sessionStatus.scan_confidence * 100)}%
               </span>
             </div>
@@ -371,11 +517,11 @@ export function AICameraCapture({
 
 // ─── Quality Bar ──────────────────────────────────────────────────────────────
 
-function QualityBar({ quality }: { quality: number }) {
+function QualityBar({ quality, phase }: { quality: number; phase?: string }) {
   const pct = Math.round(quality * 100);
   const color =
-    pct >= 72 ? "bg-green-500" :
-    pct >= 50 ? "bg-amber-500" :
+    pct >= 72 ? "bg-brand-gold" :
+    pct >= 50 ? "bg-brand-gold/70" :
     "bg-red-500";
 
   return (
@@ -384,7 +530,7 @@ function QualityBar({ quality }: { quality: number }) {
         <span>Pose quality</span>
         <span className={cn(
           "font-semibold",
-          pct >= 72 ? "text-green-400" : pct >= 50 ? "text-amber-400" : "text-red-400"
+          pct >= 72 ? "text-brand-gold" : pct >= 50 ? "text-brand-gold/70" : "text-red-400"
         )}>
           {pct}%
         </span>
@@ -396,7 +542,7 @@ function QualityBar({ quality }: { quality: number }) {
         />
       </div>
       <p className="text-xs text-white/30">
-        {pct >= 72 ? "✓ Good pose — ready to capture!" :
+        {pct >= 72 ? (phase === "capturing_side" ? "✓ Good side pose — ready to capture!" : "✓ Good pose — ready to capture!") :
          pct >= 50 ? "Adjust your position..." :
          "Step back and face the camera"}
       </p>

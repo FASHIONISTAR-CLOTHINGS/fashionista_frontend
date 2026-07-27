@@ -145,12 +145,12 @@ export function BodyDiagram({ points, activePoint, onPointClick, className = "" 
       </svg>
 
       {/* Legend */}
-      <div className="flex items-center justify-center gap-4 mt-3 text-xs text-slate-400">
+      <div className="flex items-center justify-center gap-4 mt-3 text-xs text-brand-gray">
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/80" />Measured
+          <span className="w-2.5 h-2.5 rounded-full bg-green-400/80" />Measured
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-amber-400/80" />Required
+          <span className="w-2.5 h-2.5 rounded-full bg-brand-gold/80" />Required
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-white/25" />Optional
