@@ -35,6 +35,8 @@ import { useAddCartItem } from "@/features/cart/hooks/use-cart";
 import type { WishlistItem } from "@/features/product/types/product.types";
 import { FashionistarImage } from "@/components/media";
 import { formatCurrency } from "@/lib/formatting";
+import { WishlistPriceAlertBadge } from "@/features/wishlist/components/WishlistPriceAlertBadge";
+import { WishlistShareButton } from "@/features/wishlist/components/WishlistShareButton";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -229,20 +231,30 @@ function WishlistCard({ row }: { row: WishlistRow }) {
           )}
         </div>
 
+        {/* ── Work 6: Price Drop Alert ──────────────────────────────── */}
+        <WishlistPriceAlertBadge
+          currentPrice={price}
+          oldPrice={oldPrice}
+        />
+
         {/* CTA */}
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          disabled={!inStock || addingToCart}
-          className="mt-auto flex items-center justify-center gap-2 rounded-full bg-[hsl(var(--accent))] py-2.5 text-sm font-semibold text-[hsl(var(--accent-foreground))] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {addingToCart ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <ShoppingCart className="h-4 w-4" />
-          )}
-          {inStock ? "Add to cart" : "Out of stock"}
-        </button>
+        <div className="mt-auto flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={!inStock || addingToCart}
+            className="flex-1 flex items-center justify-center gap-2 rounded-full bg-[hsl(var(--accent))] py-2.5 text-sm font-semibold text-[hsl(var(--accent-foreground))] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {addingToCart ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ShoppingCart className="h-4 w-4" />
+            )}
+            {inStock ? "Add to cart" : "Out of stock"}
+          </button>
+          {/* ── Work 6: Share Button ─────────────────────────────────── */}
+          <WishlistShareButton productSlug={slug} productTitle={title} />
+        </div>
       </div>
     </div>
   );

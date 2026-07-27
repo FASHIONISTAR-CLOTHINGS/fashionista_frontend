@@ -7,6 +7,8 @@ import { WishlistNudgeClient } from "./_components/WishlistNudgeClient";
 import { getPublicPlatformSettings } from "@/features/public-engagement";
 import { AnnouncementBanner } from "@/components/shared/ui/AnnouncementBanner";
 import { BackToTopButton } from "@/components/shared/ui/BackToTopButton";
+import { MarketingProvider } from "@/features/marketing/MarketingContext";
+import { MarketingAnnouncementBar } from "@/features/marketing/MarketingAnnouncementBar";
 
 export default function Home({
   children,
@@ -18,9 +20,12 @@ export default function Home({
   return (
     <>
       <main className="flex min-h-screen pb-16 md:pb-10 flex-col md:px-0 bg-[#FFF]">
+        <MarketingProvider>
         <header>
           {/* S21: Promotional announcement bar — dismissible, 24h localStorage suppression */}
           <AnnouncementBanner />
+          {/* ── Work 10: Cross-Page Marketing Announcement Bar ──────────────── */}
+          <MarketingAnnouncementBar />
           <TopBar platformSettingsPromise={platformSettingsPromise} />
           {/* B6: Removed 160+ lines of dead legacy navbar/topbar/search comments */}
           <NewMobileNav />
@@ -28,6 +33,7 @@ export default function Home({
         </header>
         <section id="main-content">{children}</section>
         {/* Canonical auth now always renders on dedicated /auth/* pages. */}
+        </MarketingProvider>
       </main>
       {/* <Footer /> */}
       <FooterBridge platformSettingsPromise={platformSettingsPromise} />

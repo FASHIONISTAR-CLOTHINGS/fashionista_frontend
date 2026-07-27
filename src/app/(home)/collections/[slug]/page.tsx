@@ -20,6 +20,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getCollectionDetail, getCatalogCollections } from "@/features/catalog";
+import { CollectionUrgencyBanner } from "@/features/catalog/components/CollectionUrgencyBanner";
 import CollectionTabsClient from "./CollectionTabsClient";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -270,6 +271,16 @@ export default async function CollectionDetailPage({
             </div>
           </div>
         </section>
+
+        {/* ── Work 8: Collection Urgency & Exclusive Access ──────────────── */}
+        <div className="px-5 pt-6 md:px-10 lg:px-20">
+          <CollectionUrgencyBanner
+            endDate={collection.end_date}
+            isActive={isActive}
+            isFeatured={collection.is_featured}
+            productCount={productCount}
+          />
+        </div>
 
         {/* ── Vendors & Products Tabbed Section ──────────────────────────── */}
         <section

@@ -27,6 +27,7 @@ import {
 } from "@/features/catalog";
 import { generateBreadcrumbSchema } from "@/components/seo/schemas";
 import { ProductGridSkeleton } from "@/features/product";
+import { CategoryStorytellingSection } from "@/features/catalog/components/CategoryStorytellingSection";
 import CategoryProductsClient from "./CategoryProductsClient";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -332,6 +333,12 @@ export default async function CategorySlugPage({
             </div>
           </section>
         )}
+
+        {/* ── Work 7: AI Storytelling Section ─────────────────────────────── */}
+        <CategoryStorytellingSection
+          categoryName={category.title || category.name}
+          productCount={productCount}
+        />
 
         {/* ── Brand filter chips ───────────────────────────────────────────── */}
         {brands.length > 0 && (

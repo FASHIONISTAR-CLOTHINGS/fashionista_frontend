@@ -38,6 +38,8 @@ import { Button } from "@/components/ui/button";
 import { useInfiniteScroll } from "@/components/hooks/use-infinite-scroll";
 import { formatCurrency } from "@/lib/utils";
 import Link from "next/link";
+import { VisualSearchModal } from "@/features/catalog/components/VisualSearchModal";
+import { Camera } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -81,6 +83,8 @@ const SORT_OPTIONS = [
   { value: "-price",      label: "Price: High to Low" },
   { value: "-rating",     label: "Highest Rated" },
   { value: "-orders_count", label: "Best Selling" },
+  { value: "-ai_trend_score", label: "🔥 Trending Now" },
+  { value: "best_value",  label: "⭐ Best Value" },
 ] as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -329,6 +333,7 @@ function CatalogPage() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [infiniteScroll, setInfiniteScroll] = useState(false);
+  const [visualSearchOpen, setVisualSearchOpen] = useState(false);
 
   // Count active filters for badge
   const activeFilterCount = [
@@ -462,24 +467,39 @@ function CatalogPage() {
             <div className="flex-1 min-w-0">
               {/* Toolbar: mobile filter + sort + view toggle */}
               <div className="mb-4 flex items-center gap-2 justify-between">
-                {/* Mobile filter button */}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setMobileFiltersOpen(true)}
-                  className="flex items-center gap-2 rounded-xl border border-[#01454A]/20 px-4 py-2 text-sm font-medium hover:border-[#01454A]/40 hover:bg-[#01454A]/5 h-auto lg:hidden"
-                  aria-expanded={mobileFiltersOpen}
-                  aria-controls="mobile-filter-drawer"
-                  data-testid="mobile-filter-btn"
-                >
-                  <SlidersHorizontal size={15} />
-                  Filters
-                  {activeFilterCount > 0 && (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#01454A] text-[10px] font-bold text-white">
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </Button>
+                <div className="flex items-center gap-2">
+                  {/* Work 5: Visual Search button */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setVisualSearchOpen(true)}
+                    className="flex items-center gap-2 rounded-xl border border-[#01454A]/20 px-3 py-2 text-sm font-medium hover:border-[#01454A]/40 hover:bg-[#01454A]/5 h-auto"
+                    aria-label="Search by image"
+                    data-testid="visual-search-btn"
+                  >
+                    <Camera size={15} />
+                    <span className="hidden sm:inline">Visual Search</span>
+                  </Button>
+
+                  {/* Mobile filter button */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setMobileFiltersOpen(true)}
+                    className="flex items-center gap-2 rounded-xl border border-[#01454A]/20 px-4 py-2 text-sm font-medium hover:border-[#01454A]/40 hover:bg-[#01454A]/5 h-auto lg:hidden"
+                    aria-expanded={mobileFiltersOpen}
+                    aria-controls="mobile-filter-drawer"
+                    data-testid="mobile-filter-btn"
+                  >
+                    <SlidersHorizontal size={15} />
+                    Filters
+                    {activeFilterCount > 0 && (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#01454A] text-[10px] font-bold text-white">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </Button>
+                </div>
 
                 {/* Right-side toolbar */}
                 <div className="ml-auto flex items-center gap-2">
@@ -622,6 +642,12 @@ function CatalogPage() {
           </div>
         </div>
       )}
+
+      {/* ── Work 5: Visual Search Modal ──────────────────────────────── */}
+      <VisualSearchModal
+        isOpen={visualSearchOpen}
+        onClose={() => setVisualSearchOpen(false)}
+      />
     </>
   );
 }

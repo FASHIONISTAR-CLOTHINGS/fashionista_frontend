@@ -40,6 +40,10 @@ import {
 } from "@/features/cart/hooks/use-cart";
 import { useCartAbandonment } from "@/features/cart/hooks/use-cart-abandonment";
 import { CartPageSkeleton } from "./CartPageSkeleton";
+import { FreeShippingProgressBar } from "./FreeShippingProgressBar";
+import { CartSavingsSummary } from "./CartSavingsSummary";
+import { CartTrustBadges } from "./CartTrustBadges";
+import { CartUpsellCarousel } from "./CartUpsellCarousel";
 import { formatCurrency } from "@/lib/formatting";
 import { FashionistarImage } from "@/components/media";
 
@@ -265,11 +269,26 @@ export default function CartPage() {
             >
               ← Continue shopping
             </Link>
+
+            {/* ── Work 2: AI Upsell Carousel ─────────────────────────────── */}
+            <CartUpsellCarousel
+              cartItemSlugs={cart.items.map((i) => i.product.slug)}
+            />
           </div>
 
           {/* ── Order summary panel ─────────────────────────────────────── */}
           <div className="w-full rounded-2xl border border-border bg-card p-6 shadow-[var(--card-shadow)] lg:sticky lg:top-24 lg:w-[420px]">
             <h2 className="mb-5 text-xl font-bold text-foreground">Order Summary</h2>
+
+            {/* ── Work 2: Free Shipping Progress Bar ──────────────────────── */}
+            <div className="mb-4">
+              <FreeShippingProgressBar subtotal={subtotal} currency={currency} />
+            </div>
+
+            {/* ── Work 2: Savings Summary ─────────────────────────────────── */}
+            <div className="mb-4">
+              <CartSavingsSummary items={cart.items} currency={currency} />
+            </div>
 
             {/* Items breakdown */}
             <div className="space-y-3 border-b border-border pb-4">
@@ -384,6 +403,9 @@ export default function CartPage() {
               <LockKeyhole size={13} aria-hidden="true" />
               Secured by SSL - Paystack PCI-DSS compliant
             </p>
+
+            {/* ── Work 2: Trust Badges Grid ──────────────────────────────── */}
+            <CartTrustBadges />
           </div>
         </div>
       )}

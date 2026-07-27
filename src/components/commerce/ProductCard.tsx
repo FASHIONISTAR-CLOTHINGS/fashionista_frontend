@@ -333,7 +333,24 @@ export default function ProductCard({
           {genderBadge && <Badge variant={genderBadge.variant} label={genderBadge.label} />}
           {conditionBadge && <Badge variant={conditionBadge.variant} label={conditionBadge.label} />}
           {(card.sustainability_score ?? 0) >= 75 && <Badge variant="eco" label="🌿 Eco" />}
+          {/* Work 5: "Just Sold" social proof badge */}
+          {Boolean(card._just_sold) && (
+            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] bg-emerald-500 text-white font-semibold animate-card-pop">
+              <Check className="w-2.5 h-2.5" aria-hidden="true" />
+              Just Sold
+            </span>
+          )}
         </div>
+
+        {/* Work 5: "Viewing Now" social proof badge — bottom-left */}
+        {Boolean(card._viewing_now && (card._viewing_now as number) > 5) && (
+          <div className="absolute bottom-2.5 left-2.5 z-10">
+            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] bg-black/60 text-white backdrop-blur-sm font-semibold">
+              <Eye className="w-2.5 h-2.5" aria-hidden="true" />
+              {card._viewing_now as number} viewing
+            </span>
+          </div>
+        )}
 
         {/* Low stock scarcity signal */}
         {isLowStock && (

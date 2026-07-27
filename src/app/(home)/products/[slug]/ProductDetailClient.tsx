@@ -30,9 +30,6 @@ import {
   BadgeCheck,
   Flame,
   Leaf,
-  Shield,
-  Truck,
-  RotateCcw,
   Zap,
 } from "lucide-react";
 import {
@@ -54,6 +51,10 @@ import { VariantSelector } from "@/features/product/components/pdp/VariantSelect
 import { ReviewSection } from "@/features/product/components/pdp/ReviewSection";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { ProductAccordion } from "@/features/product/components/pdp/ProductAccordion";
+import { SocialProofBadge } from "@/features/product/components/pdp/SocialProofBadge";
+import { StockScarcityIndicator } from "@/features/product/components/pdp/StockScarcityIndicator";
+import { TrustSignalsBlock } from "@/features/product/components/pdp/TrustSignalsBlock";
+import { FlashSaleCountdown } from "@/features/product/components/pdp/FlashSaleCountdown";
 
 interface ProductDetailClientProps {
   slug: string;
@@ -255,6 +256,14 @@ export function ProductDetailClient({
             </span>
           </div>
 
+          {/* ── Social Proof: Live viewers + sold today (Work 1) ─────────── */}
+          <SocialProofBadge
+            slug={product.slug}
+            fallbackViewCount={(product as unknown as Record<string, unknown>).view_count as number | undefined}
+            fallbackOrdersCount={(product as unknown as Record<string, unknown>).orders_count as number | undefined}
+            categorySlug={product.category_slug}
+          />
+
           {/* Trending + Eco signal badges */}
           {(() => {
             const p = product as unknown as Record<string, unknown>;
@@ -360,7 +369,13 @@ export function ProductDetailClient({
             }}
           />
 
-          {/* Quantity stepper + Stock urgency */}
+          {/* ── Stock Scarcity Indicator (Work 1) ─────────────────────────── */}
+          <StockScarcityIndicator
+            stockQty={(product as unknown as { stock_qty?: number }).stock_qty}
+            inStock={inStock}
+          />
+
+          {/* Quantity stepper */}
           <div className="flex items-center gap-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Qty
@@ -386,20 +401,16 @@ export function ProductDetailClient({
                 <Plus size={14} />
               </Button>
             </div>
-            {!inStock ? (
+            {!inStock && (
               <span className="text-xs font-semibold text-destructive">Out of stock</span>
-            ) : (() => {
-              const qty = (product as unknown as { stock_qty?: number }).stock_qty;
-              if (qty !== undefined && qty > 0 && qty <= 5) {
-                return (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-red-50 border border-red-200 px-2.5 py-0.5 text-[10px] font-bold text-red-600">
-                    🔥 Only {qty} left!
-                  </span>
-                );
-              }
-              return null;
-            })()}
+            )}
           </div>
+
+          {/* ── Flash Sale Countdown (Work 1) ─────────────────────────────── */}
+          <FlashSaleCountdown
+            targetDate={(product as unknown as Record<string, unknown>).discount_countdown as string | undefined}
+            discountPercentage={(product as unknown as Record<string, unknown>).discount_percentage as number | undefined}
+          />
 
           {/* CTA buttons — Add to Cart + Buy Now + Wishlist */}
           <div className="space-y-3">
@@ -447,26 +458,8 @@ export function ProductDetailClient({
             )}
           </div>
 
-          {/* Trust badges */}
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            {([
-              { icon: Shield, label: "Secure Payment", sub: "256-bit SSL" },
-              { icon: Truck, label: "Fast Delivery", sub: "2–5 business days" },
-              { icon: RotateCcw, label: "Easy Returns", sub: "Within 14 days" },
-              { icon: BadgeCheck, label: "100% Authentic", sub: "Vendor verified" },
-            ] as const).map(({ icon: Icon, label, sub }) => (
-              <div
-                key={label}
-                className="flex items-center gap-2 rounded-xl border border-[#01454A]/10 bg-[#01454A]/3 px-3 py-2"
-              >
-                <Icon size={14} className="text-[#01454A] shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-[10px] font-bold text-foreground leading-tight truncate">{label}</p>
-                  <p className="text-[9px] text-muted-foreground truncate">{sub}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          {/* ── Trust Signals (Work 1: data-driven, replaces static badges) ── */}
+          <TrustSignalsBlock product={product} />
 
           {/* ── Vendor mini-profile card ─────────────────────────────────────── */}
           {product.vendor_name && (

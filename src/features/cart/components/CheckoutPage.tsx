@@ -41,6 +41,8 @@ import {
   type AddressSelection,
 } from "@/components/reference-data";
 import { CheckoutPageSkeleton } from "./CheckoutPageSkeleton";
+import { ExitIntentModal } from "./ExitIntentModal";
+import { CheckoutUrgencyTimer } from "./CheckoutUrgencyTimer";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -478,6 +480,11 @@ export function CheckoutPage() {
             <FreeShippingBar subtotal={subtotal} />
           </div>
 
+          {/* ── Work 3: Urgency Timer ──────────────────────────────────── */}
+          <div className="mb-5">
+            <CheckoutUrgencyTimer />
+          </div>
+
           {/* Items */}
           <div className="space-y-3 border-b border-[hsl(var(--border))] pb-4">
             {cart.items.map((item) => (
@@ -575,6 +582,9 @@ export function CheckoutPage() {
           </div>
         </div>
       </form>
+
+      {/* ── Work 3: Exit Intent Recovery Modal ─────────────────────────── */}
+      <ExitIntentModal cartTotal={total} currency={currency} />
     </div>
   );
 }

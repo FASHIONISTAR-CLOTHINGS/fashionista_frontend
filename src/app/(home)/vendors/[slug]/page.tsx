@@ -31,6 +31,8 @@ import {
 } from "lucide-react";
 
 import { ProductGridSkeleton } from "@/features/product";
+import { VendorTrustScore } from "@/features/vendor/components/VendorTrustScore";
+import { VendorFollowButton } from "@/features/vendor/components/VendorFollowButton";
 import VendorPublicProfileClient from "./VendorPublicProfileClient";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -317,6 +319,11 @@ export default async function VendorStorefrontPage({ params }: PageProps) {
 
             {/* Right: CTAs */}
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center md:flex-col md:items-end">
+              {/* ── Work 9: Follow Button ──────────────────────────────── */}
+              <VendorFollowButton
+                vendorSlug={slug}
+                vendorName={storeName}
+              />
               <Link
                 href="/get-measured"
                 id="vendor-hero-get-measured"
@@ -337,6 +344,19 @@ export default async function VendorStorefrontPage({ params }: PageProps) {
               </Link>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── Work 9: Vendor Trust Score ──────────────────────────────── */}
+      <section className="border-b border-[#ECE6D6] bg-white">
+        <div className="px-5 py-6 md:px-10 lg:px-20">
+          <VendorTrustScore
+            isVerified={isVerified}
+            avgRating={avgRating}
+            reviewCount={reviewCount}
+            totalSales={totalSales}
+            totalProducts={totalProducts}
+          />
         </div>
       </section>
 

@@ -41,6 +41,8 @@ import { StickyMobileCTA } from "./_components/StickyMobileCTA";
 import { TrendingProductsRail } from "./_components/TrendingProductsRail";
 import { VendorSpotlightSection } from "./_components/VendorSpotlightSection";
 import { BlogStyleGuideRail } from "./_components/BlogStyleGuideRail";
+import { AIPersonalizedGreeting } from "./_components/AIPersonalizedGreeting";
+import { LiveSocialProofToast } from "@/components/commerce/LiveSocialProofToast";
 import { Hero } from "@/components";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
 import {
@@ -121,6 +123,9 @@ export default async function Home() {
 
       {/* ── 2. Trust Bar — instant credibility below hero ──────────────────── */}
       <TrustBar />
+
+      {/* ── Work 4: AI Personalized Greeting ──────────────────────────────── */}
+      <AIPersonalizedGreeting />
 
       {/* ── 3. Mobile email waitlist (mobile only) ─────────────────────────── */}
       <div className="mt-8 md:hidden flex z-30 px-4" data-testid="mobile-email-waitlist">
@@ -263,6 +268,9 @@ export default async function Home() {
 
       {/* ── 13. Sticky Mobile CTA (30s delay, 24h dismissal) ───────────────── */}
       <StickyMobileCTA />
+
+      {/* ── Work 4: Live Social Proof Toasts ──────────────────────────────── */}
+      <LiveSocialProofToast />
 
       {/* ── JSON-LD Structured Data — WebSite + ItemList ───────────────────── */}
       <JsonLdScript
