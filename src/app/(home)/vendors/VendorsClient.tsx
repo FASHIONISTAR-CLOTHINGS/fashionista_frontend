@@ -198,8 +198,8 @@ export function VendorsClient() {
         search:      debouncedSearch || undefined,
         city:        city || undefined,
         is_featured: isFeatured || undefined,
-        limit:       PAGE_SIZE,
-        offset:      page * PAGE_SIZE,
+        page:        page + 1,
+        page_size:   PAGE_SIZE,
       }),
     staleTime: 2 * 60_000, // 2 minutes — public data
   });

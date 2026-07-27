@@ -457,7 +457,7 @@ export default function ProductCard({
         href={`/products/${card.slug}`}
         className="flex flex-col gap-1.5 p-3 flex-1"
         aria-label={`View details for ${card.title}`}
-        prefetch={false}
+        prefetch={true}
         data-testid={`product-card-body-${card.slug}`}
       >
         {/* Vendor with verification badge */}

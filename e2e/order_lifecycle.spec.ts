@@ -21,7 +21,7 @@ const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
 
 test.describe("Catalog Browsing", () => {
   test("catalog page loads with products", async ({ page }) => {
-    await page.goto(`${BASE_URL}/catalog`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/products`, { waitUntil: "domcontentloaded" });
     await expect(page).toHaveTitle(/.*/);
 
     // At least one product card should render
@@ -30,10 +30,10 @@ test.describe("Catalog Browsing", () => {
   });
 
   test("category navigation works", async ({ page }) => {
-    await page.goto(`${BASE_URL}/catalog`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/products`, { waitUntil: "domcontentloaded" });
 
     const firstCategory = page.locator(
-      "[id*='category-'], [data-testid='category-item'], [href*='/catalog?category']"
+      "[id*='category-'], [data-testid='category-item'], [href*='/products?category'], [href*='/categories']"
     ).first();
 
     if (await firstCategory.isVisible({ timeout: 5_000 }).catch(() => false)) {
@@ -43,7 +43,7 @@ test.describe("Catalog Browsing", () => {
   });
 
   test("product search returns results", async ({ page }) => {
-    await page.goto(`${BASE_URL}/catalog`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/products`, { waitUntil: "domcontentloaded" });
 
     const searchInput = page.locator(
       "input[placeholder*='search' i], input[type='search'], #catalog-search"
@@ -61,7 +61,7 @@ test.describe("Catalog Browsing", () => {
 
 test.describe("Cart Flow", () => {
   test("cart drawer opens and closes", async ({ page }) => {
-    await page.goto(BASE_URL, { waitUntil: "networkidle" });
+    await page.goto(BASE_URL, { waitUntil: "domcontentloaded" });
 
     const cartBtn = page.locator(
       "[id*='cart'][id*='btn'], [aria-label*='cart' i], [href*='/cart']"
@@ -81,7 +81,7 @@ test.describe("Cart Flow", () => {
   });
 
   test("empty cart shows empty state", async ({ page }) => {
-    await page.goto(`${BASE_URL}/cart`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/cart`, { waitUntil: "domcontentloaded" });
 
     // Should show some cart-related content
     const content = page.locator("body");
@@ -93,7 +93,7 @@ test.describe("Cart Flow", () => {
 
 test.describe("Checkout Stepper", () => {
   test("checkout stepper renders all steps", async ({ page }) => {
-    await page.goto(`${BASE_URL}/checkout`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/checkout`, { waitUntil: "domcontentloaded" });
 
     const stepper = page.locator("#checkout-stepper");
     if (await stepper.isVisible({ timeout: 5_000 }).catch(() => false)) {
@@ -103,7 +103,7 @@ test.describe("Checkout Stepper", () => {
   });
 
   test("delivery step — delivery option selection", async ({ page }) => {
-    await page.goto(`${BASE_URL}/checkout`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/checkout`, { waitUntil: "domcontentloaded" });
 
     const proceedBtn = page.locator("#proceed-to-delivery-btn");
     if (await proceedBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
@@ -119,7 +119,7 @@ test.describe("Checkout Stepper", () => {
   });
 
   test("gift option reveals gift message input", async ({ page }) => {
-    await page.goto(`${BASE_URL}/checkout`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/checkout`, { waitUntil: "domcontentloaded" });
 
     const proceedBtn = page.locator("#proceed-to-delivery-btn");
     if (await proceedBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
@@ -138,13 +138,13 @@ test.describe("Checkout Stepper", () => {
 
 test.describe("Order Status", () => {
   test("order confirmation page renders", async ({ page }) => {
-    await page.goto(`${BASE_URL}/orders`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/orders`, { waitUntil: "domcontentloaded" });
     await expect(page).toHaveTitle(/.*/);
   });
 
   test("order detail page — back navigation", async ({ page }) => {
     // Navigate to orders list
-    await page.goto(`${BASE_URL}/orders`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/orders`, { waitUntil: "domcontentloaded" });
     const content = page.locator("body");
     await expect(content).toBeVisible();
   });
@@ -154,7 +154,7 @@ test.describe("Order Status", () => {
 
 test.describe("Vendor Storefront", () => {
   test("vendor marketplace page loads", async ({ page }) => {
-    await page.goto(`${BASE_URL}/vendors`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/vendors`, { waitUntil: "domcontentloaded" });
     await expect(page).toHaveTitle(/.*/);
 
     const vendorCards = page.locator("[id^='vendor-card-']");
@@ -168,7 +168,7 @@ test.describe("Vendor Storefront", () => {
 
 test.describe("Measurement Flow", () => {
   test("measurements page renders", async ({ page }) => {
-    await page.goto(`${BASE_URL}/measurements`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/measurements`, { waitUntil: "domcontentloaded" });
     await expect(page).toHaveTitle(/.*/);
   });
 });
@@ -178,7 +178,7 @@ test.describe("Measurement Flow", () => {
 test.describe("Chat Feature", () => {
   test("chat room renders WebSocket connection status", async ({ page }) => {
     // Navigate to a page that embeds chat (e.g. order detail or vendor profile)
-    await page.goto(`${BASE_URL}/vendors`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/vendors`, { waitUntil: "domcontentloaded" });
     // Chat is only available when authenticated — just check page loads
     await expect(page).toHaveTitle(/.*/);
   });

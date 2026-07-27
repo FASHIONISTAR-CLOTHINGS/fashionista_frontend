@@ -63,6 +63,7 @@ const Page = () => {
             </label>
           </p>
           <input
+            id="login-email"
             type="text"
             name={isEmail ? "email" : "phone_number"}
             className="box-border w-full bg-white border-[1.5px] outline-none border-[#D9D9D9] rounded-[70px] p-4"
@@ -83,7 +84,7 @@ const Page = () => {
           <input
             type="password"
             name="password"
-            id="password"
+            id="login-password"
             className="box-border bg-white outline-none w-full border-[1.5px] border-[#D9D9D9] rounded-[70px]  p-4"
             placeholder="Enter password "
           />
@@ -95,7 +96,7 @@ const Page = () => {
           </Link>
         </div>
 
-        <Button title="Login" />
+        <Button id="login-submit-btn" title="Login" />
         <div className="w-full max-w-[423px] flex items-center gap-3 ">
           <span className="w-1/2 h-[1px] bg-[#D9D9D9]" />
           <span className="text-[13px] text-[#282828] leading-[17.55px]">

@@ -23,7 +23,7 @@
  *
  * Dynamic Limits:
  *  - Min/max withdrawal loaded from /api/v1/platform/settings/public/
- *  - Falls back to ₦1,000 min if backend unavailable
+ *  - Falls back to NGN 1,000 min if backend unavailable
  */
 "use client";
 
@@ -37,7 +37,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import {
   useBankAccounts,
   useRequestPayout,
@@ -80,11 +80,11 @@ export function PayoutRequestModal({
 
   const amountError =
     amountNum > 0 && amountNum < minWithdrawal
-      ? `Minimum payout is ₦${minWithdrawal.toLocaleString("en-NG")}`
+      ? `Minimum payout is ${formatCurrency(minWithdrawal)}`
       : amountNum > walletBalance
       ? "Amount exceeds your available balance"
       : amountNum > maxWithdrawal
-      ? `Maximum payout is ₦${maxWithdrawal.toLocaleString("en-NG")}`
+      ? `Maximum payout is ${formatCurrency(maxWithdrawal)}`
       : "";
 
   const canProceedToPin =
@@ -195,7 +195,7 @@ export function PayoutRequestModal({
                   <span className="text-xs text-slate-400">Available Balance</span>
                 </div>
                 <span className="text-sm font-bold text-emerald-400">
-                  ₦{walletBalance.toLocaleString("en-NG", { minimumFractionDigits: 2 })}
+                  {formatCurrency(walletBalance)}
                 </span>
               </div>
 
@@ -238,7 +238,7 @@ export function PayoutRequestModal({
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400">
-                    ₦
+                    NGN
                   </span>
                   <input
                     id="payout-amount"
@@ -280,7 +280,7 @@ export function PayoutRequestModal({
                 </div>
                 {amountError && <p className="text-xs text-red-400 mt-1">{amountError}</p>}
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Min: ₦{minWithdrawal.toLocaleString("en-NG")} · Max: ₦{maxWithdrawal.toLocaleString("en-NG")}
+                  Min: {formatCurrency(minWithdrawal)} · Max: {formatCurrency(maxWithdrawal)}
                 </p>
               </div>
 
@@ -370,7 +370,7 @@ export function PayoutRequestModal({
       <PinEntryModal
         open={step === "pin"}
         title="Confirm Payout"
-        subtitle={`Authorise ₦${amountNum.toLocaleString("en-NG")} withdrawal`}
+        subtitle={`Authorise ${formatCurrency(amountNum)} withdrawal`}
         onCancel={() => setStep("form")}
         onVerified={handlePinVerified}
         isSubmitting={payoutMutation.isPending}
@@ -397,7 +397,7 @@ export function PayoutRequestModal({
             <div>
               <p className="text-xl font-bold text-white">Payout Initiated! 🎉</p>
               <p className="text-sm text-slate-400 mt-1.5">
-                ₦{parseFloat(result.amount).toLocaleString("en-NG")} will arrive within{" "}
+                {formatCurrency(parseFloat(result.amount))} will arrive within{" "}
                 <span className="text-emerald-400 font-medium">1–2 business days</span>
               </p>
             </div>

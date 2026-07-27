@@ -333,8 +333,8 @@ export const catalogApi = {
   },
 
   /**
-   * GET /api/ninja/vendors/?{filters}
-   * Paginated vendor list. C15/plan: added getVendors to catalogApi.
+   * GET /api/v1/ninja/vendor/public/?{filters}
+   * Public vendor list from the vendor Ninja router (no auth required).
    */
   async getVendors(
     page = 1,
@@ -342,7 +342,7 @@ export const catalogApi = {
   ): Promise<PaginatedVendors> {
     try {
       const data = await apiAsync
-        .get("vendors/", { searchParams: { page: String(page), ...filters } })
+        .get("vendor/public/", { searchParams: { page: String(page), ...filters } })
         .json();
       const results = unwrapResults<PaginatedVendors>(data);
       return results[0] ?? { results: [] as CatalogVendorCard[], count: 0, page: 1, page_size: 4 };
@@ -359,7 +359,7 @@ export const catalogApi = {
   async getBlogPosts(limit = 3): Promise<CatalogBlogPost[]> {
     try {
       const data = await apiAsync
-        .get("blog/", { searchParams: { limit: String(limit) } })
+        .get("catalog/blog/", { searchParams: { limit: String(limit) } })
         .json();
       const parsed = CatalogBlogPostListSchema.safeParse(
         (data as { results?: unknown })?.results ?? data

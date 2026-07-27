@@ -5,8 +5,12 @@
  */
 import { test as setup } from "@playwright/test";
 import path from "path";
+import { fileURLToPath } from "url";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const API = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8001";
 
 // State files — saved once, reused by all test workers
 export const CLIENT_AUTH_FILE   = path.join(__dirname, ".auth/client.json");

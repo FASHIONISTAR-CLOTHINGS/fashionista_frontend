@@ -400,29 +400,29 @@ export const vendorApi = {
     await apiSync.delete(`v1/products/coupons/${couponId}/`);
   },
 
-  // ── Public Marketplace (AllowAny) ──────────────────────────────────────────
+  // ── Public Marketplace (Ninja async, no auth required) ─────────────────────
   async getPublicVendors(params?: {
     search?:      string;
     city?:        string;
     is_featured?: boolean;
-    limit?:       number;
-    offset?:      number;
-  }): Promise<{ count: number; results: PublicVendorCard[] }> {
-    const qp = new URLSearchParams();
-    if (params?.search)      qp.set("search",      params.search);
-    if (params?.city)        qp.set("city",         params.city);
-    if (params?.is_featured) qp.set("is_featured",  "true");
-    if (params?.limit)       qp.set("limit",        String(params.limit));
-    if (params?.offset)      qp.set("offset",       String(params.offset));
-    const url = `v1/vendor/public/${qp.toString() ? "?" + qp.toString() : ""}`;
-    const { data } = await apiSync.get(url);
-    const unwrapped = unwrapData<{ count: number; results: PublicVendorCard[] }>(data);
+    page?:        number;
+    page_size?:   number;
+  }): Promise<{ count: number; results: PublicVendorCard[]; page: number; page_size: number }> {
+    const searchParams: Record<string, string> = {};
+    if (params?.search)      searchParams["search"]      = params.search;
+    if (params?.city)        searchParams["city"]        = params.city;
+    if (params?.is_featured) searchParams["is_featured"]  = "true";
+    if (params?.page)        searchParams["page"]        = String(params.page);
+    if (params?.page_size)   searchParams["page_size"]   = String(params.page_size);
+    const data = await apiAsync.get("vendor/public/", { searchParams }).json();
+    const unwrapped = unwrapData<{ count: number; results: PublicVendorCard[]; page: number; page_size: number }>(data);
     return unwrapped;
   },
 
   async getPublicVendorDetail(slug: string): Promise<PublicVendorDetail> {
-    const { data } = await apiSync.get(`v1/vendor/public/${slug}/`);
-    return unwrapData<PublicVendorDetail>(data);
+    const data = await apiAsync.get(`vendor/public/${slug}/`).json();
+    const unwrapped = unwrapData<PublicVendorDetail>(data);
+    return unwrapped;
   },
 };
 

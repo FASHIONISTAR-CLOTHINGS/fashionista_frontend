@@ -79,6 +79,7 @@ import {
 import type { Conversation, Message } from "@/features/chat";
 
 import { useAuthStore, selectToken } from "@/features/auth/store/auth.store";
+import { formatCurrency } from "@/lib/utils";
 const C = {
   green:  "#01454A",
   greenM: "#01454A",
@@ -941,7 +942,7 @@ export function VendorChatView() {
                             <div className="min-w-0">
                               <span className="text-[9px] font-bold uppercase tracking-widest text-[#FDA600]">Catalog Share</span>
                               <h4 className="text-xs font-bold text-[#1A1208] truncate mt-0.5">{attachedProduct.title}</h4>
-                              <p className="text-xs font-semibold text-[#01454A] mt-1">₦{Number(attachedProduct.price).toLocaleString("en-NG")}</p>
+                              <p className="text-xs font-semibold text-[#01454A] mt-1">{formatCurrency(Number(attachedProduct.price))}</p>
                             </div>
                             <button
                               type="button"
@@ -1050,7 +1051,7 @@ export function VendorChatView() {
                             )}
                             <div className="min-w-0 flex-1">
                               <p className="text-xs font-bold text-[#1A1208] truncate leading-tight">{prod.title}</p>
-                              <p className="text-[10px] text-[#7A6B44] mt-0.5">₦{Number(prod.price).toLocaleString("en-NG")}</p>
+                              <p className="text-[10px] text-[#7A6B44] mt-0.5">{formatCurrency(Number(prod.price))}</p>
                             </div>
                           </button>
                         ))}

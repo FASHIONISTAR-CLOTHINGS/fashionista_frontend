@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useVendorCoupons, useCreateCoupon, useDeactivateCoupon } from "@/features/vendor/hooks/use-vendor-analytics";
 import { useVendorDashboard } from "@/features/vendor/hooks/use-vendor-setup";
+import { formatCurrency } from "@/lib/utils";
 
 type CouponStatus = "active" | "expired" | "scheduled";
 interface Coupon {
@@ -56,7 +57,7 @@ function CouponCard({ coupon }: { coupon: Coupon }) {
               {coupon.code}
             </p>
             <p className="mt-1 text-sm font-medium text-[hsl(var(--muted-foreground))]">
-              {coupon.type === "percentage" ? `${coupon.value}% Off` : `₦${coupon.value.toLocaleString()} Off`}
+              {coupon.type === "percentage" ? `${coupon.value}% Off` : `${formatCurrency(coupon.value)} Off`}
             </p>
           </div>
         </div>
@@ -342,7 +343,7 @@ export function VendorCouponsView() {
                     className="w-full rounded-2xl border border-[hsl(var(--brand-cream-dark))] bg-white px-4 py-3 text-sm font-bold text-[#01454A] focus:outline-none focus:ring-2 focus:ring-[#FDA600]"
                   >
                     <option value="percentage">Percentage (%)</option>
-                    <option value="fixed">Fixed (₦)</option>
+                    <option value="fixed">Fixed (NGN)</option>
                   </select>
                 </div>
                 <div>
@@ -373,7 +374,7 @@ export function VendorCouponsView() {
               <div className="grid grid-cols-2 gap-4 items-center">
                 <div>
                   <label className="block text-xs font-black uppercase tracking-wider text-[#7A6B44] mb-2">
-                    Min. Order Subtotal (₦)
+                    Min. Order Subtotal (NGN)
                   </label>
                   <input
                     type="number"

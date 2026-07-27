@@ -140,9 +140,6 @@ interface VendorDashboardProps {
 export function VendorDashboard({ profile, metrics, isLoading }: VendorDashboardProps) {
   const [activeTab, setActiveTab] = useState<"overview" | "orders" | "products" | "analytics">("overview");
 
-  const fmtCurrency = (v: number) =>
-    new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", notation: "compact" }).format(v);
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -172,7 +169,7 @@ export function VendorDashboard({ profile, metrics, isLoading }: VendorDashboard
       {/* Metric Cards Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
-          icon="💰" label="Total Revenue" value={fmtCurrency(metrics.revenue)}
+          icon="💰" label="Total Revenue" value={formatCurrency(metrics.revenue)}
           color="amber" trend="up" trendValue="12%" subtext="All time"
         />
         <MetricCard
