@@ -8,9 +8,12 @@
  *   - Camera access     — getUserMedia API
  *   - Height estimation — Auto-estimate from landmarks if not provided by user
  *
- * State machine:
- *   idle → loading_model → awaiting_height → capturing → validating
+ * State machine (dual-pose):
+ *   idle → loading_model → awaiting_height → capturing_front → validating_front
+ *        → side_prompt → capturing_side → validating_side
  *        → submitting → processing → completed | failed
+ *
+ * Legacy single-pose flow still supported via captureAndSubmit().
  *
  * Usage:
  *   const capture = useMeasurementCapture();
