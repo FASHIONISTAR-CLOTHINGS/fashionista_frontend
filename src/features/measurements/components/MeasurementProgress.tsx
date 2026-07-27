@@ -38,11 +38,11 @@ const PHASE_CONFIG: Record<ScanProgressPhase, PhaseConfig> = {
   idle:          { label: "Ready",                    sublabel: "Press start to begin scan",        pct: 0,   color: "white/20"   },
   loading:       { label: "Loading AI Model",         sublabel: "Downloading pose detector...",      pct: 12,  color: "brand-green" },
   initialising:  { label: "Initialising Camera",      sublabel: "Starting pose detection engine...", pct: 28,  color: "brand-green" },
-  detecting:     { label: "Detecting Pose",            sublabel: "Hold still — capturing landmarks",  pct: 50,  color: "blue-500"   },
-  submitting:    { label: "Uploading Measurements",   sublabel: "Sending body data to server...",    pct: 68,  color: "sky-500"    },
+  detecting:     { label: "Detecting Pose",            sublabel: "Hold still — capturing landmarks",  pct: 50,  color: "brand-gold"   },
+  submitting:    { label: "Uploading Measurements",   sublabel: "Sending body data to server...",    pct: 68,  color: "brand-gold"    },
   processing:    { label: "AI Processing",            sublabel: "Computing body measurements...",    pct: 82,  color: "brand-gold"  },
-  saving:        { label: "Saving Profile",           sublabel: "Creating your measurement profile", pct: 95,  color: "green-500"  },
-  completed:     { label: "Complete",                 sublabel: "Measurements saved successfully",   pct: 100, color: "green-400"  },
+  saving:        { label: "Saving Profile",           sublabel: "Creating your measurement profile", pct: 95,  color: "brand-gold"  },
+  completed:     { label: "Complete",                 sublabel: "Measurements saved successfully",   pct: 100, color: "brand-gold"  },
   failed:        { label: "Scan Failed",              sublabel: "Please try again",                  pct: 0,   color: "red-500"    },
 };
 
@@ -85,7 +85,7 @@ export function MeasurementProgress({
             />
           )}
           {isCompleted && (
-            <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+            <div className="w-4 h-4 rounded-full bg-brand-gold flex items-center justify-center flex-shrink-0">
               <span className="text-[9px] text-white">✓</span>
             </div>
           )}
@@ -101,7 +101,7 @@ export function MeasurementProgress({
           <span className={cn(
             "text-sm font-semibold",
             isFailed    ? "text-red-400"   :
-            isCompleted ? "text-green-400" :
+            isCompleted ? "text-brand-gold" :
             isActive    ? "text-white"     :
             "text-white/40",
           )}>
@@ -145,7 +145,7 @@ export function MeasurementProgress({
       <p className={cn(
         "text-xs transition-all duration-300",
         isFailed    ? "text-red-400/80"  :
-        isCompleted ? "text-green-400/70" :
+        isCompleted ? "text-brand-gold/70" :
         "text-white/35",
       )}>
         {isFailed && errorMessage ? errorMessage : config.sublabel}
@@ -162,7 +162,7 @@ export function MeasurementProgress({
               <div key={step} className="flex flex-col items-center gap-0.5">
                 <div className={cn(
                   "w-1 h-1 rounded-full transition-all duration-300",
-                  isDone ? "bg-green-400" :
+                  isDone ? "bg-brand-gold" :
                   isCurr ? "bg-white/60 animate-pulse" :
                   "bg-white/10",
                 )} />
@@ -230,7 +230,7 @@ export function MeasurementProgressPill({ phase }: { phase: ScanProgressPhase })
   return (
     <div className={cn(
       "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium",
-      phase === "completed" ? "border-green-500/30 bg-green-500/10 text-green-400" :
+      phase === "completed" ? "border-brand-gold/30 bg-brand-gold/10 text-brand-gold" :
       phase === "failed"    ? "border-red-500/30 bg-red-500/10 text-red-400" :
       isActive              ? "border-white/10 bg-white/5 text-white/60" :
       "border-white/5 bg-transparent text-white/25",

@@ -189,7 +189,7 @@ export function ShareModal({ measurementId, measurementName, isOpen, onClose }: 
             </div>
 
             {/* Security notice */}
-            <div className="p-3 rounded-xl bg-green-500/8 border border-green-500/20 text-xs text-green-400">
+            <div className="p-3 rounded-xl bg-brand-gold/8 border border-brand-gold/20 text-xs text-brand-gold">
               🔒 This link is encrypted and visible only to your chosen recipient.
             </div>
           </>

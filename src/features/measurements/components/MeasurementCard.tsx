@@ -72,14 +72,14 @@ export function MeasurementCard({ profile, onEdit, onStartScan, className = "" }
       <div className="px-5 py-3 bg-white/3">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs text-brand-gray">Profile Completion</span>
-          <span className={`text-xs font-semibold ${completion >= 80 ? "text-green-400" : completion >= 50 ? "text-brand-gold" : "text-red-400"}`}>
+          <span className={`text-xs font-semibold ${completion >= 80 ? "text-brand-gold" : completion >= 50 ? "text-brand-gold/70" : "text-red-400"}`}>
             {completion}%
           </span>
         </div>
         <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-700 ${
-              completion >= 80 ? "bg-green-500" : completion >= 50 ? "bg-brand-gold" : "bg-red-500"
+              completion >= 80 ? "bg-brand-gold" : completion >= 50 ? "bg-brand-gold/70" : "bg-red-500"
             }`}
             style={{ width: `${completion}%` }}
           />
@@ -129,7 +129,7 @@ export function BodyDiagram({ profile, highlightField, className = "" }: BodyDia
 
   const hotspotClass = (field: keyof MeasurementProfile) =>
     hasValue(field)
-      ? "fill-green-500/70 stroke-green-400"
+      ? "fill-brand-gold/70 stroke-brand-gold"
       : "fill-brand-gray/50 stroke-brand-gray";
 
   return (
@@ -184,7 +184,7 @@ export function BodyDiagram({ profile, highlightField, className = "" }: BodyDia
       {/* Legend */}
       <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 text-[10px] text-brand-gray">
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-green-500" />Measured
+          <span className="w-2 h-2 rounded-full bg-brand-gold" />Measured
         </span>
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-brand-gray" />Missing

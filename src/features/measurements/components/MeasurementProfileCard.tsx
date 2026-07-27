@@ -143,7 +143,7 @@ export function MeasurementProfileCard({
           </div>
           {confidence !== null && (
             <div className="flex items-center gap-1.5 text-xs text-white/40">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-gold"></span>
               AI Scan · {confidence}% accuracy
             </div>
           )}

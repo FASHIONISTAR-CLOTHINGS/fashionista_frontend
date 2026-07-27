@@ -17,7 +17,7 @@ import { useState } from "react";
 import { MeasurementProfileCard } from "./MeasurementProfileCard";
 import { formatMeasurement } from "../utils/landmarkToMeasurement";
 import { cn } from "@/lib/utils";
-import type { MeasurementUnit } from "./MeasurementProfileCard";
+import type { MeasurementUnit, MeasurementProfile } from "./MeasurementProfileCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -82,7 +82,7 @@ export function ScanResultCard({ result, onSaveEdit, className }: ScanResultCard
   };
 
   // Build profile-compatible shape for MeasurementProfileCard
-  const profileForDisplay = {
+  const profileForDisplay: MeasurementProfile = {
     id:              result.measurement_profile_id ?? "scan-preview",
     name:            "AI Scan Results",
     is_default:      false,
@@ -132,7 +132,7 @@ export function ScanResultCard({ result, onSaveEdit, className }: ScanResultCard
 
       {/* ── Measurement grid (reuses MeasurementProfileCard) ── */}
       <MeasurementProfileCard
-        profile={profileForDisplay as Record<string, unknown>}
+        profile={profileForDisplay}
         onSave={onSaveEdit && result.measurement_profile_id
           ? (id, updates) => onSaveEdit(id, updates)
           : undefined

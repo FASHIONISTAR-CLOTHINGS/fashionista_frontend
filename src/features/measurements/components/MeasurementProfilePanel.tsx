@@ -194,7 +194,7 @@ function ProfileCard({
         <div className="flex items-center gap-2">
           {profile.is_verified && (
             <span title="Verified">
-              <CheckCircle2 size={16} className="text-green-500" />
+              <CheckCircle2 size={16} className="text-brand-gold" />
             </span>
           )}
           {profile.is_default && (
@@ -283,7 +283,7 @@ function ProfileCard({
           </button>
         )}
         {profile.is_default && (
-          <div className="flex flex-1 items-center justify-center gap-1.5 rounded-[12px] border border-green-200 bg-green-50 py-2 text-xs font-semibold text-green-600">
+          <div className="flex flex-1 items-center justify-center gap-1.5 rounded-[12px] border border-brand-gold/30 bg-brand-gold/10 py-2 text-xs font-semibold text-brand-gold">
             <StarOff size={13} />
             Active Default
           </div>
