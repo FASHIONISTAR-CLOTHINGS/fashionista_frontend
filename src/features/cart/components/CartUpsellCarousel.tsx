@@ -31,10 +31,9 @@ interface UpsellProduct {
 
 interface CartUpsellCarouselProps {
   cartItemSlugs: string[];
-  categorySlug?: string | null;
 }
 
-export function CartUpsellCarousel({ cartItemSlugs, categorySlug }: CartUpsellCarouselProps) {
+export function CartUpsellCarousel({ cartItemSlugs }: CartUpsellCarouselProps) {
   const [products, setProducts] = useState<UpsellProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement | null>(null);

@@ -349,7 +349,7 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
     setPhase("submitting");
     await scanSession.submit({
       user_height_cm:  height,
-      front_landmarks: toLandmarkPoints(frontLms),
+      landmarks_front: toLandmarkPoints(frontLms),
       device_type:     "web",
     });
     stopCamera();
@@ -387,7 +387,7 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
         setPhase("submitting");
         await scanSession.submit({
           user_height_cm:  height,
-          front_landmarks: toLandmarkPoints(frontLms),
+          landmarks_front: toLandmarkPoints(frontLms),
           device_type:     "web",
         });
         stopCamera();
@@ -399,8 +399,8 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
       // Submit both front and side landmarks
       await scanSession.submit({
         user_height_cm:   height,
-        front_landmarks:  toLandmarkPoints(frontLms),
-        side_landmarks:   toLandmarkPoints(sideLms),
+        landmarks_front:  toLandmarkPoints(frontLms),
+        landmarks_side:   toLandmarkPoints(sideLms),
         device_type:      "web",
       });
 
@@ -438,7 +438,7 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
 
       await scanSession.submit({
         user_height_cm:  height,
-        front_landmarks: toLandmarkPoints(frontLms),
+        landmarks_front: toLandmarkPoints(frontLms),
         device_type:     "web",
       });
 

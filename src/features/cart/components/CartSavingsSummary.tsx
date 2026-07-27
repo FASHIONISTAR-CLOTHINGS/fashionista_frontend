@@ -15,10 +15,7 @@ import { formatCurrency } from "@/lib/formatting";
 
 interface CartSavingsSummaryProps {
   items: Array<{
-    product: {
-      price: string;
-      old_price?: string | null;
-    };
+    unit_price: string;
     quantity: number;
     line_total: string;
   }>;
@@ -30,14 +27,13 @@ export function CartSavingsSummary({ items, currency }: CartSavingsSummaryProps)
   let subtotal = 0;
 
   for (const item of items) {
-    const currentPrice = parseFloat(item.product.price);
-    const oldPrice = item.product.old_price ? parseFloat(item.product.old_price) : null;
+    const unitPrice = parseFloat(item.unit_price);
     const lineTotal = parseFloat(item.line_total);
+    const expectedTotal = unitPrice * item.quantity;
     subtotal += lineTotal;
 
-    if (oldPrice && oldPrice > currentPrice) {
-      const savingsPerUnit = oldPrice - currentPrice;
-      totalSavings += savingsPerUnit * item.quantity;
+    if (expectedTotal > lineTotal) {
+      totalSavings += expectedTotal - lineTotal;
     }
   }
 
