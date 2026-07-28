@@ -37,6 +37,9 @@ import { FashionistarImage } from "@/components/media";
 import { formatCurrency } from "@/lib/formatting";
 import { WishlistPriceAlertBadge } from "@/features/wishlist/components/WishlistPriceAlertBadge";
 import { WishlistShareButton } from "@/features/wishlist/components/WishlistShareButton";
+import { WishlistSummary } from "@/features/wishlist/components/WishlistSummary";
+import { BackInStockToggle } from "@/features/wishlist/components/BackInStockToggle";
+import { BulkMoveToCart } from "@/features/wishlist/components/BulkMoveToCart";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -255,6 +258,11 @@ function WishlistCard({ row }: { row: WishlistRow }) {
           {/* ── Work 6: Share Button ─────────────────────────────────── */}
           <WishlistShareButton productSlug={slug} productTitle={title} />
         </div>
+
+        {/* ── Work 6: Back-in-Stock Toggle ──────────────────────── */}
+        {!inStock && (
+          <BackInStockToggle productSlug={slug} productTitle={title} />
+        )}
       </div>
     </div>
   );
@@ -355,15 +363,22 @@ export function ClientWishlistView() {
   return (
     <div className="space-y-8 py-4">
       {/* Header */}
-      <div>
-        <h1 className="font-bon_foyage text-5xl text-[hsl(var(--foreground))]">
-          Wishlist
-        </h1>
-        <p className="mt-3 max-w-2xl text-base leading-7 text-[hsl(var(--muted-foreground))]">
-          {wishlist.length} saved item{wishlist.length !== 1 ? "s" : ""} — we&apos;ll
-          notify you when prices drop.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="font-bon_foyage text-5xl text-[hsl(var(--foreground))]">
+            Wishlist
+          </h1>
+          <p className="mt-3 max-w-2xl text-base leading-7 text-[hsl(var(--muted-foreground))]">
+            {wishlist.length} saved item{wishlist.length !== 1 ? "s" : ""} — we&apos;ll
+            notify you when prices drop.
+          </p>
+        </div>
+        {/* ── Work 6: Bulk Add to Cart ──────────────────────────── */}
+        <BulkMoveToCart items={wishlist.map((r) => ({ productId: r.productId, slug: r.slug, title: r.title, inStock: r.inStock }))} />
       </div>
+
+      {/* ── Work 6: Wishlist Summary ──────────────────────────────── */}
+      <WishlistSummary items={wishlist.map((r) => ({ price: r.price, oldPrice: r.oldPrice, inStock: r.inStock }))} />
 
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-2">
