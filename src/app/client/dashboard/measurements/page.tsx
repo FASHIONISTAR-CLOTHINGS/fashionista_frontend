@@ -14,20 +14,20 @@ export const metadata: Metadata = {
 
 export default function MeasurementsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0d0d1a] via-[#120f2a] to-[#0a0a18] px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F4F3EC] px-4 py-8 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-white">My Measurements</h1>
-            <p className="text-sm text-white/50 mt-1">
+            <h1 className="text-2xl font-bold text-[#01454A]">My Measurements</h1>
+            <p className="text-sm text-[#7A6B44] mt-1">
               Your AI body measurement profiles for perfect fit
             </p>
           </div>
           <Link
             href="/client/dashboard/measurements/scan"
-            className="inline-flex items-center gap-2 rounded-xl bg-violet-600 hover:bg-violet-500
+            className="inline-flex items-center gap-2 rounded-xl bg-[#01454A] hover:bg-[#016B73]
                        text-white font-semibold text-sm px-5 py-2.5 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

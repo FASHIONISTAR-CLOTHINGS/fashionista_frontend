@@ -94,56 +94,56 @@ export function InHouseMeasurementFlow({
 
         {/* Header badge */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-brand-green/15 flex items-center justify-center text-brand-gold ring-1 ring-brand-green/20">
+          <div className="w-12 h-12 rounded-2xl bg-[#01454A]/10 flex items-center justify-center text-[#FDA600] ring-1 ring-[#01454A]/15">
             <IconRuler />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white tracking-tight">
+            <h2 className="text-xl font-bold text-[#01454A] tracking-tight">
               In-House AI Body Scan
             </h2>
-            <p className="text-sm text-white/50">
+            <p className="text-sm text-[#7A6B44]">
               30 seconds · 14 measurements · 100% private
             </p>
           </div>
         </div>
 
         {/* Measurement preview */}
-        <div className="rounded-2xl bg-white/5 border border-white/8 p-5">
-          <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">
+        <div className="rounded-2xl bg-white border border-[#ECE6D6] p-5">
+          <p className="text-xs font-semibold text-[#7A6B44] uppercase tracking-wider mb-3">
             What We Measure
           </p>
           <div className="grid grid-cols-3 gap-2">
             {MEASUREMENT_LIST.map((m) => (
               <div key={m} className="flex items-center gap-1.5">
-                <span className="text-brand-gold"><IconStar /></span>
-                <span className="text-xs text-white/70">{m}</span>
+                <span className="text-[#FDA600]"><IconStar /></span>
+                <span className="text-xs text-[#565960]">{m}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Requirements */}
-        <div className="rounded-2xl bg-white/5 border border-white/8 p-5">
-          <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">
+        <div className="rounded-2xl bg-white border border-[#ECE6D6] p-5">
+          <p className="text-xs font-semibold text-[#7A6B44] uppercase tracking-wider mb-3">
             Before You Start
           </p>
           <ul className="flex flex-col gap-2">
             {REQUIREMENTS.map((req) => (
               <li key={req} className="flex items-start gap-2.5">
-                <span className="mt-0.5 text-brand-gold shrink-0"><IconCheck /></span>
-                <span className="text-sm text-white/70">{req}</span>
+                <span className="mt-0.5 text-[#FDA600] shrink-0"><IconCheck /></span>
+                <span className="text-sm text-[#565960]">{req}</span>
               </li>
             ))}
           </ul>
         </div>
 
         {/* Privacy note */}
-        <div className="rounded-xl bg-blue-500/8 border border-blue-500/15 px-4 py-3 flex items-start gap-3">
-          <svg className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <div className="rounded-xl bg-[#01454A]/5 border border-[#01454A]/12 px-4 py-3 flex items-start gap-3">
+          <svg className="w-4 h-4 text-[#01454A] mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
           </svg>
-          <p className="text-xs text-blue-300/80">
-            <strong className="text-blue-300">100% Private.</strong> Only pose coordinates are transmitted — no video
+          <p className="text-xs text-[#565960]">
+            <strong className="text-[#01454A]">100% Private.</strong> Only pose coordinates are transmitted — no video
             or images are recorded or stored on our servers.
           </p>
         </div>
@@ -153,7 +153,7 @@ export function InHouseMeasurementFlow({
           {onCancel && (
             <button
               onClick={onCancel}
-              className="flex-1 rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10
+              className="flex-1 rounded-xl border border-[#ECE6D6] bg-white text-[#565960] hover:bg-[#F8F5ED]
                          font-semibold text-sm py-3 transition-colors"
             >
               Cancel
@@ -161,7 +161,7 @@ export function InHouseMeasurementFlow({
           )}
           <button
             onClick={() => setPhase("scanning")}
-            className="flex-1 rounded-xl bg-brand-green hover:bg-brand-green/90 text-white
+            className="flex-1 rounded-xl bg-[#01454A] hover:bg-[#016B73] text-white
                        font-semibold text-sm py-3 transition-colors flex items-center justify-center gap-2"
           >
             <IconCamera />
@@ -186,21 +186,21 @@ export function InHouseMeasurementFlow({
   // ── SUCCESS PHASE ───────────────────────────────────────────────────────────
   return (
     <div className={cn("flex flex-col items-center gap-6 py-8 text-center", className)}>
-      <div className="w-20 h-20 rounded-full bg-brand-gold/15 ring-4 ring-brand-gold/25
-                      flex items-center justify-center text-brand-gold animate-bounce-once">
+      <div className="w-20 h-20 rounded-full bg-[#FDA600]/15 ring-4 ring-[#FDA600]/25
+                      flex items-center justify-center text-[#FDA600] animate-bounce-once">
         <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
         </svg>
       </div>
 
       <div className="flex flex-col gap-2">
-        <h3 className="text-xl font-bold text-white">Measurements Saved!</h3>
-        <p className="text-sm text-white/50 max-w-xs mx-auto">
+        <h3 className="text-xl font-bold text-[#01454A]">Measurements Saved!</h3>
+        <p className="text-sm text-[#7A6B44] max-w-xs mx-auto">
           Your AI body scan is complete. Your measurement profile is ready
           for size recommendations and perfect fit.
         </p>
         {profileId && (
-          <p className="text-xs text-white/30 mt-1">Profile ID: {profileId}</p>
+          <p className="text-xs text-[#7A6B44]/60 mt-1">Profile ID: {profileId}</p>
         )}
       </div>
 
@@ -208,7 +208,7 @@ export function InHouseMeasurementFlow({
         {profileId && (
           <a
             href={`/client/dashboard/measurements/${profileId}`}
-            className="rounded-xl bg-brand-green hover:bg-brand-green/90 text-white font-semibold
+            className="rounded-xl bg-[#01454A] hover:bg-[#016B73] text-white font-semibold
                        text-sm py-3 transition-colors text-center"
           >
             View My Measurements
@@ -216,7 +216,7 @@ export function InHouseMeasurementFlow({
         )}
         <button
           onClick={() => setPhase("intro")}
-          className="rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10
+          className="rounded-xl border border-[#ECE6D6] bg-white text-[#565960] hover:bg-[#F8F5ED]
                      font-semibold text-sm py-3 transition-colors"
         >
           Scan Again
