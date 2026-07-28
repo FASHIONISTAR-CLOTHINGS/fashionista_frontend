@@ -17,6 +17,7 @@ import {
   Package,
   Palette,
   ReceiptText,
+  Ruler,
   Settings,
   Sparkles,
   TicketCheck,
@@ -62,6 +63,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/client/dashboard/orders", label: "My Orders", Icon: Package },
       { href: "/client/dashboard/custom-orders", label: "Custom Orders", Icon: Palette },
+      { href: "/client/dashboard/measurements", label: "Measurements", Icon: Ruler },
       { href: "/client/dashboard/wishlist", label: "Wishlist", Icon: Heart },
     ],
   },
@@ -416,12 +418,12 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
 
         {/* ── Sidebar ────────────────────────────────────────────────── */}
         <aside
-          className={`fixed inset-y-0 left-0 z-50 flex w-[272px] flex-col bg-[#111111] transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 z-50 flex w-[272px] flex-col bg-gradient-to-b from-[#01272C] via-[#01454A] to-[#012028] transition-transform duration-300 ease-in-out lg:translate-x-0 ${
             isOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
           {/* Brand header */}
-          <div className="flex items-center justify-between border-b border-white/8 px-5 py-5">
+          <div className="flex items-center justify-between border-b border-[#FDA600]/15 px-5 py-5">
             <Link
               href="/client/dashboard"
               className="flex items-center gap-3"
@@ -443,7 +445,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
               type="button"
               aria-label="Close navigation"
               onClick={closeMenu}
-              className="rounded-lg border border-white/10 p-1.5 text-white/60 hover:text-white lg:hidden"
+              className="rounded-lg border border-[#FDA600]/20 p-1.5 text-[#FDA600]/70 hover:text-[#FDA600] lg:hidden"
             >
               <X className="h-4 w-4" />
             </button>
@@ -451,7 +453,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
 
           {/* Profile mini-card */}
           {userEmail && (
-            <div className="mx-4 my-4 rounded-xl bg-white/5 px-4 py-3">
+            <div className="mx-4 my-4 rounded-xl bg-[#FDA600]/8 px-4 py-3 border border-[#FDA600]/10">
               <div className="flex items-center gap-3">
                 <Avatar user={avatarUser} size="md" />
                 <div className="min-w-0">
@@ -468,7 +470,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
                     Profile {completionPct}% complete
                   </span>
                 </div>
-                <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
+                <div className="h-1 w-full overflow-hidden rounded-full bg-white/15">
                   <div
                     className="h-full rounded-full bg-[#FDA600] transition-all duration-700"
                     style={{ width: `${completionPct}%` }}
@@ -491,7 +493,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           {/* Bottom: logout */}
-          <div className="border-t border-white/8 px-3 py-4">
+          <div className="border-t border-[#FDA600]/15 px-3 py-4">
             <button
               type="button"
               onClick={handleLogout}
