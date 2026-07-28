@@ -95,8 +95,8 @@ export function PoseOverlay({ frame, canvasRef, videoRef }: PoseOverlayProps) {
     // ── Draw connections ────────────────────────────────────────────────────
     ctx.lineWidth   = 2.5;
     ctx.strokeStyle = quality >= 0.72
-      ? "rgba(134, 239, 172, 0.8)"    // Green
-      : "rgba(251, 191, 36, 0.6)";    // Amber
+      ? "rgba(253, 166, 0, 0.8)"     // Brand Gold
+      : "rgba(122, 107, 68, 0.6)";    // Muted Gold
 
     for (const [a, b] of POSE_CONNECTIONS) {
       if (a >= lms.length || b >= lms.length) continue;
@@ -128,8 +128,8 @@ export function PoseOverlay({ frame, canvasRef, videoRef }: PoseOverlayProps) {
       ctx.beginPath();
       ctx.arc(px, py, radius, 0, Math.PI * 2);
       ctx.fillStyle = vis > 0.7
-        ? "rgba(134, 239, 172, 0.9)"   // Bright green
-        : "rgba(251, 191, 36, 0.7)";   // Amber for low visibility
+        ? "rgba(253, 166, 0, 0.9)"    // Brand Gold
+        : "rgba(122, 107, 68, 0.7)";  // Muted Gold
       ctx.fill();
 
       // White border
@@ -145,8 +145,8 @@ export function PoseOverlay({ frame, canvasRef, videoRef }: PoseOverlayProps) {
       ctx.beginPath();
       ctx.arc(cx, cy, pulseRadius, 0, Math.PI * 2);
       ctx.strokeStyle = quality >= 0.72
-        ? "rgba(134, 239, 172, 0.6)"
-        : "rgba(251, 191, 36, 0.4)";
+        ? "rgba(253, 166, 0, 0.6)"    // Brand Gold
+        : "rgba(122, 107, 68, 0.4)";  // Muted Gold
       ctx.lineWidth = 2;
       ctx.stroke();
     }

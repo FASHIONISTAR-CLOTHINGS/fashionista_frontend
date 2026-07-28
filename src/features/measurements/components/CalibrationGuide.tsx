@@ -105,7 +105,7 @@ export function CalibrationGuide({
 type Corner = "tl" | "tr" | "bl" | "br";
 
 function CornerBracket({ corner, isGood }: { corner: Corner; isGood: boolean }) {
-  const color = isGood ? "#FDA600" : "#848484";
+  const color = isGood ? "#FDA600" : "#7A6B44";
   const size  = 20;
   const thick = 2.5;
 
@@ -153,7 +153,7 @@ function SilhouetteGuide({ isGood }: { isGood: boolean }) {
             M60,130 L80,200 L85,270
           `}
           fill="none"
-          stroke={isGood ? "#FDA600" : "#848484"}
+          stroke={isGood ? "#FDA600" : "#7A6B44"}
           strokeWidth="5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -174,12 +174,12 @@ function LevelIndicator({ tiltStatus }: { tiltStatus: "level" | "tilted" }) {
       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
         <circle
           cx="12" cy="12" r="9"
-          stroke={isLevel ? "#FDA600" : "#848484"}
+          stroke={isLevel ? "#FDA600" : "#7A6B44"}
           strokeWidth="2"
         />
         <circle
           cx="12" cy="12" r="3"
-          fill={isLevel ? "#FDA600" : "#848484"}
+          fill={isLevel ? "#FDA600" : "#7A6B44"}
           className={isLevel ? "" : "animate-pulse"}
           style={{
             transform: isLevel ? "translate(0, 0)" : "translate(2px, 1px)",

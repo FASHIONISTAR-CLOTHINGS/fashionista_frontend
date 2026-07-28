@@ -196,23 +196,23 @@ export function AICameraCapture({
       {/* ── IDLE PHASE: Height input + start button ── */}
       {phase === "idle" && (
         <div className="flex flex-col gap-6 max-w-md mx-auto w-full">
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6 flex flex-col gap-5">
+          <div className="rounded-2xl border border-[#ECE6D6] bg-white p-6 flex flex-col gap-5 shadow-sm">
 
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-brand-gold/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-[#FDA600]/15 flex items-center justify-center text-[#FDA600]">
                 <IconRuler />
               </div>
               <div>
-                <h3 className="font-semibold text-white">AI Body Scan</h3>
-                <p className="text-xs text-white/50">30-second measurement scan</p>
+                <h3 className="font-semibold text-[#01454A]">AI Body Scan</h3>
+                <p className="text-xs text-[#7A6B44]">30-second measurement scan</p>
               </div>
             </div>
 
             {/* Height input */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-white/70">
+              <label className="text-sm font-medium text-[#565960]">
                 Your Height
-                <span className="text-white/40 text-xs ml-1">(optional — auto-estimated if blank)</span>
+                <span className="text-[#7A6B44] text-xs ml-1">(optional — auto-estimated if blank)</span>
               </label>
               <div className="flex gap-2">
                 <input
@@ -220,11 +220,11 @@ export function AICameraCapture({
                   placeholder={heightUnit === "cm" ? "e.g. 175" : "e.g. 68"}
                   value={heightInput}
                   onChange={(e) => setHeightInput(e.target.value)}
-                  className="flex-1 rounded-xl bg-white/10 border border-white/10 text-white px-4 py-2.5 text-sm
-                             placeholder:text-white/30 focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition"
+                  className="flex-1 rounded-xl bg-[#F4F3EC] border border-[#ECE6D6] text-[#141414] px-4 py-2.5 text-sm
+                             placeholder:text-[#7A6B44]/50 focus:outline-none focus:border-[#FDA600] focus:ring-1 focus:ring-[#FDA600] transition"
                 />
                 {/* CM / INCH toggle */}
-                <div className="flex rounded-xl overflow-hidden border border-white/10">
+                <div className="flex rounded-xl overflow-hidden border border-[#ECE6D6]">
                   {(["cm", "inch"] as const).map((unit) => (
                     <button
                       key={unit}
@@ -232,8 +232,8 @@ export function AICameraCapture({
                       className={cn(
                         "px-3 py-2 text-xs font-semibold transition",
                         heightUnit === unit
-                          ? "bg-brand-gold text-white"
-                          : "bg-white/5 text-white/50 hover:bg-white/10"
+                          ? "bg-[#FDA600] text-white"
+                          : "bg-[#F4F3EC] text-[#7A6B44] hover:bg-[#ECE6D6]"
                       )}
                     >
                       {unit}
@@ -248,22 +248,22 @@ export function AICameraCapture({
 
             {/* Age input (optional — for AI height prediction) */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-white/70">
+              <label className="text-sm font-medium text-[#565960]">
                 Your Age
-                <span className="text-white/40 text-xs ml-1">(optional — improves height estimate)</span>
+                <span className="text-[#7A6B44] text-xs ml-1">(optional — improves height estimate)</span>
               </label>
               <input
                 type="number"
                 placeholder="e.g. 28"
                 value={userAge}
                 onChange={(e) => handleAgeChange(e.target.value)}
-                className="flex-1 rounded-xl bg-white/10 border border-white/10 text-white px-4 py-2.5 text-sm
-                           placeholder:text-white/30 focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition"
+                className="flex-1 rounded-xl bg-[#F4F3EC] border border-[#ECE6D6] text-[#141414] px-4 py-2.5 text-sm
+                           placeholder:text-[#7A6B44]/50 focus:outline-none focus:border-[#FDA600] focus:ring-1 focus:ring-[#FDA600] transition"
               />
             </div>
 
             {/* Instructions */}
-            <ul className="text-xs text-white/50 space-y-1 list-disc list-inside">
+            <ul className="text-xs text-[#565960] space-y-1 list-disc list-inside">
               <li>Stand 1.5–2 metres from camera</li>
               <li>Wear fitted clothing (no baggy clothes)</li>
               <li>Good lighting (face the window)</li>
@@ -272,9 +272,9 @@ export function AICameraCapture({
 
             <button
               onClick={handleStartCapture}
-              className="w-full rounded-xl bg-gradient-to-r from-brand-gold to-brand-gold/80 text-white
-                         font-semibold py-3 hover:from-brand-gold hover:to-brand-gold/80 transition
-                         flex items-center justify-center gap-2 shadow-lg shadow-brand-gold/25"
+              className="w-full rounded-xl bg-gradient-to-r from-[#FDA600] to-[#E8960A] text-white
+                         font-semibold py-3 hover:from-[#E8960A] hover:to-[#FDA600] transition
+                         flex items-center justify-center gap-2 shadow-lg shadow-[#FDA600]/25"
             >
               <IconCamera />
               Start Body Scan
@@ -283,7 +283,7 @@ export function AICameraCapture({
             {onCancel && (
               <button
                 onClick={onCancel}
-                className="text-xs text-white/40 hover:text-white/70 transition text-center"
+                className="text-xs text-[#7A6B44] hover:text-[#01454A] transition text-center"
               >
                 Cancel
               </button>
@@ -295,11 +295,11 @@ export function AICameraCapture({
       {/* ── LOADING MODEL PHASE ── */}
       {phase === "loading_model" && (
         <div className="flex flex-col items-center gap-4 py-12">
-          <div className="w-16 h-16 rounded-full bg-brand-gold/20 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-[#FDA600]/15 flex items-center justify-center text-[#FDA600]">
             <IconLoader />
           </div>
-          <p className="text-white/70 font-medium">Loading AI pose detection model...</p>
-          <p className="text-white/30 text-xs">First load takes ~3 seconds</p>
+          <p className="text-[#01454A] font-medium">Loading AI pose detection model...</p>
+          <p className="text-[#7A6B44] text-xs">First load takes ~3 seconds</p>
         </div>
       )}
 
@@ -309,7 +309,7 @@ export function AICameraCapture({
           {/* Voice mute toggle + caption */}
           {voice.isSupported && (
             <div className="flex items-center justify-between max-w-sm mx-auto w-full">
-              <p className="text-xs text-white/50 truncate flex-1">
+              <p className="text-xs text-[#565960] truncate flex-1">
                 {voice.currentCaption ?? ""}
               </p>
               <button
@@ -317,8 +317,8 @@ export function AICameraCapture({
                 className={cn(
                   "px-3 py-1.5 rounded-lg text-xs font-medium transition shrink-0 ml-2",
                   voice.muted
-                    ? "bg-white/10 text-white/50 hover:bg-white/20"
-                    : "bg-brand-gold/20 text-brand-gold"
+                    ? "bg-[#ECE6D6] text-[#7A6B44] hover:bg-[#ECE6D6]/80"
+                    : "bg-[#FDA600]/15 text-[#FDA600]"
                 )}
               >
                 {voice.muted ? "🔇 Muted" : "🔊 Voice On"}
@@ -367,8 +367,8 @@ export function AICameraCapture({
               className={cn(
                 "flex-1 rounded-xl font-semibold py-3 transition flex items-center justify-center gap-2",
                 currentFrame?.isGoodPose
-                  ? "bg-gradient-to-r from-brand-green to-brand-gold text-white shadow-lg shadow-brand-green/25"
-                  : "bg-white/10 text-white/30 cursor-not-allowed"
+                  ? "bg-gradient-to-r from-[#01454A] to-[#FDA600] text-white shadow-lg shadow-[#01454A]/25"
+                  : "bg-[#ECE6D6] text-[#7A6B44]/50 cursor-not-allowed"
               )}
             >
               <IconCheck />
@@ -379,14 +379,14 @@ export function AICameraCapture({
             {phase === "capturing_side" ? (
               <button
                 onClick={() => skipSideCapture()}
-                className="px-4 py-3 rounded-xl bg-white/10 text-white/60 hover:bg-white/20 transition text-sm"
+                className="px-4 py-3 rounded-xl bg-[#ECE6D6] text-[#7A6B44] hover:bg-[#ECE6D6]/80 transition text-sm"
               >
                 Skip Side
               </button>
             ) : (
               <button
                 onClick={reset}
-                className="px-4 py-3 rounded-xl bg-white/10 text-white/60 hover:bg-white/20 transition text-sm"
+                className="px-4 py-3 rounded-xl bg-[#ECE6D6] text-[#7A6B44] hover:bg-[#ECE6D6]/80 transition text-sm"
               >
                 Cancel
               </button>
@@ -398,14 +398,14 @@ export function AICameraCapture({
       {/* ── SIDE PROMPT PHASE (front captured, asking user to turn) ── */}
       {phase === "side_prompt" && (
         <div className="flex flex-col items-center gap-6 py-12 max-w-sm mx-auto text-center">
-          <div className="w-20 h-20 rounded-full bg-brand-gold/20 flex items-center justify-center">
-            <svg className="w-10 h-10 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-20 h-20 rounded-full bg-[#FDA600]/15 flex items-center justify-center">
+            <svg className="w-10 h-10 text-[#FDA600]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <div>
-            <h3 className="text-white font-bold text-xl">Front Pose Captured!</h3>
-            <p className="text-white/50 text-sm mt-1">
+            <h3 className="text-[#01454A] font-bold text-xl">Front Pose Captured!</h3>
+            <p className="text-[#7A6B44] text-sm mt-1">
               Now turn 90° to your right so we can capture your side profile.
               This improves measurement accuracy by ~30%.
             </p>
@@ -413,7 +413,7 @@ export function AICameraCapture({
           <div className="flex flex-col gap-3 w-full">
             <button
               onClick={proceedToSideCapture}
-              className="w-full rounded-xl bg-brand-gold hover:bg-brand-gold/90 text-white
+              className="w-full rounded-xl bg-[#FDA600] hover:bg-[#E8960A] text-white
                          font-semibold py-3 transition flex items-center justify-center gap-2"
             >
               <IconCamera />
@@ -421,14 +421,14 @@ export function AICameraCapture({
             </button>
             <button
               onClick={skipSideCapture}
-              className="w-full rounded-xl border border-white/10 bg-white/5 text-white/60
-                         hover:bg-white/10 font-semibold text-sm py-3 transition"
+              className="w-full rounded-xl border border-[#ECE6D6] bg-white text-[#7A6B44]
+                         hover:bg-[#F8F5ED] font-semibold text-sm py-3 transition"
             >
               Skip — Submit Front Only
             </button>
             <button
               onClick={reset}
-              className="text-xs text-white/40 hover:text-white/70 transition"
+              className="text-xs text-[#7A6B44] hover:text-[#01454A] transition"
             >
               Start Over
             </button>
@@ -440,29 +440,29 @@ export function AICameraCapture({
       {(phase === "submitting" || phase === "processing") && (
         <div className="flex flex-col items-center gap-6 py-12 max-w-sm mx-auto">
           <div className="relative w-24 h-24">
-            <div className="absolute inset-0 rounded-full border-4 border-brand-gold/20" />
-            <div className="absolute inset-0 rounded-full border-4 border-t-brand-gold animate-spin" />
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full border-4 border-[#FDA600]/20" />
+            <div className="absolute inset-0 rounded-full border-4 border-t-[#FDA600] animate-spin" />
+            <div className="absolute inset-0 flex items-center justify-center text-[#FDA600]">
               <IconRuler />
             </div>
           </div>
           <div className="text-center">
-            <p className="text-white font-semibold">
+            <p className="text-[#01454A] font-semibold">
               {phase === "submitting" ? "Uploading scan data..." : "AI is processing your measurements..."}
             </p>
-            <p className="text-white/40 text-xs mt-1">
+            <p className="text-[#7A6B44] text-xs mt-1">
               {phase === "processing" ? "Usually takes 5–10 seconds" : ""}
             </p>
           </div>
           {/* Processing steps */}
-          <div className="w-full space-y-2 text-xs text-white/40">
+          <div className="w-full space-y-2 text-xs text-[#7A6B44]">
             {["Validating pose quality", "Extracting body landmarks", "Computing measurements", "Saving your profile"].map((step, i) => (
               <div key={step} className="flex items-center gap-2">
                 <div className={cn(
                   "w-4 h-4 rounded-full border flex items-center justify-center",
-                  i === 0 ? "border-brand-gold bg-brand-gold/20" : "border-white/10"
+                  i === 0 ? "border-[#FDA600] bg-[#FDA600]/20" : "border-[#ECE6D6]"
                 )}>
-                  {i === 0 && <div className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse" />}
+                  {i === 0 && <div className="w-1.5 h-1.5 rounded-full bg-[#FDA600] animate-pulse" />}
                 </div>
                 <span>{step}</span>
               </div>
@@ -474,28 +474,28 @@ export function AICameraCapture({
       {/* ── COMPLETED PHASE ── */}
       {phase === "completed" && (
         <div className="flex flex-col items-center gap-5 py-12 max-w-sm mx-auto text-center">
-          <div className="w-20 h-20 rounded-full bg-brand-gold/20 flex items-center justify-center">
-            <svg className="w-10 h-10 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-20 h-20 rounded-full bg-[#FDA600]/15 flex items-center justify-center">
+            <svg className="w-10 h-10 text-[#FDA600]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <div>
-            <h3 className="text-white font-bold text-xl">Measurements Captured!</h3>
-            <p className="text-white/50 text-sm mt-1">
+            <h3 className="text-[#01454A] font-bold text-xl">Measurements Captured!</h3>
+            <p className="text-[#7A6B44] text-sm mt-1">
               Your body measurements have been saved to your profile.
             </p>
           </div>
           {sessionStatus?.scan_confidence != null && (
-            <div className="text-xs text-white/40">
+            <div className="text-xs text-[#7A6B44]">
               Scan accuracy:{" "}
-              <span className="text-brand-gold font-semibold">
+              <span className="text-[#FDA600] font-semibold">
                 {Math.round(sessionStatus.scan_confidence * 100)}%
               </span>
             </div>
           )}
           <button
             onClick={reset}
-            className="text-xs text-white/40 hover:text-white/70 transition"
+            className="text-xs text-[#7A6B44] hover:text-[#01454A] transition"
           >
             Scan again
           </button>
@@ -505,18 +505,18 @@ export function AICameraCapture({
       {/* ── FAILED PHASE ── */}
       {phase === "failed" && (
         <div className="flex flex-col items-center gap-5 py-12 max-w-sm mx-auto text-center">
-          <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center">
+          <div className="w-20 h-20 rounded-full bg-red-500/15 flex items-center justify-center">
             <svg className="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
           <div>
-            <h3 className="text-white font-bold">Scan Failed</h3>
+            <h3 className="text-[#01454A] font-bold">Scan Failed</h3>
             <p className="text-red-400/80 text-sm mt-1">{error}</p>
           </div>
           <button
             onClick={reset}
-            className="rounded-xl bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 font-medium text-sm transition"
+            className="rounded-xl bg-[#ECE6D6] hover:bg-[#ECE6D6]/80 text-[#01454A] px-6 py-2.5 font-medium text-sm transition"
           >
             Try Again
           </button>
@@ -531,28 +531,28 @@ export function AICameraCapture({
 function QualityBar({ quality, phase }: { quality: number; phase?: string }) {
   const pct = Math.round(quality * 100);
   const color =
-    pct >= 72 ? "bg-brand-gold" :
-    pct >= 50 ? "bg-brand-gold/70" :
+    pct >= 72 ? "bg-[#FDA600]" :
+    pct >= 50 ? "bg-[#FDA600]/70" :
     "bg-red-500";
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex justify-between text-xs text-white/40">
+      <div className="flex justify-between text-xs text-[#7A6B44]">
         <span>Pose quality</span>
         <span className={cn(
           "font-semibold",
-          pct >= 72 ? "text-brand-gold" : pct >= 50 ? "text-brand-gold/70" : "text-red-400"
+          pct >= 72 ? "text-[#FDA600]" : pct >= 50 ? "text-[#FDA600]/70" : "text-red-400"
         )}>
           {pct}%
         </span>
       </div>
-      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+      <div className="h-1.5 rounded-full bg-[#ECE6D6] overflow-hidden">
         <div
           className={cn("h-full rounded-full transition-all duration-300", color)}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="text-xs text-white/30">
+      <p className="text-xs text-[#7A6B44]/60">
         {pct >= 72 ? (phase === "capturing_side" ? "✓ Good side pose — ready to capture!" : "✓ Good pose — ready to capture!") :
          pct >= 50 ? "Adjust your position..." :
          "Step back and face the camera"}

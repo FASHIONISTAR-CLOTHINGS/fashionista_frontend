@@ -85,7 +85,7 @@ export function MeasurementProgress({
             />
           )}
           {isCompleted && (
-            <div className="w-4 h-4 rounded-full bg-brand-gold flex items-center justify-center flex-shrink-0">
+            <div className="w-4 h-4 rounded-full bg-[#FDA600] flex items-center justify-center flex-shrink-0">
               <span className="text-[9px] text-white">✓</span>
             </div>
           )}
@@ -95,15 +95,15 @@ export function MeasurementProgress({
             </div>
           )}
           {phase === "idle" && (
-            <div className="w-4 h-4 rounded-full border-2 border-white/10 flex-shrink-0" />
+            <div className="w-4 h-4 rounded-full border-2 border-[#ECE6D6] flex-shrink-0" />
           )}
 
           <span className={cn(
             "text-sm font-semibold",
             isFailed    ? "text-red-400"   :
-            isCompleted ? "text-brand-gold" :
-            isActive    ? "text-white"     :
-            "text-white/40",
+            isCompleted ? "text-[#FDA600]" :
+            isActive    ? "text-[#01454A]"     :
+            "text-[#7A6B44]",
           )}>
             {config.label}
           </span>
@@ -111,14 +111,14 @@ export function MeasurementProgress({
 
         <span className={cn(
           "text-xs font-mono tabular-nums",
-          isFailed ? "text-red-400/60" : "text-white/30",
+          isFailed ? "text-red-400/60" : "text-[#7A6B44]/60",
         )}>
           {isFailed ? "Error" : `${pct}%`}
         </span>
       </div>
 
       {/* ── Progress bar ── */}
-      <div className="relative h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+      <div className="relative h-1.5 w-full rounded-full bg-[#ECE6D6] overflow-hidden">
         {/* Background shimmer when active */}
         {isActive && (
           <div
@@ -145,8 +145,8 @@ export function MeasurementProgress({
       <p className={cn(
         "text-xs transition-all duration-300",
         isFailed    ? "text-red-400/80"  :
-        isCompleted ? "text-brand-gold/70" :
-        "text-white/35",
+        isCompleted ? "text-[#FDA600]/70" :
+        "text-[#7A6B44]",
       )}>
         {isFailed && errorMessage ? errorMessage : config.sublabel}
       </p>
@@ -162,13 +162,13 @@ export function MeasurementProgress({
               <div key={step} className="flex flex-col items-center gap-0.5">
                 <div className={cn(
                   "w-1 h-1 rounded-full transition-all duration-300",
-                  isDone ? "bg-brand-gold" :
-                  isCurr ? "bg-white/60 animate-pulse" :
-                  "bg-white/10",
+                  isDone ? "bg-[#FDA600]" :
+                  isCurr ? "bg-[#01454A]/60 animate-pulse" :
+                  "bg-[#ECE6D6]",
                 )} />
                 <span className={cn(
                   "text-[9px] leading-tight text-center",
-                  isDone ? "text-white/40" : "text-white/15",
+                  isDone ? "text-[#7A6B44]" : "text-[#7A6B44]/40",
                 )}>
                   {step}
                 </span>
@@ -230,10 +230,10 @@ export function MeasurementProgressPill({ phase }: { phase: ScanProgressPhase })
   return (
     <div className={cn(
       "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium",
-      phase === "completed" ? "border-brand-gold/30 bg-brand-gold/10 text-brand-gold" :
+      phase === "completed" ? "border-[#FDA600]/30 bg-[#FDA600]/10 text-[#FDA600]" :
       phase === "failed"    ? "border-red-500/30 bg-red-500/10 text-red-400" :
-      isActive              ? "border-white/10 bg-white/5 text-white/60" :
-      "border-white/5 bg-transparent text-white/25",
+      isActive              ? "border-[#ECE6D6] bg-[#F4F3EC] text-[#7A6B44]" :
+      "border-[#ECE6D6] bg-transparent text-[#7A6B44]/50",
     )}>
       {isActive && (
         <span
