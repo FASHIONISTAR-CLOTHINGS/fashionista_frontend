@@ -37,6 +37,9 @@ import { useProducts } from "@/features/product";
 import { ProductCard, ProductCardSkeleton } from "@/features/product";
 import type { ProductListItem } from "@/features/product";
 import { Button } from "@/components/ui/button";
+import { VendorStory } from "@/features/vendor/components/VendorStory";
+import { VendorDealsSection } from "@/features/vendor/components/VendorDealsSection";
+import { VendorComparison } from "@/features/vendor/components/VendorComparison";
 
 // ── Brand palette ─────────────────────────────────────────────────────────────
 const P = {
@@ -348,6 +351,21 @@ export default function VendorPublicProfileClient({
           </div>
         </section>
 
+        {/* ── Work 9: Vendor Story ──────────────────────────────────────── */}
+        <VendorStory
+          displayName={displayName}
+          tagline={tagline}
+          description={description}
+          city={city}
+          state={vendorState}
+          isVerified={isVerified}
+          totalProducts={totalProducts}
+          totalSales={totalSales}
+        />
+
+        {/* ── Work 9: Vendor Deals Section ────────────────────────────────── */}
+        <VendorDealsSection vendorSlug={vendorSlug} />
+
         {/* Collections Chips */}
         {collections.length > 0 && (
           <section className="space-y-4" aria-label="Boutique collections">
@@ -390,6 +408,16 @@ export default function VendorPublicProfileClient({
           {/* Product grid */}
           <ProductGrid vendorSlug={vendorSlug} />
         </section>
+
+        {/* ── Work 9: Vendor Comparison ──────────────────────────────────── */}
+        <VendorComparison
+          vendorSlug={vendorSlug}
+          displayName={displayName}
+          totalProducts={totalProducts}
+          avgRating={avgRating}
+          reviewCount={reviewCount}
+          isVerified={isVerified}
+        />
 
         {/* Custom Order CTA Section */}
         <section className="rounded-[2.5rem] border border-[#ECE6D6] bg-[#F8F5ED] p-8 text-center space-y-4">

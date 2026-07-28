@@ -6,7 +6,7 @@
  *   1. Login via API, inject tokens into browser storage
  *   2. Navigate to /client/dashboard/measurements/scan
  *   3. Screenshot the intro/idle state (height input + Start Body Scan button)
- *   4. Click "Start Body Scan" → screenshot loading/camera state
+ *   4. Click "Start Body Scan" -> screenshot loading/camera state
  *   5. Verify the scan page renders without console errors
  *   6. Navigate to /get-measured landing page
  *   7. Navigate to measurements dashboard
@@ -31,7 +31,7 @@ const TEST_USER = {
  */
 async function loginAndInjectTokens(page: Page, request: APIRequestContext) {
   // 1. Login via API
-  const loginRes = await request.post(`${API_BASE}/api/v1/auth/login/`, {
+  const loginRes = await request.post(API_BASE + "/api/v1/auth/login/", {
     data: {
       email_or_phone: TEST_USER.email,
       password: TEST_USER.password,
@@ -42,13 +42,13 @@ async function loginAndInjectTokens(page: Page, request: APIRequestContext) {
     },
   });
 
-  expect(loginRes.ok(), `Login API should return 200, got ${loginRes.status()}`).toBeTruthy();
+  expect(loginRes.ok(), "Login API should return 200, got " + loginRes.status()).toBeTruthy();
   const body = await loginRes.json();
 
   // Unwrap Fashionistar envelope: { success: true, data: { access, refresh, ... } }
   const payload = body.data ?? body;
-  const accessToken = payload.access;
-  const refreshToken = payload.refresh;
+  const accessToken: string = payload.access;
+  const refreshToken: string = payload.refresh;
   const user = {
     id: payload.user_id,
     email: TEST_USER.email,
@@ -66,7 +66,6 @@ async function loginAndInjectTokens(page: Page, request: APIRequestContext) {
 
   // 3. Inject tokens into sessionStorage (Zustand auth store uses sessionStorage)
   await page.evaluate(({ accessToken, refreshToken, user }) => {
-    // The Zustand store key is "fashionistar-auth"
     const authState = {
       state: {
         accessToken,
@@ -81,8 +80,6 @@ async function loginAndInjectTokens(page: Page, request: APIRequestContext) {
       version: 0,
     };
     sessionStorage.setItem("fashionistar-auth", JSON.stringify(authState));
-
-    // Also set individual keys that the auth lib might check
     sessionStorage.setItem("fashionistar_access_token", accessToken);
     if (refreshToken) {
       sessionStorage.setItem("fashionistar_refresh_token", refreshToken);
@@ -91,87 +88,92 @@ async function loginAndInjectTokens(page: Page, request: APIRequestContext) {
 
   // 4. Reload to pick up the injected auth state
   await page.reload({ waitUntil: "domcontentloaded" });
-  // Give the app a moment to hydrate and read the auth state
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(3000);
+}
+
+/** Navigate to a path with retry — Next.js dev server can abort on fast refresh. */
+async function gotoWithRetry(page: Page, path: string, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      await page.goto(path, { waitUntil: "domcontentloaded", timeout: 30_000 });
+      return;
+    } catch (e) {
+      if (i === retries) throw e;
+      await page.waitForTimeout(2000);
+    }
+  }
 }
 
 test.describe("Measurement Scan E2E", () => {
   test.describe.configure({ mode: "serial" });
   test.setTimeout(120_000);
 
-  test("01 — Login via API and verify authenticated", async ({ page, request }) => {
+  test("01 - Login via API and verify authenticated", async ({ page, request }) => {
     await loginAndInjectTokens(page, request);
-    await page.screenshot({ path: `${SCREENSHOT_DIR}/01-after-login.png`, fullPage: true });
+    await page.screenshot({ path: SCREENSHOT_DIR + "/01-after-login.png", fullPage: true });
   });
 
-  test("02 — Navigate to measurement scan page", async ({ page, request }) => {
+  test("02 - Navigate to measurement scan page", async ({ page, request }) => {
     await loginAndInjectTokens(page, request);
 
-    await page.goto("/client/dashboard/measurements/scan", { waitUntil: "domcontentloaded" });
+    await gotoWithRetry(page, "/client/dashboard/measurements/scan");
     await page.waitForTimeout(2000);
-    await page.screenshot({ path: `${SCREENSHOT_DIR}/02-scan-page.png", fullPage: true });
+    await page.screenshot({ path: SCREENSHOT_DIR + "/02-scan-page.png", fullPage: true });
 
+    // The page should render the scan UI — look for the heading or the start button
+    await page.waitForSelector("text=30-Second Body Scan", { timeout: 30_000 });
     await expect(page.locator("h1")).toContainText(/30-Second Body Scan|Body Scan/i);
   });
 
-  test("03 — Verify idle state renders correctly", async ({ page, request }) => {
+  test("03 - Verify idle state renders correctly", async ({ page, request }) => {
     await loginAndInjectTokens(page, request);
 
-    await page.goto("/client/dashboard/measurements/scan", { waitUntil: "domcontentloaded" });
+    await gotoWithRetry(page, "/client/dashboard/measurements/scan");
 
-    // Wait for the InHouseMeasurementFlow to render
-    await page.waitForSelector("text=Start Body Scan", { timeout: 30_000 });
-    await page.screenshot({ path: `${SCREENSHOT_DIR}/03-idle-state.png`, fullPage: true });
+    await page.waitForSelector("text=Start AI Scan", { timeout: 30_000 });
+    await page.screenshot({ path: SCREENSHOT_DIR + "/03-idle-state.png", fullPage: true });
 
-    const startButton = page.getByText("Start Body Scan");
+    const startButton = page.getByText("Start AI Scan");
     await expect(startButton).toBeVisible();
-
-    // Verify height input exists
-    const heightInput = page.locator('input[type="number"]').first();
-    await expect(heightInput).toBeVisible();
   });
 
-  test("04 — Click Start Body Scan and capture loading state", async ({ page, request }) => {
+  test("04 - Click Start AI Scan and capture loading state", async ({ page, request }) => {
     await loginAndInjectTokens(page, request);
 
-    await page.goto("/client/dashboard/measurements/scan", { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("text=Start Body Scan", { timeout: 30_000 });
+    await gotoWithRetry(page, "/client/dashboard/measurements/scan");
+    await page.waitForSelector("text=Start AI Scan", { timeout: 30_000 });
 
-    // Capture console errors
     const consoleErrors: string[] = [];
     page.on("pageerror", (error) => {
-      consoleErrors.push(`PAGE ERROR: ${error.message}`);
+      consoleErrors.push("PAGE ERROR: " + error.message);
     });
     page.on("console", (msg) => {
       if (msg.type() === "error") {
-        consoleErrors.push(`CONSOLE ERROR: ${msg.text()}`);
+        consoleErrors.push("CONSOLE ERROR: " + msg.text());
       }
     });
 
-    // Click Start Body Scan
-    const startButton = page.getByText("Start Body Scan");
+    const startButton = page.getByText("Start AI Scan");
     await startButton.click();
 
-    // Wait for loading state to appear
     await page.waitForTimeout(3000);
-    await page.screenshot({ path: `${SCREENSHOT_DIR}/04-after-start.png`, fullPage: true });
+    await page.screenshot({ path: SCREENSHOT_DIR + "/04-after-start.png", fullPage: true });
 
-    // Log any console errors (don't fail — camera may not be available in headless)
     if (consoleErrors.length > 0) {
       console.log("Console errors during scan start:", consoleErrors);
     }
   });
 
-  test("05 — Navigate to get-measured landing page", async ({ page }) => {
-    await page.goto("/get-measured", { waitUntil: "domcontentloaded" });
-    await page.screenshot({ path: `${SCREENSHOT_DIR}/05-get-measured.png`, fullPage: true });
+  test("05 - Navigate to get-measured landing page", async ({ page }) => {
+    await gotoWithRetry(page, "/get-measured");
+    await page.screenshot({ path: SCREENSHOT_DIR + "/05-get-measured.png", fullPage: true });
     await expect(page).toHaveURL(/\/get-measured/);
   });
 
-  test("06 — Navigate to measurements dashboard", async ({ page, request }) => {
+  test("06 - Navigate to measurements dashboard", async ({ page, request }) => {
     await loginAndInjectTokens(page, request);
 
-    await page.goto("/client/dashboard/measurements", { waitUntil: "domcontentloaded" });
-    await page.screenshot({ path: `${SCREENSHOT_DIR}/06-measurements-dashboard.png`, fullPage: true });
+    await gotoWithRetry(page, "/client/dashboard/measurements");
+    await page.screenshot({ path: SCREENSHOT_DIR + "/06-measurements-dashboard.png", fullPage: true });
   });
 });

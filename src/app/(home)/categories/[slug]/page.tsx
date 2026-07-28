@@ -28,6 +28,9 @@ import {
 import { generateBreadcrumbSchema } from "@/components/seo/schemas";
 import { ProductGridSkeleton } from "@/features/product";
 import { CategoryStorytellingSection } from "@/features/catalog/components/CategoryStorytellingSection";
+import { CategoryTrendingRail } from "@/features/catalog/components/CategoryTrendingRail";
+import { CategoryDealsBanner } from "@/features/catalog/components/CategoryDealsBanner";
+import { AICategoryPick } from "@/features/catalog/components/AICategoryPick";
 import CategoryProductsClient from "./CategoryProductsClient";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -334,10 +337,30 @@ export default async function CategorySlugPage({
           </section>
         )}
 
+        {/* ── Work 7: Trending Rail ──────────────────────────────────────── */}
+        <CategoryTrendingRail
+          categorySlug={slug}
+          categoryName={category.title || category.name}
+        />
+
         {/* ── Work 7: AI Storytelling Section ─────────────────────────────── */}
         <CategoryStorytellingSection
           categoryName={category.title || category.name}
           productCount={productCount}
+        />
+
+        {/* ── Work 7: Deals Banner ──────────────────────────────────────── */}
+        <CategoryDealsBanner
+          categorySlug={slug}
+          categoryName={category.title || category.name}
+          maxDiscountPct={0}
+          saleProductCount={0}
+        />
+
+        {/* ── Work 7: AI Category Pick ──────────────────────────────────── */}
+        <AICategoryPick
+          categorySlug={slug}
+          categoryName={category.title || category.name}
         />
 
         {/* ── Brand filter chips ───────────────────────────────────────────── */}

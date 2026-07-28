@@ -21,6 +21,9 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getCollectionDetail, getCatalogCollections } from "@/features/catalog";
 import { CollectionUrgencyBanner } from "@/features/catalog/components/CollectionUrgencyBanner";
+import { CollectionStorySection } from "@/features/catalog/components/CollectionStorySection";
+import { CollectionStatsBar } from "@/features/catalog/components/CollectionStatsBar";
+import { VendorSpotlightCards } from "@/features/catalog/components/VendorSpotlightCards";
 import CollectionTabsClient from "./CollectionTabsClient";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -281,6 +284,19 @@ export default async function CollectionDetailPage({
             productCount={productCount}
           />
         </div>
+
+        {/* ── Work 8: Stats Dashboard ────────────────────────────────────── */}
+        <CollectionStatsBar productCount={productCount} />
+
+        {/* ── Work 8: Storytelling Section ────────────────────────────────── */}
+        <CollectionStorySection
+          collectionTitle={collection.title}
+          description={collection.description}
+          bannerImage={collection.banner_image_url || null}
+        />
+
+        {/* ── Work 8: Vendor Spotlight Cards ──────────────────────────────── */}
+        <VendorSpotlightCards collectionSlug={slug} />
 
         {/* ── Vendors & Products Tabbed Section ──────────────────────────── */}
         <section
