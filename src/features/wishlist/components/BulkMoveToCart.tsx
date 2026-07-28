@@ -11,7 +11,7 @@
  */
 
 import { useState } from "react";
-import { ShoppingCart, Loader2, CheckCircle2 } from "lucide-react";
+import { ShoppingCart, Loader2 } from "lucide-react";
 import { useAddCartItem } from "@/features/cart/hooks/use-cart";
 import { toast } from "sonner";
 

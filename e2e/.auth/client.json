@@ -1,0 +1,15 @@
+{
+  "cookies": [
+    {
+      "name": "fashionistar_rt",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc5Mjk3ODgzMCwiaWF0IjoxNzg1MjAyODMwLCJqdGkiOiI3MDUzNGNmYjFmZTU0M2NhODNkM2QxNWZhMmEzNGFmNSIsInVzZXJfaWQiOiIwMTlmYTY0Yy1kNGEyLTczYWEtYmQ3ZC05Y2QwYTczMjVhYWUifQ.JMYYHmGqt0V46ZhHZwa8nxzHUVOYbLGpvpsp1G_5XH0",
+      "domain": "127.0.0.1",
+      "path": "/",
+      "expires": 1787794832.175,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}

@@ -286,13 +286,13 @@ export default async function CollectionDetailPage({
         </div>
 
         {/* ── Work 8: Stats Dashboard ────────────────────────────────────── */}
-        <CollectionStatsBar productCount={productCount} />
+        <CollectionStatsBar productCount={productCount ?? 0} />
 
         {/* ── Work 8: Storytelling Section ────────────────────────────────── */}
         <CollectionStorySection
           collectionTitle={collection.title}
           description={collection.description}
-          bannerImage={collection.banner_image_url || null}
+          bannerImage={collection.image_url || collection.background_image_url || null}
         />
 
         {/* ── Work 8: Vendor Spotlight Cards ──────────────────────────────── */}
