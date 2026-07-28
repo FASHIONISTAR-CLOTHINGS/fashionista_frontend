@@ -336,8 +336,15 @@ export function ClientDashboardView() {
           </div>
           <div className="flex shrink-0 flex-col gap-3 sm:flex-row md:flex-col">
             <Link
-              href="/client/dashboard/custom-orders/new"
+              href="/client/dashboard/measurements/scan"
               className="inline-flex items-center gap-2 rounded-full bg-[#FDA600] px-5 py-2.5 text-sm font-semibold text-black shadow-lg transition hover:bg-[#f28705]"
+            >
+              <Ruler className="h-4 w-4" />
+              New AI Scan
+            </Link>
+            <Link
+              href="/client/dashboard/custom-orders/new"
+              className="inline-flex items-center gap-2 rounded-full border border-[#FDA600]/40 bg-[#FDA600]/10 px-5 py-2.5 text-sm font-semibold text-[#FDA600] transition hover:bg-[#FDA600]/20"
             >
               <Palette className="h-4 w-4" />
               Custom Order
@@ -412,8 +419,12 @@ export function ClientDashboardView() {
               <p className="mt-1 text-sm text-[#5A6465]">No measurements saved yet</p>
             )}
           </div>
-          <Link href="/client/dashboard/settings#measurements" className="shrink-0">
-            <ArrowUpRight className="h-4 w-4 text-[#A89A7A]" />
+          <Link
+            href="/client/dashboard/measurements"
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-[#01454A] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#016B73]"
+          >
+            View Measurements
+            <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
       </div>
@@ -467,6 +478,8 @@ export function ClientDashboardView() {
           </h2>
           <div className="space-y-2">
             {[
+              { href: "/client/dashboard/measurements/scan", label: "New AI Body Scan", Icon: Ruler },
+              { href: "/client/dashboard/measurements", label: "My Measurements", Icon: ClipboardCheck },
               { href: "/client/dashboard/custom-orders/new", label: "Start Custom Order", Icon: Palette },
               { href: "/client/dashboard/orders/track-order", label: "Track Order", Icon: PackageSearch },
               { href: "/client/dashboard/wallet", label: "My Wallet", Icon: Wallet },
