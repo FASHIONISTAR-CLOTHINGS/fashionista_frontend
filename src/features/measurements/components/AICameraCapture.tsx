@@ -15,7 +15,7 @@
  *   <AICameraCapture onComplete={(profileId) => router.push(`/dashboard/measurements/${profileId}`)} />
  */
 
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 import { useMeasurementCapture } from "../hooks/useMeasurementCapture";
 import { useVoiceGuidance, type GuidanceKey } from "../hooks/useVoiceGuidance";
 import { useDeviceOrientation } from "../hooks/useDeviceOrientation";
@@ -73,44 +73,47 @@ export function AICameraCapture({
   const [heightError, setHeightError]     = useState("");
   const [userAge, setUserAge]             = useState("");
 
-  // Animation frame ref
-  const rafRef = useRef<number | null>(null);
-  const frameLoopRef = useRef<() => void>(() => {});
-
-  // ── Frame loop ──────────────────────────────────────────────────────────────
-  const frameLoop = useCallback(() => {
-    // Secondary guard: only process when the video element has actual dimensions.
-    // Primary guard is inside usePoseLandmarker.detectFromVideo.
-    // Both guards together prevent the MediaPipe "ROI width/height > 0" assertion.
-    const videoEl = videoRef.current;
-    const videoReady =
-      videoEl !== null &&
-      videoEl.readyState >= 2 &&
-      videoEl.videoWidth  > 0 &&
-      videoEl.videoHeight > 0;
-
-    if (videoReady) {
-      processFrame();
-    }
-
-    if (phase === "capturing_front" || phase === "awaiting_height" || phase === "capturing_side") {
-      rafRef.current = requestAnimationFrame(frameLoopRef.current);
-    }
-  }, [phase, processFrame, videoRef]);
-
-  // Keep ref in sync so the recursive rAF call always uses the latest closure
+  // ── Frame loop (single self-contained effect) ───────────────────────────────
+  // The frameLoop function is defined inside the effect so it can reference
+  // itself for recursive requestAnimationFrame calls — no ref indirection
+  // needed. This avoids "refs during render" and "declaration order" lint
+  // warnings that arise from the useCallback + ref-sync pattern.
   useEffect(() => {
-    frameLoopRef.current = frameLoop;
-  }, [frameLoop]);
-
-  useEffect(() => {
-    if (phase === "capturing_front" || phase === "awaiting_height" || phase === "capturing_side") {
-      rafRef.current = requestAnimationFrame(frameLoop);
+    if (phase !== "capturing_front" && phase !== "awaiting_height" && phase !== "capturing_side") {
+      return;
     }
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+
+    let rafId: number | null = null;
+
+    const frameLoop = () => {
+      // Secondary guard: only process when the video element has actual dimensions.
+      // Primary guard is inside usePoseLandmarker.detectFromVideo.
+      // Both guards together prevent the MediaPipe "ROI width/height > 0" assertion.
+      const videoEl = videoRef.current;
+      const videoReady =
+        videoEl !== null &&
+        videoEl.readyState >= 2 &&
+        videoEl.videoWidth > 0 &&
+        videoEl.videoHeight > 0;
+
+      if (videoReady) {
+        processFrame();
+      }
+
+      // Re-check phase inside the loop — the effect cleanup will cancel
+      // the frame if the phase changes, but this prevents scheduling
+      // an extra frame during the transition.
+      if (phase === "capturing_front" || phase === "awaiting_height" || phase === "capturing_side") {
+        rafId = requestAnimationFrame(frameLoop);
+      }
     };
-  }, [phase, frameLoop]);
+
+    rafId = requestAnimationFrame(frameLoop);
+
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, [phase, processFrame, videoRef]);
 
   // ── Voice guidance phase mapping ──────────────────────────────────────────
   useEffect(() => {
