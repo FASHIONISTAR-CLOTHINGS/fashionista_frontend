@@ -23,6 +23,22 @@ export {
   parseMeasurementResponse,
 } from "./schemas/measurements.schemas";
 
+// T-019: Scan flow Zod schemas
+export {
+  LandmarkPointSchema,
+  SubmitLandmarksSchema,
+  ScanStatusSchema,
+  ScanEventSchema,
+  InitiateScanSchema,
+} from "./schemas/scan.schema";
+export type {
+  LandmarkPoint as ScanLandmarkPoint,
+  SubmitLandmarksRequest,
+  ScanStatusResponse as ScanStatusZod,
+  ScanEvent,
+  InitiateScanResponse,
+} from "./schemas/scan.schema";
+
 // ── API Client ─────────────────────────────────────────────────────────────────
 export {
   fetchMeasurementProfiles,
@@ -51,6 +67,9 @@ export { MeasurementProfilePanel }  from "./components/MeasurementProfilePanel";
 export { InHouseMeasurementFlow }   from "./components/InHouseMeasurementFlow";
 export { MeasurementCard }          from "./components/MeasurementCard";
 export { BodyDiagram }              from "./components/BodyDiagram";
+// T-015: Unified entry modal
+export { MeasurementEntryModal }    from "./components/MeasurementEntryModal";
+export type { MeasurementEntryData } from "./components/MeasurementEntryModal";
 
 // ── AI Camera Scan Components ──────────────────────────────────────────────────
 export { AICameraCapture }           from "./components/AICameraCapture";
@@ -72,6 +91,13 @@ export { predictHeightCm }           from "./utils/predictHeight";
 export { usePoseLandmarker }         from "./hooks/usePoseLandmarker";
 export { useMeasurementCapture }     from "./hooks/useMeasurementCapture";
 export { useScanSession }            from "./hooks/useScanSession";
+export type { UseScanSessionReturn, ScanPhase as ScanSessionPhase } from "./hooks/useScanSession";
+// T-016: Height prediction hook
+export { useHeightPrediction }       from "./hooks/useHeightPrediction";
+export type { HeightPredictionInput, UseHeightPredictionReturn } from "./hooks/useHeightPrediction";
+// T-032: WebSocket scan progress hook
+export { useScanWebSocket }          from "./hooks/useScanWebSocket";
+export type { WSConnectionStatus, ScanWSEvent } from "./hooks/useScanWebSocket";
 
 // ── AI Scan API ────────────────────────────────────────────────────────────────
 export * as scanApi                  from "./api/scan.api";
@@ -113,3 +139,7 @@ export type {
 // ── Component prop types (for external wrappers / mobile adapters) ──────────────
 export type { AICameraCaptureProps }       from "./components/AICameraCapture";
 export type { InHouseMeasurementFlowProps } from "./components/InHouseMeasurementFlow";
+
+// T-018: Zustand scan store
+export { useScanStore }                    from "./store/scanStore";
+export type { ScanPhase, UserSex, ScanState } from "./store/scanStore";

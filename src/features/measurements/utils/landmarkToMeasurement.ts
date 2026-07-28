@@ -38,6 +38,8 @@ export interface ExtractedMeasurements {
   estimated_height_cm: number | null;
   /** Per-key quality scores (0-1) */
   _visibility_scores: Record<string, number>;
+  /** T-040: Per-field confidence scores (0-1) based on landmark pair visibility */
+  _field_confidence: Record<string, number>;
   /** Scale factor used (user height / detected height) */
   _scale_factor: number;
   /** Overall pose quality score (0-1) */
@@ -247,6 +249,28 @@ export function extractMeasurements(
 
   const qualityScore = computeQualityScore(landmarks);
 
+  // T-040: Per-field confidence — minimum visibility of the landmark pair used for each measurement
+  const fieldConfidence: Record<string, number> = {};
+  const pairConfidence = (i: number, j: number): number => {
+    const a = landmarks[i]?.visibility ?? 0;
+    const b = landmarks[j]?.visibility ?? 0;
+    return Math.round(Math.min(a, b) * 100) / 100;
+  };
+  fieldConfidence.shoulder_width   = pairConfidence(LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER);
+  fieldConfidence.hip_width        = pairConfidence(LM.LEFT_HIP, LM.RIGHT_HIP);
+  fieldConfidence.inseam           = pairConfidence(LM.LEFT_KNEE, LM.LEFT_ANKLE);
+  fieldConfidence.arm_length       = Math.min(
+    pairConfidence(LM.LEFT_SHOULDER, LM.LEFT_ELBOW),
+    pairConfidence(LM.RIGHT_SHOULDER, LM.RIGHT_ELBOW),
+  );
+  fieldConfidence.torso_length     = Math.min(
+    pairConfidence(LM.LEFT_SHOULDER, LM.LEFT_HIP),
+    pairConfidence(LM.RIGHT_SHOULDER, LM.RIGHT_HIP),
+  );
+  fieldConfidence.thigh_length     = pairConfidence(LM.LEFT_HIP, LM.LEFT_KNEE);
+  fieldConfidence.leg_length       = pairConfidence(LM.LEFT_HIP, LM.LEFT_ANKLE);
+  fieldConfidence.estimated_height = pairConfidence(LM.NOSE, LM.LEFT_ANKLE);
+
   return {
     shoulder_width:       shoulderWidth,
     hip_width:            hipWidth,
@@ -257,6 +281,7 @@ export function extractMeasurements(
     leg_length:           legLength,
     estimated_height_cm:  estimatedHeightCm,
     _visibility_scores:   visibilityScores,
+    _field_confidence:    fieldConfidence,
     _scale_factor:        scale,
     _quality_score:       qualityScore,
   };

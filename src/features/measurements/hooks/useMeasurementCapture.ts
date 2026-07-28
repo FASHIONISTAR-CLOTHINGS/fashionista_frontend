@@ -91,6 +91,12 @@ export interface UseMeasurementCaptureReturn {
   captureAndSubmit: (heightCm?: number) => Promise<void>;
   /** Reset everything — allows starting a fresh scan. */
   reset:          () => void;
+  /** T-031: Retry the last failed submission. */
+  retry:          () => void;
+  /** T-030: Whether the browser is currently offline. */
+  isOffline:      boolean;
+  /** T-033: Whether the processing timeout was reached. */
+  isTimedOut:      boolean;
   /** Stored user height (auto-estimated if not provided). */
   userHeightCm:   number | null;
   /** Dual-pose captured landmarks. */
@@ -135,6 +141,10 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
   const [userHeightCm, setUserHeightCm]   = useState<number | null>(null);
   const [capturedLandmarks, setCapturedLandmarks] = useState<DualPoseLandmarks>({ front: null, side: null });
   const [localError, setLocalError]       = useState<string | null>(null);
+
+  // T-038: Multi-frame averaging buffer
+  const frameBufferRef = useRef<Landmark[][]>([]);
+  const FRAME_BUFFER_SIZE = 5;
 
   const videoRef  = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -271,13 +281,20 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
       }
     }
 
-    // Store best frame (highest quality) for the active pose
+    // T-038: Multi-frame averaging — buffer good frames and average landmarks
     const isGoodPose = quality >= 0.72;
     if (isGoodPose) {
+      // Add to frame buffer
+      frameBufferRef.current.push([...worldLms]);
+      if (frameBufferRef.current.length > FRAME_BUFFER_SIZE) {
+        frameBufferRef.current.shift();
+      }
+      // Average landmarks across buffered frames for stability
+      const averaged = averageLandmarks(frameBufferRef.current);
       if (localPhase === "capturing_side") {
-        setCapturedLandmarks((prev) => ({ ...prev, side: worldLms }));
+        setCapturedLandmarks((prev) => ({ ...prev, side: averaged }));
       } else {
-        setCapturedLandmarks((prev) => ({ ...prev, front: worldLms }));
+        setCapturedLandmarks((prev) => ({ ...prev, front: averaged }));
       }
     }
 
@@ -289,6 +306,32 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
     setCurrentFrame(frame);
     return frame;
   }, [landmarker, localPhase, userHeightCm]);
+
+  // T-038: Average landmarks across multiple frames to reduce jitter
+  function averageLandmarks(frames: Landmark[][]): Landmark[] {
+    if (frames.length === 0) return [];
+    if (frames.length === 1) return frames[0];
+    const numPoints = frames[0].length;
+    const averaged: Landmark[] = [];
+    for (let i = 0; i < numPoints; i++) {
+      let sumX = 0, sumY = 0, sumZ = 0, sumVis = 0;
+      for (const frame of frames) {
+        const lm = frame[i];
+        if (!lm) continue;
+        sumX += lm.x;
+        sumY += lm.y;
+        sumZ += lm.z;
+        sumVis += lm.visibility ?? 0;
+      }
+      averaged.push({
+        x: sumX / frames.length,
+        y: sumY / frames.length,
+        z: sumZ / frames.length,
+        visibility: sumVis / frames.length,
+      });
+    }
+    return averaged;
+  }
 
   // ── Map Landmark[] → LandmarkPoint[] for API ────────────────────────────────
   const toLandmarkPoints = (lms: Landmark[]) =>
@@ -325,6 +368,7 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
   // ── Proceed from side_prompt to capturing_side ───────────────────────────────
   const proceedToSideCapture = useCallback(() => {
     setCapturedLandmarks((prev) => ({ ...prev, side: null }));
+    frameBufferRef.current = [];  // T-038: reset buffer for side pose
     setLocalPhase("capturing_side");
   }, []);
 
@@ -446,6 +490,7 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
     stopCamera();
     landmarker.cleanup();
     scanSession.reset();
+    frameBufferRef.current = [];  // T-038: clear frame buffer
     setLocalPhase("idle");
     setCurrentFrame(null);
     setUserHeightCm(null);
@@ -486,6 +531,9 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
     captureSideAndSubmit,
     captureAndSubmit,
     reset,
+    retry:          scanSession.retry,
+    isOffline:      scanSession.isOffline,
+    isTimedOut:     scanSession.isTimedOut,
     userHeightCm,
     capturedLandmarks,
     stopCamera,

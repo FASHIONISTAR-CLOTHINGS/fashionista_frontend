@@ -13,7 +13,7 @@
  */
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -62,6 +62,12 @@ export interface UseScanSessionReturn {
   submit: (payload: LandmarkSubmitPayload) => Promise<void>;
   /** Reset state — allows starting a new scan. */
   reset: () => void;
+  /** T-031: Retry the last failed submission. */
+  retry: () => void;
+  /** T-030: Whether the browser is currently offline. */
+  isOffline: boolean;
+  /** T-033: Whether the processing timeout has been reached. */
+  isTimedOut: boolean;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -72,7 +78,45 @@ export function useScanSession(): UseScanSessionReturn {
   const [phase, setPhase]         = useState<ScanPhase>("idle");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [error, setError]         = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
+  const [isTimedOut, setIsTimedOut] = useState(false);
   const pollingEnabled = phase === "processing";
+
+  // T-030: Track online/offline status
+  useEffect(() => {
+    const updateOnline = () => setIsOffline(!navigator.onLine);
+    updateOnline();
+    window.addEventListener("online", updateOnline);
+    window.addEventListener("offline", updateOnline);
+    return () => {
+      window.removeEventListener("online", updateOnline);
+      window.removeEventListener("offline", updateOnline);
+    };
+  }, []);
+
+  // T-031: Store last payload for retry
+  const lastPayloadRef = useRef<LandmarkSubmitPayload | null>(null);
+
+  // T-033: Processing timeout (60 seconds)
+  const processingStartRef = useRef<number | null>(null);
+  const PROCESSING_TIMEOUT_MS = 60_000;
+
+  useEffect(() => {
+    if (phase === "processing") {
+      processingStartRef.current = Date.now();
+      setIsTimedOut(false);
+      const timer = setTimeout(() => {
+        if (phase === "processing") {
+          setIsTimedOut(true);
+          setPhase("failed");
+          setError("Processing timed out. The AI server may be overloaded. Please try again.");
+          toast.error("Scan processing timed out. Please try again.");
+        }
+      }, PROCESSING_TIMEOUT_MS);
+      return () => clearTimeout(timer);
+    }
+    processingStartRef.current = null;
+  }, [phase]);
 
   // ── Ninja polling query ─────────────────────────────────────────────────────
   const { data: sessionStatus } = useQuery<ScanStatusResponse>({
@@ -156,6 +200,15 @@ export function useScanSession(): UseScanSessionReturn {
         return;
       }
 
+      // T-030: Offline check — buffer the payload for when connection returns
+      if (!navigator.onLine) {
+        lastPayloadRef.current = payload;
+        setError("You are offline. Your scan will be submitted automatically when connection returns.");
+        toast.warning("Offline — scan queued for submission.");
+        return;
+      }
+
+      lastPayloadRef.current = payload;
       setPhase("submitting");
       setError(null);
 
@@ -174,11 +227,39 @@ export function useScanSession(): UseScanSessionReturn {
     [sessionId, phase]
   );
 
+  // T-031: Retry the last failed submission
+  const retry = useCallback(async () => {
+    if (!lastPayloadRef.current || !sessionId) {
+      toast.error("No previous scan data to retry.");
+      return;
+    }
+    setPhase("ready");
+    setError(null);
+    setIsTimedOut(false);
+    // Small delay to allow phase transition to render
+    setTimeout(() => {
+      void submit(lastPayloadRef.current!);
+    }, 100);
+  }, [sessionId, submit]);
+
+  // T-030: Auto-submit when connection returns if we have a buffered payload
+  useEffect(() => {
+    if (!isOffline && lastPayloadRef.current && phase === "failed" && sessionId) {
+      const wasOfflineError = error?.includes("offline");
+      if (wasOfflineError) {
+        toast.info("Connection restored — submitting scan...");
+        void retry();
+      }
+    }
+  }, [isOffline, phase, error, sessionId, retry]);
+
   // ── Reset ───────────────────────────────────────────────────────────────────
   const reset = useCallback(() => {
     setPhase("idle");
     setSessionId(null);
     setError(null);
+    setIsTimedOut(false);
+    lastPayloadRef.current = null;
     prevStatusRef.current = undefined;
   }, []);
 
@@ -188,8 +269,11 @@ export function useScanSession(): UseScanSessionReturn {
     sessionStatus: sessionStatus ?? null,
     isPolling:     pollingEnabled,
     error,
+    isOffline,
+    isTimedOut,
     initiate,
     submit,
+    retry,
     reset,
   };
 }

@@ -61,6 +61,9 @@ export function AICameraCapture({
     skipSideCapture,
     captureSideAndSubmit,
     reset,
+    retry,
+    isOffline,
+    isTimedOut,
     videoRef,
     canvasRef,
   } = useMeasurementCapture();
@@ -454,6 +457,12 @@ export function AICameraCapture({
               {phase === "processing" ? "Usually takes 5–10 seconds" : ""}
             </p>
           </div>
+          {/* T-030: Offline indicator */}
+          {isOffline && (
+            <p className="text-xs text-amber-500 font-medium">
+              ⚠ You appear to be offline. Scan will resume when connection returns.
+            </p>
+          )}
           {/* Processing steps */}
           <div className="w-full space-y-2 text-xs text-[#7A6B44]">
             {["Validating pose quality", "Extracting body landmarks", "Computing measurements", "Saving your profile"].map((step, i) => (
@@ -513,13 +522,33 @@ export function AICameraCapture({
           <div>
             <h3 className="text-[#01454A] font-bold">Scan Failed</h3>
             <p className="text-red-400/80 text-sm mt-1">{error}</p>
+            {isTimedOut && (
+              <p className="text-[#7A6B44] text-xs mt-2">
+                The AI server took too long to respond. This is usually temporary.
+              </p>
+            )}
           </div>
-          <button
-            onClick={reset}
-            className="rounded-xl bg-[#ECE6D6] hover:bg-[#ECE6D6]/80 text-[#01454A] px-6 py-2.5 font-medium text-sm transition"
+          <div className="flex gap-3">
+            <button
+              onClick={retry}
+              className="rounded-xl bg-[#FDA600] hover:bg-[#E8960A] text-white px-6 py-2.5 font-medium text-sm transition"
+            >
+              Retry Submission
+            </button>
+            <button
+              onClick={reset}
+              className="rounded-xl bg-[#ECE6D6] hover:bg-[#ECE6D6]/80 text-[#01454A] px-6 py-2.5 font-medium text-sm transition"
+            >
+              Try Again
+            </button>
+          </div>
+          {/* T-036: Manual entry fallback */}
+          <a
+            href="/dashboard/measurements/manual"
+            className="text-xs text-[#7A6B44] hover:text-[#01454A] transition underline"
           >
-            Try Again
-          </button>
+            Enter measurements manually instead
+          </a>
         </div>
       )}
     </div>
