@@ -79,6 +79,9 @@ export { MeasurementProgress, MeasurementProgressPill }
                                      from "./components/MeasurementProgress";
 export { MeasurementProfileCard }    from "./components/MeasurementProfileCard";
 export { ScanResultCard }            from "./components/ScanResultCard";
+export { MeasurementGate }           from "./components/MeasurementGate";
+export { ShareModal }                from "./components/ShareModal";
+export { SizeRecommendation }        from "./components/SizeRecommendation";
 
 // ── Voice Guidance + Device Orientation ────────────────────────────────────────
 export { useVoiceGuidance }          from "./hooks/useVoiceGuidance";

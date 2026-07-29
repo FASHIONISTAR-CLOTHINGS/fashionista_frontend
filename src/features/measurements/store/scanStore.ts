@@ -31,7 +31,7 @@ export type ScanPhase =
 
 export type UserSex = "male" | "female" | "neutral";
 
-interface ScanState {
+export interface ScanState {
   // Pre-scan inputs
   age: number | null;
   sex: UserSex | null;
