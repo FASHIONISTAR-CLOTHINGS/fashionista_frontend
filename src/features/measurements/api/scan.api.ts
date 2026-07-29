@@ -40,12 +40,12 @@ export interface LandmarkSubmitPayload {
   /** Optional biological sex — improves BMI correction for circumference estimates. */
   user_sex?: "male" | "female" | "neutral";
   device_type?: "web" | "ios" | "android";
-  /** 33 MediaPipe world landmarks from front-facing pose. (legacy alias for landmarks_front) */
+  /** 33 MediaPipe world landmarks from front-facing pose (legacy alias). */
   landmarks?: LandmarkPoint[];
-  /** 33 MediaPipe world landmarks from front-facing pose (preferred key). */
-  landmarks_front?: LandmarkPoint[];
+  /** 33 MediaPipe world landmarks from front-facing pose (canonical V1 key). */
+  front_landmarks?: LandmarkPoint[];
   /** Optional 33 MediaPipe world landmarks from 90° side pose for depth estimation. */
-  landmarks_side?: LandmarkPoint[];
+  side_landmarks?: LandmarkPoint[];
   /** Orientation confidence 0-1 from device orientation sensor (observational). */
   orientation_confidence?: number;
 }

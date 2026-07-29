@@ -14,6 +14,7 @@
  */
 
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 export type ScanPhase =
   | "idle"
@@ -36,6 +37,7 @@ export interface ScanState {
   age: number | null;
   sex: UserSex | null;
   heightCm: number | null;
+  weightKg: number | null;
 
   // Scan lifecycle
   phase: ScanPhase;
@@ -43,7 +45,7 @@ export interface ScanState {
   error: string | null;
 
   // Actions
-  setEntryData: (data: { age: number; sex: UserSex; heightCm: number }) => void;
+  setEntryData: (data: { age: number; sex: UserSex; heightCm: number; weightKg?: number }) => void;
   setPhase: (phase: ScanPhase) => void;
   setSessionId: (id: string | null) => void;
   setError: (error: string | null) => void;
@@ -54,22 +56,49 @@ const initialState = {
   age: null,
   sex: null,
   heightCm: null,
+  weightKg: null,
   phase: "idle" as ScanPhase,
   sessionId: null,
   error: null,
 };
 
-export const useScanStore = create<ScanState>((set) => ({
-  ...initialState,
+export const useScanStore = create<ScanState>()(
+  persist(
+    (set) => ({
+      ...initialState,
 
-  setEntryData: (data) =>
-    set({ age: data.age, sex: data.sex, heightCm: data.heightCm, error: null }),
+      setEntryData: (data) =>
+        set({
+          age: data.age,
+          sex: data.sex,
+          heightCm: data.heightCm,
+          weightKg: data.weightKg ?? null,
+          error: null,
+        }),
 
-  setPhase: (phase) => set({ phase }),
+      setPhase: (phase) => set({ phase }),
 
-  setSessionId: (sessionId) => set({ sessionId }),
+      setSessionId: (sessionId) => set({ sessionId }),
 
-  setError: (error) => set({ error }),
+      setError: (error) => set({ error }),
 
-  reset: () => set({ ...initialState }),
-}));
+      reset: () => set({ ...initialState }),
+    }),
+    {
+      name: "fashionistar-scan-store",
+      storage: createJSONStorage(() => {
+        if (typeof window === "undefined") {
+          return { getItem: () => null, setItem: () => {}, removeItem: () => {} } as any;
+        }
+        return sessionStorage;
+      }),
+      partialize: (state) => ({
+        age: state.age,
+        sex: state.sex,
+        heightCm: state.heightCm,
+        weightKg: state.weightKg,
+        sessionId: state.sessionId,
+      }),
+    }
+  )
+);

@@ -97,6 +97,8 @@ export interface UseMeasurementCaptureReturn {
   isOffline:      boolean;
   /** T-033: Whether the processing timeout was reached. */
   isTimedOut:      boolean;
+  /** Adopt an externally created session (e.g. from URL / QR). */
+  setExistingSession: (sessionId: string) => void;
   /** Stored user height (auto-estimated if not provided). */
   userHeightCm:   number | null;
   /** Dual-pose captured landmarks. */
@@ -238,6 +240,14 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
     }
   }, []);
 
+  // ── Adopt an externally-created session on mount ─────────────────────────────
+  useEffect(() => {
+    if (options?.sessionId && options.sessionId !== scanSession.sessionId) {
+      scanSession.setExistingSession(options.sessionId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [options?.sessionId]);
+
   // ── Start capture flow ──────────────────────────────────────────────────────
   const startCapture = useCallback(
     async (heightCm?: number) => {
@@ -251,8 +261,10 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
         // 2. Start camera
         await startCamera();
 
-        // 3. Initiate backend session
-        await scanSession.initiate("web");
+        // 3. Initiate backend session (unless one was provided externally)
+        if (!scanSession.sessionId) {
+          await scanSession.initiate("web");
+        }
 
         // 4. Store provided height (can be updated or auto-estimated later)
         if (heightCm) setUserHeightCm(heightCm);
@@ -405,7 +417,7 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
     setLocalPhase("submitting");
     await scanSession.submit({
       user_height_cm:  height,
-      landmarks_front: toLandmarkPoints(frontLms),
+      front_landmarks: toLandmarkPoints(frontLms),
       device_type:     "web",
       ...(entryAge != null && { user_age: entryAge }),
       ...(entrySex != null && { user_sex: entrySex }),
@@ -446,7 +458,7 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
         setLocalPhase("submitting");
         await scanSession.submit({
           user_height_cm:  height,
-          landmarks_front: toLandmarkPoints(frontLms),
+          front_landmarks: toLandmarkPoints(frontLms),
           device_type:     "web",
           ...(entryAge != null && { user_age: entryAge }),
           ...(entrySex != null && { user_sex: entrySex }),
@@ -461,8 +473,8 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
       // Submit both front and side landmarks
       await scanSession.submit({
         user_height_cm:   height,
-        landmarks_front:  toLandmarkPoints(frontLms),
-        landmarks_side:   toLandmarkPoints(sideLms),
+        front_landmarks:  toLandmarkPoints(frontLms),
+        side_landmarks:   toLandmarkPoints(sideLms),
         device_type:      "web",
         ...(entryAge != null && { user_age: entryAge }),
         ...(entrySex != null && { user_sex: entrySex }),
@@ -503,7 +515,7 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
 
       await scanSession.submit({
         user_height_cm:  height,
-        landmarks_front: toLandmarkPoints(frontLms),
+        front_landmarks: toLandmarkPoints(frontLms),
         device_type:     "web",
         ...(entryAge != null && { user_age: entryAge }),
         ...(entrySex != null && { user_sex: entrySex }),
@@ -561,9 +573,10 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
     captureSideAndSubmit,
     captureAndSubmit,
     reset,
-    retry:          scanSession.retry,
-    isOffline:      scanSession.isOffline,
-    isTimedOut:     scanSession.isTimedOut,
+    retry:            scanSession.retry,
+    isOffline:        scanSession.isOffline,
+    isTimedOut:       scanSession.isTimedOut,
+    setExistingSession: scanSession.setExistingSession,
     userHeightCm,
     capturedLandmarks,
     stopCamera,

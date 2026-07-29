@@ -68,6 +68,8 @@ export interface UseScanSessionReturn {
   isOffline: boolean;
   /** T-033: Whether the processing timeout has been reached. */
   isTimedOut: boolean;
+  /** Adopt an existing session ID without calling initiate(). */
+  setExistingSession: (sessionId: string) => void;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -263,6 +265,14 @@ export function useScanSession(): UseScanSessionReturn {
     prevStatusRef.current = undefined;
   }, []);
 
+  // ── Adopt an existing session (e.g. from URL or QR code) ─────────────────────
+  const setExistingSession = useCallback((sid: string) => {
+    setSessionId(sid);
+    setPhase("ready");
+    setError(null);
+    prevStatusRef.current = undefined;
+  }, []);
+
   return {
     phase,
     sessionId,
@@ -275,5 +285,6 @@ export function useScanSession(): UseScanSessionReturn {
     submit,
     retry,
     reset,
+    setExistingSession,
   };
 }

@@ -2,22 +2,26 @@
  * @file useHeightPrediction.ts
  * @description TanStack Query hook for AI height prediction from age + sex.
  *
- * T-016: Wraps the predictHeightCm utility in a TanStack Query mutation
+ * T-016: Wraps the predictHeight utility in a TanStack Query mutation
  * so the UI can track pending/error states and cache predictions.
  *
- * The prediction is purely client-side (no network call), but using a
- * mutation hook gives us consistent loading/error UX patterns.
+ * Tries the backend height prediction endpoint first; falls back to the
+ * client-side WHO table if the network request fails.
  */
 
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
 import { predictHeightCm } from "../utils/predictHeight";
+import { predictHeight as predictHeightApi } from "../api/scan.api";
 
 export interface HeightPredictionInput {
   age: number;
   sex?: "male" | "female" | "neutral";
 }
+
+/** Alias for the options type expected by the height prediction hook. */
+export type UseHeightPredictionOptions = HeightPredictionInput;
 
 export interface UseHeightPredictionReturn {
   predictedHeight: number | null;
@@ -31,11 +35,16 @@ export interface UseHeightPredictionReturn {
 export function useHeightPrediction(): UseHeightPredictionReturn {
   const mutation = useMutation({
     mutationFn: async (input: HeightPredictionInput): Promise<number> => {
-      // Sex-adjusted prediction: males tend to be ~5cm taller, females ~5cm shorter
-      const base = predictHeightCm(input.age);
-      if (input.sex === "male")    return Math.round(base + 5);
-      if (input.sex === "female")  return Math.round(base - 5);
-      return base;
+      try {
+        const result = await predictHeightApi(input.age, input.sex);
+        return Math.round(result.predicted_cm);
+      } catch {
+        // Fallback: client-side WHO table estimate
+        const base = predictHeightCm(input.age);
+        if (input.sex === "male")   return Math.round(base + 5);
+        if (input.sex === "female") return Math.round(base - 5);
+        return base;
+      }
     },
   });
 

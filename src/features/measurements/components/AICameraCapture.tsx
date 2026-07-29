@@ -40,8 +40,14 @@ export interface AICameraCaptureProps {
   onCancel?: () => void;
   /** Pre-filled age from entry modal (stored for scan submission). */
   initialAge?: number;
+  /** Pre-filled sex from entry modal (stored for scan submission). */
+  initialSex?: "male" | "female" | "neutral";
   /** Pre-filled height in cm from prediction/entry (pre-fills height input). */
   initialHeightCm?: number;
+  /** Pre-filled weight in kg from entry modal (stored for scan submission). */
+  initialWeightKg?: number;
+  /** Existing session ID from URL / QR (skip initiate, use pre-existing session). */
+  sessionId?: string;
   className?: string;
 }
 
@@ -51,7 +57,10 @@ export function AICameraCapture({
   onComplete,
   onCancel,
   initialAge,
+  initialSex,
   initialHeightCm,
+  initialWeightKg,
+  sessionId,
   className,
 }: AICameraCaptureProps) {
   const {
@@ -72,13 +81,21 @@ export function AICameraCapture({
     isTimedOut,
     videoRef,
     canvasRef,
-  } = useMeasurementCapture();
+  } = useMeasurementCapture({
+    initialAge,
+    initialSex,
+    initialHeightCm,
+    initialWeightKg,
+    sessionId,
+  });
   const voice   = useVoiceGuidance();
   const orientation = useDeviceOrientation();
 
-  // Height input state
+  // Height / age input state
   const [heightInput, setHeightInput]     = useState("");
   const [heightUnit, setHeightUnit]       = useState<"cm" | "inch">("cm");
+  const [heightError, setHeightError]     = useState("");
+  const [userAge, setUserAge]             = useState("");
 
   // T-015: Pre-fill height from entry modal / prediction
   useEffect(() => {
@@ -87,8 +104,13 @@ export function AICameraCapture({
       setHeightInput(String(Math.round(initialHeightCm)));
     }
   }, [initialHeightCm]);
-  const [heightError, setHeightError]     = useState("");
-  const [userAge, setUserAge]             = useState(initialAge ? String(initialAge) : "");
+
+  // T-015: Pre-fill age from entry modal
+  useEffect(() => {
+    if (initialAge && initialAge > 0) {
+      setUserAge(String(initialAge));
+    }
+  }, [initialAge]);
 
   // ── Frame loop (single self-contained effect) ───────────────────────────────
   // The frameLoop function is defined inside the effect so it can reference

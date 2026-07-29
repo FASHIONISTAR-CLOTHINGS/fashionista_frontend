@@ -57,6 +57,7 @@ export function ScanEntryClient() {
         age: data.age,
         sex: data.sex,
         heightCm: data.heightCm,
+        weightKg: data.weightKg,
       });
 
       try {

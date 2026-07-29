@@ -97,7 +97,7 @@ export { useScanSession }            from "./hooks/useScanSession";
 export type { UseScanSessionReturn, ScanPhase as ScanSessionPhase } from "./hooks/useScanSession";
 // T-016: Height prediction hook
 export { useHeightPrediction }       from "./hooks/useHeightPrediction";
-export type { HeightPredictionInput, UseHeightPredictionReturn } from "./hooks/useHeightPrediction";
+export type { HeightPredictionInput, UseHeightPredictionOptions, UseHeightPredictionReturn } from "./hooks/useHeightPrediction";
 // T-032: WebSocket scan progress hook
 export { useScanWebSocket }          from "./hooks/useScanWebSocket";
 export type { WSConnectionStatus, ScanWSEvent } from "./hooks/useScanWebSocket";
@@ -129,6 +129,7 @@ export type {
   CapturePhase,
   CaptureFrame,
   UseMeasurementCaptureReturn,
+  UseMeasurementCaptureOptions,
 } from "./hooks/useMeasurementCapture";
 
 export type {

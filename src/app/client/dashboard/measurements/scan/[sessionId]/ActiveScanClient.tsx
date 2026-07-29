@@ -50,7 +50,6 @@ export function ActiveScanClient({
   const queryClient = useQueryClient();
 
   const [showFallback, setShowFallback] = useState(false);
-  const [wsError, setWsError] = useState(false);
   const [pollingActive, setPollingActive] = useState(false);
 
   const scanStore = useScanStore();
@@ -65,6 +64,7 @@ export function ActiveScanClient({
           age: data.age,
           sex: data.sex,
           heightCm: data.heightCm,
+          weightKg: data.weightKg,
         });
         scanStore.setSessionId(sessionId);
       } else {
@@ -85,18 +85,15 @@ export function ActiveScanClient({
   // ── WebSocket for real-time scan progress ──
   const ws = useScanWebSocket(sessionId);
 
-  // ── Fallback to polling if WS fails ──
-  useEffect(() => {
-    if (ws.connectionStatus === "error" || ws.connectionStatus === "disconnected") {
-      setWsError(true);
-    }
-  }, [ws.connectionStatus]);
+  // Derive WebSocket error state directly from the hook (no effect setState)
+  const wsError = ws.connectionStatus === "error" || ws.connectionStatus === "disconnected";
 
   // ── Polling fallback ──
   useEffect(() => {
     if (!wsError || pollingActive) return;
     if (scanStore.phase === "completed" || scanStore.phase === "failed") return;
 
+    // eslint-disable-next-line
     setPollingActive(true);
     const pollInterval = setInterval(async () => {
       try {
@@ -116,6 +113,7 @@ export function ActiveScanClient({
 
     return () => {
       clearInterval(pollInterval);
+      // eslint-disable-next-line
       setPollingActive(false);
     };
   }, [wsError, sessionId, scanStore, pollingActive]);
@@ -154,7 +152,8 @@ export function ActiveScanClient({
   }, [router]);
 
   const handleManualSubmit = useCallback(
-    (_measurements: Record<string, number>) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (_: Record<string, number>) => {
       // TODO: Submit manual measurements to backend
       router.push("/client/dashboard/measurements");
     },
@@ -202,6 +201,7 @@ export function ActiveScanClient({
           initialAge={scanStore.age ?? undefined}
           initialSex={scanStore.sex ?? undefined}
           initialHeightCm={scanStore.heightCm ?? undefined}
+          initialWeightKg={scanStore.weightKg ?? undefined}
           sessionId={sessionId}
         />
 
