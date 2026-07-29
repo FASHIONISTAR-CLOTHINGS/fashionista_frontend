@@ -55,6 +55,8 @@ export interface EnhancedMeasurementFlowProps {
   initialHeightCm?: number;
   /** Pre-filled weight in kg from entry modal (forwarded to AICameraCapture). */
   initialWeightKg?: number;
+  /** Existing session ID from URL (skip initiate, use pre-existing session). */
+  sessionId?: string;
   className?: string;
 }
 
@@ -83,6 +85,7 @@ export function EnhancedMeasurementFlow({
   initialSex,
   initialHeightCm,
   initialWeightKg,
+  sessionId,
   className,
 }: EnhancedMeasurementFlowProps) {
   const [phase, setPhase]         = useState<FlowPhase>("intro");
@@ -198,6 +201,7 @@ export function EnhancedMeasurementFlow({
         initialSex={initialSex}
         initialHeightCm={initialHeightCm}
         initialWeightKg={initialWeightKg}
+        sessionId={sessionId}
       />
     );
   }

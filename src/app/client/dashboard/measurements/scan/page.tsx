@@ -1,18 +1,19 @@
 /**
  * @file page.tsx
  * @route /client/dashboard/measurements/scan
- * @description Full AI body measurement scan page.
+ * @description Scan entry point — tutorial + entry modal + session initiation.
  *
- * Routes to here from:
- *   - Measurement profile dashboard (Add/Retake scan button)
- *   - Checkout gate (when measurement required)
- *   - Navigation sidebar / account settings
+ * Renders ScanEntryClient which orchestrates:
+ *   1. Tutorial overlay (if not seen before)
+ *   2. MeasurementEntryModal (age, sex, height, weight)
+ *   3. initiateBodyScan API call
+ *   4. Redirect to /scan/[sessionId] (mobile) or /scan/qr (desktop)
  *
- * On scan completion: redirects to /client/dashboard/measurements/{profileId}
+ * On scan completion: ActiveScanClient redirects to /client/dashboard/measurements/{profileId}
  */
 
 import type { Metadata } from "next";
-import { MeasurementScanPageClient } from "./MeasurementScanPageClient";
+import { ScanEntryClient } from "./ScanEntryClient";
 
 export const metadata: Metadata = {
   title: "AI Body Scan — FASHIONISTAR",
@@ -21,6 +22,8 @@ export const metadata: Metadata = {
     "Our in-house AI accurately captures 14 body measurements for perfect fit.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function MeasurementScanPage() {
-  return <MeasurementScanPageClient />;
+  return <ScanEntryClient />;
 }
