@@ -9,10 +9,11 @@
  */
 
 
+import { memo } from "react";
 import type { MeasurementProfile, MeasurementCompletionStatus } from "../types/measurements.types";
 import { MEASUREMENT_FIELDS } from "../types/measurements.types";
 
-// ── MeasurementCard ──────────────────────────────────────────────────────────
+// ── MeasurementCard (T-014: memoized) ──────────────────────────────────────────
 
 interface MeasurementCardProps {
   profile: MeasurementProfile | null;
@@ -21,7 +22,7 @@ interface MeasurementCardProps {
   className?: string;
 }
 
-export function MeasurementCard({ profile, onEdit, onStartScan, className = "" }: MeasurementCardProps) {
+function MeasurementCardInner({ profile, onEdit, onStartScan, className = "" }: MeasurementCardProps) {
   const completion = profile?.completionPercent ?? 0;
   const unit = profile?.unit ?? "cm";
 
@@ -115,81 +116,5 @@ export function MeasurementCard({ profile, onEdit, onStartScan, className = "" }
   );
 }
 
-// ── BodyDiagram ──────────────────────────────────────────────────────────────
-
-interface BodyDiagramProps {
-  profile: MeasurementProfile | null;
-  highlightField?: string;
-  className?: string;
-}
-
-export function BodyDiagram({ profile, highlightField, className = "" }: BodyDiagramProps) {
-  const hasValue = (field: keyof MeasurementProfile) =>
-    profile && profile[field] !== null && profile[field] !== undefined;
-
-  const hotspotClass = (field: keyof MeasurementProfile) =>
-    hasValue(field)
-      ? "fill-brand-gold/70 stroke-brand-gold"
-      : "fill-brand-gray/50 stroke-brand-gray";
-
-  return (
-    <div className={`relative flex items-center justify-center ${className}`} aria-label="Body measurement diagram">
-      <svg viewBox="0 0 200 400" className="w-full max-w-[180px] h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Body silhouette */}
-        <g stroke="white" strokeOpacity="0.15" strokeWidth="1" fill="white" fillOpacity="0.04">
-          {/* Head */}
-          <circle cx="100" cy="40" r="25" />
-          {/* Neck */}
-          <rect x="90" y="63" width="20" height="20" rx="4" />
-          {/* Torso */}
-          <path d="M65 83 Q55 100 58 150 L142 150 Q145 100 135 83 Q120 75 100 75 Q80 75 65 83Z" />
-          {/* Hips */}
-          <path d="M58 150 Q50 170 55 200 L145 200 Q150 170 142 150Z" />
-          {/* Left arm */}
-          <path d="M65 83 Q45 100 40 160 Q42 165 50 160 Q55 110 70 95Z" />
-          {/* Right arm */}
-          <path d="M135 83 Q155 100 160 160 Q158 165 150 160 Q145 110 130 95Z" />
-          {/* Left leg */}
-          <path d="M60 200 Q55 260 58 330 Q62 340 72 338 Q78 270 80 200Z" />
-          {/* Right leg */}
-          <path d="M120 200 Q122 270 128 338 Q138 340 142 330 Q145 260 140 200Z" />
-        </g>
-
-        {/* Measurement hotspots */}
-        {/* Chest */}
-        <circle cx="100" cy="108" r="10" className={hotspotClass("chest")} strokeWidth="1.5"
-          opacity={highlightField === "chest" ? 1 : 0.8} />
-        <text x="100" y="111" textAnchor="middle" fontSize="6" fill="white" fillOpacity="0.8">Chest</text>
-
-        {/* Waist */}
-        <circle cx="100" cy="138" r="10" className={hotspotClass("waist")} strokeWidth="1.5"
-          opacity={highlightField === "waist" ? 1 : 0.8} />
-        <text x="100" y="141" textAnchor="middle" fontSize="6" fill="white" fillOpacity="0.8">Waist</text>
-
-        {/* Hips */}
-        <circle cx="100" cy="168" r="10" className={hotspotClass("hips")} strokeWidth="1.5"
-          opacity={highlightField === "hips" ? 1 : 0.8} />
-        <text x="100" y="171" textAnchor="middle" fontSize="6" fill="white" fillOpacity="0.8">Hips</text>
-
-        {/* Shoulder */}
-        <circle cx="70" cy="86" r="7" className={hotspotClass("shoulderWidth")} strokeWidth="1.5"
-          opacity={highlightField === "shoulderWidth" ? 1 : 0.8} />
-        <circle cx="130" cy="86" r="7" className={hotspotClass("shoulderWidth")} strokeWidth="1.5"
-          opacity={highlightField === "shoulderWidth" ? 1 : 0.8} />
-
-        {/* Neck */}
-        <circle cx="100" cy="68" r="6" className={hotspotClass("neck")} strokeWidth="1.5" />
-      </svg>
-
-      {/* Legend */}
-      <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 text-[10px] text-brand-gray">
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-brand-gold" />Measured
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-brand-gray" />Missing
-        </span>
-      </div>
-    </div>
-  );
-}
+// T-014: Memoized export — prevents re-render when parent updates but props are unchanged.
+export const MeasurementCard = memo(MeasurementCardInner);

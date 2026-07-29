@@ -1,9 +1,10 @@
 "use client";
 /**
- * @file InHouseMeasurementFlow.tsx
+ * @file EnhancedMeasurementFlow.tsx
  * @description Full AI Body Scan orchestration component (Production Implementation).
  *
- * PRODUCTION IMPLEMENTATION — replaces the previous photo-upload stub.
+ * Canonical scan flow component for the FASHIONISTAR measurement feature slice.
+ * Consolidated from the former InHouseMeasurementFlow — no backward-compat aliases.
  *
  * Flow:
  *   1. Intro card — explains the scan process, shows requirements
@@ -20,6 +21,8 @@
  * Props:
  *   onComplete(profileId) — called when scan saves measurement profile
  *   onCancel()            — called when user clicks Cancel
+ *   initialAge             — pre-filled age from entry modal (optional)
+ *   initialHeightCm        — pre-filled height from prediction/entry (optional)
  */
 
 import { useState, useCallback } from "react";
@@ -39,11 +42,15 @@ type FlowPhase = "intro" | "scanning" | "success";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
-export interface InHouseMeasurementFlowProps {
+export interface EnhancedMeasurementFlowProps {
   /** Called when scan completes and measurement profile is saved. */
   onComplete?: (profileId: string | number | null) => void;
   /** Called when user cancels. */
   onCancel?: () => void;
+  /** Pre-filled age from entry modal (forwarded to AICameraCapture). */
+  initialAge?: number;
+  /** Pre-filled height in cm from prediction/entry (forwarded to AICameraCapture). */
+  initialHeightCm?: number;
   className?: string;
 }
 
@@ -65,11 +72,13 @@ const MEASUREMENT_LIST = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function InHouseMeasurementFlow({
+export function EnhancedMeasurementFlow({
   onComplete,
   onCancel,
+  initialAge,
+  initialHeightCm,
   className,
-}: InHouseMeasurementFlowProps) {
+}: EnhancedMeasurementFlowProps) {
   const [phase, setPhase]         = useState<FlowPhase>("intro");
   const [profileId, setProfileId] = useState<string | number | null>(null);
 
@@ -99,7 +108,7 @@ export function InHouseMeasurementFlow({
           </div>
           <div>
             <h2 className="text-xl font-bold text-[#01454A] tracking-tight">
-              In-House AI Body Scan
+              AI Body Scan
             </h2>
             <p className="text-sm text-[#7A6B44]">
               30 seconds · 14 measurements · 100% private
@@ -179,6 +188,8 @@ export function InHouseMeasurementFlow({
         className={className}
         onComplete={handleScanComplete}
         onCancel={handleScanCancel}
+        initialAge={initialAge}
+        initialHeightCm={initialHeightCm}
       />
     );
   }

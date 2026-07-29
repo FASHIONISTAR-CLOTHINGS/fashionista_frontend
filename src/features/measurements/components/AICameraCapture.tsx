@@ -38,6 +38,10 @@ export interface AICameraCaptureProps {
   onComplete?: (profileId: string | number | null) => void;
   /** Called when user cancels. */
   onCancel?: () => void;
+  /** Pre-filled age from entry modal (stored for scan submission). */
+  initialAge?: number;
+  /** Pre-filled height in cm from prediction/entry (pre-fills height input). */
+  initialHeightCm?: number;
   className?: string;
 }
 
@@ -46,6 +50,8 @@ export interface AICameraCaptureProps {
 export function AICameraCapture({
   onComplete,
   onCancel,
+  initialAge,
+  initialHeightCm,
   className,
 }: AICameraCaptureProps) {
   const {
@@ -73,8 +79,16 @@ export function AICameraCapture({
   // Height input state
   const [heightInput, setHeightInput]     = useState("");
   const [heightUnit, setHeightUnit]       = useState<"cm" | "inch">("cm");
+
+  // T-015: Pre-fill height from entry modal / prediction
+  useEffect(() => {
+    if (initialHeightCm && initialHeightCm > 0) {
+      setHeightUnit("cm");
+      setHeightInput(String(Math.round(initialHeightCm)));
+    }
+  }, [initialHeightCm]);
   const [heightError, setHeightError]     = useState("");
-  const [userAge, setUserAge]             = useState("");
+  const [userAge, setUserAge]             = useState(initialAge ? String(initialAge) : "");
 
   // ── Frame loop (single self-contained effect) ───────────────────────────────
   // The frameLoop function is defined inside the effect so it can reference
@@ -500,6 +514,31 @@ export function AICameraCapture({
               <span className="text-[#FDA600] font-semibold">
                 {Math.round(sessionStatus.scan_confidence * 100)}%
               </span>
+            </div>
+          )}
+          {/* T-042: BMI display */}
+          {sessionStatus?.bmi != null && (
+            <div className="text-xs text-[#7A6B44]">
+              BMI:{" "}
+              <span className="text-[#01454A] font-semibold">
+                {sessionStatus.bmi.toFixed(1)}
+              </span>
+            </div>
+          )}
+          {/* T-041: Plausibility warnings display */}
+          {sessionStatus?.plausibility_warnings && sessionStatus.plausibility_warnings.length > 0 && (
+            <div className="w-full rounded-xl border border-amber-300 bg-amber-50 p-3 text-left">
+              <p className="text-xs font-semibold text-amber-700 mb-1">
+                ⚠ Measurement Quality Notes:
+              </p>
+              <ul className="text-xs text-amber-600 space-y-1 list-disc list-inside">
+                {sessionStatus.plausibility_warnings.map((w: string, i: number) => (
+                  <li key={i}>{w}</li>
+                ))}
+              </ul>
+              <p className="text-xs text-amber-500 mt-2">
+                Consider re-scanning for improved accuracy.
+              </p>
             </div>
           )}
           <button

@@ -64,7 +64,7 @@ export {
 
 // ── UI Components ──────────────────────────────────────────────────────────────
 export { MeasurementProfilePanel }  from "./components/MeasurementProfilePanel";
-export { InHouseMeasurementFlow }   from "./components/InHouseMeasurementFlow";
+export { EnhancedMeasurementFlow }  from "./components/EnhancedMeasurementFlow";
 export { MeasurementCard }          from "./components/MeasurementCard";
 export { BodyDiagram }              from "./components/BodyDiagram";
 // T-015: Unified entry modal
@@ -138,7 +138,7 @@ export type {
 
 // ── Component prop types (for external wrappers / mobile adapters) ──────────────
 export type { AICameraCaptureProps }       from "./components/AICameraCapture";
-export type { InHouseMeasurementFlowProps } from "./components/InHouseMeasurementFlow";
+export type { EnhancedMeasurementFlowProps } from "./components/EnhancedMeasurementFlow";
 
 // T-018: Zustand scan store
 export { useScanStore }                    from "./store/scanStore";

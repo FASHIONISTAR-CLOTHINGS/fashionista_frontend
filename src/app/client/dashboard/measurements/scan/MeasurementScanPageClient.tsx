@@ -4,18 +4,18 @@
  * @description Client Component: orchestrates the full AI body scan flow.
  *
  * Page states:
- *   intro    → Shows InHouseMeasurementFlow (the multi-step scan UI)
+ *   intro    → Shows EnhancedMeasurementFlow (the multi-step scan UI)
  *   complete → Shows success summary + redirect to profile
  */
 
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
-import { InHouseMeasurementFlow } from "@/features/measurements/components/InHouseMeasurementFlow";
+import { EnhancedMeasurementFlow } from "@/features/measurements/components/EnhancedMeasurementFlow";
 
 export function MeasurementScanPageClient() {
   const router = useRouter();
 
-  /** Called by InHouseMeasurementFlow when scan + save is complete. */
+  /** Called by EnhancedMeasurementFlow when scan + save is complete. */
   const handleScanComplete = useCallback(
     (profileId: string | number | null) => {
       if (profileId) {
@@ -54,7 +54,7 @@ export function MeasurementScanPageClient() {
         </div>
 
         {/* Measurement flow */}
-        <InHouseMeasurementFlow
+        <EnhancedMeasurementFlow
           onComplete={handleScanComplete}
           onCancel={handleCancel}
         />

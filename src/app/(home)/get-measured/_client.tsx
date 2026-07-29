@@ -12,7 +12,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useState, useEffect } from "react";
-import { InHouseMeasurementFlow } from "@/features/measurements/components/InHouseMeasurementFlow";
+import { EnhancedMeasurementFlow } from "@/features/measurements/components/EnhancedMeasurementFlow";
 import { MeasurementEntryModal, type MeasurementEntryData } from "@/features/measurements/components/MeasurementEntryModal";
 import { useScanStore } from "@/features/measurements/store/scanStore";
 
@@ -52,7 +52,7 @@ export function GetMeasuredClient() {
    * T-024: After scan completes:
    * - If user is logged in and we have a profile ID → redirect to their profile
    * - If not logged in → redirect to login with callback URL
-   * - If profileId is null → InHouseMeasurementFlow shows its own success state
+   * - If profileId is null → EnhancedMeasurementFlow shows its own success state
    */
   const handleComplete = useCallback(
     (profileId: string | number | null) => {
@@ -74,7 +74,7 @@ export function GetMeasuredClient() {
 
   return (
     <>
-      <InHouseMeasurementFlow
+      <EnhancedMeasurementFlow
         onComplete={handleComplete}
         // No onCancel on the public page — user can just navigate away
       />

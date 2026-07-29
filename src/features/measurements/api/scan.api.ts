@@ -65,6 +65,12 @@ export interface ScanStatusResponse {
   measurement_profile_id?: string | number;
   processing_started_at?: string;
   completed_at?: string;
+  /** T-042: BMI value if weight was provided */
+  bmi?: number | null;
+  /** T-041: Plausibility warnings from anthropometric checks */
+  plausibility_warnings?: string[];
+  /** T-041: Correction tier applied (e.g. "normal", "overweight") */
+  correction_applied?: string;
 }
 
 // ─── API Functions ─────────────────────────────────────────────────────────────

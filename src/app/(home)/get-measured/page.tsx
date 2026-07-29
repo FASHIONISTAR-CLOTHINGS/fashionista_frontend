@@ -68,7 +68,7 @@ export default function GetMeasuredPage() {
             across custom fashion orders for a smoother, more accurate fitting
             experience. Voice guidance walks you through every step.
           </div>
-          {/* Client boundary wraps InHouseMeasurementFlow */}
+          {/* Client boundary wraps EnhancedMeasurementFlow */}
           <GetMeasuredClient />
         </section>
       </div>
