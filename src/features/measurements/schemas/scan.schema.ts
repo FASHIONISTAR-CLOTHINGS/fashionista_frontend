@@ -1,84 +1,116 @@
 /**
  * @file scan.schema.ts
- * @description Zod schemas for the AI body scan flow (T-019).
+ * @description T-019: Zod schemas for scan status API responses.
+ *
+ * Validates the enriched scan status response from the consolidated
+ * Ninja async endpoint: GET /api/v1/ninja/ai/scan/{id}/status/
  *
  * Schema parity with:
- *   apps/measurements/apis/sync/scan_views.py (LandmarkSubmitSerializer)
- *   apps/ai/apis/async_api/ai_router.py (ScanStatusSchema)
+ *   apps/ai/apis/async_api/ai_router.py (ScanStatusView)
+ *   apps/measurements/apis/sync/scan_views.py (SubmitLandmarksView)
  */
-
 import { z } from "zod";
 
-// ── Landmark point (MediaPipe world coordinate) ──────────────────────────────
+// ── Landmark point ─────────────────────────────────────────────────────────────
 
 export const LandmarkPointSchema = z.object({
-  x:          z.number(),
-  y:          z.number(),
-  z:          z.number(),
-  visibility: z.number().min(0).max(1),
+  x: z.number(),
+  y: z.number(),
+  z: z.number().optional().default(0),
+  visibility: z.number().optional().default(1),
 });
 
 export type LandmarkPoint = z.infer<typeof LandmarkPointSchema>;
 
-// ── Submit landmarks request ──────────────────────────────────────────────────
-
-export const SubmitLandmarksSchema = z.object({
-  user_height_cm: z.number().min(50).max(300),
-  user_weight_kg: z.number().min(10).max(500).optional().nullable(),
-  user_age:       z.number().int().min(5).max(120).optional().nullable(),
-  user_sex:       z.enum(["male", "female", "neutral"]).optional().nullable(),
-  device_type:    z.enum(["web", "ios", "android"]).default("web"),
-  landmarks:     z.array(LandmarkPointSchema).length(33).optional(),
-  front_landmarks: z.array(LandmarkPointSchema).length(33).optional(),
-  side_landmarks:  z.array(LandmarkPointSchema).length(33).optional().nullable(),
-  orientation_confidence: z.number().min(0).max(1).optional().nullable(),
-  idempotency_key: z.string().max(128).optional().nullable(),
-}).refine(
-  (data) => data.landmarks || data.front_landmarks,
-  { message: "Either 'front_landmarks' or 'landmarks' must be provided." },
-);
-
-export type SubmitLandmarksRequest = z.infer<typeof SubmitLandmarksSchema>;
-
-// ── Scan status response ──────────────────────────────────────────────────────
+// ── Scan status response ───────────────────────────────────────────────────────
 
 export const ScanStatusSchema = z.object({
-  session_id:              z.string(),
-  status:                  z.enum(["pending", "processing", "completed", "failed"]),
-  scan_confidence:         z.number().nullable().optional(),
-  extracted_measurements:  z.record(z.string(), z.any()).nullable().optional(),
-  measurements_cm:          z.record(z.string(), z.any()).nullable().optional(),
-  measurements_inches:      z.record(z.string(), z.any()).nullable().optional(),
-  plausibility_warnings:   z.array(z.string()).default([]),
-  bmi:                     z.number().nullable().optional(),
-  correction_applied:      z.string().nullable().optional(),
-  error_message:           z.string().nullable().optional(),
-  measurement_profile_id:  z.number().nullable().optional(),
-  processing_started_at:   z.string().nullable().optional(),
-  completed_at:            z.string().nullable().optional(),
+  session_id: z.string(),
+  status: z.enum([
+    "pending",
+    "processing",
+    "completed",
+    "failed",
+    "timed_out",
+  ]),
+  scan_phase: z.string().optional().default(""),
+  scan_type: z.string().optional().default("front_side"),
+  error: z.string().nullable().optional().default(null),
+
+  // Progress
+  progress_percent: z.number().min(0).max(100).optional().default(0),
+  scan_confidence: z.number().min(0).max(1).nullable().optional().default(null),
+
+  // Results
+  measurement_profile_id: z.union([z.string(), z.number()]).nullable().optional().default(null),
+
+  // Measurements (cm) — populated when status === "completed"
+  measurements: z.record(z.string(), z.union([z.string(), z.number(), z.null()])).optional().default({}),
+
+  // Measurements (inches) — T-005
+  measurements_inches: z.record(z.string(), z.union([z.string(), z.number(), z.null()])).optional().default({}),
+
+  // Quality metrics
+  pose_quality_score: z.number().min(0).max(1).nullable().optional().default(null),
+  pose_quality_grade: z.string().nullable().optional().default(null),
+
+  // Timestamps
+  created_at: z.string().optional().default(""),
+  updated_at: z.string().optional().default(""),
+  completed_at: z.string().nullable().optional().default(null),
 });
 
 export type ScanStatusResponse = z.infer<typeof ScanStatusSchema>;
 
-// ── WebSocket scan event ──────────────────────────────────────────────────────
+// ── Scan WebSocket event ───────────────────────────────────────────────────────
 
 export const ScanEventSchema = z.object({
-  event:      z.string(),
+  type: z.literal("scan.update"),
+  event: z.string(),
   session_id: z.string(),
-  status:     z.string(),
-  scan_phase: z.string().nullable().optional(),
-  data:       z.record(z.string(), z.any()).default({}),
+  status: z.string(),
+  scan_phase: z.string().optional().default(""),
+  data: z.record(z.string(), z.unknown()).optional().default({}),
 });
 
 export type ScanEvent = z.infer<typeof ScanEventSchema>;
 
-// ── Initiate scan response ───────────────────────────────────────────────────
+// ── Initiate scan response ─────────────────────────────────────────────────────
 
 export const InitiateScanSchema = z.object({
   session_id: z.string(),
-  status:     z.literal("pending"),
-  message:    z.string().optional(),
-  qr_code_b64: z.string().nullable().optional(),
+  measurement_url: z.string(),
+  qr_code_b64: z.string().nullable().optional().default(null),
+  qr_code_url: z.string().nullable().optional().default(null),
+  expires_in_seconds: z.number().optional().default(300),
 });
 
 export type InitiateScanResponse = z.infer<typeof InitiateScanSchema>;
+
+// ── Submit landmarks request ───────────────────────────────────────────────────
+
+export const SubmitLandmarksSchema = z.object({
+  session_id: z.string(),
+  pose: z.enum(["front", "side"]),
+  landmarks: z.array(LandmarkPointSchema),
+  landmarks_world: z.array(LandmarkPointSchema).optional(),
+  user_height_cm: z.number().positive().optional(),
+  user_age: z.number().int().min(10).max(100).optional(),
+  user_sex: z.enum(["male", "female", "neutral"]).optional(),
+  user_weight_kg: z.number().positive().optional(),
+  image_width: z.number().int().positive().optional(),
+  image_height: z.number().int().positive().optional(),
+});
+
+export type SubmitLandmarksRequest = z.infer<typeof SubmitLandmarksSchema>;
+
+// ── Safe parse helper ──────────────────────────────────────────────────────────
+
+export function parseScanStatus(data: unknown): ScanStatusResponse | null {
+  const result = ScanStatusSchema.safeParse(data);
+  if (!result.success) {
+    console.error("[Zod/Scan] Schema mismatch:", result.error.flatten());
+    return null;
+  }
+  return result.data;
+}
