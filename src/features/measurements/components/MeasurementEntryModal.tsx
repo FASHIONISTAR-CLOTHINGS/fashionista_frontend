@@ -9,6 +9,12 @@
  *   - Height (auto-predicted, user can override) — calibration for landmark scaling
  *   - Weight (optional) — enables BMI correction for waist/hip circumference
  *
+ * AI Height Prediction:
+ *   - Client-side: instant prediction via predictHeightCm (WHO table)
+ *   - Backend API: richer prediction via /api/v1/ninja/ai/height-predict/
+ *   - "Let our AI predict your height" button triggers backend call
+ *   - Modal stays open; predicted height auto-fills the height field
+ *
  * On submit, calls onSubmit with the collected data.
  * The parent component is responsible for routing + scanStore persistence.
  *
@@ -21,7 +27,8 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useHeightPrediction } from "../hooks/useHeightPrediction";
+import { predictHeightCm } from "../utils/predictHeight";
+import { predictHeight as predictHeightApi } from "../api/scan.api";
 import type { UserSex } from "../store/scanStore";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -40,6 +47,17 @@ interface MeasurementEntryModalProps {
   className?: string;
 }
 
+// ─── Prediction result shape (unified from client + backend) ──────────────────
+
+interface PredictionResult {
+  predictedCm:   number;
+  predictedInch: string;
+  rangeLow:      number;
+  rangeHigh:     number;
+  confidence:    string;
+  source:        "client" | "backend";
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function MeasurementEntryModal({
@@ -56,20 +74,100 @@ export function MeasurementEntryModal({
   const [weight, setWeight]             = useState("");
   const [errors, setErrors]             = useState<Record<string, string>>({});
 
-  // Height prediction (debounced)
-  const { prediction } = useHeightPrediction(age, sex);
+  // Prediction state
+  const [prediction, setPrediction]         = useState<PredictionResult | null>(null);
+  const [isAiPredicting, setIsAiPredicting] = useState(false);
+  const [aiPredictError, setAiPredictError] = useState<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auto-fill height when prediction arrives and user hasn't typed
+  // ── Client-side height prediction (instant, debounced) ─────────────────────
   useEffect(() => {
-    if (prediction && !heightInput) {
+    const ageNum = parseInt(age, 10);
+    if (isNaN(ageNum) || ageNum < 10 || ageNum > 100) {
+      setPrediction(null);
+      return;
+    }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const base = predictHeightCm(ageNum);
+      const adjusted = sex === "male" ? base + 5 : sex === "female" ? base - 5 : base;
+      const predictedCm = Math.round(adjusted);
+      setPrediction({
+        predictedCm,
+        predictedInch: `${(predictedCm / 2.54).toFixed(1)}"`,
+        rangeLow:  predictedCm - 8,
+        rangeHigh: predictedCm + 8,
+        confidence: "moderate",
+        source: "client",
+      });
+      // Auto-fill height if user hasn't entered it yet
+      if (!heightInput) {
+        setHeightInput(
+          heightUnit === "cm"
+            ? String(predictedCm)
+            : String(Math.round(predictedCm / 2.54)),
+        );
+      }
+    }, 400);
+
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [age, sex, heightUnit]);
+
+  // ── AI (backend) height prediction ──────────────────────────────────────────
+  const handleAiPredictHeight = useCallback(async () => {
+    const ageNum = parseInt(age, 10);
+    if (isNaN(ageNum) || ageNum < 10 || ageNum > 100) {
+      setErrors({ age: "Please enter a valid age first (10-100)" });
+      return;
+    }
+
+    setIsAiPredicting(true);
+    setAiPredictError(null);
+
+    try {
+      const result = await predictHeightApi(ageNum, sex);
+      const pred: PredictionResult = {
+        predictedCm:   result.predicted_cm,
+        predictedInch: result.predicted_inch,
+        rangeLow:      result.range_low_cm,
+        rangeHigh:     result.range_high_cm,
+        confidence:    result.confidence,
+        source: "backend",
+      };
+      setPrediction(pred);
+      // Auto-fill height field with AI prediction
       setHeightInput(
         heightUnit === "cm"
-          ? String(prediction.predictedCm)
-          : String(Math.round(prediction.predictedCm / 2.54)),
+          ? String(result.predicted_cm)
+          : String(Math.round(result.predicted_cm / 2.54)),
       );
+    } catch {
+      // Fallback: use client-side prediction
+      const base = predictHeightCm(ageNum);
+      const adjusted = sex === "male" ? base + 5 : sex === "female" ? base - 5 : base;
+      const predictedCm = Math.round(adjusted);
+      setPrediction({
+        predictedCm,
+        predictedInch: `${(predictedCm / 2.54).toFixed(1)}"`,
+        rangeLow:  predictedCm - 8,
+        rangeHigh: predictedCm + 8,
+        confidence: "low",
+        source: "client",
+      });
+      setAiPredictError("AI prediction unavailable — using local estimate.");
+      setHeightInput(
+        heightUnit === "cm"
+          ? String(predictedCm)
+          : String(Math.round(predictedCm / 2.54)),
+      );
+    } finally {
+      setIsAiPredicting(false);
     }
-  }, [prediction, heightInput, heightUnit]);
+  }, [age, sex, heightUnit]);
 
+  // ── Validate + submit ───────────────────────────────────────────────────────
   const handleSubmit = useCallback(() => {
     const newErrors: Record<string, string> = {};
     const ageNum = parseInt(age, 10);
@@ -178,10 +276,11 @@ export function MeasurementEntryModal({
                   color: "#F4C430",
                 }}
               >
-                <span>✨</span>
+                <span>{prediction.source === "backend" ? "🤖" : "✨"}</span>
                 <span>
                   Estimated height: ~{prediction.predictedCm}cm ({prediction.predictedInch})
-                  — range {prediction.rangeLow}-{prediction.rangeHigh}cm
+                  — range {prediction.rangeLow}–{prediction.rangeHigh}cm
+                  {prediction.source === "backend" && ` (${prediction.confidence} confidence)`}
                 </span>
               </motion.div>
             )}
@@ -218,7 +317,7 @@ export function MeasurementEntryModal({
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-white/70">
               Your Height{" "}
-              <span className="text-white/30 text-xs">(auto-predicted - update if known)</span>
+              <span className="text-white/30 text-xs">(auto-predicted — update if known)</span>
             </label>
             <div className="flex gap-2">
               <input
@@ -251,13 +350,42 @@ export function MeasurementEntryModal({
                 ))}
               </div>
             </div>
+
+            {/* AI Predict Height CTA */}
+            <div className="mt-1">
+              <p className="text-xs text-white/40 mb-2">
+                Not sure of your height? Let our AI predict it using your age inputted above.
+              </p>
+              <button
+                onClick={handleAiPredictHeight}
+                disabled={isAiPredicting || !age}
+                className="w-full rounded-xl border border-[#2D6A4F]/40 bg-[#2D6A4F]/10 text-[#52B788]
+                           text-xs font-semibold py-2.5 transition-all hover:bg-[#2D6A4F]/20
+                           disabled:opacity-40 disabled:cursor-not-allowed
+                           flex items-center justify-center gap-2"
+              >
+                {isAiPredicting ? (
+                  <>
+                    <span className="w-3 h-3 rounded-full border-2 border-[#52B788]/30 border-t-[#52B788] animate-spin" />
+                    AI is estimating your height...
+                  </>
+                ) : (
+                  <>
+                    🤖 Let AI predict my height
+                  </>
+                )}
+              </button>
+              {aiPredictError && (
+                <p className="text-[#F4C430]/60 text-[10px] mt-1">{aiPredictError}</p>
+              )}
+            </div>
           </div>
 
           {/* Weight (optional) */}
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-white/70">
               Weight (kg){" "}
-              <span className="text-white/30 text-xs">(optional - improves waist/hip accuracy)</span>
+              <span className="text-white/30 text-xs">(optional — improves waist/hip accuracy)</span>
             </label>
             <input
               type="number"

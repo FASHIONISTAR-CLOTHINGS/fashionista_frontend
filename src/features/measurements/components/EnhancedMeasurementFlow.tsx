@@ -49,8 +49,12 @@ export interface EnhancedMeasurementFlowProps {
   onCancel?: () => void;
   /** Pre-filled age from entry modal (forwarded to AICameraCapture). */
   initialAge?: number;
+  /** Pre-filled sex from entry modal (forwarded to AICameraCapture). */
+  initialSex?: "male" | "female" | "neutral";
   /** Pre-filled height in cm from prediction/entry (forwarded to AICameraCapture). */
   initialHeightCm?: number;
+  /** Pre-filled weight in kg from entry modal (forwarded to AICameraCapture). */
+  initialWeightKg?: number;
   className?: string;
 }
 
@@ -76,7 +80,9 @@ export function EnhancedMeasurementFlow({
   onComplete,
   onCancel,
   initialAge,
+  initialSex,
   initialHeightCm,
+  initialWeightKg,
   className,
 }: EnhancedMeasurementFlowProps) {
   const [phase, setPhase]         = useState<FlowPhase>("intro");
@@ -189,7 +195,9 @@ export function EnhancedMeasurementFlow({
         onComplete={handleScanComplete}
         onCancel={handleScanCancel}
         initialAge={initialAge}
+        initialSex={initialSex}
         initialHeightCm={initialHeightCm}
+        initialWeightKg={initialWeightKg}
       />
     );
   }

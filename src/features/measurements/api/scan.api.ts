@@ -37,6 +37,8 @@ export interface LandmarkSubmitPayload {
   user_weight_kg?: number;
   /** Optional user age — improves anthropometric ratio selection. */
   user_age?: number;
+  /** Optional biological sex — improves BMI correction for circumference estimates. */
+  user_sex?: "male" | "female" | "neutral";
   device_type?: "web" | "ios" | "android";
   /** 33 MediaPipe world landmarks from front-facing pose. (legacy alias for landmarks_front) */
   landmarks?: LandmarkPoint[];
@@ -53,6 +55,12 @@ export interface ScanSessionResponse {
   session_id: string;
   status: "pending" | "processing" | "completed" | "failed";
   message?: string;
+  /** QR code URL for mobile handoff (desktop flow). */
+  measurement_url?: string;
+  /** Base64-encoded QR code image (PNG). */
+  qr_code_b64?: string;
+  /** Cloudinary URL for the uploaded QR code (if Cloudinary is configured). */
+  qr_code_url?: string;
 }
 
 /** Full scan session status from Ninja polling endpoint. */
@@ -139,5 +147,39 @@ export async function pollScanStatus(
   const raw = await apiAsync
     .get(`ai/scan/${sessionId}/status/`)
     .json<ScanStatusResponse>();
+  return raw;
+}
+
+// ─── Height Prediction ─────────────────────────────────────────────────────────
+
+/** Response from GET /api/v1/ninja/ai/height-predict/ */
+export interface HeightPredictResponse {
+  predicted_cm:   number;
+  predicted_inch:  string;
+  range_low_cm:    number;
+  range_high_cm:   number;
+  confidence:      string;
+  note?:           string;
+}
+
+/**
+ * GET /api/v1/ninja/ai/height-predict/?age={age}&sex={sex}
+ *
+ * Predicts user height from age and biological sex using the backend AI model.
+ * Falls back to client-side prediction if the backend is unreachable.
+ *
+ * @example
+ * const result = await predictHeight(28, "male");
+ * console.log(result.predicted_cm); // 177
+ */
+export async function predictHeight(
+  age: number,
+  sex?: "male" | "female" | "neutral",
+): Promise<HeightPredictResponse> {
+  const searchParams = new URLSearchParams({ age: String(age) });
+  if (sex) searchParams.set("sex", sex);
+  const raw = await apiAsync
+    .get(`ai/height-predict/?${searchParams.toString()}`)
+    .json<HeightPredictResponse>();
   return raw;
 }

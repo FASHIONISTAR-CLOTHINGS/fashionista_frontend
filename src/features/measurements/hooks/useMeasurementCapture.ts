@@ -132,15 +132,33 @@ function estimateHeightFromLandmarks(worldLandmarks: Landmark[]): number | null 
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useMeasurementCapture(): UseMeasurementCaptureReturn {
+export interface UseMeasurementCaptureOptions {
+  /** Pre-filled age from entry modal. */
+  initialAge?: number;
+  /** Pre-filled sex from entry modal. */
+  initialSex?: "male" | "female" | "neutral";
+  /** Pre-filled weight in kg from entry modal. */
+  initialWeightKg?: number;
+  /** Pre-filled height in cm from entry modal. */
+  initialHeightCm?: number;
+  /** Existing session ID (if scan was initiated externally). */
+  sessionId?: string;
+}
+
+export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): UseMeasurementCaptureReturn {
   const landmarker = usePoseLandmarker();
   const scanSession = useScanSession();
 
   const [localPhase, setLocalPhase]       = useState<CapturePhase>("idle");
   const [currentFrame, setCurrentFrame]   = useState<CaptureFrame | null>(null);
-  const [userHeightCm, setUserHeightCm]   = useState<number | null>(null);
+  const [userHeightCm, setUserHeightCm]   = useState<number | null>(options?.initialHeightCm ?? null);
   const [capturedLandmarks, setCapturedLandmarks] = useState<DualPoseLandmarks>({ front: null, side: null });
   const [localError, setLocalError]       = useState<string | null>(null);
+
+  // Entry data from options (passed through to submit)
+  const entryAge = options?.initialAge;
+  const entrySex = options?.initialSex;
+  const entryWeightKg = options?.initialWeightKg;
 
   // T-038: Multi-frame averaging buffer
   const frameBufferRef = useRef<Landmark[][]>([]);
@@ -389,9 +407,12 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
       user_height_cm:  height,
       landmarks_front: toLandmarkPoints(frontLms),
       device_type:     "web",
+      ...(entryAge != null && { user_age: entryAge }),
+      ...(entrySex != null && { user_sex: entrySex }),
+      ...(entryWeightKg != null && { user_weight_kg: entryWeightKg }),
     });
     stopCamera();
-  }, [capturedLandmarks.front, userHeightCm, scanSession, stopCamera]);
+  }, [capturedLandmarks.front, userHeightCm, scanSession, stopCamera, entryAge, entrySex, entryWeightKg]);
 
   // ── Capture side pose and submit both ────────────────────────────────────────
   const captureSideAndSubmit = useCallback(
@@ -427,6 +448,9 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
           user_height_cm:  height,
           landmarks_front: toLandmarkPoints(frontLms),
           device_type:     "web",
+          ...(entryAge != null && { user_age: entryAge }),
+          ...(entrySex != null && { user_sex: entrySex }),
+          ...(entryWeightKg != null && { user_weight_kg: entryWeightKg }),
         });
         stopCamera();
         return;
@@ -440,11 +464,14 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
         landmarks_front:  toLandmarkPoints(frontLms),
         landmarks_side:   toLandmarkPoints(sideLms),
         device_type:      "web",
+        ...(entryAge != null && { user_age: entryAge }),
+        ...(entrySex != null && { user_sex: entrySex }),
+        ...(entryWeightKg != null && { user_weight_kg: entryWeightKg }),
       });
 
       stopCamera();
     },
-    [capturedLandmarks, userHeightCm, landmarker, scanSession, stopCamera]
+    [capturedLandmarks, userHeightCm, landmarker, scanSession, stopCamera, entryAge, entrySex, entryWeightKg]
   );
 
   // ── Legacy captureAndSubmit (front-only, backward compat) ────────────────────
@@ -478,11 +505,14 @@ export function useMeasurementCapture(): UseMeasurementCaptureReturn {
         user_height_cm:  height,
         landmarks_front: toLandmarkPoints(frontLms),
         device_type:     "web",
+        ...(entryAge != null && { user_age: entryAge }),
+        ...(entrySex != null && { user_sex: entrySex }),
+        ...(entryWeightKg != null && { user_weight_kg: entryWeightKg }),
       });
 
       stopCamera();
     },
-    [capturedLandmarks.front, userHeightCm, landmarker, scanSession, stopCamera]
+    [capturedLandmarks.front, userHeightCm, landmarker, scanSession, stopCamera, entryAge, entrySex, entryWeightKg]
   );
 
   // ── Reset ───────────────────────────────────────────────────────────────────

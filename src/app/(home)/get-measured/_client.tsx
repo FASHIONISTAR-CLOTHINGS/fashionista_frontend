@@ -1,98 +1,56 @@
 "use client";
 /**
  * @file _client.tsx
- * @description Client boundary for /get-measured page.
+ * @description Client boundary for /get-measured marketing page.
  *
- * T-021-T-028: Enhanced with:
- *   - MeasurementEntryModal (T-021/T-023): age/sex/height collection before scan
- *   - Auth redirect (T-024): redirect unauthenticated users to login after scan
- *   - Device detection (T-025): mobile vs desktop UX branching
- *   - scanStore (T-018): pre-scan state persistence
+ * Renders a CTA button that opens MeasurementEntryModal.
+ * On submit, stores data in scanStore and redirects to
+ * /client/dashboard/measurements/scan for the actual scan.
  */
 
 import { useRouter } from "next/navigation";
-import { useCallback, useState, useEffect } from "react";
-import { EnhancedMeasurementFlow } from "@/features/measurements/components/EnhancedMeasurementFlow";
+import { useCallback, useState } from "react";
 import { MeasurementEntryModal, type MeasurementEntryData } from "@/features/measurements/components/MeasurementEntryModal";
 import { useScanStore } from "@/features/measurements/store/scanStore";
 
 export function GetMeasuredClient() {
   const router = useRouter();
   const [showEntryModal, setShowEntryModal] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // T-025: Device detection — mobile devices get a simplified flow
-  useEffect(() => {
-    const check = () => {
-      const mobile = window.innerWidth < 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      setIsMobile(mobile);
-    };
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
 
   const setEntryData = useScanStore((s) => s.setEntryData);
   const setPhase = useScanStore((s) => s.setPhase);
 
-  /**
-   * T-023: Called when user fills the entry modal.
-   * Stores age/sex/height in scanStore and proceeds to the scan flow.
-   */
   const handleEntrySubmit = useCallback(
     (data: MeasurementEntryData) => {
       setEntryData(data);
       setShowEntryModal(false);
       setPhase("loading_model");
+      router.push("/client/dashboard/measurements/scan");
     },
-    [setEntryData, setPhase],
-  );
-
-  /**
-   * T-024: After scan completes:
-   * - If user is logged in and we have a profile ID → redirect to their profile
-   * - If not logged in → redirect to login with callback URL
-   * - If profileId is null → EnhancedMeasurementFlow shows its own success state
-   */
-  const handleComplete = useCallback(
-    (profileId: string | number | null) => {
-      if (profileId) {
-        // Check if user is authenticated by looking for auth token
-        const hasAuth = typeof window !== "undefined" &&
-          (localStorage.getItem("access_token") ||
-           document.cookie.includes("fashionistar_auth"));
-        if (hasAuth) {
-          router.push(`/client/dashboard/measurements/${profileId}`);
-        } else {
-          // T-024: Redirect to login with callback
-          router.push(`/auth/login?next=/client/dashboard/measurements/${profileId}`);
-        }
-      }
-    },
-    [router],
+    [setEntryData, setPhase, router],
   );
 
   return (
     <>
-      <EnhancedMeasurementFlow
-        onComplete={handleComplete}
-        // No onCancel on the public page — user can just navigate away
-      />
-      {/* T-023: Entry modal for age/sex/height collection */}
+      {/* CTA button — opens the entry modal */}
+      <button
+        onClick={() => setShowEntryModal(true)}
+        className="inline-flex items-center gap-2 rounded-xl bg-[#01454A] hover:bg-[#016B73]
+                   text-white font-semibold text-sm px-6 py-3 transition-colors"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+          <circle cx="12" cy="13" r="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+        </svg>
+        Start AI Body Scan
+      </button>
+
+      {/* Entry modal for collecting age/sex/height/weight */}
       <MeasurementEntryModal
         isOpen={showEntryModal}
         onClose={() => setShowEntryModal(false)}
         onSubmit={handleEntrySubmit}
       />
-      {/* T-025: Mobile notice for devices that may struggle with camera */}
-      {isMobile && (
-        <div className="mt-4 rounded-xl bg-[#01454A]/5 border border-[#01454A]/12 px-4 py-3">
-          <p className="text-xs text-[#565960]">
-            <strong className="text-[#01454A]">Tip:</strong> For best results, use a
-            desktop or tablet with a webcam at eye level.
-          </p>
-        </div>
-      )}
     </>
   );
 }
