@@ -257,9 +257,6 @@ export async function pollScanStatus(
   return raw;
 }
 
-    .json<HeightPredictResponse>();
-  return raw;
-=======
 /**
  * GET /api/v1/ninja/ai/height-predict/
  *
@@ -277,5 +274,4 @@ export async function predictHeight(
   return apiAsync
     .get(`ai/height-predict/`, { searchParams: { age: String(age), sex } })
     .json<HeightPredictResponse>();
->>>>>>> pr_source/main
 }
