@@ -17,6 +17,7 @@ import { useScanWebSocket } from "@/features/measurements/hooks/useScanWebSocket
 import { pollScanStatus } from "@/features/measurements/api/scan.api";
 import { useQueryClient } from "@tanstack/react-query";
 import { measurementKeys } from "@/features/measurements/hooks/use-measurements";
+import { FashionistarImage } from "@/components/media";
 
 const SESSION_STORAGE_KEY = "fashionistar_measurement_entry";
 
@@ -175,16 +176,24 @@ export function QrHandoffClient({
         {/* QR Code */}
         <div className="rounded-2xl bg-white border border-[#ECE6D6] p-8 flex flex-col items-center gap-4">
           {qrB64 ? (
-            <img
+            <FashionistarImage
               src={`data:image/png;base64,${qrB64}`}
               alt="Scan QR Code"
+              width={256}
+              height={256}
               className="w-64 h-64 rounded-xl"
+              showBlurUp={false}
+              objectFit="contain"
             />
           ) : qrUrl ? (
-            <img
+            <FashionistarImage
               src={qrUrl}
               alt="Scan QR Code"
+              width={256}
+              height={256}
               className="w-64 h-64 rounded-xl"
+              showBlurUp={false}
+              objectFit="contain"
             />
           ) : (
             <div className="w-64 h-64 rounded-xl bg-[#F4F3EC] flex items-center justify-center">

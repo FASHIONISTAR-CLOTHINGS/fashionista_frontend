@@ -20,8 +20,8 @@ const SCREENSHOT_DIR = "test-screenshots/measurement";
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:8001";
 
 const TEST_USER = {
-  email: "e2e_client@fashionistar.ng",
-  password: "E2EClient!2026",
+  email: "client@fashionistar.test",
+  password: "Client@Secure99!",
 };
 
 /**

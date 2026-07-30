@@ -21,6 +21,7 @@ import {
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://fashionistar.net";
 
 export const revalidate = 3600; // regenerate sitemap every hour
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static routes — always included

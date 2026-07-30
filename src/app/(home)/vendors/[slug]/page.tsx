@@ -71,12 +71,15 @@ const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8001";
 async function fetchVendorPublicProfile(
   slug: string,
 ): Promise<VendorPublicOut | null> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5_000);
   try {
     const res = await fetch(
       `${API_BASE}/api/v1/ninja/vendor/public/${slug}/`,
       {
         next: { revalidate: 60, tags: [`vendor-${slug}`] },
         headers: { Accept: "application/json" },
+        signal: controller.signal,
       },
     );
     if (res.status === 404) return null;
@@ -87,6 +90,8 @@ async function fetchVendorPublicProfile(
   } catch {
     // Fail gracefully — the client island will still render via client-side hooks
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -123,10 +128,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 // ── Static params (ISR) ───────────────────────────────────────────────────────
 export async function generateStaticParams() {
   // Pre-render featured vendors at build time; others are ISR on demand
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5_000);
   try {
     const res = await fetch(
       `${API_BASE}/api/v1/ninja/vendor/public/?featured=true&limit=20`,
-      { next: { revalidate: 3600 } },
+      { next: { revalidate: 3600 }, signal: controller.signal },
     );
     if (!res.ok) return [{ slug: "featured-tailor" }];
     const data = await res.json();
@@ -136,6 +143,8 @@ export async function generateStaticParams() {
     return vendors.map((v) => ({ slug: v.store_slug }));
   } catch {
     return [{ slug: "featured-tailor" }];
+  } finally {
+    clearTimeout(timeout);
   }
 }
 

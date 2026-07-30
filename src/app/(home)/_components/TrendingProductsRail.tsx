@@ -176,7 +176,7 @@ export function TrendingProductsRail() {
           data-testid="trending-view-all"
           className="font-raleway text-xs font-bold text-[#01454A] border border-[#01454A]/30 px-4 py-2 rounded-full hover:bg-[#01454A] hover:text-white transition-all duration-150 flex-shrink-0"
         >
-          View All →
+          View All {"->"}
         </Link>
       </div>
 

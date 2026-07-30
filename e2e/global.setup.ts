@@ -22,8 +22,8 @@ setup("seed: client auth", async ({ request }) => {
   // Register or login a test client
   const loginRes = await request.post(`${API}/api/v1/auth/login/`, {
     data: {
-      email_or_phone: process.env.E2E_CLIENT_EMAIL ?? "e2e_client@fashionistar.ng",
-      password: process.env.E2E_CLIENT_PASSWORD ?? "E2EClient!2026",
+      email_or_phone: process.env.E2E_CLIENT_EMAIL ?? "client@fashionistar.test",
+      password: process.env.E2E_CLIENT_PASSWORD ?? "Client@Secure99!",
     },
   });
 
@@ -40,8 +40,8 @@ setup("seed: client auth", async ({ request }) => {
 setup("seed: vendor auth", async ({ request }) => {
   const loginRes = await request.post(`${API}/api/v1/auth/login/`, {
     data: {
-      email_or_phone: process.env.E2E_VENDOR_EMAIL ?? "e2e_vendor@fashionistar.ng",
-      password: process.env.E2E_VENDOR_PASSWORD ?? "E2EVendor!2026",
+      email_or_phone: process.env.E2E_VENDOR_EMAIL ?? "vendor@fashionistar.test",
+      password: process.env.E2E_VENDOR_PASSWORD ?? "Vendor@Secure99!",
     },
   });
 

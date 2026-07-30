@@ -16,7 +16,9 @@ const DEFAULT_PLATFORM_SETTINGS: PublicPlatformSettings = {
 };
 
 export async function getPublicPlatformSettings(): Promise<PublicPlatformSettings> {
-  console.log("Fashionista: ", getServerBackendRootUrl());
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5_000);
+
   try {
     const response = await fetch(
       `${getServerBackendRootUrl()}/api/v1/platform/settings/public/`,
@@ -26,6 +28,7 @@ export async function getPublicPlatformSettings(): Promise<PublicPlatformSetting
           "ngrok-skip-browser-warning": "true",
         },
         next: { revalidate: 60, tags: ["public-platform-settings"] },
+        signal: controller.signal,
       },
     );
 
@@ -40,5 +43,7 @@ export async function getPublicPlatformSettings(): Promise<PublicPlatformSetting
     };
   } catch {
     return DEFAULT_PLATFORM_SETTINGS;
+  } finally {
+    clearTimeout(timeout);
   }
 }

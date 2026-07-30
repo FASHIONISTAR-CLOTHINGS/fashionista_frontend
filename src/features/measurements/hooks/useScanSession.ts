@@ -118,6 +118,7 @@ export function useScanSession(): UseScanSessionReturn {
       return () => clearTimeout(timer);
     }
     processingStartRef.current = null;
+    return undefined;
   }, [phase]);
 
   // ── Ninja polling query ─────────────────────────────────────────────────────

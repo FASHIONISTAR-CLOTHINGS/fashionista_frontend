@@ -8,6 +8,7 @@
  * - Connection status tracking
  * - Scan phase event forwarding
  * - Graceful fallback to polling when WS fails
+ * - Heartbeat-aware: responds to server heartbeat events
  *
  * Usage:
  *   const { isConnected, scanPhase, lastEvent, reconnect } = useScanWebSocket(sessionId);
@@ -16,7 +17,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { readAccessToken } from "@/features/auth/lib/auth-session.client";
 
-export type WSConnectionStatus = "idle" | "connecting" | "connected" | "disconnected" | "error";
+export type WSConnectionStatus = "idle" | "connecting" | "connected" | "disconnected" | "error" | "polling";
 
 export interface ScanWSEvent {
   event: string;
@@ -29,6 +30,7 @@ export interface ScanWSEvent {
 const MAX_RECONNECT_ATTEMPTS = 5;
 const INITIAL_BACKOFF_MS = 1000;
 const MAX_BACKOFF_MS = 16000;
+const POLL_INTERVAL_MS = 3000;
 
 function getWsBaseUrl(): string {
   if (typeof window === "undefined") return "";
@@ -45,6 +47,13 @@ function getWsBaseUrl(): string {
   return `${protocol}//${window.location.host}`;
 }
 
+function getApiBaseUrl(): string {
+  if (typeof window === "undefined") return "";
+  const apiRoot = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "";
+  if (apiRoot) return apiRoot.replace(/\/$/, "");
+  return `${window.location.protocol}//${window.location.host}`;
+}
+
 export function useScanWebSocket(sessionId: string | null) {
   const [connectionStatus, setConnectionStatus] = useState<WSConnectionStatus>("idle");
   const [lastEvent, setLastEvent] = useState<ScanWSEvent | null>(null);
@@ -52,7 +61,43 @@ export function useScanWebSocket(sessionId: string | null) {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
+
+  const startPolling = useCallback((sid: string) => {
+    if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
+
+    const poll = async () => {
+      if (!mountedRef.current) return;
+      try {
+        const token = readAccessToken();
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        const res = await fetch(`${getApiBaseUrl()}/api/scan/sessions/${sid}/`, { headers });
+        if (!res.ok) return;
+        const data = await res.json();
+        setLastEvent({
+          event: "poll_snapshot",
+          session_id: sid,
+          status: data.status || "unknown",
+          scan_phase: data.scan_phase || null,
+          data,
+        });
+        if (data.scan_phase) setScanPhase(data.scan_phase);
+
+        if (data.status === "completed" || data.status === "failed") return;
+      } catch {
+        // silently retry on next interval
+      }
+      if (mountedRef.current) {
+        pollTimerRef.current = setTimeout(poll, POLL_INTERVAL_MS);
+      }
+    };
+
+    setConnectionStatus("polling");
+    poll();
+  }, []);
 
   const connect = useCallback((sid: string) => {
     if (!sid || typeof window === "undefined") return;
@@ -82,12 +127,17 @@ export function useScanWebSocket(sessionId: string | null) {
         if (!mountedRef.current) return;
         setConnectionStatus("connected");
         reconnectAttemptsRef.current = 0;
+        if (pollTimerRef.current) {
+          clearTimeout(pollTimerRef.current);
+          pollTimerRef.current = null;
+        }
       };
 
       ws.onmessage = (ev: MessageEvent) => {
         if (!mountedRef.current) return;
         try {
           const data: ScanWSEvent = JSON.parse(ev.data);
+          if (data.event === "heartbeat") return;
           setLastEvent(data);
           if (data.scan_phase) {
             setScanPhase(data.scan_phase);
@@ -120,17 +170,25 @@ export function useScanWebSocket(sessionId: string | null) {
               connect(sid);
             }
           }, backoff);
+        } else {
+          // All reconnect attempts exhausted — fall back to polling
+          startPolling(sid);
         }
       };
     } catch {
       setConnectionStatus("error");
+      startPolling(sid);
     }
-  }, []);
+  }, [startPolling]);
 
   const disconnect = useCallback(() => {
     if (reconnectTimerRef.current) {
       clearTimeout(reconnectTimerRef.current);
       reconnectTimerRef.current = null;
+    }
+    if (pollTimerRef.current) {
+      clearTimeout(pollTimerRef.current);
+      pollTimerRef.current = null;
     }
     reconnectAttemptsRef.current = 0;
     if (wsRef.current) {
@@ -146,6 +204,10 @@ export function useScanWebSocket(sessionId: string | null) {
   const reconnect = useCallback(() => {
     if (sessionId) {
       reconnectAttemptsRef.current = 0;
+      if (pollTimerRef.current) {
+        clearTimeout(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
       connect(sessionId);
     }
   }, [sessionId, connect]);
@@ -166,6 +228,7 @@ export function useScanWebSocket(sessionId: string | null) {
   return {
     connectionStatus,
     isConnected: connectionStatus === "connected",
+    isPolling: connectionStatus === "polling",
     lastEvent,
     scanPhase,
     reconnect,
