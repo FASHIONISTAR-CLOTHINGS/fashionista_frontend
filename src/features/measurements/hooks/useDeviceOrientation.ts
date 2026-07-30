@@ -11,6 +11,12 @@ export interface UseDeviceOrientationReturn {
   isSupported:    boolean;
   hasPermission:  boolean;
   requestPermission: () => Promise<void>;
+  /** Tilt angle in degrees from vertical (0 = perfectly upright). */
+  angle:          number;
+  /** True when phone is upright (|angle| < 15°). */
+  isVertical:     boolean;
+  /** True when phone is sideways (|angle| > 75°). */
+  isHorizontal:   boolean;
 }
 
 export function useDeviceOrientation(): UseDeviceOrientationReturn {
@@ -35,6 +41,12 @@ export function useDeviceOrientation(): UseDeviceOrientationReturn {
   };
 
   const tiltStatus = computeTiltStatus(gamma, beta);
+
+  // Compute angle from vertical (0 = perfectly upright)
+  // beta ~90 when phone is upright, gamma ~0 when phone is upright
+  const betaDeviation = beta !== null ? Math.abs(beta - 90) : 0;
+  const gammaDeviation = gamma !== null ? Math.abs(gamma) : 0;
+  const angle = Math.round(Math.sqrt(betaDeviation ** 2 + gammaDeviation ** 2));
 
   const handleOrientation = useCallback((e: DeviceOrientationEvent) => {
     if (e.beta !== null && e.beta !== undefined) setBeta(e.beta);
@@ -95,5 +107,8 @@ export function useDeviceOrientation(): UseDeviceOrientationReturn {
     isSupported,
     hasPermission,
     requestPermission,
+    angle,
+    isVertical: angle < 15,
+    isHorizontal: angle > 75,
   };
 }

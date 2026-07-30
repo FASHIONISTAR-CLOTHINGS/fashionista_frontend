@@ -11,7 +11,7 @@
  * /client/dashboard/measurements.
  */
 
-import { useEffect, useState, useCallback, use } from "react";
+import { useEffect, useState, useCallback, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { useScanWebSocket } from "@/features/measurements/hooks/useScanWebSocket";
 import { pollScanStatus } from "@/features/measurements/api/scan.api";
@@ -28,6 +28,17 @@ interface StoredEntryData {
   timestamp: number;
 }
 
+function readStoredEntry(): StoredEntryData | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as StoredEntryData;
+  } catch {
+    // sessionStorage unavailable
+  }
+  return null;
+}
+
 export function QrHandoffClient({
   searchParams,
 }: {
@@ -38,42 +49,56 @@ export function QrHandoffClient({
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const [qrB64, setQrB64] = useState<string | null>(null);
-  const [qrUrl, setQrUrl] = useState<string | null>(null);
-  const [measurementUrl, setMeasurementUrl] = useState<string | null>(null);
+  // ── Lazy init QR data from sessionStorage (no setState in effect) ──
+  const [qrB64] = useState<string | null>(() => readStoredEntry()?.qrCodeB64 ?? null);
+  const [qrUrl] = useState<string | null>(() => readStoredEntry()?.qrCodeUrl ?? null);
+  const [measurementUrl] = useState<string | null>(() => readStoredEntry()?.measurementUrl ?? null);
+
+  // ── Scan status (only updated from polling callback, never in effect body) ──
   const [scanStatus, setScanStatus] = useState<string>("waiting");
-  const [pollingActive, setPollingActive] = useState(false);
 
-  // ── Load QR data from sessionStorage ──
-  useEffect(() => {
-    if (!sessionId) {
-      router.push("/client/dashboard/measurements/scan");
-      return;
-    }
-
-    try {
-      const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
-      if (raw) {
-        const data: StoredEntryData = JSON.parse(raw);
-        if (data.qrCodeB64) setQrB64(data.qrCodeB64);
-        if (data.qrCodeUrl) setQrUrl(data.qrCodeUrl);
-        if (data.measurementUrl) setMeasurementUrl(data.measurementUrl);
-      }
-    } catch {
-      // sessionStorage unavailable — will rely on polling
-    }
-  }, [sessionId, router]);
+  // ── WS status ref (updated by effect, read by polling interval) ──
+  const wsStatusRef = useRef<string | undefined>(undefined);
 
   // ── WebSocket for real-time status ──
   const ws = useScanWebSocket(sessionId);
 
-  // ── Polling fallback ──
+  // ── Redirect if no sessionId (side effect only, no setState) ──
+  useEffect(() => {
+    if (!sessionId) {
+      router.push("/client/dashboard/measurements/scan");
+    }
+  }, [sessionId, router]);
+
+  // ── Sync WS status to ref (no setState in effect body) ──
+  useEffect(() => {
+    wsStatusRef.current = ws.lastEvent?.status;
+  }, [ws.lastEvent]);
+
+  // ── Redirect on WS completion (side effects only, no setState) ──
+  useEffect(() => {
+    if (ws.lastEvent?.status === "completed") {
+      queryClient.invalidateQueries({ queryKey: measurementKeys.all });
+      queryClient.invalidateQueries({ queryKey: measurementKeys.lists() });
+      try {
+        sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      } catch {
+        // ignore
+      }
+      router.push("/client/dashboard/measurements");
+    }
+  }, [ws.lastEvent, router, queryClient]);
+
+  // ── Polling fallback (setState only in interval callback) ──
   useEffect(() => {
     if (!sessionId) return;
 
-    // Start polling immediately as backup to WS
-    setPollingActive(true);
     const pollInterval = setInterval(async () => {
+      // Merge WS status into display state
+      if (wsStatusRef.current && wsStatusRef.current !== "waiting") {
+        setScanStatus(wsStatusRef.current);
+      }
+
       try {
         const status = await pollScanStatus(sessionId);
         setScanStatus(status.status);
@@ -99,21 +124,8 @@ export function QrHandoffClient({
     return () => clearInterval(pollInterval);
   }, [sessionId, router, queryClient]);
 
-  // ── WS event handler ──
-  useEffect(() => {
-    if (ws.lastEvent?.status === "completed") {
-      queryClient.invalidateQueries({ queryKey: measurementKeys.all });
-      queryClient.invalidateQueries({ queryKey: measurementKeys.lists() });
-      try {
-        sessionStorage.removeItem(SESSION_STORAGE_KEY);
-      } catch {
-        // ignore
-      }
-      router.push("/client/dashboard/measurements");
-    } else if (ws.lastEvent?.status) {
-      setScanStatus(ws.lastEvent.status);
-    }
-  }, [ws.lastEvent, router, queryClient]);
+  // pollingActive is always true when sessionId exists
+  const pollingActive = !!sessionId;
 
   const handleCopyUrl = useCallback(async () => {
     if (measurementUrl) {

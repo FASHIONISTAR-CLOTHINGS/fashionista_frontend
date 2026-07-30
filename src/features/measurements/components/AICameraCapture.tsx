@@ -92,25 +92,14 @@ export function AICameraCapture({
   const orientation = useDeviceOrientation();
 
   // Height / age input state
-  const [heightInput, setHeightInput]     = useState("");
+  const [heightInput, setHeightInput]     = useState(() =>
+    initialHeightCm && initialHeightCm > 0 ? String(Math.round(initialHeightCm)) : ""
+  );
   const [heightUnit, setHeightUnit]       = useState<"cm" | "inch">("cm");
   const [heightError, setHeightError]     = useState("");
-  const [userAge, setUserAge]             = useState("");
-
-  // T-015: Pre-fill height from entry modal / prediction
-  useEffect(() => {
-    if (initialHeightCm && initialHeightCm > 0) {
-      setHeightUnit("cm");
-      setHeightInput(String(Math.round(initialHeightCm)));
-    }
-  }, [initialHeightCm]);
-
-  // T-015: Pre-fill age from entry modal
-  useEffect(() => {
-    if (initialAge && initialAge > 0) {
-      setUserAge(String(initialAge));
-    }
-  }, [initialAge]);
+  const [userAge, setUserAge]             = useState(() =>
+    initialAge && initialAge > 0 ? String(initialAge) : ""
+  );
 
   // ── Frame loop (single self-contained effect) ───────────────────────────────
   // The frameLoop function is defined inside the effect so it can reference

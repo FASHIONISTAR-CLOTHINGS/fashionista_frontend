@@ -13,7 +13,7 @@
  * On failure → show error + retry button + ScanFallbackManual
  */
 
-import { useEffect, useState, useCallback, use } from "react";
+import { useEffect, useState, useCallback, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { EnhancedMeasurementFlow } from "@/features/measurements/components/EnhancedMeasurementFlow";
 import { ScanProgressStepper } from "@/features/measurements/components/ScanProgressStepper";
@@ -50,7 +50,7 @@ export function ActiveScanClient({
   const queryClient = useQueryClient();
 
   const [showFallback, setShowFallback] = useState(false);
-  const [pollingActive, setPollingActive] = useState(false);
+  const pollingActiveRef = useRef(false);
 
   const scanStore = useScanStore();
 
@@ -90,11 +90,10 @@ export function ActiveScanClient({
 
   // ── Polling fallback ──
   useEffect(() => {
-    if (!wsError || pollingActive) return;
+    if (!wsError || pollingActiveRef.current) return;
     if (scanStore.phase === "completed" || scanStore.phase === "failed") return;
 
-    // eslint-disable-next-line
-    setPollingActive(true);
+    pollingActiveRef.current = true;
     const pollInterval = setInterval(async () => {
       try {
         const status = await pollScanStatus(sessionId);
@@ -113,10 +112,9 @@ export function ActiveScanClient({
 
     return () => {
       clearInterval(pollInterval);
-      // eslint-disable-next-line
-      setPollingActive(false);
+      pollingActiveRef.current = false;
     };
-  }, [wsError, sessionId, scanStore, pollingActive]);
+  }, [wsError, sessionId, scanStore]);
 
   // ── Handle scan completion ──
   const handleScanComplete = useCallback(
@@ -186,7 +184,7 @@ export function ActiveScanClient({
         </div>
 
         {/* WS fallback indicator */}
-        {wsError && pollingActive && (
+        {wsError && (
           <div className="mb-4 rounded-lg bg-[#FDA600]/10 border border-[#FDA600]/20 px-4 py-2 text-center">
             <p className="text-xs text-[#7A6B44]">
               Live updates unavailable — polling every 2s...

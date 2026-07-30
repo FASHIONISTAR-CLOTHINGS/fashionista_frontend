@@ -2,17 +2,15 @@
 
 /**
  * @file usePhoneOrientation.ts
- * @description Phone orientation detection hook for vertical alignment during scan.
+ * @description Thin compatibility wrapper around useDeviceOrientation.
  *
- * Wraps DeviceOrientationEvent API. On iOS 13+ requires explicit requestPermission().
- * Returns angle (degrees from vertical), isVertical, isHorizontal, and permission state.
+ * Provides the higher-level API: angle, isVertical, isHorizontal, permissionGranted.
+ * All DeviceOrientationEvent logic lives in useDeviceOrientation (canonical implementation).
  *
- * Note: useDeviceOrientation already exists and handles the raw beta/gamma values.
- * This hook provides a higher-level API focused on vertical/horizontal detection
- * for the scan flow (phone should be vertical on a stand/prop).
+ * Consumers can use either hook — they share the same underlying state.
  */
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useDeviceOrientation } from "./useDeviceOrientation";
 
 export interface UsePhoneOrientationReturn {
   /** Tilt angle in degrees from vertical (0 = perfectly upright). */
@@ -30,74 +28,14 @@ export interface UsePhoneOrientationReturn {
 }
 
 export function usePhoneOrientation(): UsePhoneOrientationReturn {
-  const [angle, setAngle] = useState(0);
-  const [permissionGranted, setPermissionGranted] = useState(false);
-  const handlerRef = useRef<((e: DeviceOrientationEvent) => void) | null>(null);
-
-  const isSupported =
-    typeof window !== "undefined" && "DeviceOrientationEvent" in window;
-
-  const handleOrientation = useCallback((e: DeviceOrientationEvent) => {
-    if (e.beta === null || e.gamma === null) return;
-    // beta: front-to-back tilt (-180 to 180). ~90 when phone is upright.
-    // gamma: left-to-right tilt (-90 to 90). ~0 when phone is upright.
-    const betaDeviation = Math.abs((e.beta ?? 0) - 90);
-    const gammaDeviation = Math.abs(e.gamma ?? 0);
-    const totalAngle = Math.sqrt(betaDeviation ** 2 + gammaDeviation ** 2);
-    setAngle(Math.round(totalAngle));
-  }, []);
-
-  const attachListener = useCallback(() => {
-    if (handlerRef.current) return;
-    handlerRef.current = handleOrientation;
-    window.addEventListener("deviceorientation", handleOrientation);
-    setPermissionGranted(true);
-  }, [handleOrientation]);
-
-  const requestPermission = useCallback(async () => {
-    if (!isSupported) return;
-
-    const DOE = window.DeviceOrientationEvent as unknown as {
-      requestPermission?: () => Promise<"granted" | "denied">;
-    };
-
-    if (typeof DOE.requestPermission === "function") {
-      try {
-        const result = await DOE.requestPermission();
-        if (result === "granted") {
-          attachListener();
-        }
-      } catch {
-        // Permission denied
-      }
-    } else {
-      attachListener();
-    }
-  }, [isSupported, attachListener]);
-
-  // Auto-attach on non-iOS
-  useEffect(() => {
-    if (!isSupported) return;
-    const DOE = window.DeviceOrientationEvent as unknown as {
-      requestPermission?: () => Promise<string>;
-    };
-    if (typeof DOE.requestPermission !== "function") {
-      attachListener();
-    }
-    return () => {
-      if (handlerRef.current) {
-        window.removeEventListener("deviceorientation", handlerRef.current);
-        handlerRef.current = null;
-      }
-    };
-  }, [isSupported, attachListener]);
+  const orientation = useDeviceOrientation();
 
   return {
-    angle,
-    isVertical: angle < 15,
-    isHorizontal: angle > 75,
-    isSupported,
-    permissionGranted,
-    requestPermission,
+    angle: orientation.angle,
+    isVertical: orientation.isVertical,
+    isHorizontal: orientation.isHorizontal,
+    isSupported: orientation.isSupported,
+    permissionGranted: orientation.hasPermission,
+    requestPermission: orientation.requestPermission,
   };
 }

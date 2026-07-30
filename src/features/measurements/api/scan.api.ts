@@ -5,10 +5,10 @@
  * Endpoint Routing:
  *  - DRF (sync/write):   POST /api/v1/measurements/scan/initiate/
  *  - DRF (sync/write):   POST /api/v1/measurements/scan/{id}/submit-landmarks/
- *  - Ninja (async/read): GET  /api/v1/ninja/ai/scan/{id}/status/
+ *  - Ninja (async/read): GET  /api/v1/ninja/measurements/scan/{id}/status/
  *
- * NOTE: The status polling endpoint is under /api/v1/ninja/ai/ (NOT /ninja/measurements/).
- * The AI Ninja router is mounted at /api/v1/ninja/ai/ in the main Ninja app config.
+ * NOTE: The scan status endpoint was relocated from /ninja/ai/scan/ to /ninja/measurements/scan/
+ * and is mounted via the measurements Ninja router in backend/ninja_api.py.
  */
 
 import { apiSync } from "@/core/api/client.sync";
@@ -127,10 +127,10 @@ export async function submitLandmarks(
 }
 
 /**
- * GET /api/v1/ninja/ai/scan/{sessionId}/status/
+ * GET /api/v1/ninja/measurements/scan/{sessionId}/status/
  *
  * Polls the scan session processing status.
- * Mounted under the AI Ninja router at /api/v1/ninja/ai/ — NOT /ninja/measurements/.
+ * Mounted under the measurements Ninja router at /api/v1/ninja/measurements/.
  * Call every 2 seconds until status = 'completed' | 'failed'.
  *
  * @example
@@ -142,10 +142,10 @@ export async function submitLandmarks(
 export async function pollScanStatus(
   sessionId: string
 ): Promise<ScanStatusResponse> {
-  // The AI scan status endpoint lives under ai_router at /api/v1/ninja/ai/
-  // apiAsync base URL should be set to /api/v1/ninja/ so the path is ai/scan/...
+  // The scan status endpoint lives under the measurements Ninja router at /api/v1/ninja/measurements/
+  // apiAsync base URL should be set to /api/v1/ninja/ so the path is measurements/scan/...
   const raw = await apiAsync
-    .get(`ai/scan/${sessionId}/status/`)
+    .get(`measurements/scan/${sessionId}/status/`)
     .json<ScanStatusResponse>();
   return raw;
 }

@@ -14,6 +14,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { readAccessToken } from "@/features/auth/lib/auth-session.client";
 
 export type WSConnectionStatus = "idle" | "connecting" | "connected" | "disconnected" | "error";
 
@@ -59,7 +60,17 @@ export function useScanWebSocket(sessionId: string | null) {
     const wsBase = getWsBaseUrl();
     if (!wsBase) return;
 
-    const wsUrl = `${wsBase}/ws/scan/${sid}/`;
+    // Build WebSocket URL with JWT token for authentication
+    // Backend JWTQueryAuthMiddleware requires ?token=<access_token> query param
+    let wsUrl = `${wsBase}/ws/scan/${sid}/`;
+    try {
+      const token = readAccessToken();
+      if (token) {
+        wsUrl += `?token=${encodeURIComponent(token)}`;
+      }
+    } catch {
+      // token not available — connect without token (will fail with 403 but won't crash)
+    }
 
     setConnectionStatus("connecting");
 

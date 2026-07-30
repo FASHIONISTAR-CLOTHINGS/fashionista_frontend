@@ -2,17 +2,15 @@
 
 /**
  * @file useVoiceCoach.ts
- * @description Voice guidance hook wrapping Web Speech API with guidance script integration.
+ * @description Thin compatibility wrapper around useVoiceGuidance.
  *
- * This is a thin wrapper around useVoiceGuidance that adds a simpler speak(text) API
- * for arbitrary text, plus an enabled toggle (vs. muted toggle in useVoiceGuidance).
+ * Provides the alternative API: speak(text) + speakKey(key) + setEnabled(bool).
+ * All SpeechSynthesis logic lives in useVoiceGuidance (canonical implementation).
  *
- * Note: useVoiceGuidance already exists and handles the SpeechSynthesis API.
- * This hook provides an alternative interface for components that prefer
- * `speak(text)` + `setEnabled(bool)` over `speak(key)` + `toggleMute()`.
+ * Consumers can use either hook — they share the same underlying state.
  */
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback } from "react";
 import { useVoiceGuidance, type GuidanceKey } from "./useVoiceGuidance";
 
 export interface UseVoiceCoachReturn {
@@ -27,67 +25,26 @@ export interface UseVoiceCoachReturn {
 }
 
 export function useVoiceCoach(): UseVoiceCoachReturn {
-  const voiceGuidance = useVoiceGuidance();
-  const [isEnabled, setIsEnabled] = useState(true);
-  const lastTextRef = useRef<string | null>(null);
+  const voice = useVoiceGuidance();
 
   const speak = useCallback(
-    (text: string) => {
-      if (!isEnabled || !voiceGuidance.isSupported) return;
-      if (lastTextRef.current === text) return;
-      lastTextRef.current = text;
-
-      const synth = window.speechSynthesis;
-      synth.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.95;
-      utterance.pitch = 1.0;
-      utterance.volume = 0.8;
-      synth.speak(utterance);
-    },
-    [isEnabled, voiceGuidance.isSupported],
+    (text: string) => voice.speakText(text),
+    [voice],
   );
 
   const speakKey = useCallback(
-    (key: GuidanceKey) => {
-      if (!isEnabled) return;
-      voiceGuidance.speak(key);
-    },
-    [isEnabled, voiceGuidance],
+    (key: GuidanceKey) => voice.speak(key),
+    [voice],
   );
-
-  const cancel = useCallback(() => {
-    if (voiceGuidance.isSupported) {
-      window.speechSynthesis.cancel();
-    }
-  }, [voiceGuidance.isSupported]);
-
-  const setEnabled = useCallback(
-    (enabled: boolean) => {
-      setIsEnabled(enabled);
-      if (!enabled) {
-        cancel();
-      }
-    },
-    [cancel],
-  );
-
-  useEffect(() => {
-    return () => {
-      if (voiceGuidance.isSupported) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, [voiceGuidance.isSupported]);
 
   return {
     speak,
     speakKey,
-    cancel,
-    isSpeaking: voiceGuidance.isSpeaking,
-    isEnabled,
-    setEnabled,
-    supported: voiceGuidance.isSupported,
-    currentText: voiceGuidance.currentCaption,
+    cancel: voice.cancel,
+    isSpeaking: voice.isSpeaking,
+    isEnabled: voice.isEnabled,
+    setEnabled: voice.setEnabled,
+    supported: voice.isSupported,
+    currentText: voice.currentCaption,
   };
 }
