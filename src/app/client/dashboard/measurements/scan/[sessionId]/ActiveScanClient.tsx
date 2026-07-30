@@ -52,7 +52,16 @@ export function ActiveScanClient({
   const [showFallback, setShowFallback] = useState(false);
   const pollingActiveRef = useRef(false);
 
-  const scanStore = useScanStore();
+  // Use individual selectors to avoid object reference changes causing infinite loops
+  const scanPhase    = useScanStore((s) => s.phase);
+  const scanAge      = useScanStore((s) => s.age);
+  const scanSex      = useScanStore((s) => s.sex);
+  const scanHeightCm = useScanStore((s) => s.heightCm);
+  const scanWeightKg = useScanStore((s) => s.weightKg);
+  const setEntryData = useScanStore((s) => s.setEntryData);
+  const setSessionId = useScanStore((s) => s.setSessionId);
+  const setPhase     = useScanStore((s) => s.setPhase);
+  const setError     = useScanStore((s) => s.setError);
 
   // ── Load entry data from sessionStorage on mount ──
   useEffect(() => {
@@ -60,13 +69,13 @@ export function ActiveScanClient({
       const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
       if (raw) {
         const data: StoredEntryData = JSON.parse(raw);
-        scanStore.setEntryData({
+        setEntryData({
           age: data.age,
           sex: data.sex,
           heightCm: data.heightCm,
           weightKg: data.weightKg,
         });
-        scanStore.setSessionId(sessionId);
+        setSessionId(sessionId);
       } else {
         // No entry data — redirect back to scan entry
         router.push("/client/dashboard/measurements/scan");
@@ -80,7 +89,7 @@ export function ActiveScanClient({
 
     // Register MediaPipe service worker
     void registerMediaPipeSW();
-  }, [sessionId, router, scanStore]);
+  }, [sessionId, router, setEntryData, setSessionId]);
 
   // ── WebSocket for real-time scan progress ──
   const ws = useScanWebSocket(sessionId);
@@ -91,18 +100,18 @@ export function ActiveScanClient({
   // ── Polling fallback ──
   useEffect(() => {
     if (!wsError || pollingActiveRef.current) return;
-    if (scanStore.phase === "completed" || scanStore.phase === "failed") return;
+    if (scanPhase === "completed" || scanPhase === "failed") return;
 
     pollingActiveRef.current = true;
     const pollInterval = setInterval(async () => {
       try {
         const status = await pollScanStatus(sessionId);
         if (status.status === "completed") {
-          scanStore.setPhase("completed");
+          setPhase("completed");
           clearInterval(pollInterval);
         } else if (status.status === "failed") {
-          scanStore.setPhase("failed");
-          scanStore.setError(status.error_message ?? "Scan processing failed");
+          setPhase("failed");
+          setError(status.error_message ?? "Scan processing failed");
           clearInterval(pollInterval);
         }
       } catch {
@@ -114,7 +123,7 @@ export function ActiveScanClient({
       clearInterval(pollInterval);
       pollingActiveRef.current = false;
     };
-  }, [wsError, sessionId, scanStore]);
+  }, [wsError, sessionId, scanPhase, setPhase, setError]);
 
   // ── Handle scan completion ──
   const handleScanComplete = useCallback(
@@ -180,7 +189,7 @@ export function ActiveScanClient({
       <div className="max-w-2xl mx-auto">
         {/* Progress stepper */}
         <div className="mb-6 rounded-2xl bg-[#01454A] p-4">
-          <ScanProgressStepper currentPhase={scanStore.phase} />
+          <ScanProgressStepper currentPhase={scanPhase} />
         </div>
 
         {/* WS fallback indicator */}
@@ -196,10 +205,10 @@ export function ActiveScanClient({
         <EnhancedMeasurementFlow
           onComplete={handleScanComplete}
           onCancel={handleScanCancel}
-          initialAge={scanStore.age ?? undefined}
-          initialSex={scanStore.sex ?? undefined}
-          initialHeightCm={scanStore.heightCm ?? undefined}
-          initialWeightKg={scanStore.weightKg ?? undefined}
+          initialAge={scanAge ?? undefined}
+          initialSex={scanSex ?? undefined}
+          initialHeightCm={scanHeightCm ?? undefined}
+          initialWeightKg={scanWeightKg ?? undefined}
           sessionId={sessionId}
         />
 

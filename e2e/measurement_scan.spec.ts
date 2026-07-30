@@ -130,9 +130,10 @@ async function loginAndNavigate(
 
   // 3. Navigate to the target page
   // Use "domcontentloaded" — "networkidle" times out due to HMR WebSocket / polling
-  await page.goto(targetPath, { waitUntil: "domcontentloaded", timeout: 120_000 });
+  // 300s timeout accounts for first-time dev server compilation on slow filesystems
+  await page.goto(targetPath, { waitUntil: "domcontentloaded", timeout: 300_000 });
   // Wait for hydration and dev server compilation to finish
-  await page.waitForTimeout(8000);
+  await page.waitForTimeout(3000);
 }
 
 /**
@@ -192,7 +193,7 @@ test.describe("Measurement Scan E2E", () => {
 
     // Tutorial overlay should be visible (first slide: "Set Up Your Phone")
     await expect(page.getByRole("heading", { name: "Set Up Your Phone" })).toBeVisible();
-    await expect(page.getByText("Skip")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Skip" })).toBeVisible();
   });
 
   test("03 - Tutorial Skip button opens entry modal", async ({ page, request }) => {
@@ -200,7 +201,7 @@ test.describe("Measurement Scan E2E", () => {
     await page.waitForSelector("text=30-Second Body Scan", { timeout: 120_000 });
 
     // Click Skip to bypass tutorial
-    await page.getByText("Skip").click();
+    await page.getByRole("button", { name: "Skip" }).click();
     await page.waitForTimeout(2000);
 
     // Entry modal should appear
@@ -215,7 +216,7 @@ test.describe("Measurement Scan E2E", () => {
     await page.waitForSelector("text=30-Second Body Scan", { timeout: 120_000 });
 
     // Skip tutorial
-    await page.getByText("Skip").click();
+    await page.getByRole("button", { name: "Skip" }).click();
     await page.waitForTimeout(2000);
 
     // Verify form fields
@@ -239,7 +240,7 @@ test.describe("Measurement Scan E2E", () => {
     await page.waitForSelector("text=30-Second Body Scan", { timeout: 120_000 });
 
     // Skip tutorial
-    await page.getByText("Skip").click();
+    await page.getByRole("button", { name: "Skip" }).click();
     await page.waitForTimeout(2000);
 
     // Fill age (required to enable submit)
@@ -266,8 +267,8 @@ test.describe("Measurement Scan E2E", () => {
   });
 
   test("06 - Navigate to get-measured landing page", async ({ page }) => {
-    await page.goto("/get-measured", { waitUntil: "domcontentloaded", timeout: 120_000 });
-    await page.waitForTimeout(8000);
+    await page.goto("/get-measured", { waitUntil: "domcontentloaded", timeout: 300_000 });
+    await page.waitForTimeout(3000);
     await page.screenshot({ path: `${SCREENSHOT_DIR}/06-get-measured.png`, fullPage: true });
     await expect(page).toHaveURL(/\/get-measured/);
   });
@@ -286,6 +287,17 @@ test.describe("Measurement Scan E2E", () => {
       `/client/dashboard/measurements/scan/${TEST_SESSION_ID}`,
       { injectEntryData: true },
     );
+
+    // Debug: capture URL and screenshot right after navigation
+    await page.screenshot({ path: `${SCREENSHOT_DIR}/08-debug-after-nav.png`, fullPage: true });
+    const currentUrl = page.url();
+    console.log(`Test 08 URL after navigation: ${currentUrl}`);
+
+    // Wait for possible redirect to settle
+    await page.waitForTimeout(5000);
+    const settledUrl = page.url();
+    console.log(`Test 08 URL after settle: ${settledUrl}`);
+    await page.screenshot({ path: `${SCREENSHOT_DIR}/08-debug-after-settle.png`, fullPage: true });
 
     // The EnhancedMeasurementFlow should render with "AI Body Scan" heading
     await page.waitForSelector("text=AI Body Scan", { timeout: 120_000 });
