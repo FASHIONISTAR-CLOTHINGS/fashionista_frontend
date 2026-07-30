@@ -17,6 +17,8 @@ import { FashionistarImage } from "@/components/media";
 import { FashionistarPagination } from "@/components/ui/FashionistarPagination";
 import { BadgeCheck, Ruler, ExternalLink, Sparkles } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 // ── SEO ───────────────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
   title: "Fashion Brands | Fashionistar",

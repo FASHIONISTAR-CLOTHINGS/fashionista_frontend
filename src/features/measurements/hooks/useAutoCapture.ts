@@ -1,130 +1,260 @@
 "use client";
-
 /**
  * @file useAutoCapture.ts
- * @description Auto-capture state machine — triggers capture when pose quality is stable.
+ * @description TASK-008: Auto-capture state machine for AI body measurement.
  *
- * Tracks a rolling buffer of quality scores. When stability ≥ threshold for N consecutive
- * frames, starts a 3-2-1 countdown then calls onCapture.
+ * State Machine:
+ *   WATCHING → (quality >= threshold AND stable for N frames) → ARMING
+ *   ARMING   → (all conditions met) → COUNTDOWN(3)
+ *   COUNTDOWN(3) → COUNTDOWN(2) → COUNTDOWN(1) → CAPTURING
+ *   CAPTURING → onCapture() → DONE
+ *   Any state → (quality drops) → WATCHING (reset)
+ *
+ * Design Decisions:
+ * - Uses refs for countdown interval to avoid stale closure issues
+ * - stabilityFrames counted in processFrame call (per-frame, not per-ms)
+ * - Countdown uses setInterval + performance.now() for accuracy
+ * - qualityDropReset: countdown cancels if quality drops during countdown
+ *
+ * Usage:
+ *   const autoCapture = useAutoCapture({ onCapture: () => submitScan() });
+ *   // In frame loop:
+ *   autoCapture.tick(frameQuality, frameStabilityScore);
  */
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CAPTURE_CONFIG, POSE_THRESHOLDS } from "@/lib/brand";
 
-import { useRef, useState, useCallback } from "react";
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-export interface UseAutoCaptureOptions {
-  /** Quality threshold (0-1) above which frames are considered "stable". */
-  threshold: number;
-  /** Number of consecutive stable frames before countdown starts. */
-  minStableFrames?: number;
-  /** Called when countdown finishes — should trigger the actual capture. */
+export type AutoCaptureState =
+  | "watching"    // Waiting for stable good pose
+  | "arming"      // Quality good, counting stability frames
+  | "countdown"   // All conditions met — countdown started
+  | "capturing"   // Snap! Flash overlay shown
+  | "done";       // Capture complete — waiting for manual reset
+
+export interface UseAutoCaptureConfig {
+  /** Called when countdown reaches zero and capture triggers */
   onCapture: () => void;
-  /** Master enable/disable. */
-  enabled: boolean;
+  /** Minimum pose quality to arm auto-capture */
+  qualityThreshold?: number;
+  /** Number of consecutive good frames required before countdown starts */
+  stabilityFramesRequired?: number;
+  /** Countdown duration in seconds (3-2-1) */
+  countdownSeconds?: number;
+  /** Set false to disable auto-capture (manual-only mode) */
+  enabled?: boolean;
 }
 
 export interface UseAutoCaptureReturn {
-  /** 0-1 — fraction of buffer that is above threshold. */
-  bufferProgress: number;
-  /** True when countdown is active. */
+  /** Current state of the capture state machine */
+  captureState: AutoCaptureState;
+  /** Current countdown number (3, 2, 1) or null */
+  countdown: number | null;
+  /** Number of stable frames accumulated */
+  stabilityFrames: number;
+  /** True when in 'arming' state */
+  isArming: boolean;
+  /** True when in 'countdown' or 'capturing' state */
   isCountingDown: boolean;
-  /** 3, 2, 1, or null. */
-  countdownSeconds: number | null;
-  /** Cancel an in-progress countdown. */
-  cancelCapture: () => void;
-  /** Push a new quality sample into the buffer. */
-  pushFrame: (quality: number) => void;
-  /** Reset the buffer and any countdown. */
+  /** True during capture flash */
+  isCapturing: boolean;
+  /**
+   * Call this every frame from processFrame loop.
+   * @param quality  Pose quality score 0-1
+   * @param isStable True if current pose is stable (compare to prev frame)
+   */
+  tick: (quality: number, isStable?: boolean) => void;
+  /** Manually reset to 'watching' state */
   reset: () => void;
+  /** Trigger capture immediately regardless of quality */
+  forceCapture: () => void;
 }
 
-const BUFFER_SIZE = 30;
+// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useAutoCapture({
-  threshold,
-  minStableFrames = 20,
   onCapture,
-  enabled,
-}: UseAutoCaptureOptions): UseAutoCaptureReturn {
-  const bufferRef = useRef<number[]>([]);
-  const stableCountRef = useRef(0);
-  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const countdownStepRef = useRef(0);
+  qualityThreshold      = POSE_THRESHOLDS.frontGood,
+  stabilityFramesRequired = CAPTURE_CONFIG.landmarkBufferSize,
+  countdownSeconds      = CAPTURE_CONFIG.countdownSeconds,
+  enabled               = true,
+}: UseAutoCaptureConfig): UseAutoCaptureReturn {
 
-  const [bufferProgress, setBufferProgress] = useState(0);
-  const [isCountingDown, setIsCountingDown] = useState(false);
-  const [countdownSeconds, setCountdownSeconds] = useState<number | null>(null);
+  const [captureState, setCaptureState] = useState<AutoCaptureState>("watching");
+  const [countdown, setCountdown]       = useState<number | null>(null);
+  const [stabilityFrames, setStabilityFrames] = useState(0);
 
-  const clearCountdown = useCallback(() => {
+  // Refs for stable access inside intervals/callbacks
+  const captureStateRef       = useRef<AutoCaptureState>("watching");
+  const stabilityFramesRef    = useRef(0);
+  const countdownIntervalRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+  const countdownValueRef     = useRef<number>(countdownSeconds);
+  const onCaptureRef          = useRef(onCapture);
+  const enabledRef            = useRef(enabled);
+
+  // Keep refs in sync
+  useEffect(() => { onCaptureRef.current = onCapture; }, [onCapture]);
+  useEffect(() => { enabledRef.current = enabled; },     [enabled]);
+
+  // ── Internal state transition ──────────────────────────────────────────────
+  const setState = useCallback((next: AutoCaptureState) => {
+    captureStateRef.current = next;
+    setCaptureState(next);
+  }, []);
+
+  // ── Stop countdown interval ────────────────────────────────────────────────
+  const stopCountdown = useCallback(() => {
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
       countdownIntervalRef.current = null;
     }
-    setIsCountingDown(false);
-    setCountdownSeconds(null);
-    countdownStepRef.current = 0;
   }, []);
 
+  // ── Start countdown from N → 0 → trigger ──────────────────────────────────
   const startCountdown = useCallback(() => {
-    setIsCountingDown(true);
-    countdownStepRef.current = 3;
-    setCountdownSeconds(3);
+    stopCountdown();
+    countdownValueRef.current = countdownSeconds;
+    setCountdown(countdownSeconds);
+    setState("countdown");
+
+    // Haptic feedback on countdown start
+    if (typeof navigator !== "undefined") {
+      navigator.vibrate?.([50]);
+    }
 
     countdownIntervalRef.current = setInterval(() => {
-      countdownStepRef.current -= 1;
-      if (countdownStepRef.current <= 0) {
-        clearCountdown();
-        onCapture();
+      countdownValueRef.current -= 1;
+
+      if (countdownValueRef.current <= 0) {
+        stopCountdown();
+        setCountdown(null);
+        setState("capturing");
+
+        // Capture haptic pattern
+        navigator.vibrate?.([100, 50, 100]);
+
+        // Call the capture callback
+        onCaptureRef.current();
+
+        // Brief "done" state before component resets
+        setTimeout(() => setState("done"), CAPTURE_CONFIG.flashDuration);
       } else {
-        setCountdownSeconds(countdownStepRef.current);
+        setCountdown(countdownValueRef.current);
+
+        // Per-tick haptic
+        navigator.vibrate?.([30]);
       }
     }, 1000);
-  }, [clearCountdown, onCapture]);
+  }, [countdownSeconds, setState, stopCountdown]);
 
-  const pushFrame = useCallback(
-    (quality: number) => {
-      if (!enabled || isCountingDown) return;
+  // ── Reset ──────────────────────────────────────────────────────────────────
+  const reset = useCallback(() => {
+    stopCountdown();
+    stabilityFramesRef.current = 0;
+    setStabilityFrames(0);
+    setCountdown(null);
+    setState("watching");
+  }, [setState, stopCountdown]);
 
-      const buffer = bufferRef.current;
-      buffer.push(quality);
-      if (buffer.length > BUFFER_SIZE) buffer.shift();
+  // ── Force capture ──────────────────────────────────────────────────────────
+  const forceCapture = useCallback(() => {
+    if (
+      captureStateRef.current === "capturing" ||
+      captureStateRef.current === "done"
+    ) return;
 
-      const aboveThreshold = buffer.filter((q) => q >= threshold).length;
-      const progress = buffer.length / BUFFER_SIZE;
-      setBufferProgress(progress);
+    stopCountdown();
+    setCountdown(null);
+    setState("capturing");
 
-      if (quality >= threshold) {
-        stableCountRef.current += 1;
-      } else {
-        stableCountRef.current = 0;
+    navigator.vibrate?.([100, 50, 100]);
+    onCaptureRef.current();
+    setTimeout(() => setState("done"), CAPTURE_CONFIG.flashDuration);
+  }, [setState, stopCountdown]);
+
+  // ── Tick — called each frame ───────────────────────────────────────────────
+  const tick = useCallback(
+    /**
+     * A-2 FIX: isStable now gates stability frame accumulation.
+     * Both quality AND physical stability are required to arm the countdown.
+     * A jittery user (moving while quality score is high) will NOT trigger capture.
+     */
+    (quality: number, isStable: boolean = false) => {
+      if (!enabledRef.current) return;
+
+      const state = captureStateRef.current;
+
+      // If already capturing or done — ignore frames
+      if (state === "capturing" || state === "done") return;
+
+      const qualityOk = quality >= qualityThreshold;
+
+      // During countdown — check if quality OR stability dropped (cancel countdown)
+      if (state === "countdown") {
+        if (!qualityOk || !isStable) {
+          stopCountdown();
+          stabilityFramesRef.current = 0;
+          setStabilityFrames(0);
+          setCountdown(null);
+          setState("watching");
+        }
+        return;
       }
 
-      if (stableCountRef.current >= minStableFrames && buffer.length >= BUFFER_SIZE) {
-        const stableFraction = aboveThreshold / buffer.length;
-        if (stableFraction >= 0.8) {
-          startCountdown();
+      if (!qualityOk) {
+        // Reset stability if quality drops
+        if (stabilityFramesRef.current > 0) {
+          stabilityFramesRef.current = 0;
+          setStabilityFrames(0);
         }
+        if (state !== "watching") setState("watching");
+        return;
+      }
+
+      // A-2 FIX: Quality is good but user is physically moving — hold state, don't count frames
+      if (!isStable) {
+        // Don't reset stability counter (avoids punishing momentary micro-movements)
+        // but don't increment either. Keep "arming" visual but pause stability bar.
+        if (state === "watching") setState("arming");
+        return;
+      }
+
+      // Quality is good AND stable — increment stability counter
+      stabilityFramesRef.current += 1;
+      setStabilityFrames(stabilityFramesRef.current);
+
+      if (state === "watching") {
+        setState("arming");
+      }
+
+      // Enough stability — start countdown
+      if (
+        state === "arming" &&
+        stabilityFramesRef.current >= stabilityFramesRequired
+      ) {
+        startCountdown();
       }
     },
-    [enabled, isCountingDown, threshold, minStableFrames, startCountdown],
+    [qualityThreshold, stabilityFramesRequired, setState, startCountdown, stopCountdown]
   );
 
-  const cancelCapture = useCallback(() => {
-    clearCountdown();
-    stableCountRef.current = 0;
-  }, [clearCountdown]);
-
-  const reset = useCallback(() => {
-    bufferRef.current = [];
-    stableCountRef.current = 0;
-    clearCountdown();
-    setBufferProgress(0);
-  }, [clearCountdown]);
+  // ── Cleanup on unmount ─────────────────────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      stopCountdown();
+    };
+  }, [stopCountdown]);
 
   return {
-    bufferProgress,
-    isCountingDown,
-    countdownSeconds,
-    cancelCapture,
-    pushFrame,
+    captureState,
+    countdown,
+    stabilityFrames,
+    isArming:       captureState === "arming",
+    isCountingDown: captureState === "countdown",
+    isCapturing:    captureState === "capturing",
+    tick,
     reset,
+    forceCapture,
   };
 }

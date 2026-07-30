@@ -10,6 +10,8 @@ import { BackToTopButton } from "@/components/shared/ui/BackToTopButton";
 import { MarketingProvider } from "@/features/marketing/MarketingContext";
 import { MarketingAnnouncementBar } from "@/features/marketing/MarketingAnnouncementBar";
 
+export const dynamic = "force-dynamic";
+
 export default function Home({
   children,
 }: Readonly<{

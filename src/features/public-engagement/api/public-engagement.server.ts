@@ -16,10 +16,9 @@ const DEFAULT_PLATFORM_SETTINGS: PublicPlatformSettings = {
 };
 
 export async function getPublicPlatformSettings(): Promise<PublicPlatformSettings> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5_000);
-
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
     const response = await fetch(
       `${getServerBackendRootUrl()}/api/v1/platform/settings/public/`,
       {
@@ -31,6 +30,7 @@ export async function getPublicPlatformSettings(): Promise<PublicPlatformSetting
         signal: controller.signal,
       },
     );
+    clearTimeout(timeout);
 
     if (!response.ok) {
       return DEFAULT_PLATFORM_SETTINGS;
@@ -43,7 +43,5 @@ export async function getPublicPlatformSettings(): Promise<PublicPlatformSetting
     };
   } catch {
     return DEFAULT_PLATFORM_SETTINGS;
-  } finally {
-    clearTimeout(timeout);
   }
 }

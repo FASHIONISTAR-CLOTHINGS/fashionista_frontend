@@ -1,81 +1,92 @@
 "use client";
-
 /**
  * @file VoiceCoachDisplay.tsx
- * @description Voice coach visual feedback display.
+ * @description TASK-005: Visual text companion to voice coaching system.
  *
- * Shows current spoken text as a subtitle bar with animated waveform icon
- * when speaking, plus a mute toggle button.
+ * Accessibility companion: renders the current voice instruction as readable text.
+ * Essential for deaf/HoH users and environments where audio is disabled.
+ *
+ * Design:
+ * - Forest Green pill badge at top of camera viewport
+ * - 3 animated dots while speaking
+ * - Framer Motion fade+slide enter/exit
+ * - Auto-hides via parent (useVoiceCoach handles timing)
+ *
+ * Usage:
+ *   <VoiceCoachDisplay text={voice.currentText} isSpeaking={voice.isSpeaking} />
  */
 
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
-export interface VoiceCoachDisplayProps {
+// ─── Props ────────────────────────────────────────────────────────────────────
+
+interface VoiceCoachDisplayProps {
+  /** The current voice instruction text. Null = hidden. */
   text: string | null;
+  /** Whether speech synthesis is currently playing */
   isSpeaking: boolean;
-  isEnabled: boolean;
-  onToggle: () => void;
+  /** Additional CSS class */
   className?: string;
 }
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function VoiceCoachDisplay({
   text,
   isSpeaking,
-  isEnabled,
-  onToggle,
   className = "",
 }: VoiceCoachDisplayProps) {
   return (
-    <div className={`flex items-center justify-between gap-3 ${className}`}>
-      {/* Caption + waveform */}
-      <div className="flex items-center gap-2 flex-1 min-w-0">
-        {/* Waveform icon */}
-        <div className="flex items-end gap-0.5 h-4 shrink-0">
-          {[0, 1, 2, 3].map((i) => (
-            <motion.div
-              key={i}
-              className="w-0.5 rounded-full"
-              style={{ backgroundColor: isEnabled ? "#F4C430" : "rgba(255,255,255,0.2)" }}
-              animate={
-                isSpeaking && isEnabled
-                  ? { height: [4, 12, 4] }
-                  : { height: 4 }
-              }
-              transition={{
-                duration: 0.5,
-                repeat: Infinity,
-                delay: i * 0.1,
-              }}
-            />
-          ))}
-        </div>
+    <AnimatePresence>
+      {text && (
+        <motion.div
+          key={text}
+          initial={{ opacity: 0, y: -12, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0,   scale: 1    }}
+          exit={{   opacity: 0, y: -8,   scale: 0.97 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className={`
+            absolute top-3 left-3 right-3 z-20
+            flex items-center gap-2.5
+            bg-[#2D6A4F]/90 backdrop-blur-md
+            rounded-xl px-4 py-2.5
+            border border-[#52B788]/30
+            shadow-lg shadow-black/30
+            ${className}
+          `}
+          role="status"
+          aria-live="polite"
+          aria-label={`Voice guidance: ${text}`}
+        >
+          {/* Mic / speaking indicator */}
+          <div className="flex-shrink-0 flex items-center gap-0.5" aria-hidden="true">
+            {isSpeaking ? (
+              // Animated 3-dot equalizer
+              [0, 1, 2].map((i) => (
+                <motion.span
+                  key={i}
+                  className="w-0.5 rounded-full bg-[#F4C430]"
+                  animate={{ height: ["6px", "14px", "6px"] }}
+                  transition={{
+                    duration: 0.6,
+                    repeat: Infinity,
+                    delay: i * 0.15,
+                    ease: "easeInOut",
+                  }}
+                />
+              ))
+            ) : (
+              // Static mic dot when text visible but not speaking (just fading)
+              <span className="w-2 h-2 rounded-full bg-[#52B788]" />
+            )}
+          </div>
 
-        {/* Caption text */}
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={text ?? "empty"}
-            className="text-xs text-white/70 truncate"
-            initial={{ opacity: 0, x: -5 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 5 }}
-            transition={{ duration: 0.2 }}
-          >
-            {text ?? (isEnabled ? "Listening..." : "Voice muted")}
-          </motion.p>
-        </AnimatePresence>
-      </div>
-
-      {/* Mute toggle */}
-      <button
-        onClick={onToggle}
-        className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition"
-        style={{
-          backgroundColor: isEnabled ? "rgba(244,196,48,0.15)" : "rgba(255,255,255,0.05)",
-          color: isEnabled ? "#F4C430" : "rgba(255,255,255,0.4)",
-        }}
-      >
-        {isEnabled ? "🔊 On" : "🔇 Muted"}
-      </button>
-    </div>
+          {/* Instruction text */}
+          <p className="text-white text-xs font-medium leading-snug flex-1 min-w-0">
+            {text}
+          </p>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

@@ -35,6 +35,8 @@ import { VendorTrustScore } from "@/features/vendor/components/VendorTrustScore"
 import { VendorFollowButton } from "@/features/vendor/components/VendorFollowButton";
 import VendorPublicProfileClient from "./VendorPublicProfileClient";
 
+export const dynamic = "force-dynamic";
+
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface VendorPublicOut {
   id:             string;

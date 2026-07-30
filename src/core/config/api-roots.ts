@@ -1,23 +1,17 @@
-const DEFAULT_BACKEND_ROOT = "http://127.0.0.1:8001";
+const DEFAULT_BACKEND_ROOT = "https://fashionistar-ai-fashionistar-api-v1.hf.space";
 
 function stripTrailingSlash(value: string): string {
   return value.replace(/\/+$/, "");
 }
 
 function getLocalBrowserBackendOverride(): string | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const hostname = window.location.hostname;
-  if (hostname === "localhost" || hostname === "127.0.0.1") {
-    return DEFAULT_BACKEND_ROOT;
-  }
-
   return null;
 }
 
 export function getClientBackendRootUrl(): string {
+  if (typeof window !== "undefined") {
+    return "";
+  }
   return stripTrailingSlash(
     getLocalBrowserBackendOverride() ??
       process.env.NEXT_PUBLIC_BACKEND_URL ??
@@ -25,8 +19,13 @@ export function getClientBackendRootUrl(): string {
   );
 }
 
+export function getClientWsRootUrl(): string {
+  const root =
+    process.env.NEXT_PUBLIC_BACKEND_URL || DEFAULT_BACKEND_ROOT;
+  return stripTrailingSlash(root);
+}
+
 export function getServerBackendRootUrl(): string {
-  console.log("Fashionista: ", process.env.BACKEND_INTERNAL_URL);
   return stripTrailingSlash(
     process.env.BACKEND_INTERNAL_URL ??
       process.env.NEXT_PUBLIC_BACKEND_URL ??
@@ -52,4 +51,10 @@ export function getAdminSyncApiBaseUrl(): string {
 
 export function getAdminAsyncApiBaseUrl(): string {
   return `${getClientBackendRootUrl()}/api/v1/admin_backend`;
+}
+
+export function getClientWsBaseUrl(): string {
+  const root = getClientWsRootUrl();
+  const wsRoot = root.replace(/^http/, "ws");
+  return `${wsRoot}/ws`;
 }

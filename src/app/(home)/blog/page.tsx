@@ -4,6 +4,8 @@ import { Suspense } from "react";
 import { CatalogBlogList } from "@/features/catalog";
 import { NewsletterForm } from "../_components/NewsletterForm";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Fashionistar Blog | Digital Measurements, Tailoring, Fashion Commerce",
   description:

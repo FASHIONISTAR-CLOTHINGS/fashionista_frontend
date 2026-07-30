@@ -8,17 +8,14 @@
  *   - Camera access     — getUserMedia API
  *   - Height estimation — Auto-estimate from landmarks if not provided by user
  *
- * State machine (dual-pose):
- *   idle → loading_model → awaiting_height → capturing_front → validating_front
- *        → side_prompt → capturing_side → validating_side
+ * State machine:
+ *   idle → loading_model → awaiting_height → capturing → validating
  *        → submitting → processing → completed | failed
  *
- * Legacy single-pose flow still supported via captureAndSubmit().
- *
  * Usage:
- *   const capture = useMeasurementCapture();
+ *   const videoRef = useRef<HTMLVideoElement | null>(null);
+ *   const capture = useMeasurementCapture(videoRef);
  *   await capture.startCapture();
- *   // mount <AICameraCapture /> and pass capture.videoRef + capture.onFrame
  */
 "use client";
 
@@ -27,6 +24,7 @@ import {
   useCallback,
   useRef,
   useEffect,
+  useMemo,
   MutableRefObject,
 } from "react";
 import { usePoseLandmarker, type Landmark, type PoseLandmarkerResult } from "./usePoseLandmarker";
@@ -38,18 +36,12 @@ export type CapturePhase =
   | "idle"
   | "loading_model"
   | "awaiting_height"
-  | "capturing_front"
-  | "validating_front"
-  | "side_prompt"
-  | "capturing_side"
-  | "validating_side"
+  | "capturing"
+  | "validating"
   | "submitting"
   | "processing"
   | "completed"
   | "failed";
-
-/** Legacy phase aliases for backward-compatible consumers. */
-export type LegacyCapturePhase = "capturing" | "validating";
 
 export interface CaptureFrame {
   /** Average visibility of key landmarks (0-1). */
@@ -60,80 +52,28 @@ export interface CaptureFrame {
   worldLandmarks: Landmark[] | null;
 }
 
-/** Dual-pose landmark storage. */
-export interface DualPoseLandmarks {
-  front: Landmark[] | null;
-  side:  Landmark[] | null;
-}
-
 export interface UseMeasurementCaptureReturn {
   phase:          CapturePhase;
   currentFrame:   CaptureFrame | null;
   sessionId:      string | null;
   sessionStatus:  import("../api/scan.api").ScanStatusResponse | null;
   error:          string | null;
-  videoRef:       MutableRefObject<HTMLVideoElement | null>;
-  canvasRef:      MutableRefObject<HTMLCanvasElement | null>;
 
   /** Step 1: Load MediaPipe model + open camera. */
   startCapture:   (heightCm?: number) => Promise<void>;
   /** Step 2: Process a video frame (call in requestAnimationFrame loop). */
   processFrame:   () => CaptureFrame | null;
-  /** Step 3: Capture front pose and transition to side_prompt. */
-  captureFront:   () => void;
-  /** Step 4: Proceed from side_prompt to capturing_side phase. */
-  proceedToSideCapture: () => void;
-  /** Step 5: Skip side capture and submit front-only. */
-  skipSideCapture: () => Promise<void>;
-  /** Step 6: Capture side pose and submit both to backend. */
-  captureSideAndSubmit: (heightCm?: number) => Promise<void>;
-  /** Legacy: capture + submit in one step (front-only, backward compat). */
+  /** Step 3: Capture the best frame and submit to backend. */
   captureAndSubmit: (heightCm?: number) => Promise<void>;
   /** Reset everything — allows starting a fresh scan. */
   reset:          () => void;
-  /** T-031: Retry the last failed submission. */
-  retry:          () => void;
-  /** T-030: Whether the browser is currently offline. */
-  isOffline:      boolean;
-  /** T-033: Whether the processing timeout was reached. */
-  isTimedOut:      boolean;
-  /** Adopt an externally created session (e.g. from URL / QR). */
-  setExistingSession: (sessionId: string) => void;
   /** Stored user height (auto-estimated if not provided). */
   userHeightCm:   number | null;
-  /** Dual-pose captured landmarks. */
-  capturedLandmarks: DualPoseLandmarks;
   /** Stop camera stream. */
   stopCamera:     () => void;
 }
 
 // ─── Height estimation from landmarks ─────────────────────────────────────────
-
-/** T-038: Average landmarks across multiple frames to reduce jitter */
-function avgLandmarks(frames: Landmark[][]): Landmark[] {
-  if (frames.length === 0) return [];
-  if (frames.length === 1) return frames[0];
-  const numPoints = frames[0].length;
-  const averaged: Landmark[] = [];
-  for (let i = 0; i < numPoints; i++) {
-    let sumX = 0, sumY = 0, sumZ = 0, sumVis = 0;
-    for (const frame of frames) {
-      const lm = frame[i];
-      if (!lm) continue;
-      sumX += lm.x;
-      sumY += lm.y;
-      sumZ += lm.z;
-      sumVis += lm.visibility ?? 0;
-    }
-    averaged.push({
-      x: sumX / frames.length,
-      y: sumY / frames.length,
-      z: sumZ / frames.length,
-      visibility: sumVis / frames.length,
-    });
-  }
-  return averaged;
-}
 
 /**
  * Estimate user height from world landmarks.
@@ -160,46 +100,30 @@ function estimateHeightFromLandmarks(worldLandmarks: Landmark[]): number | null 
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export interface UseMeasurementCaptureOptions {
-  /** Pre-filled age from entry modal. */
-  initialAge?: number;
-  /** Pre-filled sex from entry modal. */
-  initialSex?: "male" | "female" | "neutral";
-  /** Pre-filled weight in kg from entry modal. */
-  initialWeightKg?: number;
-  /** Pre-filled height in cm from entry modal. */
-  initialHeightCm?: number;
-  /** Existing session ID (if scan was initiated externally). */
-  sessionId?: string;
-}
-
-export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): UseMeasurementCaptureReturn {
+export function useMeasurementCapture(
+  videoRef: MutableRefObject<HTMLVideoElement | null>,
+): UseMeasurementCaptureReturn {
   const landmarker = usePoseLandmarker();
   const scanSession = useScanSession();
 
   const [localPhase, setLocalPhase]       = useState<CapturePhase>("idle");
   const [currentFrame, setCurrentFrame]   = useState<CaptureFrame | null>(null);
-  const [userHeightCm, setUserHeightCm]   = useState<number | null>(options?.initialHeightCm ?? null);
-  const [capturedLandmarks, setCapturedLandmarks] = useState<DualPoseLandmarks>({ front: null, side: null });
+  const [userHeightCm, setUserHeightCm]   = useState<number | null>(null);
+  const [capturedLandmarks, setCapturedLandmarks] = useState<Landmark[] | null>(null);
   const [localError, setLocalError]       = useState<string | null>(null);
 
-  // Entry data from options (passed through to submit)
-  const entryAge = options?.initialAge;
-  const entrySex = options?.initialSex;
-  const entryWeightKg = options?.initialWeightKg;
-
-  // T-038: Multi-frame averaging buffer
-  const frameBufferRef = useRef<Landmark[][]>([]);
-  const FRAME_BUFFER_SIZE = 5;
-
-  const videoRef  = useRef<HTMLVideoElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // ── Effective phase/error are DERIVED from the scan session during render ───
-  // (see the derivation just before `return`). We intentionally do NOT mirror
-  // scanSession.phase into local state via an effect — synchronous setState in
-  // an effect body triggers cascading re-renders (React anti-pattern).
+  // ── Derive phase from scan session final states + local state ─────────────
+  const phase = useMemo<CapturePhase>(() => {
+    if (scanSession.phase === "submitting") return "submitting";
+    if (scanSession.phase === "processing") return "processing";
+    if (scanSession.phase === "completed") return "completed";
+    if (scanSession.phase === "failed") return "failed";
+    return localPhase;
+  }, [scanSession.phase, localPhase]);
+
+  const error = localError ?? (scanSession.phase === "failed" ? scanSession.error : null);
 
   // ── Start camera ────────────────────────────────────────────────────────────
   const startCamera = useCallback(async () => {
@@ -252,7 +176,7 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
       const msg = err instanceof Error ? err.message : "Camera access denied.";
       throw new Error(`Camera error: ${msg}`);
     }
-  }, []);
+  }, [videoRef]);
 
 
   // ── Stop camera ─────────────────────────────────────────────────────────────
@@ -264,15 +188,7 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
-  }, []);
-
-  // ── Adopt an externally-created session on mount ─────────────────────────────
-  useEffect(() => {
-    if (options?.sessionId && options.sessionId !== scanSession.sessionId) {
-      scanSession.setExistingSession(options.sessionId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options?.sessionId]);
+  }, [videoRef]);
 
   // ── Start capture flow ──────────────────────────────────────────────────────
   const startCapture = useCallback(
@@ -287,15 +203,13 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
         // 2. Start camera
         await startCamera();
 
-        // 3. Initiate backend session (unless one was provided externally)
-        if (!scanSession.sessionId) {
-          await scanSession.initiate("web");
-        }
+        // 3. Initiate backend session
+        await scanSession.initiate("web");
 
         // 4. Store provided height (can be updated or auto-estimated later)
         if (heightCm) setUserHeightCm(heightCm);
 
-        setLocalPhase(heightCm ? "capturing_front" : "awaiting_height");
+        setLocalPhase(heightCm ? "capturing" : "awaiting_height");
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Failed to start capture.";
         setLocalError(msg);
@@ -309,7 +223,7 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
   // ── Process a single video frame ────────────────────────────────────────────
   const processFrame = useCallback((): CaptureFrame | null => {
     if (!videoRef.current || !landmarker.isReady) return null;
-    if (localPhase !== "capturing_front" && localPhase !== "awaiting_height" && localPhase !== "capturing_side") return null;
+    if (phase !== "capturing" && phase !== "awaiting_height") return null;
 
     const result: PoseLandmarkerResult | null = landmarker.detectFromVideo(
       videoRef.current
@@ -333,25 +247,14 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
       const estimated = estimateHeightFromLandmarks(worldLms);
       if (estimated) {
         setUserHeightCm(estimated);
-        if (localPhase === "awaiting_height") setLocalPhase("capturing_front");
+        if (phase === "awaiting_height") setLocalPhase("capturing");
       }
     }
 
-    // T-038: Multi-frame averaging — buffer good frames and average landmarks
+    // Store best frame (highest quality)
     const isGoodPose = quality >= 0.72;
     if (isGoodPose) {
-      // Add to frame buffer
-      frameBufferRef.current.push([...worldLms]);
-      if (frameBufferRef.current.length > FRAME_BUFFER_SIZE) {
-        frameBufferRef.current.shift();
-      }
-      // Average landmarks across buffered frames for stability
-      const averaged = avgLandmarks(frameBufferRef.current);
-      if (localPhase === "capturing_side") {
-        setCapturedLandmarks((prev) => ({ ...prev, side: averaged }));
-      } else {
-        setCapturedLandmarks((prev) => ({ ...prev, front: averaged }));
-      }
+      setCapturedLandmarks(worldLms);
     }
 
     const frame: CaptureFrame = {
@@ -361,136 +264,13 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
     };
     setCurrentFrame(frame);
     return frame;
-  }, [landmarker, localPhase, userHeightCm]);
+  }, [landmarker, phase, userHeightCm, videoRef]);
 
-  // ── Map Landmark[] → LandmarkPoint[] for API ────────────────────────────────
-  const toLandmarkPoints = (lms: Landmark[]) =>
-    lms.map((l) => ({
-      x:          l.x,
-      y:          l.y,
-      z:          l.z,
-      visibility: l.visibility ?? 0,
-    }));
-
-  // ── Capture front pose ──────────────────────────────────────────────────────
-  const captureFront = useCallback(() => {
-    const frontLms = capturedLandmarks.front;
-    if (!frontLms) {
-      setLocalError("No valid front pose detected. Please stand fully visible in the frame.");
-      return;
-    }
-    setLocalPhase("validating_front");
-
-    const quality = landmarker.computeQualityScore(frontLms);
-    if (quality < 0.60) {
-      setLocalError(
-        `Front pose quality too low (${Math.round(quality * 100)}%). ` +
-        "Please ensure you are fully visible and well-lit."
-      );
-      setLocalPhase("failed");
-      return;
-    }
-
-    // Transition to side prompt — front pose validated
-    setLocalPhase("side_prompt");
-  }, [capturedLandmarks.front, landmarker]);
-
-  // ── Proceed from side_prompt to capturing_side ───────────────────────────────
-  const proceedToSideCapture = useCallback(() => {
-    setCapturedLandmarks((prev) => ({ ...prev, side: null }));
-    frameBufferRef.current = [];  // T-038: reset buffer for side pose
-    setLocalPhase("capturing_side");
-  }, []);
-
-  // ── Skip side capture — submit front-only ────────────────────────────────────
-  const skipSideCapture = useCallback(async () => {
-    const frontLms = capturedLandmarks.front;
-    if (!frontLms) return;
-
-    const height = userHeightCm;
-    if (!height || height < 100 || height > 250) {
-      setLocalError("Unable to determine your height. Please enter it manually.");
-      setLocalPhase("failed");
-      return;
-    }
-
-    setLocalPhase("submitting");
-    await scanSession.submit({
-      user_height_cm:  height,
-      front_landmarks: toLandmarkPoints(frontLms),
-      device_type:     "web",
-      ...(entryAge != null && { user_age: entryAge }),
-      ...(entrySex != null && { user_sex: entrySex }),
-      ...(entryWeightKg != null && { user_weight_kg: entryWeightKg }),
-    });
-    stopCamera();
-  }, [capturedLandmarks.front, userHeightCm, scanSession, stopCamera, entryAge, entrySex, entryWeightKg]);
-
-  // ── Capture side pose and submit both ────────────────────────────────────────
-  const captureSideAndSubmit = useCallback(
-    async (heightCm?: number) => {
-      const frontLms = capturedLandmarks.front;
-      const sideLms  = capturedLandmarks.side;
-
-      if (!frontLms) {
-        setLocalError("Front pose not captured. Please start again.");
-        setLocalPhase("failed");
-        return;
-      }
-      if (!sideLms) {
-        setLocalError("No valid side pose detected. Please stand fully visible in the frame.");
-        return;
-      }
-
-      const height = heightCm ?? userHeightCm;
-      if (!height || height < 100 || height > 250) {
-        setLocalError("Unable to determine your height. Please enter it manually.");
-        setLocalPhase("failed");
-        return;
-      }
-
-      setLocalPhase("validating_side");
-
-      // Validate side pose quality
-      const sideQuality = landmarker.computeQualityScore(sideLms);
-      if (sideQuality < 0.50) {
-        // Side pose quality too low — submit front-only as fallback
-        setLocalPhase("submitting");
-        await scanSession.submit({
-          user_height_cm:  height,
-          front_landmarks: toLandmarkPoints(frontLms),
-          device_type:     "web",
-          ...(entryAge != null && { user_age: entryAge }),
-          ...(entrySex != null && { user_sex: entrySex }),
-          ...(entryWeightKg != null && { user_weight_kg: entryWeightKg }),
-        });
-        stopCamera();
-        return;
-      }
-
-      setLocalPhase("submitting");
-
-      // Submit both front and side landmarks
-      await scanSession.submit({
-        user_height_cm:   height,
-        front_landmarks:  toLandmarkPoints(frontLms),
-        side_landmarks:   toLandmarkPoints(sideLms),
-        device_type:      "web",
-        ...(entryAge != null && { user_age: entryAge }),
-        ...(entrySex != null && { user_sex: entrySex }),
-        ...(entryWeightKg != null && { user_weight_kg: entryWeightKg }),
-      });
-
-      stopCamera();
-    },
-    [capturedLandmarks, userHeightCm, landmarker, scanSession, stopCamera, entryAge, entrySex, entryWeightKg]
-  );
-
-  // ── Legacy captureAndSubmit (front-only, backward compat) ────────────────────
+  // ── Capture + submit ────────────────────────────────────────────────────────
   const captureAndSubmit = useCallback(
     async (heightCm?: number) => {
-      const frontLms = capturedLandmarks.front;
-      if (!frontLms) {
+      const lms = capturedLandmarks;
+      if (!lms) {
         setLocalError("No valid pose detected. Please stand fully visible in the frame.");
         return;
       }
@@ -501,9 +281,10 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
         return;
       }
 
-      setLocalPhase("validating_front");
+      setLocalPhase("validating");
 
-      const quality = landmarker.computeQualityScore(frontLms);
+      // Basic client-side validation (backend does the full validation)
+      const quality = landmarker.computeQualityScore(lms);
       if (quality < 0.60) {
         setLocalError(
           `Pose quality too low (${Math.round(quality * 100)}%). ` +
@@ -513,18 +294,22 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
         return;
       }
 
+      // Submit to backend — map Landmark (visibility?: number) → LandmarkPoint (visibility: number)
       await scanSession.submit({
-        user_height_cm:  height,
-        front_landmarks: toLandmarkPoints(frontLms),
-        device_type:     "web",
-        ...(entryAge != null && { user_age: entryAge }),
-        ...(entrySex != null && { user_sex: entrySex }),
-        ...(entryWeightKg != null && { user_weight_kg: entryWeightKg }),
+        user_height_cm: height,
+        landmarks:      lms.map((l) => ({
+          x:          l.x,
+          y:          l.y,
+          z:          l.z,
+          visibility: l.visibility ?? 0,
+        })),
+        device_type:    "web",
       });
 
+      // Stop camera after submission (processing continues on backend)
       stopCamera();
     },
-    [capturedLandmarks.front, userHeightCm, landmarker, scanSession, stopCamera, entryAge, entrySex, entryWeightKg]
+    [capturedLandmarks, userHeightCm, landmarker, scanSession, stopCamera]
   );
 
   // ── Reset ───────────────────────────────────────────────────────────────────
@@ -532,11 +317,10 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
     stopCamera();
     landmarker.cleanup();
     scanSession.reset();
-    frameBufferRef.current = [];  // T-038: clear frame buffer
     setLocalPhase("idle");
     setCurrentFrame(null);
     setUserHeightCm(null);
-    setCapturedLandmarks({ front: null, side: null });
+    setCapturedLandmarks(null);
     setLocalError(null);
   }, [stopCamera, landmarker, scanSession]);
 
@@ -546,39 +330,17 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Derive effective phase/error (avoids setState-in-effect cascades) ───────
-  // Once submission starts, the scan session's phase takes precedence over the
-  // local capture phase. Computed during render — no effect, no cascade.
-  const phase: CapturePhase =
-    (["submitting", "processing", "completed", "failed"] as readonly string[])
-      .includes(scanSession.phase)
-      ? (scanSession.phase as CapturePhase)
-      : localPhase;
-  const error: string | null =
-    scanSession.phase === "failed" ? (scanSession.error ?? localError) : localError;
-
   return {
     phase,
     currentFrame,
     sessionId:     scanSession.sessionId,
     sessionStatus: scanSession.sessionStatus,
     error,
-    videoRef,
-    canvasRef,
     startCapture,
     processFrame,
-    captureFront,
-    proceedToSideCapture,
-    skipSideCapture,
-    captureSideAndSubmit,
     captureAndSubmit,
     reset,
-    retry:            scanSession.retry,
-    isOffline:        scanSession.isOffline,
-    isTimedOut:       scanSession.isTimedOut,
-    setExistingSession: scanSession.setExistingSession,
     userHeightCm,
-    capturedLandmarks,
     stopCamera,
   };
 }

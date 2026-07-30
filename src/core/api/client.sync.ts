@@ -314,3 +314,17 @@ apiSync.interceptors.response.use(
 );
 
 export default apiSync;
+
+/**
+ * @testing-only — Reset the circuit breaker state between test runs.
+ * Import this in beforeEach() to prevent 401/429 failure counts from
+ * accumulating across test cases when running the full Vitest suite.
+ *
+ * Usage in tests:
+ *   import { resetCircuitBreaker } from '@/core/api/client.sync';
+ *   beforeEach(() => resetCircuitBreaker());
+ */
+export function resetCircuitBreaker(): void {
+  circuitOpen          = false;
+  consecutiveFailures  = 0;
+}

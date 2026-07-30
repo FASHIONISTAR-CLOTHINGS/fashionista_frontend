@@ -18,7 +18,7 @@
  *      or { "tag": "categories", "path": "/categories" }
  *
  * Environment:
- *   REVALIDATE_SECRET — shared secret (set in Vercel env + Django REVALIDATE_SECRET)
+ *   REVALIDATE_SECRET — shared secret (set in HF Space secrets + Django REVALIDATE_SECRET)
  */
 
 import { revalidateTag, revalidatePath } from "next/cache";

@@ -1,58 +1,54 @@
 /**
  * @file page.tsx
  * @route /client/dashboard/measurements
- * @description Measurement profiles list page — shows all profiles for the logged-in client.
+ * @description TASK-023: Full-featured measurements dashboard — history, profiles,
+ * retake CTA, and measurement overview with delta comparisons.
+ *
+ * Architecture:
+ *   - Server Component shell (metadata, force-dynamic)
+ *   - Client panel lazy-imported to isolate TanStack Query hooks
  */
 
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Suspense } from "react";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "My Measurements — FASHIONISTAR",
-  description: "Manage your body measurement profiles for perfect AI-powered fit recommendations.",
+  description:
+    "Manage your AI body measurement profiles. View your 14 measurements, " +
+    "track changes over time, and get perfect fit recommendations.",
+  openGraph: {
+    title: "My Measurements — FASHIONISTAR",
+    description: "AI-powered body measurements for perfect fashion fit.",
+  },
 };
 
 export default function MeasurementsPage() {
   return (
-    <div className="min-h-screen bg-[#F4F3EC] px-4 py-8 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-[#01454A]">My Measurements</h1>
-            <p className="text-sm text-[#7A6B44] mt-1">
-              Your AI body measurement profiles for perfect fit
-            </p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-[#0A0A0A] via-[#0D1810] to-[#0A0A0A] flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 rounded-full border-4 border-[#2D6A4F]/20 border-t-[#2D6A4F] animate-spin mx-auto mb-4" />
+            <p className="text-white/40 text-sm">Loading your measurements…</p>
           </div>
-          <Link
-            href="/client/dashboard/measurements/scan"
-            className="inline-flex items-center gap-2 rounded-xl bg-[#01454A] hover:bg-[#016B73]
-                       text-white font-semibold text-sm px-5 py-2.5 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            New Scan
-          </Link>
         </div>
-
-        {/* Profile list — rendered client side via MeasurementProfilePanel */}
-        <MeasurementProfilesClient />
-      </div>
-    </div>
+      }
+    >
+      <MeasurementsDashboardClient />
+    </Suspense>
   );
 }
 
 /**
- * Client-rendered measurement profiles panel.
- * Imported lazily to keep the page shell as a Server Component.
+ * Lazy-imported client boundary.
+ * The actual component lives in _client.tsx to keep this file as a pure
+ * Server Component (no "use client" directive here).
  */
-function MeasurementProfilesClient() {
-  // Lazy import prevents SSR issues with TanStack Query hooks
-  const { MeasurementProfilePanel } =
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require("@/features/measurements/components/MeasurementProfilePanel");
-
-  return <MeasurementProfilePanel />;
+function MeasurementsDashboardClient() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { MeasurementsDashboard } = require("./_client");
+  return <MeasurementsDashboard />;
 }

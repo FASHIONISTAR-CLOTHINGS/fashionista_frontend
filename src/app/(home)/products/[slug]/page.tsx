@@ -11,6 +11,8 @@ import { ProductDetailSkeleton } from "./ProductDetailSkeleton";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
 import { generateProductSchema } from "@/components/seo/schemas";
 
+export const dynamic = "force-dynamic";
+
 interface ProductDetailPageProps {
   params: Promise<{ slug: string }>;
 }

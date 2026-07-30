@@ -23,6 +23,8 @@ import { getBrandDetail, getCatalogBrands } from "@/features/catalog";
 import { ProductGridSkeleton } from "@/features/product";
 import BrandProductsClient from "./BrandProductsClient";
 
+export const dynamic = "force-dynamic";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────

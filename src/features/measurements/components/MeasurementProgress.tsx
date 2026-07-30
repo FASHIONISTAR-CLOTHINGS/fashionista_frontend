@@ -35,15 +35,15 @@ interface PhaseConfig {
 }
 
 const PHASE_CONFIG: Record<ScanProgressPhase, PhaseConfig> = {
-  idle:          { label: "Ready",                    sublabel: "Press start to begin scan",        pct: 0,   color: "white/20"   },
-  loading:       { label: "Loading AI Model",         sublabel: "Downloading pose detector...",      pct: 12,  color: "brand-green" },
-  initialising:  { label: "Initialising Camera",      sublabel: "Starting pose detection engine...", pct: 28,  color: "brand-green" },
-  detecting:     { label: "Detecting Pose",            sublabel: "Hold still — capturing landmarks",  pct: 50,  color: "brand-gold"   },
-  submitting:    { label: "Uploading Measurements",   sublabel: "Sending body data to server...",    pct: 68,  color: "brand-gold"    },
-  processing:    { label: "AI Processing",            sublabel: "Computing body measurements...",    pct: 82,  color: "brand-gold"  },
-  saving:        { label: "Saving Profile",           sublabel: "Creating your measurement profile", pct: 95,  color: "brand-gold"  },
-  completed:     { label: "Complete",                 sublabel: "Measurements saved successfully",   pct: 100, color: "brand-gold"  },
-  failed:        { label: "Scan Failed",              sublabel: "Please try again",                  pct: 0,   color: "red-500"    },
+  idle:          { label: "Ready",                    sublabel: "Press start to begin scan",        pct: 0,   color: "[#2D6A4F]/40" },
+  loading:       { label: "Loading AI Model",         sublabel: "Downloading pose detector...",      pct: 12,  color: "[#2D6A4F]"    },
+  initialising:  { label: "Initialising Camera",      sublabel: "Starting pose detection engine...", pct: 28,  color: "[#2D6A4F]"    },
+  detecting:     { label: "Detecting Pose",            sublabel: "Hold still — capturing landmarks",  pct: 50,  color: "[#52B788]"    },
+  submitting:    { label: "Uploading Measurements",   sublabel: "Sending body data to server...",    pct: 68,  color: "[#F4C430]"    },
+  processing:    { label: "AI Processing",            sublabel: "Computing body measurements...",    pct: 82,  color: "[#F4C430]"    },
+  saving:        { label: "Saving Profile",           sublabel: "Creating your measurement profile", pct: 95,  color: "[#2D6A4F]"    },
+  completed:     { label: "Complete",                 sublabel: "Measurements saved successfully",   pct: 100, color: "[#52B788]"    },
+  failed:        { label: "Scan Failed",              sublabel: "Please try again",                  pct: 0,   color: "[#DC2626]"    },
 };
 
 interface MeasurementProgressProps {
@@ -85,7 +85,7 @@ export function MeasurementProgress({
             />
           )}
           {isCompleted && (
-            <div className="w-4 h-4 rounded-full bg-[#FDA600] flex items-center justify-center flex-shrink-0">
+            <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
               <span className="text-[9px] text-white">✓</span>
             </div>
           )}
@@ -95,15 +95,15 @@ export function MeasurementProgress({
             </div>
           )}
           {phase === "idle" && (
-            <div className="w-4 h-4 rounded-full border-2 border-[#ECE6D6] flex-shrink-0" />
+            <div className="w-4 h-4 rounded-full border-2 border-white/10 flex-shrink-0" />
           )}
 
           <span className={cn(
             "text-sm font-semibold",
             isFailed    ? "text-red-400"   :
-            isCompleted ? "text-[#FDA600]" :
-            isActive    ? "text-[#01454A]"     :
-            "text-[#7A6B44]",
+            isCompleted ? "text-green-400" :
+            isActive    ? "text-white"     :
+            "text-white/40",
           )}>
             {config.label}
           </span>
@@ -111,14 +111,14 @@ export function MeasurementProgress({
 
         <span className={cn(
           "text-xs font-mono tabular-nums",
-          isFailed ? "text-red-400/60" : "text-[#7A6B44]/60",
+          isFailed ? "text-red-400/60" : "text-white/30",
         )}>
           {isFailed ? "Error" : `${pct}%`}
         </span>
       </div>
 
       {/* ── Progress bar ── */}
-      <div className="relative h-1.5 w-full rounded-full bg-[#ECE6D6] overflow-hidden">
+      <div className="relative h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
         {/* Background shimmer when active */}
         {isActive && (
           <div
@@ -145,8 +145,8 @@ export function MeasurementProgress({
       <p className={cn(
         "text-xs transition-all duration-300",
         isFailed    ? "text-red-400/80"  :
-        isCompleted ? "text-[#FDA600]/70" :
-        "text-[#7A6B44]",
+        isCompleted ? "text-green-400/70" :
+        "text-white/35",
       )}>
         {isFailed && errorMessage ? errorMessage : config.sublabel}
       </p>
@@ -162,13 +162,13 @@ export function MeasurementProgress({
               <div key={step} className="flex flex-col items-center gap-0.5">
                 <div className={cn(
                   "w-1 h-1 rounded-full transition-all duration-300",
-                  isDone ? "bg-[#FDA600]" :
-                  isCurr ? "bg-[#01454A]/60 animate-pulse" :
-                  "bg-[#ECE6D6]",
+                  isDone ? "bg-green-400" :
+                  isCurr ? "bg-white/60 animate-pulse" :
+                  "bg-white/10",
                 )} />
                 <span className={cn(
                   "text-[9px] leading-tight text-center",
-                  isDone ? "text-[#7A6B44]" : "text-[#7A6B44]/40",
+                  isDone ? "text-white/40" : "text-white/15",
                 )}>
                   {step}
                 </span>
@@ -197,27 +197,27 @@ const STEP_LABELS = ["Load", "Camera", "Pose", "Upload", "Save"];
 
 function phaseColorHex(phase: ScanProgressPhase): string {
   const map: Partial<Record<ScanProgressPhase, string>> = {
-    loading:      "#01454A",
-    initialising: "#01454A",
-    detecting:    "#FDA600",
-    submitting:   "#FDA600",
-    processing:   "#FDA600",
-    saving:       "#FDA600",
-    completed:    "#FDA600",
-    failed:       "#ef4444",
+    loading:      "#2D6A4F",
+    initialising: "#2D6A4F",
+    detecting:    "#52B788",
+    submitting:   "#F4C430",
+    processing:   "#F4C430",
+    saving:       "#2D6A4F",
+    completed:    "#52B788",
+    failed:       "#DC2626",
   };
   return map[phase] ?? "#ffffff20";
 }
 
 function phaseGradient(phase: ScanProgressPhase): string {
-  if (phase === "completed") return "linear-gradient(90deg, #01454A, #FDA600)";
-  if (phase === "failed")    return "#ef4444";
+  if (phase === "completed") return "linear-gradient(90deg, #2D6A4F, #52B788)";
+  if (phase === "failed")    return "#DC2626";
   if (["loading", "initialising"].includes(phase))
-    return "linear-gradient(90deg, #01272C, #01454A)";
-  if (phase === "detecting")   return "linear-gradient(90deg, #E8960A, #FDA600)";
-  if (phase === "submitting")  return "linear-gradient(90deg, #E8960A, #FDA600)";
-  if (phase === "processing")  return "linear-gradient(90deg, #E8960A, #FDA600)";
-  if (phase === "saving")      return "linear-gradient(90deg, #01454A, #FDA600)";
+    return "linear-gradient(90deg, #1B4332, #2D6A4F)";
+  if (phase === "detecting")   return "linear-gradient(90deg, #2D6A4F, #52B788)";
+  if (phase === "submitting")  return "linear-gradient(90deg, #C9A227, #F4C430)";
+  if (phase === "processing")  return "linear-gradient(90deg, #C9A227, #F4C430)";
+  if (phase === "saving")      return "linear-gradient(90deg, #1B4332, #2D6A4F)";
   return "rgba(255,255,255,0.1)";
 }
 
@@ -230,10 +230,10 @@ export function MeasurementProgressPill({ phase }: { phase: ScanProgressPhase })
   return (
     <div className={cn(
       "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium",
-      phase === "completed" ? "border-[#FDA600]/30 bg-[#FDA600]/10 text-[#FDA600]" :
+      phase === "completed" ? "border-green-500/30 bg-green-500/10 text-green-400" :
       phase === "failed"    ? "border-red-500/30 bg-red-500/10 text-red-400" :
-      isActive              ? "border-[#ECE6D6] bg-[#F4F3EC] text-[#7A6B44]" :
-      "border-[#ECE6D6] bg-transparent text-[#7A6B44]/50",
+      isActive              ? "border-white/10 bg-white/5 text-white/60" :
+      "border-white/5 bg-transparent text-white/25",
     )}>
       {isActive && (
         <span

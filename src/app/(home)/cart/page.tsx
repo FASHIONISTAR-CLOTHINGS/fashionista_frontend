@@ -4,6 +4,8 @@ import { CommerceRouteGuard } from "@/features/auth/components/CommerceRouteGuar
 import { CartPage } from "@/features/cart";
 import { CartPageSkeleton } from "@/features/cart";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Your Cart",
   description:

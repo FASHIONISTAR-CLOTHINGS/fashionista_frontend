@@ -9,11 +9,10 @@
  */
 
 
-import { memo } from "react";
 import type { MeasurementProfile, MeasurementCompletionStatus } from "../types/measurements.types";
 import { MEASUREMENT_FIELDS } from "../types/measurements.types";
 
-// ── MeasurementCard (T-014: memoized) ──────────────────────────────────────────
+// ── MeasurementCard ──────────────────────────────────────────────────────────
 
 interface MeasurementCardProps {
   profile: MeasurementProfile | null;
@@ -22,7 +21,7 @@ interface MeasurementCardProps {
   className?: string;
 }
 
-function MeasurementCardInner({ profile, onEdit, onStartScan, className = "" }: MeasurementCardProps) {
+export function MeasurementCard({ profile, onEdit, onStartScan, className = "" }: MeasurementCardProps) {
   const completion = profile?.completionPercent ?? 0;
   const unit = profile?.unit ?? "cm";
 
@@ -39,19 +38,19 @@ function MeasurementCardInner({ profile, onEdit, onStartScan, className = "" }: 
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-brand-green/20 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-[#2D6A4F]/20 flex items-center justify-center">
             <span className="text-base">📐</span>
           </div>
           <div>
             <h3 className="text-sm font-semibold text-white">My Measurements</h3>
-            <p className="text-xs text-brand-gray">{completedFields.length}/{fields.length} fields complete</p>
+            <p className="text-xs text-white/40">{completedFields.length}/{fields.length} fields complete</p>
           </div>
         </div>
         <div className="flex gap-2">
           {onStartScan && (
             <button
               onClick={onStartScan}
-              className="text-xs px-3 py-1.5 rounded-lg bg-brand-green hover:bg-brand-green/90 text-white transition-colors"
+              className="text-xs px-3 py-1.5 rounded-lg bg-[#2D6A4F] hover:bg-[#1B4332] text-white transition-colors"
               id="start-body-scan-btn"
             >
               📷 AI Scan
@@ -60,7 +59,7 @@ function MeasurementCardInner({ profile, onEdit, onStartScan, className = "" }: 
           {onEdit && (
             <button
               onClick={onEdit}
-              className="text-xs px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-white/70 transition-colors"
+              className="text-xs px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-white/60 transition-colors"
               id="edit-measurements-btn"
             >
               Edit
@@ -72,21 +71,21 @@ function MeasurementCardInner({ profile, onEdit, onStartScan, className = "" }: 
       {/* Completion progress */}
       <div className="px-5 py-3 bg-white/3">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-xs text-brand-gray">Profile Completion</span>
-          <span className={`text-xs font-semibold ${completion >= 80 ? "text-brand-gold" : completion >= 50 ? "text-brand-gold/70" : "text-red-400"}`}>
+          <span className="text-xs text-white/40">Profile Completion</span>
+          <span className={`text-xs font-semibold ${completion >= 80 ? "text-[#52B788]" : completion >= 50 ? "text-[#F4C430]" : "text-red-400"}`}>
             {completion}%
           </span>
         </div>
         <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-700 ${
-              completion >= 80 ? "bg-brand-gold" : completion >= 50 ? "bg-brand-gold/70" : "bg-red-500"
+              completion >= 80 ? "bg-[#2D6A4F]" : completion >= 50 ? "bg-[#F4C430]" : "bg-red-500"
             }`}
             style={{ width: `${completion}%` }}
           />
         </div>
         {missingRequired.length > 0 && (
-          <p className="text-xs text-brand-gold/70 mt-1.5">
+          <p className="text-xs text-[#F4C430]/70 mt-1.5">
             Missing required: {missingRequired.map((f) => f.label).join(", ")}
           </p>
         )}
@@ -105,10 +104,10 @@ function MeasurementCardInner({ profile, onEdit, onStartScan, className = "" }: 
                   : "bg-white/3 border border-white/8"
             }`}
           >
-            <div className={`text-base font-bold ${field.value !== null ? "text-white" : "text-brand-gray"}`}>
+            <div className={`text-base font-bold ${field.value !== null ? "text-white" : "text-white/25"}`}>
               {field.value !== null ? `${field.value}${unit}` : "—"}
             </div>
-            <div className="text-[10px] text-brand-gray mt-0.5">{field.label}</div>
+            <div className="text-[10px] text-white/30 mt-0.5">{field.label}</div>
           </div>
         ))}
       </div>
@@ -116,5 +115,81 @@ function MeasurementCardInner({ profile, onEdit, onStartScan, className = "" }: 
   );
 }
 
-// T-014: Memoized export — prevents re-render when parent updates but props are unchanged.
-export const MeasurementCard = memo(MeasurementCardInner);
+// ── BodyDiagram ──────────────────────────────────────────────────────────────
+
+interface BodyDiagramProps {
+  profile: MeasurementProfile | null;
+  highlightField?: string;
+  className?: string;
+}
+
+export function BodyDiagram({ profile, highlightField, className = "" }: BodyDiagramProps) {
+  const hasValue = (field: keyof MeasurementProfile) =>
+    profile && profile[field] !== null && profile[field] !== undefined;
+
+  const hotspotClass = (field: keyof MeasurementProfile) =>
+    hasValue(field)
+      ? "fill-[#2D6A4F]/70 stroke-[#52B788]"
+      : "fill-white/10 stroke-white/20";
+
+  return (
+    <div className={`relative flex items-center justify-center ${className}`} aria-label="Body measurement diagram">
+      <svg viewBox="0 0 200 400" className="w-full max-w-[180px] h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Body silhouette */}
+        <g stroke="white" strokeOpacity="0.15" strokeWidth="1" fill="white" fillOpacity="0.04">
+          {/* Head */}
+          <circle cx="100" cy="40" r="25" />
+          {/* Neck */}
+          <rect x="90" y="63" width="20" height="20" rx="4" />
+          {/* Torso */}
+          <path d="M65 83 Q55 100 58 150 L142 150 Q145 100 135 83 Q120 75 100 75 Q80 75 65 83Z" />
+          {/* Hips */}
+          <path d="M58 150 Q50 170 55 200 L145 200 Q150 170 142 150Z" />
+          {/* Left arm */}
+          <path d="M65 83 Q45 100 40 160 Q42 165 50 160 Q55 110 70 95Z" />
+          {/* Right arm */}
+          <path d="M135 83 Q155 100 160 160 Q158 165 150 160 Q145 110 130 95Z" />
+          {/* Left leg */}
+          <path d="M60 200 Q55 260 58 330 Q62 340 72 338 Q78 270 80 200Z" />
+          {/* Right leg */}
+          <path d="M120 200 Q122 270 128 338 Q138 340 142 330 Q145 260 140 200Z" />
+        </g>
+
+        {/* Measurement hotspots */}
+        {/* Chest */}
+        <circle cx="100" cy="108" r="10" className={hotspotClass("chest")} strokeWidth="1.5"
+          opacity={highlightField === "chest" ? 1 : 0.8} />
+        <text x="100" y="111" textAnchor="middle" fontSize="6" fill="white" fillOpacity="0.8">Chest</text>
+
+        {/* Waist */}
+        <circle cx="100" cy="138" r="10" className={hotspotClass("waist")} strokeWidth="1.5"
+          opacity={highlightField === "waist" ? 1 : 0.8} />
+        <text x="100" y="141" textAnchor="middle" fontSize="6" fill="white" fillOpacity="0.8">Waist</text>
+
+        {/* Hips */}
+        <circle cx="100" cy="168" r="10" className={hotspotClass("hips")} strokeWidth="1.5"
+          opacity={highlightField === "hips" ? 1 : 0.8} />
+        <text x="100" y="171" textAnchor="middle" fontSize="6" fill="white" fillOpacity="0.8">Hips</text>
+
+        {/* Shoulder */}
+        <circle cx="70" cy="86" r="7" className={hotspotClass("shoulderWidth")} strokeWidth="1.5"
+          opacity={highlightField === "shoulderWidth" ? 1 : 0.8} />
+        <circle cx="130" cy="86" r="7" className={hotspotClass("shoulderWidth")} strokeWidth="1.5"
+          opacity={highlightField === "shoulderWidth" ? 1 : 0.8} />
+
+        {/* Neck */}
+        <circle cx="100" cy="68" r="6" className={hotspotClass("neck")} strokeWidth="1.5" />
+      </svg>
+
+      {/* Legend */}
+      <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 text-[10px] text-white/30">
+        <span className="flex items-center gap-1">
+          <span className="w-2 h-2 rounded-full bg-[#2D6A4F]" />Measured
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-2 h-2 rounded-full bg-white/20" />Missing
+        </span>
+      </div>
+    </div>
+  );
+}

@@ -14,45 +14,35 @@
 import { cn } from "@/lib/utils";
 
 interface CalibrationGuideProps {
-  phase:            "awaiting_height" | "capturing_front" | "capturing_side" | "side_prompt" | string;
+  phase:            "awaiting_height" | "capturing" | string;
   qualityScore:     number;   // 0 to 1
   estimatedHeight:  number | null;
-  tiltStatus?:      "level" | "tilted" | "unavailable";
-  caption?:         string | null;
 }
 
 export function CalibrationGuide({
   phase,
   qualityScore,
   estimatedHeight,
-  tiltStatus = "unavailable",
-  caption = null,
 }: CalibrationGuideProps) {
   const pct          = Math.round(qualityScore * 100);
   const isGood       = pct >= 72;
   const isMedium     = pct >= 50 && pct < 72;
 
-  const instruction = caption ??
-    (phase === "awaiting_height"
+  const instruction =
+    phase === "awaiting_height"
       ? "Stand 1.5m from camera — estimating height..."
-      : phase === "capturing_side"
-      ? isGood
-        ? "Great side pose! Ready to capture."
-        : "Turn 90° so we can see your side profile."
-      : phase === "side_prompt"
-      ? "Front captured! Now turn to your side."
       : isGood
       ? "Great pose! Ready to capture."
       : isMedium
       ? "Move back slightly and face the camera directly."
-      : "Stand straight, face the camera, arms slightly apart.");
+      : "Stand straight, face the camera, arms slightly apart.";
 
   return (
     <div className="absolute inset-0 pointer-events-none select-none">
 
       {/* ── Corner scan-line brackets ── */}
       {(["tl", "tr", "bl", "br"] as const).map((corner) => (
-        <CornerBracket key={corner} corner={corner} isGood={isGood} />
+        <CornerBracket key={corner} corner={corner} isGood={isGood} isMedium={isMedium} />
       ))}
 
       {/* ── Body silhouette guide ── */}
@@ -63,21 +53,21 @@ export function CalibrationGuide({
         "absolute bottom-4 left-4 right-4 rounded-xl px-4 py-2.5 backdrop-blur-md",
         "transition-colors duration-500 flex items-center justify-between gap-2",
         isGood
-          ? "bg-brand-gold/20 border border-brand-gold/30"
+          ? "bg-[#2D6A4F]/20 border border-[#2D6A4F]/40"
           : isMedium
-          ? "bg-brand-gold/10 border border-brand-gold/20"
-          : "bg-white/10 border border-white/10",
+          ? "bg-[#F4C430]/20 border border-[#F4C430]/30"
+          : "bg-[#DC2626]/15 border border-[#DC2626]/20",
       )}>
         <p className={cn(
           "text-xs font-medium",
-          isGood ? "text-brand-gold" : isMedium ? "text-brand-gold/70" : "text-white/60",
+          isGood ? "text-[#2D6A4F]" : isMedium ? "text-[#F4C430]" : "text-[#DC2626]/80",
         )}>
           {instruction}
         </p>
         {/* Quality dot */}
         <div className={cn(
           "w-2 h-2 rounded-full flex-shrink-0",
-          isGood ? "bg-brand-gold animate-pulse" : isMedium ? "bg-brand-gold/50" : "bg-white/20",
+          isGood ? "bg-[#2D6A4F] animate-pulse" : isMedium ? "bg-[#F4C430]" : "bg-[#DC2626]/60",
         )} />
       </div>
 
@@ -87,11 +77,6 @@ export function CalibrationGuide({
                         border border-white/10 text-xs text-white/60 font-mono">
           ~{estimatedHeight.toFixed(1)} cm
         </div>
-      )}
-
-      {/* ── Level indicator (top-right) ── */}
-      {tiltStatus !== "unavailable" && (
-        <LevelIndicator tiltStatus={tiltStatus} />
       )}
 
       {/* ── Scanning animation overlay (active when quality is good) ── */}
@@ -104,8 +89,8 @@ export function CalibrationGuide({
 
 type Corner = "tl" | "tr" | "bl" | "br";
 
-function CornerBracket({ corner, isGood }: { corner: Corner; isGood: boolean }) {
-  const color = isGood ? "#FDA600" : "#7A6B44";
+function CornerBracket({ corner, isGood, isMedium }: { corner: Corner; isGood: boolean; isMedium: boolean }) {
+  const color = isGood ? "#2D6A4F" /* forest green */ : isMedium ? "#F4C430" /* golden yellow */ : "#DC2626";
   const size  = 20;
   const thick = 2.5;
 
@@ -153,7 +138,7 @@ function SilhouetteGuide({ isGood }: { isGood: boolean }) {
             M60,130 L80,200 L85,270
           `}
           fill="none"
-          stroke={isGood ? "#FDA600" : "#7A6B44"}
+          stroke={isGood ? "#2D6A4F" /* forest green */ : "#848484" /* gray */}
           strokeWidth="5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -164,45 +149,12 @@ function SilhouetteGuide({ isGood }: { isGood: boolean }) {
   );
 }
 
-// ─── Level Indicator ─────────────────────────────────────────────────────────
-
-function LevelIndicator({ tiltStatus }: { tiltStatus: "level" | "tilted" }) {
-  const isLevel = tiltStatus === "level";
-  return (
-    <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/40 backdrop-blur-sm border border-white/10">
-      {/* Bubble level icon */}
-      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
-        <circle
-          cx="12" cy="12" r="9"
-          stroke={isLevel ? "#FDA600" : "#7A6B44"}
-          strokeWidth="2"
-        />
-        <circle
-          cx="12" cy="12" r="3"
-          fill={isLevel ? "#FDA600" : "#7A6B44"}
-          className={isLevel ? "" : "animate-pulse"}
-          style={{
-            transform: isLevel ? "translate(0, 0)" : "translate(2px, 1px)",
-            transition: "transform 0.2s ease",
-          }}
-        />
-      </svg>
-      <span className={cn(
-        "text-xs font-medium",
-        isLevel ? "text-brand-gold" : "text-white/50",
-      )}>
-        {isLevel ? "Level" : "Tilted"}
-      </span>
-    </div>
-  );
-}
-
 // ─── Scan Line Animation ──────────────────────────────────────────────────────
 
 function ScanLine() {
   return (
     <div
-      className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-brand-gold to-transparent opacity-70"
+      className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-[#F4C430] to-transparent opacity-70"
       style={{
         animation: "scan-line 2s linear infinite",
         top: "0%",

@@ -15,11 +15,8 @@
  *   <AICameraCapture onComplete={(profileId) => router.push(`/dashboard/measurements/${profileId}`)} />
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useMeasurementCapture } from "../hooks/useMeasurementCapture";
-import { useVoiceGuidance, type GuidanceKey } from "../hooks/useVoiceGuidance";
-import { useDeviceOrientation } from "../hooks/useDeviceOrientation";
-import { predictHeightCm } from "../utils/predictHeight";
 import { PoseOverlay }      from "./PoseOverlay";
 import { CalibrationGuide } from "./CalibrationGuide";
 import { cn } from "@/lib/utils";
@@ -38,16 +35,6 @@ export interface AICameraCaptureProps {
   onComplete?: (profileId: string | number | null) => void;
   /** Called when user cancels. */
   onCancel?: () => void;
-  /** Pre-filled age from entry modal (stored for scan submission). */
-  initialAge?: number;
-  /** Pre-filled sex from entry modal (stored for scan submission). */
-  initialSex?: "male" | "female" | "neutral";
-  /** Pre-filled height in cm from prediction/entry (pre-fills height input). */
-  initialHeightCm?: number;
-  /** Pre-filled weight in kg from entry modal (stored for scan submission). */
-  initialWeightKg?: number;
-  /** Existing session ID from URL / QR (skip initiate, use pre-existing session). */
-  sessionId?: string;
   className?: string;
 }
 
@@ -56,122 +43,63 @@ export interface AICameraCaptureProps {
 export function AICameraCapture({
   onComplete,
   onCancel,
-  initialAge,
-  initialSex,
-  initialHeightCm,
-  initialWeightKg,
-  sessionId,
   className,
 }: AICameraCaptureProps) {
-  const {
-    phase,
-    currentFrame,
-    userHeightCm,
-    sessionStatus,
-    error,
-    processFrame,
-    startCapture,
-    captureFront,
-    proceedToSideCapture,
-    skipSideCapture,
-    captureSideAndSubmit,
-    reset,
-    retry,
-    isOffline,
-    isTimedOut,
-    videoRef,
-    canvasRef,
-  } = useMeasurementCapture({
-    initialAge,
-    initialSex,
-    initialHeightCm,
-    initialWeightKg,
-    sessionId,
-  });
-  const voice   = useVoiceGuidance();
-  const orientation = useDeviceOrientation();
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const capture = useMeasurementCapture(videoRef);
 
-  // Height / age input state
-  const [heightInput, setHeightInput]     = useState(() =>
-    initialHeightCm && initialHeightCm > 0 ? String(Math.round(initialHeightCm)) : ""
-  );
+  // Height input state
+  const [heightInput, setHeightInput]     = useState("");
   const [heightUnit, setHeightUnit]       = useState<"cm" | "inch">("cm");
   const [heightError, setHeightError]     = useState("");
-  const [userAge, setUserAge]             = useState(() =>
-    initialAge && initialAge > 0 ? String(initialAge) : ""
-  );
 
-  // ── Frame loop (single self-contained effect) ───────────────────────────────
-  // The frameLoop function is defined inside the effect so it can reference
-  // itself for recursive requestAnimationFrame calls — no ref indirection
-  // needed. This avoids "refs during render" and "declaration order" lint
-  // warnings that arise from the useCallback + ref-sync pattern.
-  useEffect(() => {
-    if (phase !== "capturing_front" && phase !== "awaiting_height" && phase !== "capturing_side") {
-      return;
+  // Animation frame refs
+  const rafRef = useRef<number | null>(null);
+  const frameLoopRef = useRef<() => void>(() => {});
+
+  // ── Frame loop ──────────────────────────────────────────────────────────────
+  const { processFrame, phase: capturePhase } = capture;
+  const frameLoop = useCallback(() => {
+    // Secondary guard: only process when the video element has actual dimensions.
+    // Primary guard is inside usePoseLandmarker.detectFromVideo.
+    // Both guards together prevent the MediaPipe "ROI width/height > 0" assertion.
+    const videoEl = videoRef.current;
+    const videoReady =
+      videoEl !== null &&
+      videoEl.readyState >= 2 &&
+      videoEl.videoWidth  > 0 &&
+      videoEl.videoHeight > 0;
+
+    if (videoReady) {
+      processFrame();
     }
 
-    let rafId: number | null = null;
+    if (capturePhase === "capturing" || capturePhase === "awaiting_height") {
+      rafRef.current = requestAnimationFrame(() => frameLoopRef.current());
+    }
+  }, [processFrame, capturePhase]);
 
-    const frameLoop = () => {
-      // Secondary guard: only process when the video element has actual dimensions.
-      // Primary guard is inside usePoseLandmarker.detectFromVideo.
-      // Both guards together prevent the MediaPipe "ROI width/height > 0" assertion.
-      const videoEl = videoRef.current;
-      const videoReady =
-        videoEl !== null &&
-        videoEl.readyState >= 2 &&
-        videoEl.videoWidth > 0 &&
-        videoEl.videoHeight > 0;
+  useEffect(() => {
+    frameLoopRef.current = frameLoop;
+  }, [frameLoop]);
 
-      if (videoReady) {
-        processFrame();
-      }
-
-      // Re-check phase inside the loop — the effect cleanup will cancel
-      // the frame if the phase changes, but this prevents scheduling
-      // an extra frame during the transition.
-      if (phase === "capturing_front" || phase === "awaiting_height" || phase === "capturing_side") {
-        rafId = requestAnimationFrame(frameLoop);
-      }
-    };
-
-    rafId = requestAnimationFrame(frameLoop);
-
+  useEffect(() => {
+    if (capturePhase === "capturing" || capturePhase === "awaiting_height") {
+      rafRef.current = requestAnimationFrame(() => frameLoopRef.current());
+    }
     return () => {
-      if (rafId !== null) cancelAnimationFrame(rafId);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [phase, processFrame, videoRef]);
-
-  // ── Voice guidance phase mapping ──────────────────────────────────────────
-  useEffect(() => {
-    const phaseToGuidance: Partial<Record<string, GuidanceKey>> = {
-      awaiting_height:  "POSITION_PHONE",
-      capturing_front:  "HOLD_STILL",
-      side_prompt:      "TURN_SIDEWAYS",
-      capturing_side:   "HOLD_STILL_SIDE",
-      submitting:       "PROCESSING",
-      processing:       "PROCESSING",
-      completed:        "DONE",
-    };
-    const key = phaseToGuidance[phase];
-    if (key) voice.speak(key);
-  }, [phase, voice]);
-
-  // ── Request device orientation permission on camera start ───────────────────
-  useEffect(() => {
-    if (phase === "capturing_front" || phase === "awaiting_height") {
-      orientation.requestPermission();
-    }
-  }, [phase, orientation]);
+  }, [capturePhase]);
 
   // ── On completion ───────────────────────────────────────────────────────────
   useEffect(() => {
-    if (phase === "completed") {
-      const profileId = sessionStatus?.measurement_profile_id ?? null;
+    if (capture.phase === "completed") {
+      const profileId = capture.sessionStatus?.measurement_profile_id ?? null;
       onComplete?.(profileId ?? null);
     }
-  }, [phase, sessionStatus, onComplete]);
+  }, [capture.phase, capture.sessionStatus, onComplete]);
 
   // ── Height helpers ──────────────────────────────────────────────────────────
   const parsedHeightCm = (): number | null => {
@@ -193,28 +121,12 @@ export function AICameraCapture({
       }
     }
     setHeightError("");
-    await startCapture(height ?? undefined);
+    await capture.startCapture(height ?? undefined);
   };
 
   const handleSubmit = async () => {
-    if (phase === "capturing_side") {
-      const height = parsedHeightCm() ?? userHeightCm ?? undefined;
-      await captureSideAndSubmit(height);
-    } else {
-      captureFront();
-    }
-  };
-
-  // ── Age-based height prediction ─────────────────────────────────────────────
-  const handleAgeChange = (age: string) => {
-    setUserAge(age);
-    const ageNum = parseInt(age, 10);
-    if (!isNaN(ageNum) && ageNum >= 5 && ageNum <= 120) {
-      const predicted = predictHeightCm(ageNum);
-      if (!heightInput) {
-        setHeightInput(String(predicted));
-      }
-    }
+    const height = parsedHeightCm() ?? capture.userHeightCm ?? undefined;
+    await capture.captureAndSubmit(height);
   };
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -222,25 +134,25 @@ export function AICameraCapture({
     <div className={cn("flex flex-col gap-4", className)}>
 
       {/* ── IDLE PHASE: Height input + start button ── */}
-      {phase === "idle" && (
+      {capture.phase === "idle" && (
         <div className="flex flex-col gap-6 max-w-md mx-auto w-full">
-          <div className="rounded-2xl border border-[#ECE6D6] bg-white p-6 flex flex-col gap-5 shadow-sm">
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6 flex flex-col gap-5">
 
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#FDA600]/15 flex items-center justify-center text-[#FDA600]">
+              <div className="w-10 h-10 rounded-full bg-[#2D6A4F]/20 flex items-center justify-center">
                 <IconRuler />
               </div>
               <div>
-                <h3 className="font-semibold text-[#01454A]">AI Body Scan</h3>
-                <p className="text-xs text-[#7A6B44]">30-second measurement scan</p>
+                <h3 className="font-semibold text-white">AI Body Scan</h3>
+                <p className="text-xs text-white/50">30-second measurement scan</p>
               </div>
             </div>
 
             {/* Height input */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[#565960]">
+              <label className="text-sm font-medium text-white/70">
                 Your Height
-                <span className="text-[#7A6B44] text-xs ml-1">(optional — auto-estimated if blank)</span>
+                <span className="text-white/40 text-xs ml-1">(optional — auto-estimated if blank)</span>
               </label>
               <div className="flex gap-2">
                 <input
@@ -248,11 +160,11 @@ export function AICameraCapture({
                   placeholder={heightUnit === "cm" ? "e.g. 175" : "e.g. 68"}
                   value={heightInput}
                   onChange={(e) => setHeightInput(e.target.value)}
-                  className="flex-1 rounded-xl bg-[#F4F3EC] border border-[#ECE6D6] text-[#141414] px-4 py-2.5 text-sm
-                             placeholder:text-[#7A6B44]/50 focus:outline-none focus:border-[#FDA600] focus:ring-1 focus:ring-[#FDA600] transition"
+                  className="flex-1 rounded-xl bg-white/10 border border-white/10 text-white px-4 py-2.5 text-sm
+                             placeholder:text-white/30 focus:outline-none focus:border-[#F4C430] focus:ring-1 focus:ring-[#F4C430] transition"
                 />
                 {/* CM / INCH toggle */}
-                <div className="flex rounded-xl overflow-hidden border border-[#ECE6D6]">
+                <div className="flex rounded-xl overflow-hidden border border-white/10">
                   {(["cm", "inch"] as const).map((unit) => (
                     <button
                       key={unit}
@@ -260,8 +172,8 @@ export function AICameraCapture({
                       className={cn(
                         "px-3 py-2 text-xs font-semibold transition",
                         heightUnit === unit
-                          ? "bg-[#FDA600] text-white"
-                          : "bg-[#F4F3EC] text-[#7A6B44] hover:bg-[#ECE6D6]"
+                          ? "bg-[#2D6A4F] text-white"
+                          : "bg-white/5 text-white/50 hover:bg-white/10"
                       )}
                     >
                       {unit}
@@ -274,24 +186,8 @@ export function AICameraCapture({
               )}
             </div>
 
-            {/* Age input (optional — for AI height prediction) */}
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[#565960]">
-                Your Age
-                <span className="text-[#7A6B44] text-xs ml-1">(optional — improves height estimate)</span>
-              </label>
-              <input
-                type="number"
-                placeholder="e.g. 28"
-                value={userAge}
-                onChange={(e) => handleAgeChange(e.target.value)}
-                className="flex-1 rounded-xl bg-[#F4F3EC] border border-[#ECE6D6] text-[#141414] px-4 py-2.5 text-sm
-                           placeholder:text-[#7A6B44]/50 focus:outline-none focus:border-[#FDA600] focus:ring-1 focus:ring-[#FDA600] transition"
-              />
-            </div>
-
             {/* Instructions */}
-            <ul className="text-xs text-[#565960] space-y-1 list-disc list-inside">
+            <ul className="text-xs text-white/50 space-y-1 list-disc list-inside">
               <li>Stand 1.5–2 metres from camera</li>
               <li>Wear fitted clothing (no baggy clothes)</li>
               <li>Good lighting (face the window)</li>
@@ -300,9 +196,9 @@ export function AICameraCapture({
 
             <button
               onClick={handleStartCapture}
-              className="w-full rounded-xl bg-gradient-to-r from-[#FDA600] to-[#E8960A] text-white
-                         font-semibold py-3 hover:from-[#E8960A] hover:to-[#FDA600] transition
-                         flex items-center justify-center gap-2 shadow-lg shadow-[#FDA600]/25"
+              className="w-full rounded-xl bg-gradient-to-r from-[#2D6A4F] to-[#2D6A4F]/70 text-white
+                         font-semibold py-3 hover:from-[#2D6A4F]/90 hover:to-[#2D6A4F]/60 transition
+                         flex items-center justify-center gap-2 shadow-lg shadow-[#2D6A4F]/25"
             >
               <IconCamera />
               Start Body Scan
@@ -311,7 +207,7 @@ export function AICameraCapture({
             {onCancel && (
               <button
                 onClick={onCancel}
-                className="text-xs text-[#7A6B44] hover:text-[#01454A] transition text-center"
+                className="text-xs text-white/40 hover:text-white/70 transition text-center"
               >
                 Cancel
               </button>
@@ -321,39 +217,19 @@ export function AICameraCapture({
       )}
 
       {/* ── LOADING MODEL PHASE ── */}
-      {phase === "loading_model" && (
+      {capture.phase === "loading_model" && (
         <div className="flex flex-col items-center gap-4 py-12">
-          <div className="w-16 h-16 rounded-full bg-[#FDA600]/15 flex items-center justify-center text-[#FDA600]">
+          <div className="w-16 h-16 rounded-full bg-[#2D6A4F]/20 flex items-center justify-center">
             <IconLoader />
           </div>
-          <p className="text-[#01454A] font-medium">Loading AI pose detection model...</p>
-          <p className="text-[#7A6B44] text-xs">First load takes ~3 seconds</p>
+          <p className="text-white/70 font-medium">Loading AI pose detection model...</p>
+          <p className="text-white/30 text-xs">First load takes ~3 seconds</p>
         </div>
       )}
 
-      {/* ── CAMERA ACTIVE PHASES (awaiting_height + capturing_front + capturing_side) ── */}
-      {(phase === "capturing_front" || phase === "awaiting_height" || phase === "capturing_side") && (
+      {/* ── CAMERA ACTIVE PHASES (awaiting_height + capturing) ── */}
+      {(capture.phase === "capturing" || capture.phase === "awaiting_height") && (
         <div className="flex flex-col gap-4">
-          {/* Voice mute toggle + caption */}
-          {voice.isSupported && (
-            <div className="flex items-center justify-between max-w-sm mx-auto w-full">
-              <p className="text-xs text-[#565960] truncate flex-1">
-                {voice.currentCaption ?? ""}
-              </p>
-              <button
-                onClick={voice.toggleMute}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-xs font-medium transition shrink-0 ml-2",
-                  voice.muted
-                    ? "bg-[#ECE6D6] text-[#7A6B44] hover:bg-[#ECE6D6]/80"
-                    : "bg-[#FDA600]/15 text-[#FDA600]"
-                )}
-              >
-                {voice.muted ? "🔇 Muted" : "🔊 Voice On"}
-              </button>
-            </div>
-          )}
-
           {/* Camera viewport */}
           <div className="relative rounded-2xl overflow-hidden bg-black aspect-[3/4] max-h-[70vh] mx-auto w-full max-w-sm shadow-2xl">
             <video
@@ -368,135 +244,75 @@ export function AICameraCapture({
             />
             {/* Pose overlay */}
             <PoseOverlay
-              frame={currentFrame}
+              frame={capture.currentFrame}
               canvasRef={canvasRef}
               videoRef={videoRef}
             />
             {/* Calibration guide overlay */}
             <CalibrationGuide
-              phase={phase}
-              qualityScore={currentFrame?.quality ?? 0}
-              estimatedHeight={userHeightCm}
-              tiltStatus={orientation.tiltStatus}
-              caption={voice.currentCaption}
+              phase={capture.phase}
+              qualityScore={capture.currentFrame?.quality ?? 0}
+              estimatedHeight={capture.userHeightCm}
             />
           </div>
 
           {/* Quality indicator */}
           <div className="max-w-sm mx-auto w-full">
-            <QualityBar quality={currentFrame?.quality ?? 0} phase={phase} />
+            <QualityBar quality={capture.currentFrame?.quality ?? 0} />
           </div>
 
           {/* Capture button */}
           <div className="flex gap-3 max-w-sm mx-auto w-full">
             <button
               onClick={handleSubmit}
-              disabled={!currentFrame?.isGoodPose}
+              disabled={!capture.currentFrame?.isGoodPose}
               className={cn(
                 "flex-1 rounded-xl font-semibold py-3 transition flex items-center justify-center gap-2",
-                currentFrame?.isGoodPose
-                  ? "bg-gradient-to-r from-[#01454A] to-[#FDA600] text-white shadow-lg shadow-[#01454A]/25"
-                  : "bg-[#ECE6D6] text-[#7A6B44]/50 cursor-not-allowed"
+                capture.currentFrame?.isGoodPose
+                  ? "bg-gradient-to-r from-[#2D6A4F] to-[#2D6A4F]/70 text-white shadow-lg shadow-[#2D6A4F]/25"
+                  : "bg-white/10 text-white/30 cursor-not-allowed"
               )}
             >
               <IconCheck />
-              {currentFrame?.isGoodPose
-                ? phase === "capturing_side" ? "Capture Side Pose" : "Capture Front Pose"
-                : "Hold Still..."}
-            </button>
-            {phase === "capturing_side" ? (
-              <button
-                onClick={() => skipSideCapture()}
-                className="px-4 py-3 rounded-xl bg-[#ECE6D6] text-[#7A6B44] hover:bg-[#ECE6D6]/80 transition text-sm"
-              >
-                Skip Side
-              </button>
-            ) : (
-              <button
-                onClick={reset}
-                className="px-4 py-3 rounded-xl bg-[#ECE6D6] text-[#7A6B44] hover:bg-[#ECE6D6]/80 transition text-sm"
-              >
-                Cancel
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── SIDE PROMPT PHASE (front captured, asking user to turn) ── */}
-      {phase === "side_prompt" && (
-        <div className="flex flex-col items-center gap-6 py-12 max-w-sm mx-auto text-center">
-          <div className="w-20 h-20 rounded-full bg-[#FDA600]/15 flex items-center justify-center">
-            <svg className="w-10 h-10 text-[#FDA600]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <div>
-            <h3 className="text-[#01454A] font-bold text-xl">Front Pose Captured!</h3>
-            <p className="text-[#7A6B44] text-sm mt-1">
-              Now turn 90° to your right so we can capture your side profile.
-              This improves measurement accuracy by ~30%.
-            </p>
-          </div>
-          <div className="flex flex-col gap-3 w-full">
-            <button
-              onClick={proceedToSideCapture}
-              className="w-full rounded-xl bg-[#FDA600] hover:bg-[#E8960A] text-white
-                         font-semibold py-3 transition flex items-center justify-center gap-2"
-            >
-              <IconCamera />
-              Capture Side Pose
+              {capture.currentFrame?.isGoodPose ? "Capture Measurements" : "Hold Still..."}
             </button>
             <button
-              onClick={skipSideCapture}
-              className="w-full rounded-xl border border-[#ECE6D6] bg-white text-[#7A6B44]
-                         hover:bg-[#F8F5ED] font-semibold text-sm py-3 transition"
+              onClick={capture.reset}
+              className="px-4 py-3 rounded-xl bg-white/10 text-white/60 hover:bg-white/20 transition text-sm"
             >
-              Skip — Submit Front Only
-            </button>
-            <button
-              onClick={reset}
-              className="text-xs text-[#7A6B44] hover:text-[#01454A] transition"
-            >
-              Start Over
+              Cancel
             </button>
           </div>
         </div>
       )}
 
       {/* ── SUBMITTING / PROCESSING PHASES ── */}
-      {(phase === "submitting" || phase === "processing") && (
+      {(capture.phase === "submitting" || capture.phase === "processing") && (
         <div className="flex flex-col items-center gap-6 py-12 max-w-sm mx-auto">
           <div className="relative w-24 h-24">
-            <div className="absolute inset-0 rounded-full border-4 border-[#FDA600]/20" />
-            <div className="absolute inset-0 rounded-full border-4 border-t-[#FDA600] animate-spin" />
-            <div className="absolute inset-0 flex items-center justify-center text-[#FDA600]">
+            <div className="absolute inset-0 rounded-full border-4 border-[#2D6A4F]/20" />
+            <div className="absolute inset-0 rounded-full border-4 border-t-[#2D6A4F] animate-spin" />
+            <div className="absolute inset-0 flex items-center justify-center">
               <IconRuler />
             </div>
           </div>
           <div className="text-center">
-            <p className="text-[#01454A] font-semibold">
-              {phase === "submitting" ? "Uploading scan data..." : "AI is processing your measurements..."}
+            <p className="text-white font-semibold">
+              {capture.phase === "submitting" ? "Uploading scan data..." : "AI is processing your measurements..."}
             </p>
-            <p className="text-[#7A6B44] text-xs mt-1">
-              {phase === "processing" ? "Usually takes 5–10 seconds" : ""}
+            <p className="text-white/40 text-xs mt-1">
+              {capture.phase === "processing" ? "Usually takes 5–10 seconds" : ""}
             </p>
           </div>
-          {/* T-030: Offline indicator */}
-          {isOffline && (
-            <p className="text-xs text-amber-500 font-medium">
-              ⚠ You appear to be offline. Scan will resume when connection returns.
-            </p>
-          )}
           {/* Processing steps */}
-          <div className="w-full space-y-2 text-xs text-[#7A6B44]">
+          <div className="w-full space-y-2 text-xs text-white/40">
             {["Validating pose quality", "Extracting body landmarks", "Computing measurements", "Saving your profile"].map((step, i) => (
               <div key={step} className="flex items-center gap-2">
                 <div className={cn(
                   "w-4 h-4 rounded-full border flex items-center justify-center",
-                  i === 0 ? "border-[#FDA600] bg-[#FDA600]/20" : "border-[#ECE6D6]"
+                  i === 0 ? "border-[#2D6A4F] bg-[#2D6A4F]/20" : "border-white/10"
                 )}>
-                  {i === 0 && <div className="w-1.5 h-1.5 rounded-full bg-[#FDA600] animate-pulse" />}
+                  {i === 0 && <div className="w-1.5 h-1.5 rounded-full bg-[#2D6A4F] animate-pulse" />}
                 </div>
                 <span>{step}</span>
               </div>
@@ -506,55 +322,30 @@ export function AICameraCapture({
       )}
 
       {/* ── COMPLETED PHASE ── */}
-      {phase === "completed" && (
+      {capture.phase === "completed" && (
         <div className="flex flex-col items-center gap-5 py-12 max-w-sm mx-auto text-center">
-          <div className="w-20 h-20 rounded-full bg-[#FDA600]/15 flex items-center justify-center">
-            <svg className="w-10 h-10 text-[#FDA600]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-20 h-20 rounded-full bg-[#2D6A4F]/20 flex items-center justify-center">
+            <svg className="w-10 h-10 text-[#2D6A4F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <div>
-            <h3 className="text-[#01454A] font-bold text-xl">Measurements Captured!</h3>
-            <p className="text-[#7A6B44] text-sm mt-1">
+            <h3 className="text-white font-bold text-xl">Measurements Captured!</h3>
+            <p className="text-white/50 text-sm mt-1">
               Your body measurements have been saved to your profile.
             </p>
           </div>
-          {sessionStatus?.scan_confidence != null && (
-            <div className="text-xs text-[#7A6B44]">
+          {capture.sessionStatus?.scan_confidence != null && (
+            <div className="text-xs text-white/40">
               Scan accuracy:{" "}
-              <span className="text-[#FDA600] font-semibold">
-                {Math.round(sessionStatus.scan_confidence * 100)}%
+              <span className="text-[#2D6A4F] font-semibold">
+                {Math.round(capture.sessionStatus.scan_confidence * 100)}%
               </span>
-            </div>
-          )}
-          {/* T-042: BMI display */}
-          {sessionStatus?.bmi != null && (
-            <div className="text-xs text-[#7A6B44]">
-              BMI:{" "}
-              <span className="text-[#01454A] font-semibold">
-                {sessionStatus.bmi.toFixed(1)}
-              </span>
-            </div>
-          )}
-          {/* T-041: Plausibility warnings display */}
-          {sessionStatus?.plausibility_warnings && sessionStatus.plausibility_warnings.length > 0 && (
-            <div className="w-full rounded-xl border border-amber-300 bg-amber-50 p-3 text-left">
-              <p className="text-xs font-semibold text-amber-700 mb-1">
-                ⚠ Measurement Quality Notes:
-              </p>
-              <ul className="text-xs text-amber-600 space-y-1 list-disc list-inside">
-                {sessionStatus.plausibility_warnings.map((w: string, i: number) => (
-                  <li key={i}>{w}</li>
-                ))}
-              </ul>
-              <p className="text-xs text-amber-500 mt-2">
-                Consider re-scanning for improved accuracy.
-              </p>
             </div>
           )}
           <button
-            onClick={reset}
-            className="text-xs text-[#7A6B44] hover:text-[#01454A] transition"
+            onClick={capture.reset}
+            className="text-xs text-white/40 hover:text-white/70 transition"
           >
             Scan again
           </button>
@@ -562,43 +353,23 @@ export function AICameraCapture({
       )}
 
       {/* ── FAILED PHASE ── */}
-      {phase === "failed" && (
+      {capture.phase === "failed" && (
         <div className="flex flex-col items-center gap-5 py-12 max-w-sm mx-auto text-center">
-          <div className="w-20 h-20 rounded-full bg-red-500/15 flex items-center justify-center">
+          <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center">
             <svg className="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
           <div>
-            <h3 className="text-[#01454A] font-bold">Scan Failed</h3>
-            <p className="text-red-400/80 text-sm mt-1">{error}</p>
-            {isTimedOut && (
-              <p className="text-[#7A6B44] text-xs mt-2">
-                The AI server took too long to respond. This is usually temporary.
-              </p>
-            )}
+            <h3 className="text-white font-bold">Scan Failed</h3>
+            <p className="text-red-400/80 text-sm mt-1">{capture.error}</p>
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={retry}
-              className="rounded-xl bg-[#FDA600] hover:bg-[#E8960A] text-white px-6 py-2.5 font-medium text-sm transition"
-            >
-              Retry Submission
-            </button>
-            <button
-              onClick={reset}
-              className="rounded-xl bg-[#ECE6D6] hover:bg-[#ECE6D6]/80 text-[#01454A] px-6 py-2.5 font-medium text-sm transition"
-            >
-              Try Again
-            </button>
-          </div>
-          {/* T-036: Manual entry fallback */}
-          <a
-            href="/dashboard/measurements/manual"
-            className="text-xs text-[#7A6B44] hover:text-[#01454A] transition underline"
+          <button
+            onClick={capture.reset}
+            className="rounded-xl bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 font-medium text-sm transition"
           >
-            Enter measurements manually instead
-          </a>
+            Try Again
+          </button>
         </div>
       )}
     </div>
@@ -607,32 +378,32 @@ export function AICameraCapture({
 
 // ─── Quality Bar ──────────────────────────────────────────────────────────────
 
-function QualityBar({ quality, phase }: { quality: number; phase?: string }) {
+function QualityBar({ quality }: { quality: number }) {
   const pct = Math.round(quality * 100);
   const color =
-    pct >= 72 ? "bg-[#FDA600]" :
-    pct >= 50 ? "bg-[#FDA600]/70" :
+    pct >= 72 ? "bg-[#2D6A4F]" :
+    pct >= 50 ? "bg-[#F4C430]" :
     "bg-red-500";
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex justify-between text-xs text-[#7A6B44]">
+      <div className="flex justify-between text-xs text-white/40">
         <span>Pose quality</span>
         <span className={cn(
           "font-semibold",
-          pct >= 72 ? "text-[#FDA600]" : pct >= 50 ? "text-[#FDA600]/70" : "text-red-400"
+          pct >= 72 ? "text-[#2D6A4F]" : pct >= 50 ? "text-[#F4C430]" : "text-red-400"
         )}>
           {pct}%
         </span>
       </div>
-      <div className="h-1.5 rounded-full bg-[#ECE6D6] overflow-hidden">
+      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
         <div
           className={cn("h-full rounded-full transition-all duration-300", color)}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="text-xs text-[#7A6B44]/60">
-        {pct >= 72 ? (phase === "capturing_side" ? "✓ Good side pose — ready to capture!" : "✓ Good pose — ready to capture!") :
+      <p className="text-xs text-white/30">
+        {pct >= 72 ? "✓ Good pose — ready to capture!" :
          pct >= 50 ? "Adjust your position..." :
          "Step back and face the camera"}
       </p>

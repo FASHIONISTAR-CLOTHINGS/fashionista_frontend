@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { VendorsClient } from "./VendorsClient";
 
+export const dynamic = "force-dynamic";
+
 // ── Metadata ─────────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
   title: "Our Vendors | Fashionistar — Premium Fashion Designers & Tailors",

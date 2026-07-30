@@ -71,6 +71,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/client/dashboard/orders", label: "My Orders", Icon: Package },
       { href: "/client/dashboard/custom-orders", label: "Custom Orders", Icon: Palette },
       { href: "/client/dashboard/wishlist", label: "Wishlist", Icon: Heart },
+      { href: "/client/dashboard/measurements", label: "AI Measurements", Icon: Ruler },
     ],
   },
   {

@@ -22,6 +22,8 @@ import {
 } from "@/features/catalog";
 import type { CatalogBlogPost } from "@/features/catalog/types/catalog.types";
 
+export const dynamic = "force-dynamic";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────

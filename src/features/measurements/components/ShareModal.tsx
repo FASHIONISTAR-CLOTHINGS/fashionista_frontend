@@ -89,7 +89,7 @@ export function ShareModal({ measurementId, measurementName, isOpen, onClose }: 
           <span className="text-2xl">📏</span>
           <div>
             <p className="text-sm font-semibold text-white">{measurementName ?? "My Measurements"}</p>
-            <p className="text-xs text-brand-gray">Share securely with your tailor or vendor</p>
+            <p className="text-xs text-white/40">Share securely with your tailor or vendor</p>
           </div>
         </div>
 
@@ -102,7 +102,7 @@ export function ShareModal({ measurementId, measurementName, isOpen, onClose }: 
                 { icon: "⏰", text: "Auto-expires in 72 hours for your privacy" },
                 { icon: "🚫", text: "No personal contact info is shared — measurements only" },
               ].map(({ icon, text }) => (
-                <div key={text} className="flex items-start gap-2.5 text-xs text-brand-gray">
+                <div key={text} className="flex items-start gap-2.5 text-xs text-white/40">
                   <span className="text-sm flex-shrink-0">{icon}</span>
                   <span>{text}</span>
                 </div>
@@ -120,12 +120,12 @@ export function ShareModal({ measurementId, measurementName, isOpen, onClose }: 
                   id="share-consent-checkbox"
                 />
                 <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
-                  consentChecked ? "bg-brand-gold border-brand-gold" : "border-white/30 group-hover:border-white/50"
+                  consentChecked ? "bg-[#F4C430] border-[#F4C430]" : "border-white/30 group-hover:border-white/50"
                 }`}>
                   {consentChecked && <span className="text-xs text-white font-bold">✓</span>}
                 </div>
               </div>
-              <span className="text-xs text-brand-gray leading-relaxed">
+              <span className="text-xs text-white/40 leading-relaxed">
                 I consent to sharing my measurement data with the selected recipient.
                 I understand this is GDPR Article 6(1)(a) lawful processing and I can
                 revoke access at any time.
@@ -150,7 +150,7 @@ export function ShareModal({ measurementId, measurementName, isOpen, onClose }: 
           <>
             {/* Share link */}
             <div className="space-y-2">
-              <p className="text-xs font-medium text-brand-gray uppercase tracking-wide">Share Link</p>
+              <p className="text-xs font-medium text-white/40 uppercase tracking-wide">Share Link</p>
               <div className="flex gap-2">
                 <input
                   readOnly
@@ -172,7 +172,7 @@ export function ShareModal({ measurementId, measurementName, isOpen, onClose }: 
 
             {/* Expiry */}
             <div className="flex items-center justify-between text-xs">
-              <span className="text-brand-gray">
+              <span className="text-white/40">
                 Expires: <span className="text-white">
                   {new Date(token.expires_at).toLocaleString("en-NG", {
                     dateStyle: "medium", timeStyle: "short",
@@ -189,7 +189,7 @@ export function ShareModal({ measurementId, measurementName, isOpen, onClose }: 
             </div>
 
             {/* Security notice */}
-            <div className="p-3 rounded-xl bg-brand-gold/8 border border-brand-gold/20 text-xs text-brand-gold">
+            <div className="p-3 rounded-xl bg-[#2D6A4F]/10 border border-[#2D6A4F]/20 text-xs text-[#52B788]">
               🔒 This link is encrypted and visible only to your chosen recipient.
             </div>
           </>

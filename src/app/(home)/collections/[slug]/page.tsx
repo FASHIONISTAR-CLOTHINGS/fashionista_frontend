@@ -26,6 +26,8 @@ import { CollectionStatsBar } from "@/features/catalog/components/CollectionStat
 import { VendorSpotlightCards } from "@/features/catalog/components/VendorSpotlightCards";
 import CollectionTabsClient from "./CollectionTabsClient";
 
+export const dynamic = "force-dynamic";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────

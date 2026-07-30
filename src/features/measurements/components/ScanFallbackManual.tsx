@@ -1,120 +1,158 @@
 "use client";
-
 /**
  * @file ScanFallbackManual.tsx
- * @description Manual measurement entry fallback.
+ * @description Step 38 / TASK-027: "Can't Scan?" fallback panel for the body scan flow.
  *
- * Shown when AI scan fails or user prefers manual entry.
- * Simple form with measurement inputs (cm).
+ * Shown as an optional alternative on the scan page when:
+ *   - Camera permission is denied (phase === 'failed' with camera error)
+ *   - User explicitly clicks "Enter measurements manually"
+ *
+ * Routes to the existing MeasurementProfile manual creation form.
+ * Ensures zero measurement friction across all user types (accessibility).
+ *
+ * Brand: Forest Green + Golden Yellow on dark background
  */
 
-import { useState, useCallback } from "react";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
-export interface ScanFallbackManualProps {
-  variant?: "inline" | "full";
-  onSubmit?: (measurements: Record<string, number>) => void;
-  onCancel?: () => void;
-  className?: string;
+interface ScanFallbackManualProps {
+  /** Show as inline expandable panel (default) or full-screen modal */
+  variant?: "inline" | "modal";
+  /** Called when user dismisses (modal variant only) */
+  onDismiss?: () => void;
+  /** Destination URL for the manual form. Defaults to dashboard measurements. */
+  manualEntryUrl?: string;
 }
 
-const FIELDS = [
-  { key: "height", label: "Height", placeholder: "175" },
-  { key: "shoulder_width", label: "Shoulder Width", placeholder: "45" },
-  { key: "bust", label: "Bust / Chest", placeholder: "95" },
-  { key: "waist", label: "Waist", placeholder: "80" },
-  { key: "hips", label: "Hips", placeholder: "100" },
-  { key: "arm_length", label: "Arm Length", placeholder: "65" },
-  { key: "inseam", label: "Inseam", placeholder: "80" },
-  { key: "thigh", label: "Thigh", placeholder: "55" },
-  { key: "neck", label: "Neck", placeholder: "38" },
-  { key: "wrist", label: "Wrist", placeholder: "17" },
-  { key: "knee", label: "Knee", placeholder: "40" },
-  { key: "ankle", label: "Ankle", placeholder: "22" },
+const REASONS = [
+  { icon: "📷", text: "Camera permission denied" },
+  { icon: "📶", text: "Slow connection / model failed to load" },
+  { icon: "♿", text: "Accessibility or device limitations" },
+  { icon: "👗", text: "Measurements already known" },
 ];
 
 export function ScanFallbackManual({
-  variant = "full",
-  onSubmit,
-  onCancel,
-  className = "",
+  variant = "inline",
+  onDismiss,
+  manualEntryUrl = "/client/dashboard/profile",
 }: ScanFallbackManualProps) {
-  const [values, setValues] = useState<Record<string, string>>({});
+  const router = useRouter();
 
-  const handleChange = useCallback((key: string, val: string) => {
-    setValues((prev) => ({ ...prev, [key]: val }));
-  }, []);
-
-  const handleSubmit = useCallback(() => {
-    const measurements: Record<string, number> = {};
-    for (const field of FIELDS) {
-      const val = parseFloat(values[field.key] ?? "");
-      if (!isNaN(val) && val > 0) {
-        measurements[field.key] = val;
-      }
-    }
-    onSubmit?.(measurements);
-  }, [values, onSubmit]);
-
-  return (
-    <div className={`flex flex-col gap-5 ${className}`}>
+  const content = (
+    <div className="flex flex-col gap-5">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-[#FDA600]/15 flex items-center justify-center text-[#FDA600]">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
+      <div className="text-center">
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3"
+          style={{ background: "rgba(244,196,48,0.12)", border: "1px solid rgba(244,196,48,0.25)" }}
+        >
+          <span className="text-3xl">📋</span>
         </div>
-        <div>
-          <h3 className="font-semibold text-[#01454A]">Manual Entry</h3>
-          <p className="text-xs text-[#7A6B44]">
-            Enter your measurements in centimetres
-          </p>
-        </div>
+        <h3 className="text-lg font-black text-white">Can&apos;t use the camera?</h3>
+        <p className="text-sm text-white/50 mt-1">
+          No problem — enter your measurements manually in under 2 minutes.
+        </p>
       </div>
 
-      {/* Measurement grid */}
-      <div className={`grid gap-3 ${variant === "inline" ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"}`}>
-        {FIELDS.map((field) => (
-          <div key={field.key} className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-[#565960]">{field.label}</label>
-            <div className="relative">
-              <input
-                type="number"
-                placeholder={field.placeholder}
-                value={values[field.key] ?? ""}
-                onChange={(e) => handleChange(field.key, e.target.value)}
-                className="w-full rounded-xl bg-[#F4F3EC] border border-[#ECE6D6] text-[#141414]
-                           px-3 py-2 text-sm placeholder:text-[#7A6B44]/40
-                           focus:outline-none focus:border-[#FDA600] focus:ring-1 focus:ring-[#FDA600]
-                           transition pr-8"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#7A6B44]/50">
-                cm
-              </span>
-            </div>
-          </div>
+      {/* Reason chips */}
+      <div className="flex flex-wrap gap-2 justify-center">
+        {REASONS.map(r => (
+          <span
+            key={r.text}
+            className="flex items-center gap-1.5 text-[11px] text-white/50 px-2.5 py-1 rounded-full"
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
+          >
+            <span>{r.icon}</span>
+            {r.text}
+          </span>
         ))}
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-3">
-        {onCancel && (
-          <button
-            onClick={onCancel}
-            className="flex-1 rounded-xl border border-[#ECE6D6] bg-white text-[#565960]
-                       hover:bg-[#F8F5ED] font-semibold text-sm py-3 transition-colors"
-          >
-            Cancel
-          </button>
-        )}
-        <button
-          onClick={handleSubmit}
-          className="flex-1 rounded-xl bg-[#01454A] hover:bg-[#016B73] text-white
-                     font-semibold text-sm py-3 transition-colors"
-        >
-          Submit Manual Measurements
-        </button>
+      {/* What you'll enter */}
+      <div
+        className="rounded-2xl p-4"
+        style={{ background: "rgba(45,106,79,0.08)", border: "1px solid rgba(45,106,79,0.2)" }}
+      >
+        <p className="text-xs font-semibold text-[#52B788] mb-2 uppercase tracking-wider">
+          You&apos;ll fill in:
+        </p>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+          {["Bust / Chest", "Waist", "Hips", "Shoulder Width",
+            "Arm Length", "Inseam", "Height", "Weight (opt.)"].map(field => (
+            <div key={field} className="flex items-center gap-1.5">
+              <div className="w-1 h-1 rounded-full bg-[#2D6A4F]" />
+              <span className="text-xs text-white/60">{field}</span>
+            </div>
+          ))}
+        </div>
       </div>
+
+      {/* CTA */}
+      <button
+        onClick={() => router.push(manualEntryUrl)}
+        className="w-full rounded-2xl py-3.5 font-black text-sm transition-all active:scale-95"
+        style={{
+          background: "linear-gradient(135deg, #F4C430, #C9A227)",
+          color: "#0A0A0A",
+          boxShadow: "0 4px 20px rgba(244,196,48,0.3)",
+        }}
+        id="manual-entry-cta-btn"
+      >
+        Enter Measurements Manually →
+      </button>
+
+      {/* Back / dismiss */}
+      {onDismiss && (
+        <button
+          onClick={onDismiss}
+          className="text-xs text-white/30 hover:text-white/60 transition-colors text-center"
+          id="dismiss-fallback-btn"
+        >
+          Try camera again
+        </button>
+      )}
     </div>
+  );
+
+  if (variant === "modal") {
+    return (
+      <motion.div
+        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+        style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(12px)" }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.div
+          className="w-full max-w-sm rounded-3xl p-6"
+          style={{
+            background: "linear-gradient(145deg, #0D1810, #0A0A0A)",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}
+          initial={{ y: 60, scale: 0.95, opacity: 0 }}
+          animate={{ y: 0,  scale: 1,    opacity: 1 }}
+          exit={{ y: 60, opacity: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+        >
+          {content}
+        </motion.div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      className="rounded-2xl p-5 w-full"
+      style={{
+        background: "rgba(255,255,255,0.03)",
+        border: "1px solid rgba(255,255,255,0.08)",
+      }}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      {content}
+    </motion.div>
   );
 }

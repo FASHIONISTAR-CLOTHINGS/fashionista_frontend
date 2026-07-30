@@ -25,7 +25,14 @@ NGROK ?= $(PNPM) dlx --package ngrok@4 ngrok
 NEXT_DEV_HOST ?= 0.0.0.0
 NEXT_DEV_PORT ?= 3000
 NEXT_DEV_MEMORY_MB ?= 3072
-NEXT_DEV_ENV = NODE_OPTIONS=--max-old-space-size=$(NEXT_DEV_MEMORY_MB)
+
+ifeq ($(OS),Windows_NT)
+  NEXT_DEV_ENV = set "NODE_OPTIONS=--max-old-space-size=$(NEXT_DEV_MEMORY_MB)" &&
+  NEXT_BIN = node_modules\.bin\next.CMD
+else
+  NEXT_DEV_ENV = NODE_OPTIONS=--max-old-space-size=$(NEXT_DEV_MEMORY_MB)
+  NEXT_BIN = $(PNPM) exec next
+endif
 
 # Detect if running on Windows and inside OneDrive to fallback to webpack automatically
 USE_WEBPACK :=
@@ -62,11 +69,11 @@ dev: ## Start Next.js development server (Webpack fallback on Windows OneDrive)
 ifneq ($(USE_WEBPACK),)
 	@echo "$(YELLOW)⚠ Detected Windows + OneDrive. Falling back to Webpack to prevent Turbopack watch-state deadlocks.$(NC)"
 endif
-	$(NEXT_DEV_ENV) $(PNPM) exec next dev $(USE_WEBPACK) --hostname $(NEXT_DEV_HOST) --port $(NEXT_DEV_PORT)
+	$(NEXT_DEV_ENV) $(NEXT_BIN) dev $(USE_WEBPACK) --hostname $(NEXT_DEV_HOST) --port $(NEXT_DEV_PORT)
 
 dev-webpack: ## Start Next.js dev server with Webpack (fallback — use --webpack flag)
 	@echo "$(CYAN)Starting Next.js dev server with Webpack (Turbopack disabled)...$(NC)"
-	$(NEXT_DEV_ENV) $(PNPM) exec next dev --webpack --hostname $(NEXT_DEV_HOST) --port $(NEXT_DEV_PORT)
+	$(NEXT_DEV_ENV) $(NEXT_BIN) dev --webpack --hostname $(NEXT_DEV_HOST) --port $(NEXT_DEV_PORT)
 
 build: ## Build production bundle (auto-clears .next cache to prevent Windows/OneDrive EPERM)
 	@echo "$(CYAN)Building for production...$(NC)"
@@ -243,17 +250,27 @@ ci-e2e: ci test-e2e ## Run CI pipeline with E2E tests
 ##@ Deployment
 # ═══════════════════════════════════════════════════════════════
 
-deploy-vercel: ## Deploy to Vercel (production)
-	@echo "$(CYAN)Deploying to Vercel...$(NC)"
-	npx vercel --prod
-	@echo "$(GREEN)✓ Deployed to Vercel$(NC)"
+deploy-hf: ## Deploy to Hugging Face Spaces (via GitHub Actions CI/CD)
+	@echo "$(CYAN)Deploying to Hugging Face Spaces...$(NC)"
+	@echo "$(YELLOW)  Push to main triggers GitHub Actions → HF Space auto-build$(NC)"
+	@echo "$(YELLOW)  Space: https://huggingface.co/spaces/fashionistar-ai/fashionistar-frontend$(NC)"
+	@echo "$(YELLOW)  URL:   https://fashionistar-ai-fashionistar-frontend.hf.space$(NC)"
+	@git push origin main
+	@echo "$(GREEN)✓ Pushed to main — monitor CI/CD at GitHub Actions$(NC)"
 
-deploy-vercel-preview: ## Deploy to Vercel (preview)
-	@echo "$(CYAN)Deploying preview to Vercel...$(NC)"
-	npx vercel
-	@echo "$(GREEN)✓ Preview deployed$(NC)"
+deploy-hf-logs: ## Fetch HF Space build/run logs (requires HF_TOKEN env var)
+	@echo "$(CYAN)Fetching HF Space build logs...$(NC)"
+	@curl.exe -N -H "Authorization: Bearer $$HF_TOKEN" "https://huggingface.co/api/spaces/fashionistar-ai/fashionistar-frontend/logs/build" 2>/dev/null || echo "$(RED)Set HF_TOKEN env var first$(NC)"
 
-deploy-docker: docker-build docker-up ## Deploy via Docker
+deploy-hf-run-logs: ## Fetch HF Space runtime logs (requires HF_TOKEN env var)
+	@echo "$(CYAN)Fetching HF Space runtime logs...$(NC)"
+	@curl.exe -N -H "Authorization: Bearer $$HF_TOKEN" "https://huggingface.co/api/spaces/fashionistar-ai/fashionistar-frontend/logs/run" 2>/dev/null || echo "$(RED)Set HF_TOKEN env var first$(NC)"
+
+deploy-hf-status: ## Check HF Space build status (requires HF_TOKEN env var)
+	@echo "$(CYAN)Checking HF Space status...$(NC)"
+	@curl.exe -sf -H "Authorization: Bearer $$HF_TOKEN" "https://huggingface.co/api/spaces/fashionistar-ai/fashionistar-frontend" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); r=d.get('runtime',{}); print(f'Stage: {r.get(\"stage\",\"unknown\")}'); print(f'Hardware: {r.get(\"hardware',{}).get('current','unknown')}')" 2>/dev/null || echo "$(RED)Set HF_TOKEN env var first$(NC)"
+
+deploy-docker: docker-build docker-up ## Deploy via Docker (local)
 	@echo "$(GREEN)✓ Deployed via Docker$(NC)"
 
 # ═══════════════════════════════════════════════════════════════

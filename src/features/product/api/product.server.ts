@@ -22,7 +22,7 @@ import type { ProductDetail, ProductDetailBundle, ProductListItem } from "../typ
 import { unwrapApiData } from "@/core/api/response";
 import { getServerBackendRootUrl } from "@/core/config/api-roots";
 
-const METADATA_TIMEOUT_MS = 2_500;
+const METADATA_TIMEOUT_MS = 10_000;
 
 /** Shared headers for internal server-to-server requests. */
 function serverHeaders(): HeadersInit {

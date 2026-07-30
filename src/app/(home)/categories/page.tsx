@@ -14,6 +14,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { CatalogCategoryGrid, CatalogCategoryGridSkeleton } from "@/features/catalog";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 60;
 
 export const metadata: Metadata = {

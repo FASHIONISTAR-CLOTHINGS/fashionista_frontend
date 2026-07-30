@@ -5,14 +5,15 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
+const FALLBACK_BACKEND_URL = "https://fashionistar-ai-fashionistar-api-v1.hf.space";
 const backendUrl = (() => {
   const raw =
     process.env.BACKEND_INTERNAL_URL ||
     process.env.NEXT_PUBLIC_BACKEND_URL ||
-    "http://127.0.0.1:8001";
-  if (!raw || !raw.startsWith("http://") && !raw.startsWith("https://")) {
-    console.warn(`[next.config] backendUrl "${raw}" is not a valid URL, falling back to http://127.0.0.1:8001`);
-    return "http://127.0.0.1:8001";
+    FALLBACK_BACKEND_URL;
+  if (!raw || (!raw.startsWith("http://") && !raw.startsWith("https://"))) {
+    console.warn(`[next.config] backendUrl is not a valid URL, using fallback: ${FALLBACK_BACKEND_URL}`);
+    return FALLBACK_BACKEND_URL;
   }
   return raw;
 })();
@@ -61,6 +62,7 @@ const allowedDevOrigins = unique([
   "*.ngrok-free.app",
   "*.ngrok-free.dev",
   "*.trycloudflare.com",
+  "fashionistar-ai-fashionistar-frontend.hf.space",
   normalizeDevOrigin(process.env.NEXT_PUBLIC_APP_URL),
   normalizeDevOrigin(process.env.NEXT_PUBLIC_FRONTEND_TUNNEL_URL),
   normalizeDevOrigin(backendUrl),
@@ -121,6 +123,7 @@ const nextConfig = {
   output: "standalone",
   distDir,
   allowedDevOrigins,
+  skipTrailingSlashRedirect: true,
   experimental: {
     // cpus: 1,   // Uncomment for debugging: force single-threaded builds to avoid worker spawning issues in Windows/OneDrive setups.
     //   // cpus: 1 intentionally REMOVED — caused 404s on first route request and 
@@ -143,6 +146,31 @@ const nextConfig = {
     contentDispositionType: "attachment",
   },
   headers: async () => [
+    {
+      // ── MediaPipe SW: always revalidate so updates deploy immediately ──
+      source: "/sw-mediapipe.js",
+      headers: [
+        { key: "Cache-Control", value: "public, max-age=0, must-revalidate" },
+        { key: "Service-Worker-Allowed", value: "/" },
+      ],
+    },
+    {
+      // ── WASM cross-origin isolation (required for SharedArrayBuffer + SIMD) ──
+      // Applied only to the scan page to avoid breaking other routes
+      source: "/client/dashboard/measurements/scan/:path*",
+      headers: [
+        { key: "Cross-Origin-Opener-Policy",   value: "same-origin" },
+        { key: "Cross-Origin-Embedder-Policy",  value: "require-corp" },
+      ],
+    },
+    {
+      // ── MediaPipe WASM binaries — immutable, versioned by npm version ──
+      source: "/_next/static/:path*.wasm",
+      headers: [
+        { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        { key: "Cross-Origin-Resource-Policy", value: "cross-origin" },
+      ],
+    },
     {
       // Static preloader CSS — cache 1 year, immutable (no personalization)
       source: "/preloader.css",
@@ -231,12 +259,12 @@ const nextConfig = {
   rewrites: async () => ({
     beforeFiles: [
       {
-        source: "/api/v1/:path*",
-        destination: `${backendUrl}/api/v1/:path*`,
+        source: "/api/v1/:path*/",
+        destination: `${backendUrl}/api/v1/:path*/`,
       },
       {
-        source: "/api/v1/ninja/:path*",
-        destination: `${backendUrl}/api/v1/ninja/:path*`,
+        source: "/api/v1/:path*",
+        destination: `${backendUrl}/api/v1/:path*/`,
       },
       {
         source: "/media/:path*",
@@ -286,7 +314,7 @@ export default withSentryConfig(withBundleAnalyzer(nextConfig), {
     // See the following for more information:
     // https://docs.sentry.io/product/crons/
     // https://vercel.com/docs/cron-jobs
-    automaticVercelMonitors: true,
+    automaticVercelMonitors: false,
 
     // Tree-shaking options for reducing bundle size
     treeshake: {

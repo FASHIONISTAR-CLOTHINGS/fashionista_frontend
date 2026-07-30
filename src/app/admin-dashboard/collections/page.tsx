@@ -1,5 +1,3 @@
-// @ts-nocheck
-import React from "react";
 import Link from "next/link";
 import man from "../../../../public/couple_assets.svg";
 import man2 from "../../../../public/woman3.svg";

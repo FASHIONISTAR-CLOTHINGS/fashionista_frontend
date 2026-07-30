@@ -1,6 +1,3 @@
-// @ts-nocheck
-import React from "react";
-
 const page = () => {
   const reviews = [
     {

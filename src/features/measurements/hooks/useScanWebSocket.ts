@@ -1,243 +1,192 @@
 "use client";
 /**
  * @file useScanWebSocket.ts
- * @description T-032: WebSocket hook for real-time scan progress updates.
+ * @description GAP-4 FIX: Real-time scan progress hook via Django Channels WebSocket.
  *
- * Features:
- * - Auto-reconnect with exponential backoff (max 5 attempts)
- * - Connection status tracking
- * - Scan phase event forwarding
- * - Graceful fallback to polling when WS fails
- * - Heartbeat-aware: responds to server heartbeat events
+ * Replaces the 2-second polling loop in useScanSession with a WebSocket
+ * connection to ws://<api>/ws/scan/<session_id>/?token=<JWT>.
  *
- * Usage:
- *   const { isConnected, scanPhase, lastEvent, reconnect } = useScanWebSocket(sessionId);
+ * Events received from the backend:
+ *   status_snapshot     — sent immediately on connect (current DB state)
+ *   processing_started  — Celery task started
+ *   landmarks_validated — pose quality passed
+ *   measurements_extracted — geometry pipeline complete
+ *   profile_saved       — MeasurementProfile created
+ *   completed           — everything done; measurements_cm is populated
+ *   failed              — processing failed; error_message is set
+ *
+ * Fallback strategy:
+ *   If the WebSocket fails to connect (network error, server not ready) the
+ *   hook exposes `isWebSocketError` so the caller can fall back to polling.
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { readAccessToken } from "@/features/auth/lib/auth-session.client";
+import { useEffect, useRef, useState, useCallback } from "react";
+import type { ScanStatusResponse } from "../api/scan.api";
+import { normalizeScanMeasurements } from "../api/scan.api";
 
-export type WSConnectionStatus = "idle" | "connecting" | "connected" | "disconnected" | "error" | "polling";
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-export interface ScanWSEvent {
-  event: string;
+interface ScanWsEvent {
+  event:      string;
   session_id: string;
-  status: string;
-  scan_phase: string | null;
-  data: Record<string, unknown>;
+  status:     ScanStatusResponse["status"];
+  data: {
+    quality_score?:         number | null;
+    measurements_cm?:       Record<string, number | null> | null;
+    plausibility_warnings?: string[];
+    correction_applied?:    string;
+    bmi?:                   number | null;
+    profile_id?:            string | null;
+    error_message?:         string | null;
+  };
 }
 
-const MAX_RECONNECT_ATTEMPTS = 5;
-const INITIAL_BACKOFF_MS = 1000;
-const MAX_BACKOFF_MS = 16000;
-const POLL_INTERVAL_MS = 3000;
+interface UseScanWebSocketOptions {
+  /** JWT access token for ?token= query param */
+  accessToken: string | null;
+  /** Callback fired on every status event */
+  onStatusUpdate?: (status: ScanStatusResponse) => void;
+  /** Callback fired when status transitions to "completed" */
+  onCompleted?:    (status: ScanStatusResponse) => void;
+  /** Callback fired when status transitions to "failed" */
+  onFailed?:       (errorMessage: string) => void;
+}
 
-function getWsBaseUrl(): string {
-  if (typeof window === "undefined") return "";
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const apiRoot = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "";
-  if (apiRoot) {
-    try {
-      const url = new URL(apiRoot);
-      return `${url.protocol === "https:" ? "wss:" : "ws:"}//${url.host}`;
-    } catch {
-      // fall through
+interface UseScanWebSocketReturn {
+  /** Last received status from WebSocket (or null if not yet received) */
+  status:           ScanStatusResponse | null;
+  isConnected:      boolean;
+  isWebSocketError: boolean;
+  /** Call to close the WebSocket (e.g. on component unmount or scan complete) */
+  disconnect:       () => void;
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8001";
+const WS_BASE_URL =
+  (process.env.NEXT_PUBLIC_WS_URL ?? BACKEND_URL)
+    .replace(/^http(s?)/, "ws$1")
+    .replace(/\/$/, "");
+
+const MAX_RECONNECT_ATTEMPTS = 3;
+const RECONNECT_DELAY_MS     = 2_000;
+
+// ─── Hook ────────────────────────────────────────────────────────────────────
+
+export function useScanWebSocket(
+  sessionId: string | null,
+  options: UseScanWebSocketOptions
+): UseScanWebSocketReturn {
+  const { accessToken, onStatusUpdate, onCompleted, onFailed } = options;
+
+  const [status,           setStatus]           = useState<ScanStatusResponse | null>(null);
+  const [isConnected,      setIsConnected]       = useState(false);
+  const [isWebSocketError, setIsWebSocketError]  = useState(false);
+
+  const wsRef              = useRef<WebSocket | null>(null);
+  const reconnectAttempts  = useRef(0);
+  const isMountedRef       = useRef(true);
+
+  const disconnect = useCallback(() => {
+    if (wsRef.current) {
+      wsRef.current.close(1000, "client_disconnect");
+      wsRef.current = null;
     }
-  }
-  return `${protocol}//${window.location.host}`;
-}
-
-function getApiBaseUrl(): string {
-  if (typeof window === "undefined") return "";
-  const apiRoot = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "";
-  if (apiRoot) return apiRoot.replace(/\/$/, "");
-  return `${window.location.protocol}//${window.location.host}`;
-}
-
-export function useScanWebSocket(sessionId: string | null) {
-  const [connectionStatus, setConnectionStatus] = useState<WSConnectionStatus>("idle");
-  const [lastEvent, setLastEvent] = useState<ScanWSEvent | null>(null);
-  const [scanPhase, setScanPhase] = useState<string | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
-  const reconnectAttemptsRef = useRef(0);
-  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mountedRef = useRef(true);
-  const connectRef = useRef<(sid: string) => void>(() => {});
-
-  const startPolling = useCallback((sid: string) => {
-    if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
-
-    const poll = async () => {
-      if (!mountedRef.current) return;
-      try {
-        const token = readAccessToken();
-        const headers: Record<string, string> = { "Content-Type": "application/json" };
-        if (token) headers["Authorization"] = `Bearer ${token}`;
-
-        const res = await fetch(`${getApiBaseUrl()}/api/scan/sessions/${sid}/`, { headers });
-        if (!res.ok) return;
-        const data = await res.json();
-        setLastEvent({
-          event: "poll_snapshot",
-          session_id: sid,
-          status: data.status || "unknown",
-          scan_phase: data.scan_phase || null,
-          data,
-        });
-        if (data.scan_phase) setScanPhase(data.scan_phase);
-
-        if (data.status === "completed" || data.status === "failed") return;
-      } catch {
-        // silently retry on next interval
-      }
-      if (mountedRef.current) {
-        pollTimerRef.current = setTimeout(poll, POLL_INTERVAL_MS);
-      }
-    };
-
-    setConnectionStatus("polling");
-    poll();
+    setIsConnected(false);
   }, []);
 
-  const connect = useCallback((sid: string) => {
-    if (!sid || typeof window === "undefined") return;
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => { isMountedRef.current = false; };
+  }, []);
 
-    const wsBase = getWsBaseUrl();
-    if (!wsBase) return;
+  useEffect(() => {
+    if (!sessionId || !accessToken) return;
 
-    // Build WebSocket URL with JWT token for authentication
-    // Backend JWTQueryAuthMiddleware requires ?token=<access_token> query param
-    let wsUrl = `${wsBase}/ws/scan/${sid}/`;
-    try {
-      const token = readAccessToken();
-      if (token) {
-        wsUrl += `?token=${encodeURIComponent(token)}`;
-      }
-    } catch {
-      // token not available — connect without token (will fail with 403 but won't crash)
-    }
+    const url = `${WS_BASE_URL}/ws/scan/${sessionId}/?token=${encodeURIComponent(accessToken)}`;
 
-    setConnectionStatus("connecting");
+    function connect() {
+      if (!isMountedRef.current) return;
 
-    try {
-      const ws = new WebSocket(wsUrl);
+      const ws = new WebSocket(url);
       wsRef.current = ws;
 
       ws.onopen = () => {
-        if (!mountedRef.current) return;
-        setConnectionStatus("connected");
-        reconnectAttemptsRef.current = 0;
-        if (pollTimerRef.current) {
-          clearTimeout(pollTimerRef.current);
-          pollTimerRef.current = null;
-        }
+        if (!isMountedRef.current) { ws.close(); return; }
+        reconnectAttempts.current = 0;
+        setIsConnected(true);
+        setIsWebSocketError(false);
       };
 
-      ws.onmessage = (ev: MessageEvent) => {
-        if (!mountedRef.current) return;
+      ws.onmessage = (event) => {
+        if (!isMountedRef.current) return;
         try {
-          const data: ScanWSEvent = JSON.parse(ev.data);
-          if (data.event === "heartbeat") return;
-          setLastEvent(data);
-          if (data.scan_phase) {
-            setScanPhase(data.scan_phase);
+          const msg: ScanWsEvent = JSON.parse(event.data as string);
+
+          // Build a ScanStatusResponse from the WS event
+          const normalizedMeasurements = normalizeScanMeasurements(
+            (msg.data.measurements_cm ?? undefined) as Record<string, number | null> | undefined
+          );
+
+          const updatedStatus: ScanStatusResponse = {
+            session_id:            msg.session_id,
+            status:                msg.status ?? "processing",
+            scan_confidence:       msg.data.quality_score ?? undefined,
+            measurements_cm:       normalizedMeasurements,
+            extracted_measurements: normalizedMeasurements,
+            plausibility_warnings: msg.data.plausibility_warnings ?? [],
+            correction_applied:    msg.data.correction_applied,
+            bmi:                   msg.data.bmi ?? undefined,
+            error_message:         msg.data.error_message ?? undefined,
+            measurement_profile_id: msg.data.profile_id ?? undefined,
+          };
+
+          setStatus(updatedStatus);
+          onStatusUpdate?.(updatedStatus);
+
+          if (msg.status === "completed" || msg.event === "completed") {
+            onCompleted?.(updatedStatus);
+            ws.close(1000, "scan_completed");
+          }
+          if (msg.status === "failed" || msg.event === "failed") {
+            onFailed?.(msg.data.error_message ?? "Scan processing failed.");
+            ws.close(1000, "scan_failed");
           }
         } catch {
-          // ignore malformed messages
+          // Malformed JSON — ignore silently
         }
       };
 
       ws.onerror = () => {
-        if (!mountedRef.current) return;
-        setConnectionStatus("error");
+        if (!isMountedRef.current) return;
+        setIsConnected(false);
       };
 
-      ws.onclose = () => {
-        if (!mountedRef.current) return;
-        setConnectionStatus("disconnected");
+      ws.onclose = (closeEvent) => {
+        if (!isMountedRef.current) return;
+        setIsConnected(false);
 
-        // Auto-reconnect with exponential backoff
-        if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
-          const attempt = reconnectAttemptsRef.current;
-          const backoff = Math.min(
-            INITIAL_BACKOFF_MS * Math.pow(2, attempt),
-            MAX_BACKOFF_MS
-          );
-          reconnectAttemptsRef.current += 1;
-
-          reconnectTimerRef.current = setTimeout(() => {
-            if (mountedRef.current && sid) {
-              connectRef.current(sid);
-            }
-          }, backoff);
-        } else {
-          // All reconnect attempts exhausted — fall back to polling
-          startPolling(sid);
+        // Reconnect unless intentional close (code 1000) or max attempts reached
+        if (
+          closeEvent.code !== 1000 &&
+          reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS
+        ) {
+          reconnectAttempts.current += 1;
+          setTimeout(connect, RECONNECT_DELAY_MS * reconnectAttempts.current);
+        } else if (reconnectAttempts.current >= MAX_RECONNECT_ATTEMPTS) {
+          setIsWebSocketError(true);
         }
       };
-    } catch {
-      setConnectionStatus("error");
-      startPolling(sid);
     }
-  }, [startPolling]);
 
-  useEffect(() => {
-    connectRef.current = connect;
-  }, [connect]);
+    connect();
 
-  const disconnect = useCallback(() => {
-    if (reconnectTimerRef.current) {
-      clearTimeout(reconnectTimerRef.current);
-      reconnectTimerRef.current = null;
-    }
-    if (pollTimerRef.current) {
-      clearTimeout(pollTimerRef.current);
-      pollTimerRef.current = null;
-    }
-    reconnectAttemptsRef.current = 0;
-    if (wsRef.current) {
-      wsRef.current.onclose = null;
-      wsRef.current.close();
-      wsRef.current = null;
-    }
-    setConnectionStatus("idle");
-    setScanPhase(null);
-    setLastEvent(null);
-  }, []);
-
-  const reconnect = useCallback(() => {
-    if (sessionId) {
-      reconnectAttemptsRef.current = 0;
-      if (pollTimerRef.current) {
-        clearTimeout(pollTimerRef.current);
-        pollTimerRef.current = null;
-      }
-      connect(sessionId);
-    }
-  }, [sessionId, connect]);
-
-  // Connect when sessionId is provided
-  useEffect(() => {
-    mountedRef.current = true;
-    if (sessionId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      connect(sessionId);
-    }
     return () => {
-      mountedRef.current = false;
-      disconnect();
+      wsRef.current?.close(1000, "component_unmount");
+      wsRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId]);
+  }, [sessionId, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return {
-    connectionStatus,
-    isConnected: connectionStatus === "connected",
-    isPolling: connectionStatus === "polling",
-    lastEvent,
-    scanPhase,
-    reconnect,
-    disconnect,
-  };
+  return { status, isConnected, isWebSocketError, disconnect };
 }

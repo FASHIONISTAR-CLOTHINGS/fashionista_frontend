@@ -1,0 +1,92 @@
+# =============================================================================
+# FASHIONISTAR — Frontend Dockerfile (Hugging Face Spaces)
+# =============================================================================
+# Target:  huggingface.co/spaces/fashionistar/fashionistar-frontend
+# Port:    7860 (HF mandatory)
+# UID:     1000 (HF mandatory)
+#
+# Key differences from the root Dockerfile:
+#   ✓ Port 7860 instead of 3000
+#   ✓ UID 1000 (appuser) instead of 1001 (nextjs)
+#   ✓ dos2unix included for CRLF safety
+#   ✓ HF Spaces URLs as ARG defaults
+#   ✓ Cloudinary build args for image optimization config
+# =============================================================================
+
+# ── Stage 1: base with pnpm ──────────────────────────────────────────────────
+FROM node:24-alpine AS base
+
+ENV PNPM_HOME="/pnpm" \
+    PATH="/pnpm:$PATH" \
+    NEXT_TELEMETRY_DISABLED=1
+
+RUN corepack enable && corepack prepare pnpm@10.34.5 --activate
+
+# ── Stage 2: builder (install + build) ───────────────────────────────────────
+# Note: We use --no-frozen-lockfile because binary assets (fonts, favicon) are
+# excluded from the HF deploy package, which can cause lockfile drift.
+FROM base AS builder
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml .npmrc ./
+RUN pnpm install --no-frozen-lockfile
+
+COPY . .
+
+# Decode base64-encoded font files (binary fonts can't be pushed to HF git)
+RUN if [ -f setup-fonts.sh ]; then sh setup-fonts.sh; fi
+
+# Build-time public env vars (HF Spaces injects secrets as build args)
+ARG NEXT_PUBLIC_BACKEND_URL=https://fashionistar-ai-fashionistar-api-v1.hf.space
+ARG NEXT_PUBLIC_API_V1_URL=https://fashionistar-ai-fashionistar-api-v1.hf.space/api
+ARG NEXT_PUBLIC_API_NINJA_URL=https://fashionistar-ai-fashionistar-api-v1.hf.space/api/v1/ninja
+ARG BACKEND_INTERNAL_URL=https://fashionistar-ai-fashionistar-api-v1.hf.space
+ARG NEXT_PUBLIC_APP_URL=https://fashionistar-ai-fashionistar-frontend.hf.space
+ARG NEXT_PUBLIC_APP_NAME=FASHIONISTAR_AI
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID=173651651078-9i9odkm33sc6dq7ukoicd91nlcjerqtv.apps.googleusercontent.com
+ARG NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=dgpdlknc1
+ARG NEXT_PUBLIC_CLOUDINARY_CLOUD=dgpdlknc1
+ARG NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=fashionista_ai
+
+ENV NODE_ENV=production \
+    NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL} \
+    NEXT_PUBLIC_API_V1_URL=${NEXT_PUBLIC_API_V1_URL} \
+    NEXT_PUBLIC_API_NINJA_URL=${NEXT_PUBLIC_API_NINJA_URL} \
+    BACKEND_INTERNAL_URL=${BACKEND_INTERNAL_URL} \
+    NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL} \
+    NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME} \
+    NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID} \
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME} \
+    NEXT_PUBLIC_CLOUDINARY_CLOUD=${NEXT_PUBLIC_CLOUDINARY_CLOUD} \
+    NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=${NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+
+RUN pnpm build
+
+# ── Stage 4: runner ──────────────────────────────────────────────────────────
+FROM node:24-alpine AS runner
+
+RUN apk add --no-cache dos2unix wget
+
+WORKDIR /app
+
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=7860 \
+    HOSTNAME=0.0.0.0
+
+# node:24-alpine already has user "node" with UID 1000 — HF Spaces requires UID 1000
+RUN mkdir -p /app/public /app/.next/static
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+
+USER node
+
+# Port 7860 — mandatory for HF Spaces
+EXPOSE 7860
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD wget -q -O /dev/null "http://127.0.0.1:${PORT}/" || exit 1
+
+CMD ["node", "server.js"]

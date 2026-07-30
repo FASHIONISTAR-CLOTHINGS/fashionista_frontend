@@ -33,6 +33,8 @@ import { CategoryDealsBanner } from "@/features/catalog/components/CategoryDeals
 import { AICategoryPick } from "@/features/catalog/components/AICategoryPick";
 import CategoryProductsClient from "./CategoryProductsClient";
 
+export const dynamic = "force-dynamic";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────

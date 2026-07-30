@@ -1,162 +1,277 @@
 "use client";
-
 /**
  * @file ScanTutorialOverlay.tsx
- * @description Full-screen tutorial overlay shown before scan entry modal.
+ * @description Step 40 / TASK-026: First-time user tutorial overlay for the body scan flow.
  *
- * 4 slides: Set Up Phone, Wear Fitted Clothing, Good Lighting, Two Poses.
- * Stores tutorialSeen in localStorage to skip on revisit.
- * Forest Green + Golden Yellow brand theme.
+ * - Shown only on first scan visit (keyed by localStorage 'fashionistar_scan_tutorial_v1')
+ * - 4 illustrated slide cards: Phone Setup → Step Back → Spread Arms → Results
+ * - "Got it, Start Scan!" CTA dismisses and sets localStorage flag
+ * - Framer Motion AnimatePresence for slide + fade transitions
+ * - Brand-compliant Forest Green + Golden Yellow design
+ * - Skip button for returning users who somehow see it again
  */
 
-import { useState, useCallback, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-const STORAGE_KEY = "fashionistar_tutorial_seen";
+// ─── Tutorial Slides ──────────────────────────────────────────────────────────
 
-const SLIDES = [
+interface TutorialSlide {
+  id:       string;
+  emoji:    string;
+  title:    string;
+  body:     string;
+  tip:      string;
+  accent:   string;
+}
+
+const SLIDES: TutorialSlide[] = [
   {
-    icon: "📱",
-    title: "Set Up Your Phone",
-    desc: "Prop your phone at chest height, 1.5–2 metres away. Use a stand or lean it against something stable.",
+    id:     "phone-setup",
+    emoji:  "📱",
+    title:  "Place Your Phone",
+    body:   "Lean your phone against a wall or prop it on a stable surface at chest height, about 1.5–2 metres from where you'll stand.",
+    tip:    "The camera should face you directly — like it's taking a photo of you.",
+    accent: "#2D6A4F",
   },
   {
-    icon: "👕",
-    title: "Wear Fitted Clothing",
-    desc: "Baggy clothes distort measurements. Wear fitted tops and bottoms — or tight activewear for best results.",
+    id:     "step-back",
+    emoji:  "🧍",
+    title:  "Step into the Frame",
+    body:   "Walk back until your entire body is visible — head to toe. Wear fitted clothing for the most accurate measurements.",
+    tip:    "Loose or baggy clothing will reduce accuracy by up to 30%.",
+    accent: "#52B788",
   },
   {
-    icon: "💡",
-    title: "Good Lighting + Plain Background",
-    desc: "Face a window or bright light. Stand against a plain wall — avoid cluttered backgrounds.",
+    id:     "spread-arms",
+    emoji:  "🤸",
+    title:  "Strike the Pose",
+    body:   "Stand straight and spread your arms slightly — about 15° from your body, like a relaxed letter T. Hold still while the AI captures your pose.",
+    tip:    "Our voice coach will count you down. Just hold the position!",
+    accent: "#F4C430",
   },
   {
-    icon: "🔄",
-    title: "Two Poses",
-    desc: "First face the camera (front pose), then turn 90° to your right (side pose). Our AI guides you through each step.",
+    id:     "results",
+    emoji:  "✅",
+    title:  "Get Your Measurements",
+    body:   "After front and side poses, our AI calculates 14 precise body measurements in about 10 seconds — ready to find your perfect fit.",
+    tip:    "Measurements are saved to your profile and used for all future purchases.",
+    accent: "#2D6A4F",
   },
 ];
 
-export interface ScanTutorialOverlayProps {
-  onComplete: () => void;
-  onSkip: () => void;
+const STORAGE_KEY = "fashionistar_scan_tutorial_v1";
+
+// ─── Slide Card ───────────────────────────────────────────────────────────────
+
+function SlideCard({ slide }: { slide: TutorialSlide }) {
+  return (
+    <motion.div
+      key={slide.id}
+      initial={{ opacity: 0, x: 60 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -60 }}
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center"
+    >
+      {/* Emoji illustration */}
+      <motion.div
+        className="w-28 h-28 rounded-3xl flex items-center justify-center mb-6"
+        style={{ background: `${slide.accent}20`, border: `2px solid ${slide.accent}30` }}
+        initial={{ scale: 0.7, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.15, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <span className="text-6xl">{slide.emoji}</span>
+      </motion.div>
+
+      {/* Title */}
+      <motion.h3
+        className="text-xl font-black text-white mb-3"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        {slide.title}
+      </motion.h3>
+
+      {/* Body */}
+      <motion.p
+        className="text-sm text-white/70 leading-relaxed max-w-xs mb-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+      >
+        {slide.body}
+      </motion.p>
+
+      {/* Tip */}
+      <motion.div
+        className="rounded-xl px-4 py-2.5 max-w-xs"
+        style={{ background: `${slide.accent}15`, border: `1px solid ${slide.accent}25` }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.35 }}
+      >
+        <p className="text-xs font-medium" style={{ color: slide.accent }}>
+          💡 {slide.tip}
+        </p>
+      </motion.div>
+    </motion.div>
+  );
 }
 
-export function ScanTutorialOverlay({ onComplete, onSkip }: ScanTutorialOverlayProps) {
+// ─── Dot Progress ─────────────────────────────────────────────────────────────
+
+function DotProgress({ total, current, accent }: {
+  total:   number;
+  current: number;
+  accent:  string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      {Array.from({ length: total }).map((_, i) => (
+        <motion.div
+          key={i}
+          className="rounded-full"
+          style={{ background: i === current ? accent : "rgba(255,255,255,0.2)" }}
+          animate={{ width: i === current ? 20 : 8, height: 8 }}
+          transition={{ duration: 0.3 }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── Main Tutorial Overlay ────────────────────────────────────────────────────
+
+interface ScanTutorialOverlayProps {
+  /** If false, overlay won't show (for already-seen users). */
+  forceShow?: boolean;
+  onComplete: () => void;
+}
+
+export function ScanTutorialOverlay({ forceShow = false, onComplete }: ScanTutorialOverlayProps) {
+  const [visible, setVisible] = useState(() => {
+    if (typeof window === "undefined") return false;
+    if (forceShow) return true;
+    return localStorage.getItem(STORAGE_KEY) !== "1";
+  });
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  const didAutoCompleteRef = useRef(false);
+
   useEffect(() => {
-    // Check if tutorial already seen
-    try {
-      if (localStorage.getItem(STORAGE_KEY) === "true") {
-        onComplete();
-        return;
-      }
-    } catch {
-      // localStorage unavailable
+    if (!visible && !didAutoCompleteRef.current) {
+      didAutoCompleteRef.current = true;
+      onComplete();
     }
+  }, [visible, onComplete]);
+
+  const handleDismiss = useCallback(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEY, "1");
+    }
+    setVisible(false);
+    onComplete();
   }, [onComplete]);
 
   const handleNext = useCallback(() => {
     if (currentSlide < SLIDES.length - 1) {
-      setCurrentSlide(currentSlide + 1);
+      setCurrentSlide(prev => prev + 1);
     } else {
-      try {
-        localStorage.setItem(STORAGE_KEY, "true");
-      } catch {
-        // ignore
-      }
-      onComplete();
+      handleDismiss();
     }
-  }, [currentSlide, onComplete]);
+  }, [currentSlide, handleDismiss]);
 
-  const handleSkip = useCallback(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, "true");
-    } catch {
-      // ignore
-    }
-    onSkip();
-  }, [onSkip]);
+  const handlePrev = useCallback(() => {
+    setCurrentSlide(prev => Math.max(0, prev - 1));
+  }, []);
 
-  const slide = SLIDES[currentSlide];
+  const slide  = SLIDES[currentSlide];
+  const isLast = currentSlide === SLIDES.length - 1;
 
   return (
     <AnimatePresence>
-      <motion.div
-        key="tutorial-backdrop"
-        className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
+      {visible && (
         <motion.div
-          key={`tutorial-slide-${currentSlide}`}
-          className="relative w-full max-w-md rounded-2xl p-8 flex flex-col items-center text-center"
-          style={{
-            backgroundColor: "#0F1A14",
-            border: "1px solid rgba(45,106,79,0.3)",
-          }}
-          initial={{ opacity: 0, y: 20, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -20, scale: 0.97 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
         >
-          {/* Close / Skip */}
-          <button
-            onClick={handleSkip}
-            className="absolute top-4 right-4 text-white/40 hover:text-white/80 transition text-sm"
-          >
-            Skip
-          </button>
-
-          {/* Slide icon */}
-          <div
-            className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl mb-6"
+          <motion.div
+            className="w-full max-w-sm rounded-3xl overflow-hidden"
             style={{
-              backgroundColor: "rgba(244,196,48,0.1)",
-              border: "1px solid rgba(244,196,48,0.2)",
+              background: "linear-gradient(145deg, #0D1810, #0A0A0A)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow: "0 25px 60px rgba(0,0,0,0.6), 0 0 80px rgba(45,106,79,0.1)",
             }}
+            initial={{ scale: 0.85, opacity: 0, y: 30 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.85, opacity: 0, y: 30 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            {slide.icon}
-          </div>
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-2">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-widest text-[#2D6A4F]">
+                  FASHIONISTAR AI Scan
+                </span>
+                <p className="text-[10px] text-white/30 mt-0.5">Quick guide — 30 seconds</p>
+              </div>
+              <button
+                onClick={handleDismiss}
+                className="text-white/30 hover:text-white/60 transition-colors text-sm"
+                id="skip-tutorial-btn"
+              >
+                Skip
+              </button>
+            </div>
 
-          {/* Slide content */}
-          <h2 className="text-white font-bold text-xl mb-3">{slide.title}</h2>
-          <p className="text-white/60 text-sm leading-relaxed mb-8">{slide.desc}</p>
+            {/* Slide area */}
+            <div className="relative h-80 mx-6">
+              <AnimatePresence mode="wait">
+                <SlideCard key={slide.id} slide={slide} />
+              </AnimatePresence>
+            </div>
 
-          {/* Progress dots */}
-          <div className="flex gap-2 mb-6">
-            {SLIDES.map((_, i) => (
-              <div
-                key={i}
-                className="h-2 rounded-full transition-all duration-300"
-                style={{
-                  width: i === currentSlide ? 24 : 8,
-                  backgroundColor:
-                    i === currentSlide
-                      ? "#F4C430"
-                      : i < currentSlide
-                        ? "#52B788"
-                        : "rgba(255,255,255,0.2)",
-                }}
-              />
-            ))}
-          </div>
+            {/* Footer */}
+            <div className="px-6 pb-6 flex flex-col items-center gap-4">
+              {/* Dot progress */}
+              <DotProgress total={SLIDES.length} current={currentSlide} accent={slide.accent} />
 
-          {/* Next button */}
-          <button
-            onClick={handleNext}
-            className="w-full rounded-xl py-3 font-semibold text-sm transition"
-            style={{
-              backgroundColor: "#F4C430",
-              color: "#0A0A0A",
-            }}
-          >
-            {currentSlide < SLIDES.length - 1 ? "Next" : "Got It — Start Scan"}
-          </button>
+              {/* Navigation */}
+              <div className="flex items-center gap-3 w-full">
+                {currentSlide > 0 && (
+                  <button
+                    onClick={handlePrev}
+                    className="flex-1 py-3 rounded-2xl border border-white/15 text-white/60 text-sm font-semibold hover:bg-white/5 transition-colors"
+                  >
+                    ← Back
+                  </button>
+                )}
+                <button
+                  onClick={handleNext}
+                  className="flex-1 py-3 rounded-2xl text-[#0A0A0A] text-sm font-black transition-all active:scale-95"
+                  style={{
+                    background: isLast
+                      ? "linear-gradient(135deg, #F4C430, #C9A227)"
+                      : "linear-gradient(135deg, #2D6A4F, #1B4332)",
+                    color: "white",
+                    boxShadow: isLast ? "0 4px 20px rgba(244,196,48,0.3)" : "none",
+                  }}
+                  id={isLast ? "start-scan-after-tutorial-btn" : "tutorial-next-btn"}
+                >
+                  {isLast ? "✅ Got it, Start Scan!" : "Next →"}
+                </button>
+              </div>
+            </div>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      )}
     </AnimatePresence>
   );
 }

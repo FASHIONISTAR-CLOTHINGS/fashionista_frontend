@@ -5,7 +5,8 @@
  * Responsibilities:
  * - Initiate a scan session (POST → DRF)
  * - Submit landmarks (POST → DRF)
- * - Poll session status every 2 seconds (GET → Ninja) until done
+ * - Receive real-time status via Django Channels WebSocket (primary)
+ * - Fall back to 2-second polling if WebSocket fails (isWebSocketError)
  * - Invalidate measurement profiles cache on completion
  *
  * Usage:
@@ -13,7 +14,7 @@
  */
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -21,7 +22,9 @@ import {
   submitLandmarks,
   pollScanStatus,
 } from "../api/scan.api";
+import { useScanWebSocket } from "./useScanWebSocket";
 import { measurementKeys } from "./use-measurements";
+import { readAccessToken } from "@/features/auth/lib/auth-session.client";
 import type {
   LandmarkSubmitPayload,
   ScanSessionResponse,
@@ -35,7 +38,7 @@ export type ScanPhase =
   | "initiating"    // POST /initiate/ in progress
   | "ready"         // Session created — waiting for landmarks
   | "submitting"    // POST /submit-landmarks/ in progress
-  | "processing"    // Celery task running — polling status
+  | "processing"    // Celery task running — receiving progress
   | "completed"     // Measurements saved
   | "failed";       // Backend error
 
@@ -44,10 +47,12 @@ export interface UseScanSessionReturn {
   phase: ScanPhase;
   /** The active session ID (null before initiation). */
   sessionId: string | null;
-  /** Full status response from the Ninja polling endpoint. */
+  /** Full status response from the Ninja polling endpoint or WebSocket. */
   sessionStatus: ScanStatusResponse | null;
-  /** True while polling for status (Celery processing). */
+  /** True while processing scan (WebSocket connected or polling). */
   isPolling: boolean;
+  /** True while the WebSocket is connected and receiving events. */
+  isWebSocketConnected: boolean;
   /** Error message if any step failed. */
   error: string | null;
   /**
@@ -57,19 +62,18 @@ export interface UseScanSessionReturn {
   initiate: (deviceType?: "web" | "ios" | "android") => Promise<string | null>;
   /**
    * Step 2: Submit MediaPipe landmarks to the backend.
-   * Starts Celery processing and begins polling.
+   * Starts Celery processing and begins WebSocket / polling.
    */
   submit: (payload: LandmarkSubmitPayload) => Promise<void>;
   /** Reset state — allows starting a new scan. */
   reset: () => void;
-  /** T-031: Retry the last failed submission. */
-  retry: () => void;
-  /** T-030: Whether the browser is currently offline. */
-  isOffline: boolean;
-  /** T-033: Whether the processing timeout has been reached. */
-  isTimedOut: boolean;
-  /** Adopt an existing session ID without calling initiate(). */
-  setExistingSession: (sessionId: string) => void;
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+/** JWT access token source — reads from the same sessionStorage key the auth store uses. */
+function getAccessToken(): string | null {
+  return readAccessToken();
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -77,214 +81,149 @@ export interface UseScanSessionReturn {
 export function useScanSession(): UseScanSessionReturn {
   const qc = useQueryClient();
 
-  const [phase, setPhase]         = useState<ScanPhase>("idle");
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [error, setError]         = useState<string | null>(null);
-  const [isOffline, setIsOffline] = useState(false);
-  const [isTimedOut, setIsTimedOut] = useState(false);
-  const pollingEnabled = phase === "processing";
+  const [manualPhase, setManualPhase] = useState<ScanPhase>("idle");
+  const [sessionId, setSessionId]     = useState<string | null>(null);
+  const [manualError, setManualError] = useState<string | null>(null);
 
-  // T-030: Track online/offline status
-  useEffect(() => {
-    const updateOnline = () => setIsOffline(!navigator.onLine);
-    updateOnline();
-    window.addEventListener("online", updateOnline);
-    window.addEventListener("offline", updateOnline);
-    return () => {
-      window.removeEventListener("online", updateOnline);
-      window.removeEventListener("offline", updateOnline);
-    };
-  }, []);
+  const pollingEnabled = manualPhase === "processing";
+  const accessToken    = getAccessToken();
 
-  // T-031: Store last payload for retry
-  const lastPayloadRef = useRef<LandmarkSubmitPayload | null>(null);
+  // Track the last status we toasted/invalidated for to avoid duplicates
+  const prevStatusRef = useRef<string | undefined>(undefined);
 
-  // T-033: Processing timeout (60 seconds)
-  const processingStartRef = useRef<number | null>(null);
-  const PROCESSING_TIMEOUT_MS = 60_000;
+  // ── D-2: WebSocket real-time progress ─────────────────────────────────────
 
-  useEffect(() => {
-    if (phase === "processing") {
-      processingStartRef.current = Date.now();
-      const timer = setTimeout(() => {
-        if (phase === "processing") {
-          setIsTimedOut(true);
-          setPhase("failed");
-          setError("Processing timed out. The AI server may be overloaded. Please try again.");
-          toast.error("Scan processing timed out. Please try again.");
-        }
-      }, PROCESSING_TIMEOUT_MS);
-      return () => clearTimeout(timer);
-    }
-    processingStartRef.current = null;
-    return undefined;
-  }, [phase]);
+  const {
+    status:           wsStatus,
+    isConnected:      isWebSocketConnected,
+    isWebSocketError: wsError,
+  } = useScanWebSocket(pollingEnabled ? sessionId : null, { accessToken });
 
-  // ── Ninja polling query ─────────────────────────────────────────────────────
-  const { data: sessionStatus } = useQuery<ScanStatusResponse>({
-    queryKey: ["scan-session", sessionId],
-    queryFn:  () => pollScanStatus(sessionId!),
-    enabled:  Boolean(sessionId) && pollingEnabled,
-    refetchInterval: 2000,       // Poll every 2 seconds
+  // ── Polling fallback (when WebSocket error, no token, or disconnected) ───
+
+  const useFallbackPolling = pollingEnabled && (wsError || !accessToken || !isWebSocketConnected);
+
+  const { data: polledStatus } = useQuery<ScanStatusResponse>({
+    queryKey:  ["scan-session-poll", sessionId],
+    queryFn:   () => pollScanStatus(sessionId!),
+    enabled:   Boolean(sessionId) && useFallbackPolling,
+    refetchInterval: 2000,
     staleTime: 0,
-    retry: false,
-    // Stop polling once status is terminal
+    retry:     false,
     refetchIntervalInBackground: false,
-    select: (data) => {
-      if (data.status === "completed" || data.status === "failed") {
-        // Will trigger the onSuccess side-effect below
-        return data;
-      }
-      return data;
-    },
   });
 
-  // Watch for terminal status transitions
-  const prevStatusRef = useRef<string | undefined>(undefined);
-  useEffect(() => {
-    if (!sessionStatus) return;
-    if (sessionStatus.status === prevStatusRef.current) return;
-    prevStatusRef.current = sessionStatus.status;
+  // Active session status: prefer WebSocket, fall back to polling
+  const sessionStatus = wsStatus ?? polledStatus ?? null;
 
-    if (sessionStatus.status === "completed" && phase === "processing") {
-      // Transition to completed — setState is reacting to external query data change
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPhase("completed");
-      // Invalidate measurement profiles so the new profile appears immediately
+  // ── Derive public phase/error from manual state + external status ─────────
+
+  const phase = useMemo<ScanPhase>(() => {
+    if (sessionStatus?.status === "completed") return "completed";
+    if (sessionStatus?.status === "failed")    return "failed";
+    return manualPhase;
+  }, [sessionStatus, manualPhase]);
+
+  const error = useMemo<string | null>(() => {
+    if (sessionStatus?.status === "failed") {
+      return sessionStatus.error_message ?? "Scan failed.";
+    }
+    return manualError;
+  }, [sessionStatus, manualError]);
+
+  // Notify + invalidate cache when external status reaches a terminal state
+  useEffect(() => {
+    const status = sessionStatus?.status;
+    if (!status || status === prevStatusRef.current) return;
+    prevStatusRef.current = status;
+
+    if (status === "completed") {
       void qc.invalidateQueries({ queryKey: measurementKeys.all });
       toast.success("Body measurements captured successfully! 🎉");
-    } else if (sessionStatus.status === "failed" && phase === "processing") {
-      setPhase("failed");
-      setError(sessionStatus.error_message ?? "Scan processing failed.");
-      toast.error(
-        sessionStatus.error_message ?? "Scan failed. Please try again."
-      );
+    } else if (status === "failed") {
+      toast.error(sessionStatus?.error_message ?? "Scan failed. Please try again.");
     }
-  }, [sessionStatus, phase, qc]);
+  }, [sessionStatus, qc]);
 
-  // ── Initiate scan session ───────────────────────────────────────────────────
+  // ── Initiate scan session ────────────────────────────────────────────────
+
   const initiate = useCallback(
     async (deviceType: "web" | "ios" | "android" = "web"): Promise<string | null> => {
-      if (phase !== "idle") {
-        console.warn("[useScanSession] initiate() called in non-idle phase:", phase);
+      if (manualPhase !== "idle") {
+        console.warn("[useScanSession] initiate() called in non-idle phase:", manualPhase);
         return sessionId;
       }
 
-      setPhase("initiating");
-      setError(null);
+      setManualPhase("initiating");
+      setManualError(null);
 
       try {
         const response: ScanSessionResponse = await initiateBodyScan({ device_type: deviceType });
         const sid = response.session_id;
         setSessionId(sid);
-        setPhase("ready");
+        setManualPhase("ready");
         return sid;
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Failed to start scan session.";
-        setError(msg);
-        setPhase("failed");
+        setManualError(msg);
+        setManualPhase("failed");
         toast.error(msg);
         return null;
       }
     },
-    [phase, sessionId]
+    [manualPhase, sessionId]
   );
 
-  // ── Submit landmarks ────────────────────────────────────────────────────────
+  // ── Submit landmarks ─────────────────────────────────────────────────────
+
   const submit = useCallback(
     async (payload: LandmarkSubmitPayload): Promise<void> => {
       if (!sessionId) {
         toast.error("No active scan session. Please start a new scan.");
         return;
       }
-      if (phase !== "ready") {
-        console.warn("[useScanSession] submit() called in unexpected phase:", phase);
+      if (manualPhase !== "ready") {
+        console.warn("[useScanSession] submit() called in unexpected phase:", manualPhase);
         return;
       }
 
-      // T-030: Offline check — buffer the payload for when connection returns
-      if (!navigator.onLine) {
-        lastPayloadRef.current = payload;
-        setError("You are offline. Your scan will be submitted automatically when connection returns.");
-        toast.warning("Offline — scan queued for submission.");
-        return;
-      }
-
-      lastPayloadRef.current = payload;
-      setPhase("submitting");
-      setError(null);
+      setManualPhase("submitting");
+      setManualError(null);
 
       try {
         await submitLandmarks(sessionId, payload);
-        // Backend returns 202 Accepted — Celery task now running
-        setPhase("processing");
+        // Backend returns 202 Accepted — WebSocket or Celery polling begins
+        setManualPhase("processing");
+        prevStatusRef.current = undefined; // reset for fresh transition detection
       } catch (err: unknown) {
         const msg =
           err instanceof Error ? err.message : "Failed to submit scan data.";
-        setError(msg);
-        setPhase("failed");
+        setManualError(msg);
+        setManualPhase("failed");
         toast.error(msg);
       }
     },
-    [sessionId, phase]
+    [sessionId, manualPhase]
   );
 
-  // T-031: Retry the last failed submission
-  const retry = useCallback(async () => {
-    if (!lastPayloadRef.current || !sessionId) {
-      toast.error("No previous scan data to retry.");
-      return;
-    }
-    setPhase("ready");
-    setError(null);
-    setIsTimedOut(false);
-    // Small delay to allow phase transition to render
-    setTimeout(() => {
-      void submit(lastPayloadRef.current!);
-    }, 100);
-  }, [sessionId, submit]);
+  // ── Reset ────────────────────────────────────────────────────────────────
 
-  // T-030: Auto-submit when connection returns if we have a buffered payload
-  useEffect(() => {
-    if (!isOffline && lastPayloadRef.current && phase === "failed" && sessionId) {
-      const wasOfflineError = error?.includes("offline");
-      if (wasOfflineError) {
-        toast.info("Connection restored — submitting scan...");
-        void retry();
-      }
-    }
-  }, [isOffline, phase, error, sessionId, retry]);
-
-  // ── Reset ───────────────────────────────────────────────────────────────────
   const reset = useCallback(() => {
-    setPhase("idle");
+    setManualPhase("idle");
     setSessionId(null);
-    setError(null);
-    setIsTimedOut(false);
-    lastPayloadRef.current = null;
-    prevStatusRef.current = undefined;
-  }, []);
-
-  // ── Adopt an existing session (e.g. from URL or QR code) ─────────────────────
-  const setExistingSession = useCallback((sid: string) => {
-    setSessionId(sid);
-    setPhase("ready");
-    setError(null);
+    setManualError(null);
     prevStatusRef.current = undefined;
   }, []);
 
   return {
     phase,
     sessionId,
-    sessionStatus: sessionStatus ?? null,
-    isPolling:     pollingEnabled,
+    sessionStatus,
+    isPolling:           pollingEnabled,
+    isWebSocketConnected,
     error,
-    isOffline,
-    isTimedOut,
     initiate,
     submit,
-    retry,
     reset,
-    setExistingSession,
   };
 }
