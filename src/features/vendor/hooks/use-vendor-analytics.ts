@@ -116,8 +116,9 @@ export function useCreateCoupon() {
       void qc.invalidateQueries({ queryKey: vendorAnalyticsKeys.coupons });
       toast.success("Coupon created successfully!");
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || err.message || "Failed to create coupon.");
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(e.response?.data?.message || e.message || "Failed to create coupon.");
     },
   });
 }
@@ -130,8 +131,9 @@ export function useDeactivateCoupon() {
       void qc.invalidateQueries({ queryKey: vendorAnalyticsKeys.coupons });
       toast.success("Coupon deactivated successfully.");
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || err.message || "Failed to deactivate coupon.");
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(e.response?.data?.message || e.message || "Failed to deactivate coupon.");
     },
   });
 }

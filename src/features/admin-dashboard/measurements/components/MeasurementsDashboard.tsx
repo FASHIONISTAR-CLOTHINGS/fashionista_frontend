@@ -11,10 +11,11 @@ import {
   Loader2,
 } from "lucide-react";
 import { useAdminMeasurements } from "../hooks";
+import type { MeasurementProfile } from "../types";
 
 export function MeasurementsDashboard() {
   const [search, setSearch] = useState("");
-  const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<MeasurementProfile | null>(null);
 
   const { data: measurementsList = [], isLoading, isError } = useAdminMeasurements();
 
@@ -102,19 +103,19 @@ export function MeasurementsDashboard() {
                   <div className="grid grid-cols-4 gap-2 text-center pt-3 border-t border-[#ECE6D6]/40 text-xs">
                     <div className="bg-[#F8F5ED]/40 border border-[#ECE6D6]/50 p-2 rounded-lg">
                       <span className="text-[9px] text-[#8A9596] uppercase block">Bust</span>
-                      <span className="font-bold text-[#01454A]">{profile.bust}"</span>
+                      <span className="font-bold text-[#01454A]">{profile.bust}&quot;</span>
                     </div>
                     <div className="bg-[#F8F5ED]/40 border border-[#ECE6D6]/50 p-2 rounded-lg">
                       <span className="text-[9px] text-[#8A9596] uppercase block">Waist</span>
-                      <span className="font-bold text-[#01454A]">{profile.waist}"</span>
+                      <span className="font-bold text-[#01454A]">{profile.waist}&quot;</span>
                     </div>
                     <div className="bg-[#F8F5ED]/40 border border-[#ECE6D6]/50 p-2 rounded-lg">
                       <span className="text-[9px] text-[#8A9596] uppercase block">Hips</span>
-                      <span className="font-bold text-[#01454A]">{profile.hips}"</span>
+                      <span className="font-bold text-[#01454A]">{profile.hips}&quot;</span>
                     </div>
                     <div className="bg-[#F8F5ED]/40 border border-[#ECE6D6]/50 p-2 rounded-lg">
                       <span className="text-[9px] text-[#8A9596] uppercase block">Shoulder</span>
-                      <span className="font-bold text-[#01454A]">{profile.shoulder}"</span>
+                      <span className="font-bold text-[#01454A]">{profile.shoulder}&quot;</span>
                     </div>
                   </div>
                 </div>

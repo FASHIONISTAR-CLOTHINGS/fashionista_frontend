@@ -91,10 +91,10 @@ async function loginAndNavigate(
   );
 
   // 3. Navigate to the target page — addInitScript runs before page JS
-  // Use "domcontentloaded" instead of "commit" for more reliable navigation
-  await page.goto(targetPath, { waitUntil: "domcontentloaded", timeout: 120_000 });
-  // Wait for the page to settle and hydrate
-  await page.waitForTimeout(5000);
+  // Use "networkidle" to wait for the dev server to finish compiling and loading
+  await page.goto(targetPath, { waitUntil: "networkidle", timeout: 120_000 });
+  // Wait for hydration and any loading screen to clear
+  await page.waitForTimeout(8000);
 }
 
 /**
@@ -149,7 +149,8 @@ test.describe("Measurement Scan E2E", () => {
     await page.screenshot({ path: `${SCREENSHOT_DIR}/02-scan-page.png`, fullPage: true });
 
     // The scan entry page should show the intro card with "AI Body Scan" heading
-    await page.waitForSelector("text=AI Body Scan", { timeout: 60_000 });
+    // Wait for the scan page to fully render (dev server may still be compiling)
+    await page.waitForSelector("text=AI Body Scan", { timeout: 120_000 });
     await expect(page.getByText("AI Body Scan")).toBeVisible();
     // Verify subtitle text
     await expect(page.getByText("30 seconds · 14 measurements · 100% private")).toBeVisible();
@@ -158,7 +159,7 @@ test.describe("Measurement Scan E2E", () => {
   test("03 - Verify idle state renders Start AI Scan button", async ({ page, request }) => {
     await loginAndNavigate(page, request, "/client/dashboard/measurements/scan");
 
-    await page.waitForSelector("text=Start AI Scan", { timeout: 60_000 });
+    await page.waitForSelector("text=Start AI Scan", { timeout: 120_000 });
     await page.screenshot({ path: `${SCREENSHOT_DIR}/03-idle-state.png`, fullPage: true });
 
     const startButton = page.getByRole("button", { name: "Start AI Scan" });
@@ -168,9 +169,9 @@ test.describe("Measurement Scan E2E", () => {
 
   test("04 - Click Start AI Scan and verify camera capture UI", async ({ page, request }) => {
     await loginAndNavigate(page, request, "/client/dashboard/measurements/scan");
-    await page.waitForSelector("text=Start AI Scan", { timeout: 60_000 });
+    await page.waitForSelector("text=Start AI Scan", { timeout: 120_000 });
 
-    const { consoleErrors, networkErrors } = collectErrors(page);
+    const { networkErrors } = collectErrors(page);
 
     const startButton = page.getByRole("button", { name: "Start AI Scan" });
     await startButton.click();
@@ -199,7 +200,7 @@ test.describe("Measurement Scan E2E", () => {
 
   test("05 - Verify measurement list and requirements visible", async ({ page, request }) => {
     await loginAndNavigate(page, request, "/client/dashboard/measurements/scan");
-    await page.waitForSelector("text=AI Body Scan", { timeout: 60_000 });
+    await page.waitForSelector("text=AI Body Scan", { timeout: 120_000 });
 
     // Verify measurement list items
     await expect(page.getByText("What We Measure")).toBeVisible();
@@ -217,8 +218,8 @@ test.describe("Measurement Scan E2E", () => {
   });
 
   test("06 - Navigate to get-measured landing page", async ({ page }) => {
-    await page.goto("/get-measured", { waitUntil: "domcontentloaded", timeout: 120_000 });
-    await page.waitForTimeout(5000);
+    await page.goto("/get-measured", { waitUntil: "networkidle", timeout: 120_000 });
+    await page.waitForTimeout(8000);
     await page.screenshot({ path: `${SCREENSHOT_DIR}/06-get-measured.png`, fullPage: true });
     await expect(page).toHaveURL(/\/get-measured/);
   });
@@ -231,7 +232,7 @@ test.describe("Measurement Scan E2E", () => {
 
   test("08 - Verify no 404 on scan status endpoint and no 403 on WebSocket", async ({ page, request }) => {
     await loginAndNavigate(page, request, "/client/dashboard/measurements/scan");
-    await page.waitForSelector("text=Start AI Scan", { timeout: 60_000 });
+    await page.waitForSelector("text=Start AI Scan", { timeout: 120_000 });
 
     const { networkErrors } = collectErrors(page);
 
