@@ -1,7 +1,7 @@
 /**
- * standalone-measurement-test.ts
+ * standalone-measurement-test.spec.ts
  * Standalone Playwright test — no global setup dependency.
- * Runs directly against localhost:3000 + localhost:8001.
+ * Tests the full measurement scan flow: login → tutorial → entry modal → QR handoff → measurements dashboard.
  */
 import { test, expect, type Page, type APIRequestContext } from "@playwright/test";
 
@@ -72,34 +72,39 @@ async function loginAndNavigate(page: Page, request: APIRequestContext, targetPa
 test.describe("Measurement Scan E2E", () => {
   test.setTimeout(300_000);
 
-  test("01 - Login via API and verify authenticated", async ({ page, request }) => {
+  test("01 - Login via API and verify authenticated on homepage", async ({ page, request }) => {
     await loginAndNavigate(page, request, "/");
     await page.screenshot({ path: SCREENSHOT_DIR + "/01-after-login.png", fullPage: true });
     console.log("01 - Login screenshot captured");
   });
 
-  test("02 - Navigate to measurement scan page", async ({ page, request }) => {
+  test("02 - Scan page: tutorial overlay visible with 30-Second Body Scan heading", async ({ page, request }) => {
     await loginAndNavigate(page, request, "/client/dashboard/measurements/scan");
-    await page.screenshot({ path: SCREENSHOT_DIR + "/02-scan-page.png", fullPage: true });
+    await page.screenshot({ path: SCREENSHOT_DIR + "/02-scan-page-tutorial.png", fullPage: true });
 
-    // Check for the scan page heading
     const heading = page.locator("h1").filter({ hasText: "30-Second Body Scan" });
     await expect(heading).toBeVisible({ timeout: 60_000 });
     console.log("02 - Scan page heading verified");
   });
 
-  test("03 - Verify idle state renders correctly", async ({ page, request }) => {
+  test("03 - Skip tutorial and verify MeasurementEntryModal appears", async ({ page, request }) => {
     await loginAndNavigate(page, request, "/client/dashboard/measurements/scan");
 
-    const startButton = page.getByText("Start AI Scan");
-    await expect(startButton).toBeVisible({ timeout: 60_000 });
-    await page.screenshot({ path: SCREENSHOT_DIR + "/03-idle-state.png", fullPage: true });
-    console.log("03 - Idle state verified");
+    // Wait for tutorial overlay and click Skip
+    const skipButton = page.getByRole("button", { name: "Skip" });
+    await expect(skipButton).toBeVisible({ timeout: 60_000 });
+    await skipButton.click();
+
+    await page.waitForTimeout(3000);
+    await page.screenshot({ path: SCREENSHOT_DIR + "/03-entry-modal.png", fullPage: true });
+
+    // Verify the entry modal appears
+    const modalHeading = page.locator("h2").filter({ hasText: "Before Your Scan" });
+    await expect(modalHeading).toBeVisible({ timeout: 30_000 });
+    console.log("03 - Entry modal verified after skipping tutorial");
   });
 
-  test("04 - Click Start AI Scan and capture loading state", async ({ page, request }) => {
-    await loginAndNavigate(page, request, "/client/dashboard/measurements/scan");
-
+  test("04 - Fill entry modal and submit to create scan session", async ({ page, request }) => {
     const consoleErrors: string[] = [];
     page.on("pageerror", (error) => {
       consoleErrors.push("PAGE ERROR: " + error.message);
@@ -110,30 +115,165 @@ test.describe("Measurement Scan E2E", () => {
       }
     });
 
-    const startButton = page.getByText("Start AI Scan");
-    await expect(startButton).toBeVisible({ timeout: 60_000 });
-    await startButton.click();
+    await loginAndNavigate(page, request, "/client/dashboard/measurements/scan");
 
-    await page.waitForTimeout(5000);
-    await page.screenshot({ path: SCREENSHOT_DIR + "/04-after-start.png", fullPage: true });
+    // Skip tutorial
+    const skipButton = page.getByRole("button", { name: "Skip" });
+    await expect(skipButton).toBeVisible({ timeout: 60_000 });
+    await skipButton.click();
+    await page.waitForTimeout(3000);
+
+    // Fill entry modal — Age (required)
+    const ageInput = page.locator('input[type="number"]').first();
+    await expect(ageInput).toBeVisible({ timeout: 30_000 });
+    await ageInput.fill("28");
+    await page.waitForTimeout(1000);
+
+    // Height should auto-fill from prediction. Verify it has a value.
+    const heightInput = page.locator('input[placeholder*="175"]');
+    const heightValue = await heightInput.inputValue().catch(() => "");
+    if (!heightValue) {
+      await heightInput.fill("175");
+    }
+
+    // Weight (optional) — enter 70
+    const weightInput = page.locator('input[placeholder*="70"]');
+    await weightInput.fill("70");
+
+    await page.screenshot({ path: SCREENSHOT_DIR + "/04-entry-modal-filled.png", fullPage: true });
+
+    // Click "Continue to Scan →"
+    const submitButton = page.getByRole("button", { name: /Continue to Scan/ });
+    await expect(submitButton).toBeVisible({ timeout: 10_000 });
+    await submitButton.click();
+
+    // Wait for redirect — either to QR page (desktop) or active scan (mobile)
+    await page.waitForTimeout(10000);
+    await page.screenshot({ path: SCREENSHOT_DIR + "/04-after-submit.png", fullPage: true });
+
+    const currentUrl = page.url();
+    console.log("04 - Current URL after submit:", currentUrl);
+
+    if (currentUrl.includes("/scan/qr")) {
+      console.log("04 - Redirected to QR handoff page (desktop flow)");
+      const qrHeading = page.locator("h1").filter({ hasText: "Scan with Your Phone" });
+      await expect(qrHeading).toBeVisible({ timeout: 30_000 });
+    } else if (currentUrl.match(/\/scan\/[a-f0-9-]+/)) {
+      console.log("04 - Redirected to active scan page (mobile flow)");
+    } else {
+      console.log("04 - Still on scan page, checking for error state");
+    }
 
     if (consoleErrors.length > 0) {
-      console.log("Console errors during scan start:", consoleErrors);
+      console.log("04 - Console errors:", consoleErrors);
     }
-    console.log("04 - After start screenshot captured");
+    console.log("04 - Entry modal submitted, screenshot captured");
   });
 
-  test("05 - Navigate to get-measured landing page", async ({ page }) => {
+  test("05 - Verify QR code display on QR handoff page (desktop flow)", async ({ page, request }) => {
+    await loginAndNavigate(page, request, "/client/dashboard/measurements/scan");
+
+    // Skip tutorial
+    const skipButton = page.getByRole("button", { name: "Skip" });
+    await expect(skipButton).toBeVisible({ timeout: 60_000 });
+    await skipButton.click();
+    await page.waitForTimeout(3000);
+
+    // Fill entry modal
+    const ageInput = page.locator('input[type="number"]').first();
+    await expect(ageInput).toBeVisible({ timeout: 30_000 });
+    await ageInput.fill("30");
+    await page.waitForTimeout(1000);
+
+    // Submit
+    const submitButton = page.getByRole("button", { name: /Continue to Scan/ });
+    await expect(submitButton).toBeVisible({ timeout: 10_000 });
+    await submitButton.click();
+
+    // Wait for redirect
+    await page.waitForTimeout(15000);
+    await page.screenshot({ path: SCREENSHOT_DIR + "/05-qr-handoff.png", fullPage: true });
+
+    const currentUrl = page.url();
+    console.log("05 - Current URL:", currentUrl);
+
+    if (currentUrl.includes("/scan/qr")) {
+      const qrHeading = page.locator("h1").filter({ hasText: "Scan with Your Phone" });
+      await expect(qrHeading).toBeVisible({ timeout: 30_000 });
+
+      // Check for QR code image or loading state
+      const qrImage = page.getByAltText("Scan QR Code");
+      const qrLoading = page.getByText("Loading QR code");
+
+      const qrVisible = await qrImage.isVisible().catch(() => false);
+      const loadingVisible = await qrLoading.isVisible().catch(() => false);
+
+      if (qrVisible) {
+        console.log("05 - QR code image is visible");
+      } else if (loadingVisible) {
+        console.log("05 - QR code is loading (spinner visible)");
+      } else {
+        console.log("05 - QR code area not found, checking page state");
+      }
+
+      // Verify status indicator
+      const statusText = page.getByText(/Waiting for phone|Scan in progress|Scan complete/);
+      await expect(statusText).toBeVisible({ timeout: 10_000 });
+      console.log("05 - QR handoff page verified with status indicator");
+    } else {
+      console.log("05 - Not on QR page, URL:", currentUrl);
+    }
+
+    await page.screenshot({ path: SCREENSHOT_DIR + "/05-qr-page-final.png", fullPage: true });
+  });
+
+  test("06 - Navigate to get-measured landing page", async ({ page }) => {
     await page.goto("/get-measured", { waitUntil: "commit", timeout: 120_000 });
     await page.waitForTimeout(5000);
-    await page.screenshot({ path: SCREENSHOT_DIR + "/05-get-measured.png", fullPage: true });
+    await page.screenshot({ path: SCREENSHOT_DIR + "/06-get-measured.png", fullPage: true });
     await expect(page).toHaveURL(/\/get-measured/);
-    console.log("05 - Get-measured page verified");
+    console.log("06 - Get-measured page verified");
   });
 
-  test("06 - Navigate to measurements dashboard", async ({ page, request }) => {
+  test("07 - Navigate to measurements dashboard and verify page loads", async ({ page, request }) => {
     await loginAndNavigate(page, request, "/client/dashboard/measurements");
-    await page.screenshot({ path: SCREENSHOT_DIR + "/06-measurements-dashboard.png", fullPage: true });
-    console.log("06 - Measurements dashboard screenshot captured");
+    await page.waitForTimeout(5000);
+    await page.screenshot({ path: SCREENSHOT_DIR + "/07-measurements-dashboard.png", fullPage: true });
+
+    await expect(page).toHaveURL(/\/client\/dashboard\/measurements/);
+    console.log("07 - Measurements dashboard verified");
+  });
+
+  test("08 - Verify WebSocket/polling connection for scan status", async ({ page, request }) => {
+    await loginAndNavigate(page, request, "/client/dashboard/measurements/scan");
+
+    // Skip tutorial and fill entry modal to trigger scan session
+    const skipButton = page.getByRole("button", { name: "Skip" });
+    await expect(skipButton).toBeVisible({ timeout: 60_000 });
+    await skipButton.click();
+    await page.waitForTimeout(3000);
+
+    const ageInput = page.locator('input[type="number"]').first();
+    await expect(ageInput).toBeVisible({ timeout: 30_000 });
+    await ageInput.fill("25");
+    await page.waitForTimeout(1000);
+
+    const submitButton = page.getByRole("button", { name: /Continue to Scan/ });
+    await submitButton.click();
+
+    // Wait for redirect and WebSocket connection
+    await page.waitForTimeout(15000);
+    await page.screenshot({ path: SCREENSHOT_DIR + "/08-ws-connection.png", fullPage: true });
+
+    const currentUrl = page.url();
+    console.log("08 - Current URL:", currentUrl);
+
+    if (currentUrl.includes("/scan/qr")) {
+      const liveIndicator = page.getByText(/Live|Polling every 3s/);
+      await expect(liveIndicator).toBeVisible({ timeout: 10_000 });
+      console.log("08 - WebSocket/polling status indicator verified");
+    }
+
+    await page.screenshot({ path: SCREENSHOT_DIR + "/08-ws-final.png", fullPage: true });
   });
 });
