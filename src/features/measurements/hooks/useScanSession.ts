@@ -106,7 +106,6 @@ export function useScanSession(): UseScanSessionReturn {
   useEffect(() => {
     if (phase === "processing") {
       processingStartRef.current = Date.now();
-      setIsTimedOut(false);
       const timer = setTimeout(() => {
         if (phase === "processing") {
           setIsTimedOut(true);
@@ -142,14 +141,14 @@ export function useScanSession(): UseScanSessionReturn {
 
   // Watch for terminal status transitions
   const prevStatusRef = useRef<string | undefined>(undefined);
-  if (
-    sessionStatus &&
-    sessionStatus.status !== prevStatusRef.current
-  ) {
+  useEffect(() => {
+    if (!sessionStatus) return;
+    if (sessionStatus.status === prevStatusRef.current) return;
     prevStatusRef.current = sessionStatus.status;
 
     if (sessionStatus.status === "completed" && phase === "processing") {
-      // Transition to completed
+      // Transition to completed — setState is reacting to external query data change
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPhase("completed");
       // Invalidate measurement profiles so the new profile appears immediately
       void qc.invalidateQueries({ queryKey: measurementKeys.all });
@@ -161,7 +160,7 @@ export function useScanSession(): UseScanSessionReturn {
         sessionStatus.error_message ?? "Scan failed. Please try again."
       );
     }
-  }
+  }, [sessionStatus, phase, qc]);
 
   // ── Initiate scan session ───────────────────────────────────────────────────
   const initiate = useCallback(

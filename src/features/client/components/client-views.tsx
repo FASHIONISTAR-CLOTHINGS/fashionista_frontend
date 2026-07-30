@@ -6,7 +6,6 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   ArrowRight,
-  ArrowUpRight,
   BarChart3,
   Bell,
   CheckCircle2,
@@ -803,8 +802,9 @@ export function ClientAddressView() {
       await clientApi.addAddress(payload);
       await queryClient.invalidateQueries({ queryKey: ["client", "profile"] });
       toast.success("Address added successfully!");
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to add address. Please try again.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to add address. Please try again.";
+      toast.error(msg);
     }
   };
 
@@ -813,8 +813,9 @@ export function ClientAddressView() {
       await clientApi.deleteAddress(id);
       await queryClient.invalidateQueries({ queryKey: ["client", "profile"] });
       toast.success("Address removed successfully!");
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to remove address. Please try again.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to remove address. Please try again.";
+      toast.error(msg);
     }
   };
 
@@ -823,8 +824,9 @@ export function ClientAddressView() {
       await clientApi.setDefaultAddress(id);
       await queryClient.invalidateQueries({ queryKey: ["client", "profile"] });
       toast.success("Default address updated successfully!");
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to update default address. Please try again.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to update default address. Please try again.";
+      toast.error(msg);
     }
   };
 
@@ -889,21 +891,26 @@ export function ClientAccountDetailsView() {
     email_notifications_enabled: true,
     sms_notifications_enabled: true,
   });
+  const formKey = profile?.id ?? "empty";
+
+  // Sync form when profile loads — uses key-based remount to avoid setState-in-effect
+  const syncedForm = useMemo<ClientProfileUpdatePayload>(() => ({
+    bio: profile?.bio || "",
+    default_shipping_address: profile?.default_shipping_address || "",
+    state: profile?.state || "",
+    country: profile?.country || "",
+    preferred_size: profile?.preferred_size || "",
+    style_preferences: profile?.style_preferences || [],
+    favourite_colours: profile?.favourite_colours || [],
+    email_notifications_enabled: profile?.email_notifications_enabled ?? true,
+    sms_notifications_enabled: profile?.sms_notifications_enabled ?? true,
+  }), [profile]);
 
   useEffect(() => {
-    if (!profile) return;
-    setForm({
-      bio: profile.bio || "",
-      default_shipping_address: profile.default_shipping_address || "",
-      state: profile.state || "",
-      country: profile.country || "",
-      preferred_size: profile.preferred_size || "",
-      style_preferences: profile.style_preferences || [],
-      favourite_colours: profile.favourite_colours || [],
-      email_notifications_enabled: profile.email_notifications_enabled,
-      sms_notifications_enabled: profile.sms_notifications_enabled,
-    });
-  }, [profile]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setForm(syncedForm);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formKey]);
 
   const stylePreferencesText = useMemo(() => (form.style_preferences ?? []).join(", "), [form.style_preferences]);
   const colourText = useMemo(() => (form.favourite_colours ?? []).join(", "), [form.favourite_colours]);
@@ -913,8 +920,9 @@ export function ClientAccountDetailsView() {
     try {
       await updateProfile.mutateAsync(form);
       toast.success("Profile updated successfully!");
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to save profile changes. Please try again.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to save profile changes. Please try again.";
+      toast.error(msg);
     }
   };
 
@@ -1192,8 +1200,9 @@ function WalletTopUpPanel() {
       toast.success("Redirecting to payment gateway...");
       if (res.payment_url) window.location.href = res.payment_url;
     },
-    onError: (err: any) => {
-      toast.error(err?.message || "Wallet top-up initiation failed. Please try again.");
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : "Wallet top-up initiation failed. Please try again.";
+      toast.error(msg);
     },
   });
 
@@ -1479,8 +1488,9 @@ function CreateTicketModal({ onClose }: { onClose: () => void }) {
       void queryClient.invalidateQueries({ queryKey: ["client-support-tickets"] });
       onClose();
     },
-    onError: (err: any) => {
-      toast.error(err?.message || "Failed to create support ticket. Please try again.");
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : "Failed to create support ticket. Please try again.";
+      toast.error(msg);
     },
   });
 

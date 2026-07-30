@@ -77,7 +77,13 @@ export async function registerMediaPipeSW(): Promise<void> {
     if ("caches" in window) {
       const cache = await caches.open(SW_CACHE_NAME);
       await Promise.allSettled(
-        MEDIAPIPE_ASSETS.map((url) => cache.match(url).then((r) => r ?? fetch(url).then((res) => cache.put(url, res.clone())))),
+        MEDIAPIPE_ASSETS.map(async (url) => {
+          const r = await cache.match(url);
+          if (!r) {
+            const res = await fetch(url);
+            await cache.put(url, res.clone());
+          }
+        }),
       );
     }
   } catch (err) {
