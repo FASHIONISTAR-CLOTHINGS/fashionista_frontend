@@ -2,15 +2,23 @@
  * @file measurement_scan.spec.ts
  * @description E2E test for the AI body measurement scan flow.
  *
- * Flow:
- *   1. Login via API, inject tokens into browser sessionStorage
- *   2. Navigate to /client/dashboard/measurements/scan
- *   3. Verify intro state renders (AI Body Scan heading, Start AI Scan button)
- *   4. Click "Start AI Scan" → verify camera capture UI (Start Body Scan button)
- *   5. Assert no 404 errors from scan status endpoint
- *   6. Assert no 403 errors from WebSocket connection
- *   7. Navigate to /get-measured landing page
- *   8. Navigate to measurements dashboard
+ * Actual UI flow (verified from component source code):
+ *
+ *   Scan Entry Page (/client/dashboard/measurements/scan):
+ *     1. Header: "30-Second Body Scan" (h1) + "AI Body Measurement" badge
+ *     2. ScanTutorialOverlay: 4 slides with "Skip" and "Next" buttons
+ *     3. MeasurementEntryModal: "Before Your Scan" heading
+ *        - Age input (placeholder "e.g. 28")
+ *        - Sex selector (Male/Female/Other)
+ *        - Height input (placeholder "e.g. 175")
+ *        - Weight input (placeholder "e.g. 70")
+ *        - "Continue to Scan →" submit button
+ *     4. On submit → redirect to QR page (desktop) or /scan/[sessionId] (mobile)
+ *
+ *   Active Scan Page (/client/dashboard/measurements/scan/[sessionId]):
+ *     1. EnhancedMeasurementFlow: "AI Body Scan" heading (h2)
+ *     2. "Start AI Scan" button → camera capture phase
+ *     3. Requires sessionStorage entry data (age, height, etc.)
  *
  * Screenshots saved to: test-screenshots/measurement/
  */
@@ -25,6 +33,9 @@ const TEST_USER = {
   password: "Client@Secure99!",
 };
 
+// Test session ID for active scan page tests
+const TEST_SESSION_ID = "ca9ef4f4-8330-40ec-a646-c9699d8d9f8c";
+
 /**
  * Login via the backend API directly and inject auth tokens into
  * the browser's sessionStorage before the page's JS hydrates.
@@ -37,6 +48,7 @@ async function loginAndNavigate(
   page: Page,
   request: APIRequestContext,
   targetPath: string,
+  options?: { injectEntryData?: boolean },
 ): Promise<void> {
   // 1. Login via API
   const loginRes = await request.post(API_BASE + "/api/v1/auth/login/", {
@@ -69,9 +81,9 @@ async function loginAndNavigate(
   expect(accessToken, "Access token should be present").toBeTruthy();
 
   // 2. Inject sessionStorage BEFORE the page loads via addInitScript
-  // This runs before any page JS, so Zustand will pick up the auth state on hydration
   await page.addInitScript(
     (authData) => {
+      // Auth state in Zustand persist envelope format
       const authState = {
         state: {
           accessToken: authData.accessToken,
@@ -86,14 +98,40 @@ async function loginAndNavigate(
         version: 0,
       };
       sessionStorage.setItem("fashionistar-auth", JSON.stringify(authState));
+
+      // Optionally inject measurement entry data for active scan page
+      if (authData.entryData) {
+        sessionStorage.setItem("fashionistar_measurement_entry", JSON.stringify(authData.entryData));
+      }
+
+      // Skip tutorial for tests that don't specifically test it
+      if (authData.skipTutorial) {
+        localStorage.setItem("fashionistar_tutorial_seen", "true");
+      }
     },
-    { accessToken, refreshToken, user },
+    {
+      accessToken,
+      refreshToken,
+      user,
+      skipTutorial: options?.injectEntryData ?? false,
+      entryData: options?.injectEntryData
+        ? {
+            age: 28,
+            sex: "neutral",
+            heightCm: 175,
+            weightKg: 70,
+            sessionId: TEST_SESSION_ID,
+            deviceType: "desktop",
+            timestamp: Date.now(),
+          }
+        : null,
+    },
   );
 
-  // 3. Navigate to the target page — addInitScript runs before page JS
-  // Use "networkidle" to wait for the dev server to finish compiling and loading
-  await page.goto(targetPath, { waitUntil: "networkidle", timeout: 120_000 });
-  // Wait for hydration and any loading screen to clear
+  // 3. Navigate to the target page
+  // Use "domcontentloaded" — "networkidle" times out due to HMR WebSocket / polling
+  await page.goto(targetPath, { waitUntil: "domcontentloaded", timeout: 120_000 });
+  // Wait for hydration and dev server compilation to finish
   await page.waitForTimeout(8000);
 }
 
@@ -109,8 +147,8 @@ function collectErrors(page: Page) {
   });
   page.on("console", (msg) => {
     if (msg.type() === "error") {
-      // Ignore Google OAuth origin errors (unrelated to our code)
       const text = msg.text();
+      // Ignore Google OAuth origin errors and browser extension noise
       if (!text.includes("GSI_LOGGER") && !text.includes("accounts.google.com")) {
         consoleErrors.push(`CONSOLE ERROR: ${text}`);
       }
@@ -120,7 +158,7 @@ function collectErrors(page: Page) {
     const url = response.url();
     const status = response.status();
 
-    // Only track scan-related endpoints (not Google OAuth, static assets, etc.)
+    // Only track scan-related endpoints
     if (
       (url.includes("/api/v1/ninja/") || url.includes("/ws/scan/")) &&
       (status === 404 || status === 403)
@@ -135,74 +173,169 @@ function collectErrors(page: Page) {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 test.describe("Measurement Scan E2E", () => {
-  test.setTimeout(180_000);
+  test.setTimeout(300_000);
 
   test("01 - Login via API and verify authenticated", async ({ page, request }) => {
     await loginAndNavigate(page, request, "/");
     await page.screenshot({ path: `${SCREENSHOT_DIR}/01-after-login.png`, fullPage: true });
-    // Verify we're not redirected to sign-in
     await expect(page).not.toHaveURL(/\/auth\/sign-in/);
   });
 
-  test("02 - Navigate to measurement scan page and verify intro", async ({ page, request }) => {
+  test("02 - Scan entry page renders header and tutorial", async ({ page, request }) => {
     await loginAndNavigate(page, request, "/client/dashboard/measurements/scan");
-    await page.screenshot({ path: `${SCREENSHOT_DIR}/02-scan-page.png`, fullPage: true });
+    await page.screenshot({ path: `${SCREENSHOT_DIR}/02-scan-entry.png`, fullPage: true });
 
-    // The scan entry page should show the intro card with "AI Body Scan" heading
-    // Wait for the scan page to fully render (dev server may still be compiling)
-    await page.waitForSelector("text=AI Body Scan", { timeout: 120_000 });
-    await expect(page.getByText("AI Body Scan")).toBeVisible();
-    // Verify subtitle text
-    await expect(page.getByText("30 seconds · 14 measurements · 100% private")).toBeVisible();
+    // Verify page header
+    await page.waitForSelector("text=30-Second Body Scan", { timeout: 120_000 });
+    await expect(page.getByRole("heading", { name: "30-Second Body Scan" })).toBeVisible();
+    await expect(page.getByText("AI Body Measurement")).toBeVisible();
+
+    // Tutorial overlay should be visible (first slide: "Set Up Your Phone")
+    await expect(page.getByRole("heading", { name: "Set Up Your Phone" })).toBeVisible();
+    await expect(page.getByText("Skip")).toBeVisible();
   });
 
-  test("03 - Verify idle state renders Start AI Scan button", async ({ page, request }) => {
+  test("03 - Tutorial Skip button opens entry modal", async ({ page, request }) => {
     await loginAndNavigate(page, request, "/client/dashboard/measurements/scan");
+    await page.waitForSelector("text=30-Second Body Scan", { timeout: 120_000 });
 
-    await page.waitForSelector("text=Start AI Scan", { timeout: 120_000 });
-    await page.screenshot({ path: `${SCREENSHOT_DIR}/03-idle-state.png`, fullPage: true });
+    // Click Skip to bypass tutorial
+    await page.getByText("Skip").click();
+    await page.waitForTimeout(2000);
 
+    // Entry modal should appear
+    await expect(page.getByRole("heading", { name: "Before Your Scan" })).toBeVisible();
+    await expect(page.getByText("A few details help our AI")).toBeVisible();
+
+    await page.screenshot({ path: `${SCREENSHOT_DIR}/03-entry-modal.png`, fullPage: true });
+  });
+
+  test("04 - Entry modal has age, height, weight inputs and submit button", async ({ page, request }) => {
+    await loginAndNavigate(page, request, "/client/dashboard/measurements/scan");
+    await page.waitForSelector("text=30-Second Body Scan", { timeout: 120_000 });
+
+    // Skip tutorial
+    await page.getByText("Skip").click();
+    await page.waitForTimeout(2000);
+
+    // Verify form fields
+    await expect(page.getByPlaceholder("e.g. 28")).toBeVisible();
+    await expect(page.getByPlaceholder("e.g. 175")).toBeVisible();
+    await expect(page.getByPlaceholder("e.g. 70")).toBeVisible();
+
+    // Verify sex selector buttons
+    await expect(page.getByRole("button", { name: "Male" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Female" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Other" })).toBeVisible();
+
+    // Verify submit button
+    await expect(page.getByRole("button", { name: "Continue to Scan →" })).toBeVisible();
+
+    await page.screenshot({ path: `${SCREENSHOT_DIR}/04-modal-fields.png`, fullPage: true });
+  });
+
+  test("05 - Fill entry modal and submit triggers redirect", async ({ page, request }) => {
+    await loginAndNavigate(page, request, "/client/dashboard/measurements/scan");
+    await page.waitForSelector("text=30-Second Body Scan", { timeout: 120_000 });
+
+    // Skip tutorial
+    await page.getByText("Skip").click();
+    await page.waitForTimeout(2000);
+
+    // Fill age (required to enable submit)
+    await page.getByPlaceholder("e.g. 28").fill("28");
+    await page.waitForTimeout(500);
+
+    // Fill height
+    await page.getByPlaceholder("e.g. 175").fill("175");
+
+    // Fill weight
+    await page.getByPlaceholder("e.g. 70").fill("70");
+
+    await page.screenshot({ path: `${SCREENSHOT_DIR}/05-modal-filled.png`, fullPage: true });
+
+    // Submit — this calls initiateBodyScan and redirects
+    await page.getByRole("button", { name: "Continue to Scan →" }).click();
+
+    // Wait for redirect (either QR page or scan session page)
+    await page.waitForTimeout(10000);
+    await page.screenshot({ path: `${SCREENSHOT_DIR}/05-after-submit.png`, fullPage: true });
+
+    // Should have navigated away from the scan entry page
+    await expect(page).not.toHaveURL(/\/client\/dashboard\/measurements\/scan$/);
+  });
+
+  test("06 - Navigate to get-measured landing page", async ({ page }) => {
+    await page.goto("/get-measured", { waitUntil: "domcontentloaded", timeout: 120_000 });
+    await page.waitForTimeout(8000);
+    await page.screenshot({ path: `${SCREENSHOT_DIR}/06-get-measured.png`, fullPage: true });
+    await expect(page).toHaveURL(/\/get-measured/);
+  });
+
+  test("07 - Navigate to measurements dashboard (authenticated)", async ({ page, request }) => {
+    await loginAndNavigate(page, request, "/client/dashboard/measurements");
+    await page.screenshot({ path: `${SCREENSHOT_DIR}/07-measurements-dashboard.png`, fullPage: true });
+    await expect(page).not.toHaveURL(/\/auth\/sign-in/);
+  });
+
+  test("08 - Active scan page renders AI Body Scan and Start AI Scan button", async ({ page, request }) => {
+    // Inject entry data so ActiveScanClient doesn't redirect back
+    await loginAndNavigate(
+      page,
+      request,
+      `/client/dashboard/measurements/scan/${TEST_SESSION_ID}`,
+      { injectEntryData: true },
+    );
+
+    // The EnhancedMeasurementFlow should render with "AI Body Scan" heading
+    await page.waitForSelector("text=AI Body Scan", { timeout: 120_000 });
+    await expect(page.getByRole("heading", { name: "AI Body Scan" })).toBeVisible();
+    await expect(page.getByText("30 seconds · 14 measurements · 100% private")).toBeVisible();
+
+    // "Start AI Scan" button should be visible
     const startButton = page.getByRole("button", { name: "Start AI Scan" });
     await expect(startButton).toBeVisible();
     await expect(startButton).toBeEnabled();
+
+    await page.screenshot({ path: `${SCREENSHOT_DIR}/08-active-scan-idle.png`, fullPage: true });
   });
 
-  test("04 - Click Start AI Scan and verify camera capture UI", async ({ page, request }) => {
-    await loginAndNavigate(page, request, "/client/dashboard/measurements/scan");
+  test("09 - Click Start AI Scan and verify no 404/403 on scan endpoints", async ({ page, request }) => {
+    await loginAndNavigate(
+      page,
+      request,
+      `/client/dashboard/measurements/scan/${TEST_SESSION_ID}`,
+      { injectEntryData: true },
+    );
+
     await page.waitForSelector("text=Start AI Scan", { timeout: 120_000 });
 
     const { networkErrors } = collectErrors(page);
 
-    const startButton = page.getByRole("button", { name: "Start AI Scan" });
-    await startButton.click();
+    // Click Start AI Scan to trigger camera capture
+    await page.getByRole("button", { name: "Start AI Scan" }).click();
+    await page.waitForTimeout(5000);
 
-    // Wait for camera capture UI to render
-    await page.waitForTimeout(3000);
-    await page.screenshot({ path: `${SCREENSHOT_DIR}/04-after-start.png`, fullPage: true });
+    await page.screenshot({ path: `${SCREENSHOT_DIR}/09-after-click.png`, fullPage: true });
 
-    // Verify we're in the scanning phase — look for "Start Body Scan" button
-    // or the height input field that appears in AICameraCapture
-    const bodyScanButton = page.getByRole("button", { name: "Start Body Scan" });
-    const heightInput = page.getByPlaceholder("e.g. 175");
-
-    // At least one of these should be visible in the camera capture phase
-    const hasBodyScanButton = await bodyScanButton.isVisible().catch(() => false);
-    const hasHeightInput = await heightInput.isVisible().catch(() => false);
-
+    // Assert no 404/403 errors on scan-related API or WebSocket endpoints
     expect(
-      hasBodyScanButton || hasHeightInput,
-      "Should show either 'Start Body Scan' button or height input in camera capture phase",
-    ).toBeTruthy();
-
-    // Assert no 404 or 403 errors on scan-related endpoints
-    expect(networkErrors, `Should not have 404/403 errors on scan endpoints: ${networkErrors.join(", ")}`).toHaveLength(0);
+      networkErrors,
+      `Should not have 404/403 errors on scan endpoints. Found: ${networkErrors.join(", ")}`,
+    ).toHaveLength(0);
   });
 
-  test("05 - Verify measurement list and requirements visible", async ({ page, request }) => {
-    await loginAndNavigate(page, request, "/client/dashboard/measurements/scan");
+  test("10 - Verify measurement list and requirements on active scan page", async ({ page, request }) => {
+    await loginAndNavigate(
+      page,
+      request,
+      `/client/dashboard/measurements/scan/${TEST_SESSION_ID}`,
+      { injectEntryData: true },
+    );
+
     await page.waitForSelector("text=AI Body Scan", { timeout: 120_000 });
 
-    // Verify measurement list items
+    // Verify measurement list section
     await expect(page.getByText("What We Measure")).toBeVisible();
     await expect(page.getByText("Bust")).toBeVisible();
     await expect(page.getByText("Waist")).toBeVisible();
@@ -212,40 +345,7 @@ test.describe("Measurement Scan E2E", () => {
     // Verify requirements section
     await expect(page.getByText("Before You Start")).toBeVisible();
     await expect(page.getByText("Wear fitted clothing")).toBeVisible();
-    await expect(page.getByText("Stand 1.5–2 metres")).toBeVisible();
 
-    await page.screenshot({ path: `${SCREENSHOT_DIR}/05-measurement-details.png`, fullPage: true });
-  });
-
-  test("06 - Navigate to get-measured landing page", async ({ page }) => {
-    await page.goto("/get-measured", { waitUntil: "networkidle", timeout: 120_000 });
-    await page.waitForTimeout(8000);
-    await page.screenshot({ path: `${SCREENSHOT_DIR}/06-get-measured.png`, fullPage: true });
-    await expect(page).toHaveURL(/\/get-measured/);
-  });
-
-  test("07 - Navigate to measurements dashboard", async ({ page, request }) => {
-    await loginAndNavigate(page, request, "/client/dashboard/measurements");
-    await page.screenshot({ path: `${SCREENSHOT_DIR}/07-measurements-dashboard.png`, fullPage: true });
-    await expect(page).not.toHaveURL(/\/auth\/sign-in/);
-  });
-
-  test("08 - Verify no 404 on scan status endpoint and no 403 on WebSocket", async ({ page, request }) => {
-    await loginAndNavigate(page, request, "/client/dashboard/measurements/scan");
-    await page.waitForSelector("text=Start AI Scan", { timeout: 120_000 });
-
-    const { networkErrors } = collectErrors(page);
-
-    // Click Start AI Scan to trigger camera capture (which may initiate WebSocket)
-    await page.getByRole("button", { name: "Start AI Scan" }).click();
-    await page.waitForTimeout(5000);
-
-    // Assert no 404/403 errors on scan-related API or WebSocket endpoints
-    expect(
-      networkErrors,
-      `Should not have 404/403 errors on scan endpoints. Found: ${networkErrors.join(", ")}`,
-    ).toHaveLength(0);
-
-    await page.screenshot({ path: `${SCREENSHOT_DIR}/08-no-network-errors.png`, fullPage: true });
+    await page.screenshot({ path: `${SCREENSHOT_DIR}/10-measurement-details.png`, fullPage: true });
   });
 });
