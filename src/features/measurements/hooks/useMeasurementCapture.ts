@@ -109,6 +109,32 @@ export interface UseMeasurementCaptureReturn {
 
 // ─── Height estimation from landmarks ─────────────────────────────────────────
 
+/** T-038: Average landmarks across multiple frames to reduce jitter */
+function avgLandmarks(frames: Landmark[][]): Landmark[] {
+  if (frames.length === 0) return [];
+  if (frames.length === 1) return frames[0];
+  const numPoints = frames[0].length;
+  const averaged: Landmark[] = [];
+  for (let i = 0; i < numPoints; i++) {
+    let sumX = 0, sumY = 0, sumZ = 0, sumVis = 0;
+    for (const frame of frames) {
+      const lm = frame[i];
+      if (!lm) continue;
+      sumX += lm.x;
+      sumY += lm.y;
+      sumZ += lm.z;
+      sumVis += lm.visibility ?? 0;
+    }
+    averaged.push({
+      x: sumX / frames.length,
+      y: sumY / frames.length,
+      z: sumZ / frames.length,
+      visibility: sumVis / frames.length,
+    });
+  }
+  return averaged;
+}
+
 /**
  * Estimate user height from world landmarks.
  * Uses nose (top) to ankle (bottom) vertical distance.
@@ -320,7 +346,7 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
         frameBufferRef.current.shift();
       }
       // Average landmarks across buffered frames for stability
-      const averaged = averageLandmarks(frameBufferRef.current);
+      const averaged = avgLandmarks(frameBufferRef.current);
       if (localPhase === "capturing_side") {
         setCapturedLandmarks((prev) => ({ ...prev, side: averaged }));
       } else {
@@ -336,32 +362,6 @@ export function useMeasurementCapture(options?: UseMeasurementCaptureOptions): U
     setCurrentFrame(frame);
     return frame;
   }, [landmarker, localPhase, userHeightCm]);
-
-  // T-038: Average landmarks across multiple frames to reduce jitter
-  function averageLandmarks(frames: Landmark[][]): Landmark[] {
-    if (frames.length === 0) return [];
-    if (frames.length === 1) return frames[0];
-    const numPoints = frames[0].length;
-    const averaged: Landmark[] = [];
-    for (let i = 0; i < numPoints; i++) {
-      let sumX = 0, sumY = 0, sumZ = 0, sumVis = 0;
-      for (const frame of frames) {
-        const lm = frame[i];
-        if (!lm) continue;
-        sumX += lm.x;
-        sumY += lm.y;
-        sumZ += lm.z;
-        sumVis += lm.visibility ?? 0;
-      }
-      averaged.push({
-        x: sumX / frames.length,
-        y: sumY / frames.length,
-        z: sumZ / frames.length,
-        visibility: sumVis / frames.length,
-      });
-    }
-    return averaged;
-  }
 
   // ── Map Landmark[] → LandmarkPoint[] for API ────────────────────────────────
   const toLandmarkPoints = (lms: Landmark[]) =>

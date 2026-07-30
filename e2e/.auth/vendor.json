@@ -1,0 +1,16 @@
+{
+  "state": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg1OTg0MjcwLCJpYXQiOjE3ODUzNzk0NzEsImp0aSI6IjY4ZDA2MGMzZmFiODRiOGY4OTg4YWY1YjhmODhmMzZmIiwidXNlcl9pZCI6IjAxOWUxNTRkLWEzMzktNzE2NS1iMmMxLThiYjY3NzM3NTIxNiJ9.0IBK49-H7kj9G1kXaFKccFlcmtYg7GvF7kmWom4X-gg",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc5MzE1NTQ3MCwiaWF0IjoxNzg1Mzc5NDcwLCJqdGkiOiIxOWU3ODgwMjE2Njc0YTJkOTUyOTgwYWYwNWNiOWZiZSIsInVzZXJfaWQiOiIwMTllMTU0ZC1hMzM5LTcxNjUtYjJjMS04YmI2NzczNzUyMTYifQ.wC0noDUZyYcG_FeHgp3db4Plme6lI3-pUGKRs7Pd9K8",
+    "user": {
+      "id": "019e154d-a339-7165-b2c1-8bb677375216",
+      "email": "vendor@fashionistar.test",
+      "role": "vendor",
+      "is_verified": true,
+      "is_staff": false,
+      "first_name": "",
+      "last_name": ""
+    }
+  },
+  "version": 0
+}

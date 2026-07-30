@@ -126,7 +126,7 @@ export function MeasurementReveal({
                       <span className="text-sm font-semibold text-[#01454A]">
                         {formatMeasurement(rawCm, "cm")}
                         <span className="text-[#7A6B44] text-xs ml-1">
-                          ({cmToInch(rawCm).toFixed(1)}")
+                          ({cmToInch(rawCm).toFixed(1)}&quot;)
                         </span>
                       </span>
                     ) : (

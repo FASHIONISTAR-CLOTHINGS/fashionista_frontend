@@ -63,6 +63,7 @@ export function useScanWebSocket(sessionId: string | null) {
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
+  const connectRef = useRef<(sid: string) => void>(() => {});
 
   const startPolling = useCallback((sid: string) => {
     if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
@@ -167,7 +168,7 @@ export function useScanWebSocket(sessionId: string | null) {
 
           reconnectTimerRef.current = setTimeout(() => {
             if (mountedRef.current && sid) {
-              connect(sid);
+              connectRef.current(sid);
             }
           }, backoff);
         } else {
@@ -180,6 +181,10 @@ export function useScanWebSocket(sessionId: string | null) {
       startPolling(sid);
     }
   }, [startPolling]);
+
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
 
   const disconnect = useCallback(() => {
     if (reconnectTimerRef.current) {
@@ -216,6 +221,7 @@ export function useScanWebSocket(sessionId: string | null) {
   useEffect(() => {
     mountedRef.current = true;
     if (sessionId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       connect(sessionId);
     }
     return () => {

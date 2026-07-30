@@ -1,15 +1,16 @@
 {
-  "cookies": [
-    {
-      "name": "fashionistar_rt",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc5Mjk3ODgzMCwiaWF0IjoxNzg1MjAyODMwLCJqdGkiOiI3MDUzNGNmYjFmZTU0M2NhODNkM2QxNWZhMmEzNGFmNSIsInVzZXJfaWQiOiIwMTlmYTY0Yy1kNGEyLTczYWEtYmQ3ZC05Y2QwYTczMjVhYWUifQ.JMYYHmGqt0V46ZhHZwa8nxzHUVOYbLGpvpsp1G_5XH0",
-      "domain": "127.0.0.1",
-      "path": "/",
-      "expires": 1787794832.175,
-      "httpOnly": true,
-      "secure": false,
-      "sameSite": "Lax"
+  "state": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg1OTg0MjYyLCJpYXQiOjE3ODUzNzk0NjMsImp0aSI6Ijc2N2JmMmZjMmFkMzQyOGNhY2JjMWZkZmUwMDdiMTA4IiwidXNlcl9pZCI6IjAxOWZhNmJhLTA3MmEtN2U4My1hMzQ0LWM0YjIzZmZhZDYyNyJ9.XQRH5neGRcakSx1LypYySSNPn_MzHat0dg_VliKqcK4",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc5MzE1NTQ2MiwiaWF0IjoxNzg1Mzc5NDYyLCJqdGkiOiIyNTMwZjk5MTY0YmE0ZTExOWUyMzVhMWJlYTFjYTk4MCIsInVzZXJfaWQiOiIwMTlmYTZiYS0wNzJhLTdlODMtYTM0NC1jNGIyM2ZmYWQ2MjcifQ.fZc4EKDFvbRfA_k5O7dGJuJoOklMtJN3S_jY_R_jzIM",
+    "user": {
+      "id": "019fa6ba-072a-7e83-a344-c4b23ffad627",
+      "email": "client@fashionistar.test",
+      "role": "client",
+      "is_verified": true,
+      "is_staff": false,
+      "first_name": "",
+      "last_name": ""
     }
-  ],
-  "origins": []
+  },
+  "version": 0
 }

@@ -15,7 +15,7 @@
  * Integration:
  *   - Uses useMeasurementCapture hook (MediaPipe + session lifecycle)
  *   - Calls /api/v1/measurements/scan/initiate/ (DRF POST)
- *   - Polls /api/v1/ninja/ai/scan/{id}/status/ (Ninja GET)
+ *   - Polls /api/v1/ninja/measurements/scan/{id}/status/ (Ninja GET)
  *   - On complete: calls onComplete(profileId) for router.push
  *
  * Props:

@@ -100,7 +100,7 @@ export async function initiateBodyScan(
     "v1/measurements/scan/initiate/",
     payload
   );
-  return (data as any)?.data ?? data;
+  return (data.data ?? data) as ScanSessionResponse;
 }
 
 /**
@@ -123,7 +123,7 @@ export async function submitLandmarks(
     `v1/measurements/scan/${sessionId}/submit-landmarks/`,
     payload
   );
-  return (data as any)?.data ?? data;
+  return (data.data ?? data) as ScanSessionResponse;
 }
 
 /**

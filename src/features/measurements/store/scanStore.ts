@@ -14,7 +14,7 @@
  */
 
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { persist, createJSONStorage, type StateStorage } from "zustand/middleware";
 
 export type ScanPhase =
   | "idle"
@@ -88,7 +88,7 @@ export const useScanStore = create<ScanState>()(
       name: "fashionistar-scan-store",
       storage: createJSONStorage(() => {
         if (typeof window === "undefined") {
-          return { getItem: () => null, setItem: () => {}, removeItem: () => {} } as any;
+          return { getItem: () => null, setItem: () => {}, removeItem: () => {} } as unknown as StateStorage;
         }
         return sessionStorage;
       }),

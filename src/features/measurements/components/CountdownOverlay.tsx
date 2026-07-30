@@ -29,6 +29,7 @@ export function CountdownOverlay({ active, onComplete, onCancel }: CountdownOver
 
   useEffect(() => {
     if (!active) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCount(3);
       return;
     }

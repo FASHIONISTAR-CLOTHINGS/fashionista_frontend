@@ -20,6 +20,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { FashionistarImage } from "@/components/media";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -50,6 +51,7 @@ export function DesktopQRGateway({
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSecondsLeft(SESSION_TTL_SECONDS);
     intervalRef.current = setInterval(() => {
       setSecondsLeft((prev) => {
@@ -98,12 +100,14 @@ export function DesktopQRGateway({
         {/* QR Code Display */}
         <div className="relative rounded-2xl bg-white p-6 mx-auto w-fit shadow-2xl">
           {qrCodeB64 ? (
-            <img
+            <FashionistarImage
               src={`data:image/png;base64,${qrCodeB64}`}
               alt="Scan QR code to start body measurement"
               width={240}
               height={240}
               className="rounded-lg"
+              showBlurUp={false}
+              objectFit="contain"
             />
           ) : measurementUrl ? (
             <div className="w-[240px] h-[240px] flex items-center justify-center text-center text-xs text-gray-500 p-4">

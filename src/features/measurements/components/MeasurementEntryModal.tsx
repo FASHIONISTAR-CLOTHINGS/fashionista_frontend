@@ -84,6 +84,7 @@ export function MeasurementEntryModal({
   useEffect(() => {
     const ageNum = parseInt(age, 10);
     if (isNaN(ageNum) || ageNum < 10 || ageNum > 100) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPrediction(null);
       return;
     }
