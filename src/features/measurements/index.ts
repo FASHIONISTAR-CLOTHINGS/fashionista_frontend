@@ -101,7 +101,6 @@ export type { HeightPredictionInput, UseHeightPredictionOptions, UseHeightPredic
 export { useEnhancedMeasurementCapture }     from "./hooks/useEnhancedMeasurementCapture";
 export type { UseEnhancedMeasurementCaptureReturn, UseEnhancedMeasurementCaptureOptions, EnhancedCapturePhase, EnhancedCaptureFrame } from "./hooks/useEnhancedMeasurementCapture";
 export { useScanWebSocket }          from "./hooks/useScanWebSocket";
-export type { WSConnectionStatus, ScanWSEvent } from "./hooks/useScanWebSocket";
 
 // ── AI Scan API ────────────────────────────────────────────────────────────────
 export * as scanApi                  from "./api/scan.api";
@@ -130,7 +129,6 @@ export type {
   CapturePhase,
   CaptureFrame,
   UseMeasurementCaptureReturn,
-  UseMeasurementCaptureOptions,
 } from "./hooks/useMeasurementCapture";
 
 export type {
@@ -151,31 +149,22 @@ export type { ScanPhase, UserSex, ScanState } from "./store/scanStore";
 
 // ── New Hooks (Measurement Workflow Refactor) ─────────────────────────────────
 export { useAutoCapture }                  from "./hooks/useAutoCapture";
-export type { UseAutoCaptureReturn, UseAutoCaptureOptions } from "./hooks/useAutoCapture";
+export type { UseAutoCaptureReturn, UseAutoCaptureConfig } from "./hooks/useAutoCapture";
 export { useVoiceCoach }                   from "./hooks/useVoiceCoach";
-export type { UseVoiceCoachReturn }        from "./hooks/useVoiceCoach";
 export { usePhoneOrientation }             from "./hooks/usePhoneOrientation";
-export type { UsePhoneOrientationReturn }  from "./hooks/usePhoneOrientation";
+export type { PhoneOrientationData, OrientationStatus } from "./hooks/usePhoneOrientation";
 export { useHapticFeedback }               from "./hooks/useHapticFeedback";
-export type { UseHapticFeedbackReturn, HapticPattern } from "./hooks/useHapticFeedback";
 export { useDeviceType }                   from "./hooks/useDeviceType";
-export type { UseDeviceTypeReturn, DeviceKind, ApiDeviceType } from "./hooks/useDeviceType";
+export type { DeviceType, DeviceCategory } from "./hooks/useDeviceType";
 
 // ── New UI Components (Measurement Workflow Refactor) ──────────────────────────
 export { ScanTutorialOverlay }             from "./components/ScanTutorialOverlay";
-export type { ScanTutorialOverlayProps }   from "./components/ScanTutorialOverlay";
 export { ScanProgressStepper }             from "./components/ScanProgressStepper";
-export type { ScanProgressStepperProps }   from "./components/ScanProgressStepper";
 export { CountdownOverlay }                from "./components/CountdownOverlay";
-export type { CountdownOverlayProps }      from "./components/CountdownOverlay";
 export { PhoneOrientationIndicator }       from "./components/PhoneOrientationIndicator";
-export type { PhoneOrientationIndicatorProps } from "./components/PhoneOrientationIndicator";
 export { VoiceCoachDisplay }               from "./components/VoiceCoachDisplay";
-export type { VoiceCoachDisplayProps }     from "./components/VoiceCoachDisplay";
 export { MeasurementReveal }               from "./components/MeasurementReveal";
-export type { MeasurementRevealProps }     from "./components/MeasurementReveal";
 export { ScanFallbackManual }              from "./components/ScanFallbackManual";
-export type { ScanFallbackManualProps }    from "./components/ScanFallbackManual";
 
 // ── MediaPipe Service Worker Registration ──────────────────────────────────────
 export { registerMediaPipeSW }             from "./lib/registerMediaPipeSW";

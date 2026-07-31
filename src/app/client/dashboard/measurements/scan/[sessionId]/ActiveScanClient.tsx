@@ -156,15 +156,6 @@ export function ActiveScanClient({
     router.push("/client/dashboard/measurements");
   }, [router]);
 
-  const handleManualSubmit = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    (_: Record<string, number>) => {
-      // TODO: Submit manual measurements to backend
-      router.push("/client/dashboard/measurements");
-    },
-    [router],
-  );
-
   // ── Fallback manual entry ──
   if (showFallback) {
     return (
@@ -172,9 +163,9 @@ export function ActiveScanClient({
         <div className="max-w-2xl mx-auto">
           <div className="rounded-2xl bg-white border border-[#ECE6D6] p-6">
             <ScanFallbackManual
-              variant="full"
-              onSubmit={handleManualSubmit}
-              onCancel={() => setShowFallback(false)}
+              variant="inline"
+              manualEntryUrl="/client/dashboard/measurements"
+              onDismiss={() => setShowFallback(false)}
             />
           </div>
         </div>

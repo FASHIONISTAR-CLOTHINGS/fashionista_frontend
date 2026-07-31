@@ -209,7 +209,7 @@ export function QrHandoffClient({
             </div>
             {pollingActive && (
               <span className="text-[10px] text-[#7A6B44]/50">
-                {ws.isConnected ? "Live" : "Polling every 3s"}
+                Polling every 3s
               </span>
             )}
           </div>

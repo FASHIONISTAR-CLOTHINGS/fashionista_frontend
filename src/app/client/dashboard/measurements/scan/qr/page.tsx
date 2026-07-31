@@ -19,7 +19,7 @@
  */
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
 import { DesktopQRGateway } from "@/features/measurements/components/DesktopQRGateway";
 import { initiateBodyScan } from "@/features/measurements/api/scan.api";
 
@@ -38,28 +38,38 @@ function QRGatewayInner() {
   const weightKg       = params.get("weight_kg")   ?? "";
 
   // QR b64 comes from sessionStorage (too large for URL params)
-  const [qrCodeB64, setQrCodeB64] = useState<string>("");
-  const [activeSid, setActiveSid] = useState<string>(sessionId);
-  const [activeMurl, setActiveMurl] = useState<string>(measurementUrl);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // Load QR b64 from sessionStorage on mount
-  useEffect(() => {
+  // Lazy-init from sessionStorage to avoid setState-in-effect
+  // NOTE: ScanEntryClient stores keys in camelCase (qrCodeB64, measurementUrl)
+  const [qrCodeB64, setQrCodeB64] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
     try {
       const stored = sessionStorage.getItem("fashionistar_measurement_entry");
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed.qr_code_b64) {
-          setQrCodeB64(parsed.qr_code_b64);
-        }
-        if (parsed.measurement_url && !measurementUrl) {
-          setActiveMurl(parsed.measurement_url);
-        }
+        if (parsed.qrCodeB64) return parsed.qrCodeB64;
+        if (parsed.qr_code_b64) return parsed.qr_code_b64;
       }
     } catch {
       // sessionStorage unavailable
     }
-  }, [measurementUrl]);
+    return "";
+  });
+  const [activeSid, setActiveSid] = useState<string>(sessionId);
+  const [activeMurl, setActiveMurl] = useState<string>(() => {
+    if (typeof window === "undefined" || measurementUrl) return measurementUrl;
+    try {
+      const stored = sessionStorage.getItem("fashionistar_measurement_entry");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.measurementUrl) return parsed.measurementUrl;
+        if (parsed.measurement_url) return parsed.measurement_url;
+      }
+    } catch {
+      // sessionStorage unavailable
+    }
+    return measurementUrl;
+  });
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // ── Refresh handler (called on session expiry) ────────────────────────────
   const handleRefresh = useCallback(async () => {
@@ -67,18 +77,19 @@ function QRGatewayInner() {
     try {
       const session = await initiateBodyScan({ device_type: "web" });
       setActiveSid(session.session_id);
-      setActiveMurl(session.measurement_url);
-      setQrCodeB64(session.qr_code_b64);
+      setActiveMurl(session.measurement_url ?? "");
+      setQrCodeB64(session.qr_code_b64 ?? "");
 
-      // Update sessionStorage
+      // Update sessionStorage (use camelCase keys consistent with ScanEntryClient)
       try {
         const stored = sessionStorage.getItem("fashionistar_measurement_entry");
         const existing = stored ? JSON.parse(stored) : {};
         sessionStorage.setItem("fashionistar_measurement_entry", JSON.stringify({
           ...existing,
-          session_id:      session.session_id,
-          measurement_url: session.measurement_url,
-          qr_code_b64:     session.qr_code_b64,
+          sessionId:       session.session_id,
+          measurementUrl:  session.measurement_url,
+          qrCodeB64:       session.qr_code_b64,
+          qrCodeUrl:       session.qr_code_url,
           timestamp:       Date.now(),
         }));
       } catch {
@@ -88,7 +99,7 @@ function QRGatewayInner() {
       // Update URL without full page reload
       const newParams = new URLSearchParams({
         session_id: session.session_id,
-        murl:       session.measurement_url,
+        murl:       session.measurement_url ?? "",
         ...(heightCm  && { height_cm:  heightCm }),
         ...(age       && { age }),
         ...(weightKg  && { weight_kg:  weightKg }),
