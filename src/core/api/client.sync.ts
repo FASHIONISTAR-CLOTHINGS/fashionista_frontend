@@ -214,8 +214,9 @@ apiSync.interceptors.response.use(
         }
         return apiSync(originalRequest);
       } catch (refreshError) {
-        // Refresh truly failed for an authenticated request — force logout
-        if (typeof window !== "undefined") {
+        // Refresh failed — force logout unless suppressAuthRedirect is requested
+        const suppressRedirect = Boolean((originalRequest as any)?._suppressAuthRedirect);
+        if (typeof window !== "undefined" && !suppressRedirect) {
           clearStoredAuthState();
           clearMirrorCookies();
           window.location.href = "/auth/sign-in"; // Canonical sign-in URL

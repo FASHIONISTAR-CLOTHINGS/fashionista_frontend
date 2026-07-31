@@ -94,10 +94,11 @@ export function ActiveScanClient({
   // ── Polling fallback for scan status ──
   // The EnhancedMeasurementFlow internally uses useScanSession which has its own
   // WebSocket + polling. This outer polling is a secondary safety net for when
-  // the user navigates back or the component re-mounts mid-scan.
+  // the user navigates back or the component re-mounts while a scan is processing.
   useEffect(() => {
     if (!sessionId) return;
-    if (scanPhase === "completed" || scanPhase === "failed") return;
+    // Only poll when the scan is actively processing on the backend (after submission)
+    if (scanPhase !== "processing") return;
     if (pollingActiveRef.current) return;
 
     pollingActiveRef.current = true;
@@ -113,7 +114,7 @@ export function ActiveScanClient({
           clearInterval(pollInterval);
         }
       } catch {
-        // Polling error — keep trying
+        // Polling error — keep trying quietly
       }
     }, 3000);
 

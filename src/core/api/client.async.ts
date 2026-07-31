@@ -136,7 +136,8 @@ export const apiAsync: KyInstance = ky.create({
             request.headers.set("Authorization", `Bearer ${newToken}`);
             return ky(request, options);
           } catch (error) {
-            if (typeof window !== "undefined") {
+            const suppressRedirect = Boolean((options as any)?._suppressAuthRedirect);
+            if (typeof window !== "undefined" && !suppressRedirect) {
               clearStoredAuthState();
               clearMirrorCookies();
               window.location.href = "/auth/sign-in";
