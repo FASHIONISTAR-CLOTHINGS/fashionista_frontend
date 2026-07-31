@@ -475,28 +475,4 @@ export function GetMeasuredClient({
     </>
   );
 }
-                   * initialAge + initialHeightCm forwarded from the entry modal.
-                   */
-                  <EnhancedMeasurementFlow
-                    onComplete={handleScanComplete}
-                    onCancel={() => setIsScanMode(false)}
-                    initialAge={parseInt(age, 10) || undefined}
-                    initialHeightCm={
-                      prediction?.predictedCm ??
-                      (parseFloat(heightInput) > 0
-                        ? heightUnit === "inch"
-                          ? Math.round(parseFloat(heightInput) * 2.54 * 10) / 10
-                          : parseFloat(heightInput)
-                        : undefined)
-                    }
-                  />
-                )}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
->>>>>>> pr_source/main
-    </>
-  );
-}
+
