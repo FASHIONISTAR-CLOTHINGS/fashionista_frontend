@@ -246,7 +246,7 @@ export function MeasurementsDashboard() {
   const [selectedProfileId, setSelectedProfileId] = useState<number | string | null>(null);
 
   // Find selected or default profile
-  const profiles: Record<string, unknown>[] = Array.isArray(data) ? data : (data as any)?.results ?? [];
+  const profiles: Record<string, unknown>[] = Array.isArray(data) ? data : (data as { results?: Record<string, unknown>[] })?.results ?? [];
   const selectedProfile = profiles.find(
     p => (selectedProfileId != null ? p.id === selectedProfileId : p.is_default)
   ) ?? profiles[0] ?? null;
@@ -425,21 +425,21 @@ export function MeasurementsDashboard() {
               {profiles.length > 1 && (
                 <div className="mt-4">
                   <MeasurementTimeline
-                    entries={profiles.map((p: any) => ({
-                      id:                p.id,
-                      scanned_at:        p.created_at ?? p.updated_at ?? new Date().toISOString(),
+                    entries={profiles.map((p: Record<string, unknown>) => ({
+                      id:                p.id as string | number,
+                      scanned_at:        (p.created_at ?? p.updated_at ?? new Date().toISOString()) as string,
                       scan_confidence:   typeof p.scan_confidence === "number" ? p.scan_confidence : null,
                       measurements_cm: {
-                        bust:           p.bust           ?? null,
-                        waist:          p.waist          ?? null,
-                        hips:           p.hips           ?? null,
-                        shoulder_width: p.shoulder_width ?? null,
-                        arm_length:     p.arm_length     ?? null,
-                        inseam:         p.inseam         ?? null,
-                        thigh:          p.thigh          ?? null,
-                        neck:           p.neck           ?? null,
-                        torso_length:   p.torso_length   ?? null,
-                        sleeve_length:  p.sleeve_length  ?? null,
+                        bust:           (p.bust           as number | null) ?? null,
+                        waist:          (p.waist          as number | null) ?? null,
+                        hips:           (p.hips           as number | null) ?? null,
+                        shoulder_width: (p.shoulder_width as number | null) ?? null,
+                        arm_length:     (p.arm_length     as number | null) ?? null,
+                        inseam:         (p.inseam         as number | null) ?? null,
+                        thigh:          (p.thigh          as number | null) ?? null,
+                        neck:           (p.neck           as number | null) ?? null,
+                        torso_length:   (p.torso_length   as number | null) ?? null,
+                        sleeve_length:  (p.sleeve_length  as number | null) ?? null,
                       },
                     }))}
                     onRetake={() => router.push("/client/dashboard/measurements/scan")}

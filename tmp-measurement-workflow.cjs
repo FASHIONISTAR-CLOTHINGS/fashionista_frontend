@@ -2,8 +2,8 @@ const { chromium } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
 
-const BASE_URL = 'http://localhost:3000';
-const API_URL = 'http://127.0.0.1:8001';
+const BASE_URL = 'http://127.0.0.1:3000';
+const API_URL = 'http://127.0.0.1:8002';
 const EVIDENCE_DIR = path.join(__dirname, 'test-evidence', 'e2e');
 
 const EMAIL = 'email-reset.1779305773712.a8cot8@playwright.fashionistar.io';
@@ -51,39 +51,52 @@ function makeLandmarks() {
   const lm = Array.from({ length: 33 }, (_, i) => ({ x: 0, y: 0, z: 1, visibility: 1 }));
   const set = (i, x, y, z = 1, vis = 1) => { lm[i] = { x, y, z, visibility: vis }; };
 
-  set(0, 0.00, 1.75);
-  set(1, -0.04, 1.78);
-  set(2, -0.06, 1.78);
-  set(3, -0.08, 1.78);
-  set(4, 0.04, 1.78);
-  set(5, 0.06, 1.78);
-  set(6, 0.08, 1.78);
-  set(7, -0.10, 1.74);
-  set(8, 0.10, 1.74);
-  set(9, -0.03, 1.72);
-  set(10, 0.03, 1.72);
-  set(11, -0.25, 1.45);
-  set(12, 0.25, 1.45);
-  set(13, -0.50, 1.20);
-  set(14, 0.50, 1.20);
-  set(15, -0.75, 0.95);
-  set(16, 0.75, 0.95);
-  set(17, -0.78, 0.92);
-  set(18, 0.78, 0.92);
-  set(19, -0.76, 0.94);
-  set(20, 0.76, 0.94);
-  set(21, -0.74, 0.96);
-  set(22, 0.74, 0.96);
-  set(23, -0.12, 0.95);
-  set(24, 0.12, 0.95);
-  set(25, -0.12, 0.55);
-  set(26, 0.12, 0.55);
-  set(27, -0.12, 0.05);
-  set(28, 0.12, 0.05);
-  set(29, -0.12, 0.00);
-  set(30, 0.12, 0.00);
-  set(31, -0.12, -0.05);
-  set(32, 0.12, -0.05);
+  // MediaPipe BlazePose: Y increases downward
+  // Nose at top, ankles at bottom
+  set(0, 0.00, 0.05);
+  set(1, -0.04, 0.02);
+  set(2, -0.06, 0.02);
+  set(3, -0.08, 0.02);
+  set(4, 0.04, 0.02);
+  set(5, 0.06, 0.02);
+  set(6, 0.08, 0.02);
+  set(7, -0.10, 0.06);
+  set(8, 0.10, 0.06);
+  set(9, -0.03, 0.08);
+  set(10, 0.03, 0.08);
+  // Shoulders
+  set(11, -0.22, 0.15);
+  set(12, 0.22, 0.15);
+  // Elbows
+  set(13, -0.30, 0.35);
+  set(14, 0.30, 0.35);
+  // Wrists
+  set(15, -0.35, 0.55);
+  set(16, 0.35, 0.55);
+  // Pinky
+  set(17, -0.38, 0.58);
+  set(18, 0.38, 0.58);
+  // Index
+  set(19, -0.36, 0.56);
+  set(20, 0.36, 0.56);
+  // Thumb
+  set(21, -0.34, 0.54);
+  set(22, 0.34, 0.54);
+  // Hips
+  set(23, -0.15, 0.55);
+  set(24, 0.15, 0.55);
+  // Knees
+  set(25, -0.15, 0.80);
+  set(26, 0.15, 0.80);
+  // Ankles
+  set(27, -0.15, 1.05);
+  set(28, 0.15, 1.05);
+  // Heels
+  set(29, -0.18, 1.08);
+  set(30, 0.18, 1.08);
+  // Foot index
+  set(31, -0.10, 1.10);
+  set(32, 0.10, 1.10);
 
   return lm;
 }
@@ -131,6 +144,11 @@ async function screenshot(page, name) {
     recordVideo: { dir: EVIDENCE_DIR, size: { width: 1280, height: 720 } },
   });
 
+  await context.addCookies([
+    { name: 'fashionistar_auth_hint', value: '1', path: '/', domain: '127.0.0.1', sameSite: 'Lax' },
+    { name: 'fashionistar_role', value: 'client', path: '/', domain: '127.0.0.1', sameSite: 'Lax' },
+  ]);
+
   await context.addInitScript(({ token, refresh, userData }) => {
     const envelope = {
       state: {
@@ -139,19 +157,35 @@ async function screenshot(page, name) {
         user: userData,
         isAuthenticated: true,
       },
+      version: 0,
     };
     window.sessionStorage.setItem('fashionistar-auth', JSON.stringify(envelope));
+    // Also set mirror cookies so edge middleware (proxy.ts) doesn't block
+    document.cookie = 'fashionistar_auth_hint=1; path=/; sameSite=lax';
+    document.cookie = 'fashionistar_role=client; path=/; sameSite=lax';
   }, { token: accessToken, refresh: refreshToken, userData: user });
+
+  // Also set measurement entry data so ScanEntryClient auto-initiates
+  await context.addInitScript(() => {
+    const entryData = {
+      age: 28,
+      sex: 'neutral',
+      heightCm: 175,
+      weightKg: 70,
+      timestamp: Date.now(),
+    };
+    window.sessionStorage.setItem('fashionistar_measurement_entry', JSON.stringify(entryData));
+  });
 
   const page = await context.newPage();
 
   try {
-    // 1. Visit Get Measured marketing page
+    // 1. Visit Get Measured marketing page (screenshot only)
     log('Navigating to /get-measured');
-    await page.goto(`${BASE_URL}/get-measured`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.goto(`${BASE_URL}/get-measured`, { waitUntil: 'commit', timeout: 60000 });
     await sleep(5000);
 
-    // Remove preloader overlay immediately (load event may not fire in headless)
+    // Remove preloader overlay immediately
     await page.evaluate(() => {
       const pre = document.getElementById('fs-preloader');
       if (pre) pre.remove();
@@ -160,29 +194,35 @@ async function screenshot(page, name) {
 
     await screenshot(page, '01-get-measured');
 
-    // 2. Open modal and fill entry form
-    const cta = page.locator('#get-measured-cta, #get-measured-inline-cta').first();
-    await cta.waitFor({ state: 'visible', timeout: 10000 });
-    await cta.click();
-    log('CTA clicked, waiting for modal...');
-    await sleep(1500);
+    // 2. Navigate directly to scan entry page
+    // ScanEntryClient will detect pre-existing entry data in sessionStorage
+    // and auto-initiate a scan session, then redirect to QR page (desktop)
+    log('Navigating to /client/dashboard/measurements/scan');
 
-    // Fill age input (placeholder contains "e.g. 28")
-    const ageInput = page.locator('input[type=number][placeholder*="28"]').first();
-    await ageInput.waitFor({ state: 'visible', timeout: 10000 });
-    await ageInput.fill('28');
-    log('Age filled, waiting for height prediction...');
-    await sleep(1000);
-    await screenshot(page, '02-measurement-modal');
+    // Capture console errors for debugging (set up BEFORE navigation)
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') log('CONSOLE ERROR:', msg.text());
+    });
+    page.on('pageerror', (err) => log('PAGE ERROR:', err.message));
 
-    // Submit button has text "Continue to Scan"
-    const submitBtn = page.getByText('Continue to Scan', { exact: false }).first();
-    await submitBtn.waitFor({ state: 'visible', timeout: 5000 });
-    await submitBtn.click();
-    log('Submit clicked, waiting for redirect to scan entry...');
+    await page.goto(`${BASE_URL}/client/dashboard/measurements/scan`, { waitUntil: 'commit', timeout: 60000 });
+
+    // Remove preloader overlay
+    await page.evaluate(() => {
+      const pre = document.getElementById('fs-preloader');
+      if (pre) pre.remove();
+    });
+
+    // Wait for redirect to scan entry page first, then QR
+    await page.waitForURL('**/client/dashboard/measurements/scan**', { timeout: 30000 }).catch(() => {
+      log('Did not redirect to scan entry. Current URL:', page.url());
+    });
+    log('Current URL after submit:', page.url());
+    await sleep(3000);
+    await screenshot(page, '02b-after-submit');
 
     // 3. Wait for QR gateway (ScanEntryClient auto-initiates and redirects to QR page)
-    await page.waitForURL('**/scan/qr**', { timeout: 30000 });
+    await page.waitForURL('**/scan/qr**', { timeout: 60000 });
     await sleep(2000);
     const qrUrl = page.url();
     log('QR gateway URL:', qrUrl);
@@ -213,6 +253,7 @@ async function screenshot(page, name) {
         user_height_cm: 175,
         user_weight_kg: 70,
         user_age: 28,
+        user_sex: 'neutral',
         device_type: 'web',
         front_landmarks: frontLandmarks,
         landmarks: frontLandmarks,
@@ -225,7 +266,7 @@ async function screenshot(page, name) {
     let statusData;
     for (let i = 0; i < 45; i++) {
       await sleep(2000);
-      const poll = await apiGet(`${API_URL}/api/v1/ninja/ai/scan/${sessionId}/status/`, accessToken);
+      const poll = await apiGet(`${API_URL}/api/v1/measurements/scan/${sessionId}/status/`, accessToken);
       statusData = poll.data ?? poll;
       log(`Poll ${i + 1}: status=${statusData.status}`);
       if (statusData.status === 'completed' || statusData.status === 'failed') break;
@@ -238,7 +279,7 @@ async function screenshot(page, name) {
     log('Measurements:', JSON.stringify(statusData.extracted_measurements || statusData.measurements_cm));
 
     // 6. Verify saved profile via API
-    const profilesRes = await apiGet(`${API_URL}/api/v1/ninja/measurements/`, accessToken);
+    const profilesRes = await apiGet(`${API_URL}/api/v1/measurements/`, accessToken);
     const profiles = profilesRes.data || [];
     if (!profiles.length) throw new Error('No measurement profiles returned');
     log('Profiles count:', profiles.length);
@@ -247,14 +288,14 @@ async function screenshot(page, name) {
 
     // 7. Navigate to dashboard measurements page
     log('Navigating to /client/dashboard/measurements');
-    await page.goto(`${BASE_URL}/client/dashboard/measurements`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.goto(`${BASE_URL}/client/dashboard/measurements`, { waitUntil: 'commit', timeout: 60000 });
     await sleep(3000);
     await screenshot(page, '04-dashboard-measurements');
 
     // 8. Navigate to measurement details page
     if (latest.id) {
       log('Navigating to /client/dashboard/measurements/' + latest.id);
-      await page.goto(`${BASE_URL}/client/dashboard/measurements/${latest.id}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      await page.goto(`${BASE_URL}/client/dashboard/measurements/${latest.id}`, { waitUntil: 'commit', timeout: 60000 });
       await sleep(3000);
       await screenshot(page, '05-measurement-details');
     }

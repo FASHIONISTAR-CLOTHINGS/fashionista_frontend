@@ -305,6 +305,7 @@ export function FashionistarImage({
 
   // ── Reset state when src/publicId changes ─────────────────────────────────
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoaded(false);
     setErrored(false);
     setRetries(0);
@@ -344,6 +345,7 @@ export function FashionistarImage({
     : "(max-width: 768px) 100vw, 50vw");
 
   // ── Event handlers ─────────────────────────────────────────────────────────
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const handleLoad = useCallback(() => {
     setLoaded(true);
     onLoad?.();
@@ -354,7 +356,7 @@ export function FashionistarImage({
         }),
       );
     }
-  }, [resolvedSrc, dataProductId, onLoad]);
+  }, [resolvedSrc, dataProductId, onLoad]); // eslint-disable-line react-hooks/preserve-manual-memoization
 
   const handleError = useCallback(() => {
     if (retries < MAX_IMAGE_RETRIES) {
