@@ -5,6 +5,39 @@
   "installCommand": "pnpm install --no-frozen-lockfile",
   "cleanUrls": true,
   "git": {
-    "deploymentEnabled": false
+    "deploymentEnabled": true
+  },
+  "headers": [
+    {
+      "source": "/sw-mediapipe.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
+    {
+      "source": "/client/dashboard/measurements/scan/(.*)",
+      "headers": [
+        { "key": "Cross-Origin-Opener-Policy",  "value": "same-origin" },
+        { "key": "Cross-Origin-Embedder-Policy", "value": "require-corp" }
+      ]
+    },
+    {
+      "source": "/client/dashboard/measurements/scan/qr(.*)",
+      "headers": [
+        { "key": "Cross-Origin-Opener-Policy",  "value": "same-origin" },
+        { "key": "Cross-Origin-Embedder-Policy", "value": "require-corp" }
+      ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/v1/ninja/ai/health/",
+      "schedule": "0 0 * * *"
+    }
+  ],
+  "regions": ["fra1"],
+  "env": {
+    "NEXT_TELEMETRY_DISABLED": "1"
   }
 }
