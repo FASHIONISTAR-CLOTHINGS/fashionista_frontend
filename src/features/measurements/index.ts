@@ -98,7 +98,8 @@ export type { UseScanSessionReturn, ScanPhase as ScanSessionPhase } from "./hook
 // T-016: Height prediction hook
 export { useHeightPrediction }       from "./hooks/useHeightPrediction";
 export type { HeightPredictionInput, UseHeightPredictionOptions, UseHeightPredictionReturn } from "./hooks/useHeightPrediction";
-// T-032: WebSocket scan progress hook
+export { useEnhancedMeasurementCapture }     from "./hooks/useEnhancedMeasurementCapture";
+export type { UseEnhancedMeasurementCaptureReturn, UseEnhancedMeasurementCaptureOptions, EnhancedCapturePhase, EnhancedCaptureFrame } from "./hooks/useEnhancedMeasurementCapture";
 export { useScanWebSocket }          from "./hooks/useScanWebSocket";
 export type { WSConnectionStatus, ScanWSEvent } from "./hooks/useScanWebSocket";
 
@@ -178,3 +179,6 @@ export type { ScanFallbackManualProps }    from "./components/ScanFallbackManual
 
 // ── MediaPipe Service Worker Registration ──────────────────────────────────────
 export { registerMediaPipeSW }             from "./lib/registerMediaPipeSW";
+
+// ── Desktop QR Gateway ─────────────────────────────────────────────────────────
+export { DesktopQRGateway }                from "./components/DesktopQRGateway";

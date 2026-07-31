@@ -67,6 +67,12 @@ export interface EnhancedMeasurementFlowProps {
   initialHeightCm?: number;
   /** Pre-filled age for backend prediction — A-5 FIX: now actually forwarded to backend */
   initialAge?: number;
+  /** Pre-filled weight for BMI correction */
+  initialWeightKg?: number;
+  /** Pre-filled biological sex for BMI correction */
+  initialSex?: "male" | "female" | "neutral";
+  /** Session ID from backend initiate — if provided, used for submitLandmarks */
+  sessionId?: string;
   className?: string;
 }
 
@@ -89,12 +95,19 @@ export function EnhancedMeasurementFlow({
   onCancel,
   initialHeightCm,
   initialAge,
+  initialWeightKg,
+  initialSex,
+  sessionId,
   className,
 }: EnhancedMeasurementFlowProps) {
   // Camera refs owned by the component (avoids React Compiler ref-during-render warnings)
   const videoRef  = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const capture     = useEnhancedMeasurementCapture(videoRef);
+  const capture     = useEnhancedMeasurementCapture(videoRef, {
+    sessionId: sessionId,
+    initialWeightKg: initialWeightKg,
+    initialSex: initialSex,
+  });
   const voice       = useVoiceCoach();
   const orientation = usePhoneOrientation();
   const haptic      = useHapticFeedback();

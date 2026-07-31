@@ -13,7 +13,7 @@
  *   - Desktop → /client/dashboard/measurements/scan/qr?session_id=...
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ScanTutorialOverlay } from "@/features/measurements/components/ScanTutorialOverlay";
 import { MeasurementEntryModal, type MeasurementEntryData } from "@/features/measurements/components/MeasurementEntryModal";
@@ -35,6 +35,71 @@ export function ScanEntryClient() {
   const setEntryData = useScanStore((s) => s.setEntryData);
   const setSessionId = useScanStore((s) => s.setSessionId);
   const setScanPhase = useScanStore((s) => s.setPhase);
+
+  // ── Check for pre-existing entry data from marketing page ──
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        // If entry data exists but no sessionId yet (from marketing page),
+        // skip tutorial + modal and go straight to initiating
+        if (data.age && data.heightCm && !data.sessionId) {
+          setPhase("initiating");
+          // Re-use the handleEntrySubmit logic by setting entry data + initiating
+          setEntryData({
+            age: data.age,
+            sex: data.sex ?? "neutral",
+            heightCm: data.heightCm,
+            weightKg: data.weightKg,
+          });
+
+          (async () => {
+            try {
+              const session = await initiateBodyScan({
+                device_type: device.apiDeviceType,
+              });
+              const sid = session.session_id;
+              const entryData = {
+                age: data.age,
+                sex: data.sex ?? "neutral",
+                heightCm: data.heightCm,
+                weightKg: data.weightKg,
+                sessionId: sid,
+                measurementUrl: session.measurement_url ?? "",
+                qrCodeB64: session.qr_code_b64 ?? "",
+                qrCodeUrl: session.qr_code_url ?? "",
+                deviceType: device.apiDeviceType,
+                timestamp: Date.now(),
+              };
+              try {
+                sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(entryData));
+              } catch {
+                // ignore
+              }
+              setSessionId(sid);
+              setScanPhase("loading_model");
+              if (device.isMobile || device.isTablet) {
+                router.push(`/client/dashboard/measurements/scan/${sid}`);
+              } else {
+                router.push(`/client/dashboard/measurements/scan/qr?session_id=${sid}`);
+              }
+            } catch (err) {
+              setError(
+                err instanceof Error
+                  ? err.message
+                  : "Failed to create scan session. Please try again.",
+              );
+              setPhase("error");
+            }
+          })();
+        }
+      }
+    } catch {
+      // sessionStorage parse failed — show tutorial + modal
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleTutorialComplete = useCallback(() => {
     setPhase("modal");

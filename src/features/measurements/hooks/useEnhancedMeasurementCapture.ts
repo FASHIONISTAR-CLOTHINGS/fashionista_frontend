@@ -203,8 +203,18 @@ function estimateHeightFromLandmarks(worldLandmarks: Landmark[]): number | null 
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
+export interface UseEnhancedMeasurementCaptureOptions {
+  /** Pre-existing session ID from backend initiate — skips internal initiate() */
+  sessionId?: string;
+  /** Pre-filled weight in kg — forwarded to backend for BMI correction */
+  initialWeightKg?: number;
+  /** Pre-filled biological sex — forwarded to backend for BMI correction */
+  initialSex?: "male" | "female" | "neutral";
+}
+
 export function useEnhancedMeasurementCapture(
-  videoRef: MutableRefObject<HTMLVideoElement | null>
+  videoRef: MutableRefObject<HTMLVideoElement | null>,
+  options?: UseEnhancedMeasurementCaptureOptions,
 ): UseEnhancedMeasurementCaptureReturn {
   const landmarker  = usePoseLandmarker();
   const scanSession = useScanSession();
@@ -281,7 +291,11 @@ export function useEnhancedMeasurementCapture(
       try {
         await landmarker.initialize();
         await startCamera();
-        await scanSession.initiate("web");
+        if (options?.sessionId) {
+          scanSession.setExistingSession(options.sessionId);
+        } else {
+          await scanSession.initiate("web");
+        }
 
         if (heightCm)  setUserHeightCm(heightCm);
         if (ageYears)  setUserAge(ageYears);   // A-5 FIX: store age for submit
@@ -294,7 +308,7 @@ export function useEnhancedMeasurementCapture(
         stopCamera();
       }
     },
-    [landmarker, scanSession, startCamera, stopCamera, setPhaseSync]
+    [landmarker, scanSession, startCamera, stopCamera, setPhaseSync, options]
   );
 
   // (setLocalError omitted from deps because setter identity is stable)
@@ -415,11 +429,13 @@ export function useEnhancedMeasurementCapture(
     }
 
     // Submit both landmark sets to backend
-    // A-5 FIX: Include user_age in payload so backend anthropometric anchoring works
+    // A-5 FIX: Include user_age, user_sex, user_weight_kg in payload
     await scanSession.submit({
       user_height_cm: height,
       ...(userAge != null && { user_age: userAge }),
-      landmarks: frontLms.map((l) => ({
+      ...(options?.initialSex && { user_sex: options.initialSex }),
+      ...(options?.initialWeightKg != null && { user_weight_kg: options.initialWeightKg }),
+      front_landmarks: frontLms.map((l) => ({
         x: l.x, y: l.y, z: l.z, visibility: l.visibility ?? 0,
       })),
       // side_landmarks forwarded to backend for dual-pose fused pipeline
@@ -432,7 +448,7 @@ export function useEnhancedMeasurementCapture(
     });
 
     stopCamera();
-  }, [scanSession, userHeightCm, userAge, stopCamera, setPhaseSync]);
+  }, [scanSession, userHeightCm, userAge, options, stopCamera, setPhaseSync]);
 
   // ── Advance to side pose phase (manual trigger) ───────────────────────────
   const advanceToSidePhase = useCallback(() => {

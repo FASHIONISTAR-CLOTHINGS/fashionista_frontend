@@ -11,9 +11,8 @@
  * /client/dashboard/measurements.
  */
 
-import { useEffect, useState, useCallback, useRef, use } from "react";
+import { useEffect, useState, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
-import { useScanWebSocket } from "@/features/measurements/hooks/useScanWebSocket";
 import { pollScanStatus } from "@/features/measurements/api/scan.api";
 import { useQueryClient } from "@tanstack/react-query";
 import { measurementKeys } from "@/features/measurements/hooks/use-measurements";
@@ -58,12 +57,6 @@ export function QrHandoffClient({
   // ── Scan status (only updated from polling callback, never in effect body) ──
   const [scanStatus, setScanStatus] = useState<string>("waiting");
 
-  // ── WS status ref (updated by effect, read by polling interval) ──
-  const wsStatusRef = useRef<string | undefined>(undefined);
-
-  // ── WebSocket for real-time status ──
-  const ws = useScanWebSocket(sessionId);
-
   // ── Redirect if no sessionId (side effect only, no setState) ──
   useEffect(() => {
     if (!sessionId) {
@@ -71,35 +64,11 @@ export function QrHandoffClient({
     }
   }, [sessionId, router]);
 
-  // ── Sync WS status to ref (no setState in effect body) ──
-  useEffect(() => {
-    wsStatusRef.current = ws.lastEvent?.status;
-  }, [ws.lastEvent]);
-
-  // ── Redirect on WS completion (side effects only, no setState) ──
-  useEffect(() => {
-    if (ws.lastEvent?.status === "completed") {
-      queryClient.invalidateQueries({ queryKey: measurementKeys.all });
-      queryClient.invalidateQueries({ queryKey: measurementKeys.lists() });
-      try {
-        sessionStorage.removeItem(SESSION_STORAGE_KEY);
-      } catch {
-        // ignore
-      }
-      router.push("/client/dashboard/measurements");
-    }
-  }, [ws.lastEvent, router, queryClient]);
-
-  // ── Polling fallback (setState only in interval callback) ──
+  // ── Polling for scan status (desktop QR page uses polling only) ──
   useEffect(() => {
     if (!sessionId) return;
 
     const pollInterval = setInterval(async () => {
-      // Merge WS status into display state
-      if (wsStatusRef.current && wsStatusRef.current !== "waiting") {
-        setScanStatus(wsStatusRef.current);
-      }
-
       try {
         const status = await pollScanStatus(sessionId);
         setScanStatus(status.status);

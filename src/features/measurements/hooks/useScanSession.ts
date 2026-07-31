@@ -67,6 +67,8 @@ export interface UseScanSessionReturn {
   submit: (payload: LandmarkSubmitPayload) => Promise<void>;
   /** Reset state — allows starting a new scan. */
   reset: () => void;
+  /** Set an existing session ID (e.g. from route param) — skips initiate. */
+  setExistingSession: (sessionId: string) => void;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -206,6 +208,16 @@ export function useScanSession(): UseScanSessionReturn {
     [sessionId, manualPhase]
   );
 
+  // ── Set existing session (from route param or external source) ───────────
+
+  const setExistingSession = useCallback(
+    (sid: string) => {
+      setSessionId(sid);
+      setManualPhase("ready");
+    },
+    []
+  );
+
   // ── Reset ────────────────────────────────────────────────────────────────
 
   const reset = useCallback(() => {
@@ -225,5 +237,6 @@ export function useScanSession(): UseScanSessionReturn {
     initiate,
     submit,
     reset,
+    setExistingSession,
   };
 }

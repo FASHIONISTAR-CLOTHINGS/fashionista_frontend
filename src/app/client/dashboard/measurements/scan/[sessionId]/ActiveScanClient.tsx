@@ -16,11 +16,11 @@
 import { useEffect, useState, useCallback, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { EnhancedMeasurementFlow } from "@/features/measurements/components/EnhancedMeasurementFlow";
+import type { EnhancedCapturePhase } from "@/features/measurements/hooks/useEnhancedMeasurementCapture";
 import { ScanProgressStepper } from "@/features/measurements/components/ScanProgressStepper";
 import { ScanFallbackManual } from "@/features/measurements/components/ScanFallbackManual";
 import { registerMediaPipeSW } from "@/features/measurements/lib/registerMediaPipeSW";
 import { useScanStore } from "@/features/measurements/store/scanStore";
-import { useScanWebSocket } from "@/features/measurements/hooks/useScanWebSocket";
 import { pollScanStatus } from "@/features/measurements/api/scan.api";
 import { useQueryClient } from "@tanstack/react-query";
 import { measurementKeys } from "@/features/measurements/hooks/use-measurements";
@@ -91,16 +91,14 @@ export function ActiveScanClient({
     void registerMediaPipeSW();
   }, [sessionId, router, setEntryData, setSessionId]);
 
-  // ── WebSocket for real-time scan progress ──
-  const ws = useScanWebSocket(sessionId);
-
-  // Derive WebSocket error state directly from the hook (no effect setState)
-  const wsError = ws.connectionStatus === "error" || ws.connectionStatus === "disconnected";
-
-  // ── Polling fallback ──
+  // ── Polling fallback for scan status ──
+  // The EnhancedMeasurementFlow internally uses useScanSession which has its own
+  // WebSocket + polling. This outer polling is a secondary safety net for when
+  // the user navigates back or the component re-mounts mid-scan.
   useEffect(() => {
-    if (!wsError || pollingActiveRef.current) return;
+    if (!sessionId) return;
     if (scanPhase === "completed" || scanPhase === "failed") return;
+    if (pollingActiveRef.current) return;
 
     pollingActiveRef.current = true;
     const pollInterval = setInterval(async () => {
@@ -117,13 +115,13 @@ export function ActiveScanClient({
       } catch {
         // Polling error — keep trying
       }
-    }, 2000);
+    }, 3000);
 
     return () => {
       clearInterval(pollInterval);
       pollingActiveRef.current = false;
     };
-  }, [wsError, sessionId, scanPhase, setPhase, setError]);
+  }, [sessionId, scanPhase, setPhase, setError]);
 
   // ── Handle scan completion ──
   const handleScanComplete = useCallback(
@@ -189,17 +187,8 @@ export function ActiveScanClient({
       <div className="max-w-2xl mx-auto">
         {/* Progress stepper */}
         <div className="mb-6 rounded-2xl bg-[#01454A] p-4">
-          <ScanProgressStepper currentPhase={scanPhase} />
+          <ScanProgressStepper phase={scanPhase as EnhancedCapturePhase} />
         </div>
-
-        {/* WS fallback indicator */}
-        {wsError && (
-          <div className="mb-4 rounded-lg bg-[#FDA600]/10 border border-[#FDA600]/20 px-4 py-2 text-center">
-            <p className="text-xs text-[#7A6B44]">
-              Live updates unavailable — polling every 2s...
-            </p>
-          </div>
-        )}
 
         {/* Main scan flow */}
         <EnhancedMeasurementFlow
