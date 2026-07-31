@@ -43,6 +43,7 @@ import {
 import { CheckoutPageSkeleton } from "./CheckoutPageSkeleton";
 import { ExitIntentModal } from "./ExitIntentModal";
 import { CheckoutUrgencyTimer } from "./CheckoutUrgencyTimer";
+import { ExpressCheckoutRail } from "./ExpressCheckoutRail";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -372,6 +373,29 @@ export function CheckoutPage() {
       >
         {/* ── Left: forms ──────────────────────────────────────────────────── */}
         <div className="flex-1 space-y-6">
+          {/* ── Work 3: Express Checkout Rail ──────────────────────────────── */}
+          <ExpressCheckoutRail
+            cartTotal={total}
+            currency={currency}
+            onExpressCheckout={(method) => {
+              submit({
+                idempotency_key: idempotencyKey.current,
+                payment_method: method,
+                fulfillment_type: "delivery",
+                delivery_address: {
+                  full_name: form.full_name.trim() || "Express Checkout",
+                  phone: form.phone.trim(),
+                  email: form.email.trim(),
+                  address_line_1: addressSelection.street_address.trim() || "Saved address",
+                  city: resolvedCityName.trim() || "Lagos",
+                  state: resolvedStateName.trim() || "Lagos",
+                  country: resolvedCountryName,
+                  postal_code: form.postal_code.trim() || undefined,
+                },
+              });
+            }}
+          />
+
           {/* Delivery address */}
           <section className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-[var(--card-shadow)]">
             <h2 className="mb-5 text-lg font-bold text-[hsl(var(--foreground))]">

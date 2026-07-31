@@ -13,7 +13,7 @@
  *   - Desktop → /client/dashboard/measurements/scan/qr?session_id=...
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ScanTutorialOverlay } from "@/features/measurements/components/ScanTutorialOverlay";
 import { MeasurementEntryModal, type MeasurementEntryData } from "@/features/measurements/components/MeasurementEntryModal";
@@ -25,10 +25,38 @@ const SESSION_STORAGE_KEY = "fashionistar_measurement_entry";
 
 type EntryPhase = "tutorial" | "modal" | "initiating" | "error";
 
+/** Read pre-existing entry data from sessionStorage (from marketing page). */
+function readPreExistingEntry(): { age: number; sex: "male" | "female" | "neutral"; heightCm: number; weightKg?: number } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      // If entry data exists but no sessionId yet (from marketing page),
+      // skip tutorial + modal and go straight to initiating
+      if (data.age && data.heightCm && !data.sessionId) {
+        return {
+          age: data.age,
+          sex: data.sex ?? "neutral",
+          heightCm: data.heightCm,
+          weightKg: data.weightKg,
+        };
+      }
+    }
+  } catch {
+    // sessionStorage parse failed — show tutorial + modal
+  }
+  return null;
+}
+
 export function ScanEntryClient() {
   const router = useRouter();
   const device = useDeviceType();
-  const [phase, setPhase] = useState<EntryPhase>("tutorial");
+  // Lazy-init phase: if pre-existing entry data from marketing page, skip to "initiating"
+  const [phase, setPhase] = useState<EntryPhase>(() => {
+    const pre = readPreExistingEntry();
+    return pre ? "initiating" : "tutorial";
+  });
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,12 +64,68 @@ export function ScanEntryClient() {
   const setSessionId = useScanStore((s) => s.setSessionId);
   const setScanPhase = useScanStore((s) => s.setPhase);
 
-  const handleTutorialComplete = useCallback(() => {
-    setPhase("modal");
-    setShowModal(true);
-  }, []);
+  // ── If pre-existing entry data, initiate scan session immediately ──
+  useEffect(() => {
+    if (phase !== "initiating") return;
+    const pre = readPreExistingEntry();
+    if (!pre) return;
 
-  const handleTutorialSkip = useCallback(() => {
+    // Set entry data in Zustand store (not React setState — safe in effect)
+    setEntryData({
+      age: pre.age,
+      sex: pre.sex,
+      heightCm: pre.heightCm,
+      weightKg: pre.weightKg,
+    });
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const session = await initiateBodyScan({
+          device_type: device.apiDeviceType,
+        });
+        if (cancelled) return;
+        const sid = session.session_id;
+        const entryData = {
+          age: pre.age,
+          sex: pre.sex,
+          heightCm: pre.heightCm,
+          weightKg: pre.weightKg,
+          sessionId: sid,
+          measurementUrl: session.measurement_url ?? "",
+          qrCodeB64: session.qr_code_b64 ?? "",
+          qrCodeUrl: session.qr_code_url ?? "",
+          deviceType: device.apiDeviceType,
+          timestamp: Date.now(),
+        };
+        try {
+          sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(entryData));
+        } catch {
+          // ignore
+        }
+        setSessionId(sid);
+        setScanPhase("loading_model");
+        if (device.isMobile || device.isTablet) {
+          router.push(`/client/dashboard/measurements/scan/${sid}`);
+        } else {
+          router.push(`/client/dashboard/measurements/scan/qr?session_id=${sid}`);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to create scan session. Please try again.",
+        );
+        setPhase("error");
+      }
+    })();
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
+
+  const handleTutorialComplete = useCallback(() => {
     setPhase("modal");
     setShowModal(true);
   }, []);
@@ -186,7 +270,6 @@ export function ScanEntryClient() {
         {phase === "tutorial" && (
           <ScanTutorialOverlay
             onComplete={handleTutorialComplete}
-            onSkip={handleTutorialSkip}
           />
         )}
 

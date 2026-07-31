@@ -42,7 +42,11 @@ import { TrendingProductsRail } from "./_components/TrendingProductsRail";
 import { VendorSpotlightSection } from "./_components/VendorSpotlightSection";
 import { BlogStyleGuideRail } from "./_components/BlogStyleGuideRail";
 import { AIPersonalizedGreeting } from "./_components/AIPersonalizedGreeting";
+import { UrgencyBanner } from "./_components/UrgencyBanner";
+import { LiveShopperCounter } from "./_components/LiveShopperCounter";
+import { PersonalizedRail } from "./_components/PersonalizedRail";
 import { LiveSocialProofToast } from "@/components/commerce/LiveSocialProofToast";
+import { EmailCaptureModal } from "@/components/marketing/EmailCaptureModal";
 import { Hero } from "@/components";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
 import {
@@ -114,6 +118,9 @@ export default async function Home() {
   return (
     <div className="flex flex-col gap-0" data-testid="homepage">
 
+      {/* ── Work 4: Urgency Banner — rotating scarcity messages ───────────── */}
+      <UrgencyBanner />
+
       {/* ── 1. Hero: CMS Banner if available, else static Hero ─────────────── */}
       {bundle.banners.length > 0 ? (
         <CatalogBannerHero banners={bundle.banners} />
@@ -123,6 +130,11 @@ export default async function Home() {
 
       {/* ── 2. Trust Bar — instant credibility below hero ──────────────────── */}
       <TrustBar />
+
+      {/* ── Work 4: Live Shopper Counter ──────────────────────────────────── */}
+      <div className="flex justify-center py-3">
+        <LiveShopperCounter />
+      </div>
 
       {/* ── Work 4: AI Personalized Greeting ──────────────────────────────── */}
       <AIPersonalizedGreeting />
@@ -148,6 +160,9 @@ export default async function Home() {
 
       {/* ── 7. R20: Trending Now Rail — AI trend score powered ──────────────── */}
       <TrendingProductsRail />
+
+      {/* ── Work 4: Personalized Rail — "Recommended for You" ─────────────── */}
+      <PersonalizedRail />
 
       {/* ── 8. Recently Viewed Rail (client-side, localStorage) ─────────────── */}
       <RecentlyViewedSection />
@@ -271,6 +286,9 @@ export default async function Home() {
 
       {/* ── Work 4: Live Social Proof Toasts ──────────────────────────────── */}
       <LiveSocialProofToast />
+
+      {/* ── Work 10: Email Capture Modal ──────────────────────────────────── */}
+      <EmailCaptureModal />
 
       {/* ── JSON-LD Structured Data — WebSite + ItemList ───────────────────── */}
       <JsonLdScript

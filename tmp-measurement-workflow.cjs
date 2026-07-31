@@ -51,44 +51,39 @@ function makeLandmarks() {
   const lm = Array.from({ length: 33 }, (_, i) => ({ x: 0, y: 0, z: 1, visibility: 1 }));
   const set = (i, x, y, z = 1, vis = 1) => { lm[i] = { x, y, z, visibility: vis }; };
 
-  // Head / face (approximate upright positions)
-  set(0, 0.00, 1.75);      // nose
-  set(1, -0.04, 1.78);     // left eye inner
+  set(0, 0.00, 1.75);
+  set(1, -0.04, 1.78);
   set(2, -0.06, 1.78);
   set(3, -0.08, 1.78);
-  set(4, 0.04, 1.78);      // right eye inner
+  set(4, 0.04, 1.78);
   set(5, 0.06, 1.78);
   set(6, 0.08, 1.78);
-  set(7, -0.10, 1.74);     // left ear
-  set(8, 0.10, 1.74);      // right ear
-  set(9, -0.03, 1.72);     // mouth left
-  set(10, 0.03, 1.72);     // mouth right
-
-  // Upper body
-  set(11, -0.25, 1.45);    // left shoulder
-  set(12, 0.25, 1.45);     // right shoulder
-  set(13, -0.50, 1.20);    // left elbow
-  set(14, 0.50, 1.20);     // right elbow
-  set(15, -0.75, 0.95);    // left wrist
-  set(16, 0.75, 0.95);     // right wrist
-  set(17, -0.78, 0.92);    // left pinky
-  set(18, 0.78, 0.92);     // right pinky
-  set(19, -0.76, 0.94);    // left index
-  set(20, 0.76, 0.94);     // right index
-  set(21, -0.74, 0.96);    // left thumb
-  set(22, 0.74, 0.96);     // right thumb
-
-  // Lower body
-  set(23, -0.12, 0.95);    // left hip
-  set(24, 0.12, 0.95);     // right hip
-  set(25, -0.12, 0.55);    // left knee
-  set(26, 0.12, 0.55);     // right knee
-  set(27, -0.12, 0.05);    // left ankle
-  set(28, 0.12, 0.05);     // right ankle
-  set(29, -0.12, 0.00);    // left heel
-  set(30, 0.12, 0.00);     // right heel
-  set(31, -0.12, -0.05);   // left foot index
-  set(32, 0.12, -0.05);    // right foot index
+  set(7, -0.10, 1.74);
+  set(8, 0.10, 1.74);
+  set(9, -0.03, 1.72);
+  set(10, 0.03, 1.72);
+  set(11, -0.25, 1.45);
+  set(12, 0.25, 1.45);
+  set(13, -0.50, 1.20);
+  set(14, 0.50, 1.20);
+  set(15, -0.75, 0.95);
+  set(16, 0.75, 0.95);
+  set(17, -0.78, 0.92);
+  set(18, 0.78, 0.92);
+  set(19, -0.76, 0.94);
+  set(20, 0.76, 0.94);
+  set(21, -0.74, 0.96);
+  set(22, 0.74, 0.96);
+  set(23, -0.12, 0.95);
+  set(24, 0.12, 0.95);
+  set(25, -0.12, 0.55);
+  set(26, 0.12, 0.55);
+  set(27, -0.12, 0.05);
+  set(28, 0.12, 0.05);
+  set(29, -0.12, 0.00);
+  set(30, 0.12, 0.00);
+  set(31, -0.12, -0.05);
+  set(32, 0.12, -0.05);
 
   return lm;
 }
@@ -98,10 +93,13 @@ function sleep(ms) {
 }
 
 async function screenshot(page, name) {
-  const fp = path.join(EVIDENCE_DIR, `${name}.png`);
-  await page.screenshot({ path: fp, fullPage: true });
-  log('Screenshot:', fp);
-  return fp;
+  try {
+    const fp = path.join(EVIDENCE_DIR, `${name}.png`);
+    await page.screenshot({ path: fp, fullPage: true, timeout: 10000 });
+    log('Screenshot:', fp);
+  } catch (e) {
+    log('Screenshot failed for', name, ':', e.message);
+  }
 }
 
 (async () => {
@@ -150,19 +148,42 @@ async function screenshot(page, name) {
   try {
     // 1. Visit Get Measured marketing page
     log('Navigating to /get-measured');
-    await page.goto(`${BASE_URL}/get-measured`, { waitUntil: 'networkidle' });
+    await page.goto(`${BASE_URL}/get-measured`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await sleep(5000);
+
+    // Remove preloader overlay immediately (load event may not fire in headless)
+    await page.evaluate(() => {
+      const pre = document.getElementById('fs-preloader');
+      if (pre) pre.remove();
+    });
+    await sleep(1000);
+
     await screenshot(page, '01-get-measured');
 
     // 2. Open modal and fill entry form
     const cta = page.locator('#get-measured-cta, #get-measured-inline-cta').first();
+    await cta.waitFor({ state: 'visible', timeout: 10000 });
     await cta.click();
-    await page.locator('input[type=number][placeholder*="28"]').first().fill('28');
-    await sleep(700); // wait for height prediction
-    await screenshot(page, '02-measurement-modal');
-    await page.locator('#measurement-entry-submit').click();
+    log('CTA clicked, waiting for modal...');
+    await sleep(1500);
 
-    // 3. Wait for QR gateway
-    await page.waitForURL('**/scan/qr**', { timeout: 15000 });
+    // Fill age input (placeholder contains "e.g. 28")
+    const ageInput = page.locator('input[type=number][placeholder*="28"]').first();
+    await ageInput.waitFor({ state: 'visible', timeout: 10000 });
+    await ageInput.fill('28');
+    log('Age filled, waiting for height prediction...');
+    await sleep(1000);
+    await screenshot(page, '02-measurement-modal');
+
+    // Submit button has text "Continue to Scan"
+    const submitBtn = page.getByText('Continue to Scan', { exact: false }).first();
+    await submitBtn.waitFor({ state: 'visible', timeout: 5000 });
+    await submitBtn.click();
+    log('Submit clicked, waiting for redirect to scan entry...');
+
+    // 3. Wait for QR gateway (ScanEntryClient auto-initiates and redirects to QR page)
+    await page.waitForURL('**/scan/qr**', { timeout: 30000 });
+    await sleep(2000);
     const qrUrl = page.url();
     log('QR gateway URL:', qrUrl);
     await screenshot(page, '03-qr-gateway');
@@ -222,12 +243,21 @@ async function screenshot(page, name) {
     if (!profiles.length) throw new Error('No measurement profiles returned');
     log('Profiles count:', profiles.length);
     const latest = profiles[0];
-    log('Latest profile:', JSON.stringify(latest));
+    log('Latest profile id:', latest.id);
 
     // 7. Navigate to dashboard measurements page
     log('Navigating to /client/dashboard/measurements');
-    await page.goto(`${BASE_URL}/client/dashboard/measurements`, { waitUntil: 'networkidle' });
+    await page.goto(`${BASE_URL}/client/dashboard/measurements`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await sleep(3000);
     await screenshot(page, '04-dashboard-measurements');
+
+    // 8. Navigate to measurement details page
+    if (latest.id) {
+      log('Navigating to /client/dashboard/measurements/' + latest.id);
+      await page.goto(`${BASE_URL}/client/dashboard/measurements/${latest.id}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      await sleep(3000);
+      await screenshot(page, '05-measurement-details');
+    }
 
     log('E2E measurement workflow PASSED');
   } catch (err) {
