@@ -241,7 +241,9 @@ export async function pollScanStatus(
   sessionId: string
 ): Promise<ScanStatusResponse> {
   const raw = await apiAsync
-    .get(`measurements/scan/${sessionId}/status/`)
+    .get(`measurements/scan/${sessionId}/status/`, {
+      _suppressAuthRedirect: true,
+    } as any)
     .json<ScanStatusResponse>();
 
   const rawMeasurements = raw.extracted_measurements ?? raw.measurements_cm;
