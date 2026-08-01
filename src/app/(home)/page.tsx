@@ -1,13 +1,14 @@
 /**
- * app/(home)/page.tsx — Fashionistar Homepage (v3 — APEX Sprint)
+ * app/(home)/page.tsx — Fashionistar Homepage (v4 — APEX Sprint)
  *
  * Production Architecture 2026–2027:
- *   - Single RSC with ONE server fetch: getHomepageBundleV2() (v1 compatible)
- *   - Backend: 5–6 parallel DB queries via asyncio.gather() < 30ms p95
+ *   - Single RSC with ONE server fetch: getHomepageBundleV2() (8-section APEX v4)
+ *   - Backend: 8 parallel DB queries via asyncio.gather() < 30ms p95
  *   - Frontend: ISR revalidate 300s — matches backend Redis TTL
  *   - ALL sections receive data as props — ZERO additional HTTP round-trips
  *   - Suspense boundaries with pixel-perfect skeleton fallbacks
  *   - data-testid on every section for Playwright E2E tests
+ *   - Semantic HTML5 section tags with aria-label on every section
  *
  * APEX Sprint Changes (v3):
  *   + TrustBar — 4 trust signals immediately below hero
@@ -17,14 +18,16 @@
  *   + Psychological funnel: Hero → Trust → Shop by Category → Measure or Buy →
  *       Featured Products → Collections → Deals → Reviews → Newsletter → Sticky CTA
  *
- * Data flow:
+ *   Data flow:
  *   getHomepageBundleV2() → HomepageBundle →
- *     { collections, categories, featured_products, hot_deals, reviews, banners }
+ *     { collections, categories, featured_products, hot_deals, reviews, banners,
+ *       trending_products (v4 NEW), vendors (v4 NEW) }
  *       ↓ props to each section component (no re-fetch anywhere)
  */
 
 import Link from "next/link";
 import { Suspense } from "react";
+import dynamic from "next/dynamic";
 import { CatalogCategoryGrid, CatalogCollectionGrid } from "@/features/catalog";
 import { getHomepageBundleV2 } from "@/features/catalog/api/catalog.server";
 import TabbedFeaturedProducts, { HomepageFeaturedProductsSkeleton } from "@/features/catalog/components/TabbedFeaturedProducts";
@@ -46,13 +49,53 @@ import { UrgencyBanner } from "./_components/UrgencyBanner";
 import { LiveShopperCounter } from "./_components/LiveShopperCounter";
 import { PersonalizedRail } from "./_components/PersonalizedRail";
 import { LiveSocialProofToast } from "@/components/commerce/LiveSocialProofToast";
-import { EmailCaptureModal } from "@/components/marketing/EmailCaptureModal";
 import { Hero } from "@/components";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
 import {
   generateWebSiteSchema,
   generateItemListSchema,
 } from "@/components/seo/schemas";
+
+// APEX v4: EmailCaptureModal is rarely interacted with — lazy-load it to
+// exclude from the initial JS bundle (~15KB saved).
+const EmailCaptureModal = dynamic(
+  () => import("@/components/marketing/EmailCaptureModal").then((m) => ({ default: m.EmailCaptureModal })),
+  { ssr: false }
+);
+
+// Skeleton placeholder for Trending and Vendor sections
+const TrendingProductsRailSkeleton = () => (
+  <div className="px-5 md:px-10 lg:px-20 py-8 animate-pulse">
+    <div className="h-8 w-48 bg-gray-200 rounded mb-6" />
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="aspect-square bg-gray-200 rounded-2xl" />
+      ))}
+    </div>
+  </div>
+);
+
+const VendorSpotlightSkeleton = () => (
+  <div className="px-5 md:px-10 lg:px-20 py-8 animate-pulse">
+    <div className="h-8 w-56 bg-gray-200 rounded mb-6" />
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="h-40 bg-gray-200 rounded-2xl" />
+      ))}
+    </div>
+  </div>
+);
+
+const BlogRailSkeleton = () => (
+  <div className="px-5 md:px-10 lg:px-20 py-8 animate-pulse">
+    <div className="h-8 w-40 bg-gray-200 rounded mb-6" />
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="h-64 bg-gray-200 rounded-2xl" />
+      ))}
+    </div>
+  </div>
+);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ISR — 5 minute cache, stale-while-revalidate semantics on CDN edge.
@@ -76,11 +119,30 @@ export const metadata = {
     "senator outfit",
     "custom clothing Nigeria",
   ],
+  alternates: {
+    canonical: "https://fashionistar.net/",
+  },
   openGraph: {
     title: "Fashionistar — AI-Powered Fashion & Custom Tailoring",
     description:
       "Nigeria's premier AI-powered e-commerce platform connecting clients with verified tailors.",
     type: "website",
+    images: [
+      {
+        url: "https://res.cloudinary.com/fashionistar/image/upload/w_1200,h_630,c_fill,f_auto,q_auto/fashionistar-og-image",
+        width: 1200,
+        height: 630,
+        alt: "Fashionistar — AI-Powered Fashion & Custom Tailoring in Nigeria",
+      },
+    ],
+    siteName: "Fashionistar",
+    locale: "en_NG",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Fashionistar — AI-Powered Fashion & Custom Tailoring",
+    description: "Nigeria's premier AI-powered fashion e-commerce platform.",
+    images: ["https://res.cloudinary.com/fashionistar/image/upload/w_1200,h_630,c_fill,f_auto,q_auto/fashionistar-og-image"],
   },
 };
 
@@ -105,75 +167,106 @@ export const metadata = {
 
 export default async function Home() {
   /**
-   * ONE server-side fetch — backend asyncio.gather() runs 6 DB queries in
-   * parallel via /catalog/homepage/bundle/ (Phase B3).
+   * ONE server-side fetch — backend asyncio.gather() runs 8 DB queries in
+   * parallel via /catalog/homepage/bundle/ (APEX v4).
    * ISR: revalidate 300s, tagged "homepage-bundle" for on-demand invalidation.
    * On error → EMPTY_BUNDLE (homepage never crashes).
+   * APEX v4: bundle now includes trending_products + vendors.
    */
   const bundle = await getHomepageBundleV2();
   const highlightedCollection = bundle.collections[0] ?? null;
   const categoryCount = bundle.meta.categories_count || bundle.categories.length;
   const collectionCount = bundle.meta.collections_count || bundle.collections.length;
 
+  // APEX v4: DealsCountdown fallback — if no product has a countdown date,
+  // use next Sunday midnight as a universal weekly deals reset anchor.
+  const countdownTarget: string | undefined =
+    (bundle.hot_deals.find((p) => p.discount_countdown)?.discount_countdown as string | undefined) ??
+    (() => {
+      const d = new Date();
+      const daysUntilSunday = (7 - d.getDay()) % 7 || 7;
+      d.setDate(d.getDate() + daysUntilSunday);
+      d.setHours(23, 59, 59, 0);
+      return d.toISOString();
+    })();
+
   return (
     <div className="flex flex-col gap-0" data-testid="homepage">
 
-      {/* ── Work 4: Urgency Banner — rotating scarcity messages ───────────── */}
+      {/* ── Work 4: Urgency Banner ────────────────────────────────────────── */}
       <UrgencyBanner />
 
       {/* ── 1. Hero: CMS Banner if available, else static Hero ─────────────── */}
-      {bundle.banners.length > 0 ? (
-        <CatalogBannerHero banners={bundle.banners} />
-      ) : (
-        <Hero />
-      )}
+      <section aria-label="Homepage Hero" data-testid="hero-section">
+        {bundle.banners.length > 0 ? (
+          <CatalogBannerHero banners={bundle.banners} />
+        ) : (
+          <Hero />
+        )}
+      </section>
 
-      {/* ── 2. Trust Bar — instant credibility below hero ──────────────────── */}
-      <TrustBar />
+      {/* ── 2. Trust Bar ──────────────────────────────────────────────────── */}
+      <section aria-label="Trust Signals" data-testid="trust-bar">
+        <TrustBar />
+      </section>
 
-      {/* ── Work 4: Live Shopper Counter ──────────────────────────────────── */}
-      <div className="flex justify-center py-3">
+      {/* ── Live Shopper Counter ───────────────────────────────────────────── */}
+      <div className="flex justify-center py-3" data-testid="live-shopper-counter" suppressHydrationWarning>
         <LiveShopperCounter />
       </div>
 
-      {/* ── Work 4: AI Personalized Greeting ──────────────────────────────── */}
-      <AIPersonalizedGreeting />
+      {/* ── AI Personalized Greeting ───────────────────────────────────────── */}
+      <div data-testid="ai-greeting" suppressHydrationWarning>
+        <AIPersonalizedGreeting />
+      </div>
 
       {/* ── 3. Mobile email waitlist (mobile only) ─────────────────────────── */}
       <div className="mt-8 md:hidden flex z-30 px-4" data-testid="mobile-email-waitlist">
-        {/* WaitlistMobileForm is a client component — form action handled there */}
         <WaitlistMobileForm />
       </div>
 
-      {/* ── 4. Shop by Category (C1 FIX: no internal fetch — uses bundle) ──── */}
-      <div data-testid="category-grid-section">
+      {/* ── 4. Shop by Category ────────────────────────────────────────────── */}
+      <section aria-label="Shop by Category" data-testid="category-grid-section">
         <CatalogCategoryGrid categories={bundle.categories} />
-      </div>
+      </section>
 
-      {/* ── 5. AI Measurement CTA Banner — "Measure or Buy" funnel ─────────── */}
-      <MeasurementCTABanner />
+      {/* ── 5. AI Measurement CTA Banner ──────────────────────────────────── */}
+      <section aria-label="AI Body Measurement" data-testid="measurement-cta-banner">
+        <MeasurementCTABanner />
+      </section>
 
-      {/* ── 6. Featured Products — Tabbed Rails (Featured | New | Trending | Best Sellers) */}
-      <Suspense fallback={<HomepageFeaturedProductsSkeleton count={8} />}>
-        <TabbedFeaturedProducts products={bundle.featured_products} limit={8} />
-      </Suspense>
+      {/* ── 6. Featured Products — Tabbed Rails ───────────────────────────── */}
+      <section aria-label="Featured Products" data-testid="featured-products-section">
+        <Suspense fallback={<HomepageFeaturedProductsSkeleton count={8} />}>
+          <TabbedFeaturedProducts products={bundle.featured_products} limit={8} />
+        </Suspense>
+      </section>
 
-      {/* ── 7. R20: Trending Now Rail — AI trend score powered ──────────────── */}
-      <TrendingProductsRail />
+      {/* ── 7. Trending Now Rail (APEX v4: props from bundle — zero extra fetch) */}
+      <section aria-label="Trending Now" data-testid="trending-products-section">
+        <Suspense fallback={<TrendingProductsRailSkeleton />}>
+          <TrendingProductsRail products={bundle.trending_products} />
+        </Suspense>
+      </section>
 
-      {/* ── Work 4: Personalized Rail — "Recommended for You" ─────────────── */}
-      <PersonalizedRail />
+      {/* ── Personalized Rail ──────────────────────────────────────────────── */}
+      <section aria-label="Recommended for You" data-testid="personalized-rail">
+        <PersonalizedRail />
+      </section>
 
-      {/* ── 8. Recently Viewed Rail (client-side, localStorage) ─────────────── */}
-      <RecentlyViewedSection />
+      {/* ── 8. Recently Viewed Rail ────────────────────────────────────────── */}
+      <section aria-label="Recently Viewed" data-testid="recently-viewed-section">
+        <RecentlyViewedSection />
+      </section>
 
-      {/* ── 9. Collections (C1 FIX: no internal fetch — uses bundle) ────────── */}
-      <div data-testid="collection-grid-section">
+      {/* ── 9. Collections ────────────────────────────────────────────────────── */}
+      <section aria-label="Shop Collections" data-testid="collection-grid-section">
         <CatalogCollectionGrid collections={bundle.collections} />
-      </div>
+      </section>
 
-      {/* ── 9. Campaign Banner ──────────────────────────────────────────────── */}
-      <div
+      {/* ── Campaign Banner ────────────────────────────────────────────────── */}
+      <section
+        aria-label="Campaign Banner"
         className="w-full bg-[#fda600] relative p-8 md:p-14 lg:p-24 overflow-hidden"
         data-testid="campaign-banner"
       >
@@ -229,10 +322,11 @@ export default async function Home() {
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── 10. Deals of the Week (APEX: 6 cards, was 4) ──────────────────── */}
-      <div
+      {/* ── 10. Deals of the Week ───────────────────────────────────────────── */}
+      <section
+        aria-label="Deals of the Week"
         className="px-5 py-10 md:px-10 lg:px-20 space-y-6 md:space-y-10"
         data-testid="deals-section"
       >
@@ -241,45 +335,48 @@ export default async function Home() {
             Deals of the Week
           </h2>
           <div data-testid="deals-countdown">
-            <DealsCountdown
-              targetDate={
-                bundle.hot_deals.find((p) => p.discount_countdown)?.discount_countdown as string | undefined
-              }
-            />
+            {/* APEX v4: countdownTarget has a fallback (next Sunday midnight) */}
+            <DealsCountdown targetDate={countdownTarget} />
           </div>
         </div>
-
-        {/* Hot deal cards — live from homepage bundle (zero extra fetch) */}
-        {/* APEX: pass limit=6 to show 6 deals instead of 4 */}
         <HomepageHotDealsSection products={bundle.hot_deals.slice(0, 6)} />
-      </div>
+      </section>
 
-      {/* ── 11. Customer Reviews ─────────────────────────────────────── */}
-      <div data-testid="reviews-section">
+      {/* ── 11. Customer Reviews ─────────────────────────────────────────────── */}
+      <section aria-label="Customer Reviews" data-testid="reviews-section">
         <HomepageReviewsSection reviews={bundle.reviews} />
-      </div>
+      </section>
 
-      {/* ── 12. R19: Blog Style Guide Rail — 3 latest posts ────────────── */}
-      <BlogStyleGuideRail />
+      {/* ── 12. Blog Style Guide Rail ────────────────────────────────────────── */}
+      <section aria-label="Style Guide & Blog" data-testid="blog-rail-section">
+        <Suspense fallback={<BlogRailSkeleton />}>
+          <BlogStyleGuideRail />
+        </Suspense>
+      </section>
 
-      {/* ── 13. Vendor Spotlight — Meet Our Vendors (4 cards) ──────────── */}
-      <VendorSpotlightSection />
+      {/* ── 13. Vendor Spotlight (APEX v4: props from bundle — zero extra fetch) */}
+      <section aria-label="Meet Our Vendors" data-testid="vendor-spotlight-section">
+        <Suspense fallback={<VendorSpotlightSkeleton />}>
+          <VendorSpotlightSection vendors={bundle.vendors} />
+        </Suspense>
+      </section>
 
-      {/* ── 12. Newsletter CTA ──────────────────────────────────────────────── */}
-      <div
-        className="mx-5 md:mx-10 lg:mx-20 mb-10 rounded-3xl bg-gradient-to-r from-[#01454A] to-[#01454A]/80 p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8"
-        data-testid="newsletter-section"
-      >
-        <div>
-          <h2 className="font-bon_foyage text-3xl md:text-4xl text-white mb-2">
-            Stay in Style
-          </h2>
-          <p className="font-raleway text-[#ECE6D6]/80 text-base md:text-lg">
-            Get exclusive deals, new arrivals and style tips delivered to your inbox.
-          </p>
+      {/* ── Newsletter CTA ───────────────────────────────────────────────────── */}
+      <section aria-label="Stay in Style — Newsletter" data-testid="newsletter-section">
+        <div
+          className="mx-5 md:mx-10 lg:mx-20 mb-10 rounded-3xl bg-gradient-to-r from-[#01454A] to-[#01454A]/80 p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8"
+        >
+          <div>
+            <h2 className="font-bon_foyage text-3xl md:text-4xl text-white mb-2">
+              Stay in Style
+            </h2>
+            <p className="font-raleway text-[#ECE6D6]/80 text-base md:text-lg">
+              Get exclusive deals, new arrivals and style tips delivered to your inbox.
+            </p>
+          </div>
+          <NewsletterForm />
         </div>
-        <NewsletterForm />
-      </div>
+      </section>
 
       {/* ── 13. Sticky Mobile CTA (30s delay, 24h dismissal) ───────────────── */}
       <StickyMobileCTA />
@@ -290,10 +387,30 @@ export default async function Home() {
       {/* ── Work 10: Email Capture Modal ──────────────────────────────────── */}
       <EmailCaptureModal />
 
-      {/* ── JSON-LD Structured Data — WebSite + ItemList ───────────────────── */}
+      {/* ── JSON-LD Structured Data ─────────────────────────────────────────── */}
+      {/* WebSite schema: helps Google index Fashionistar as a site entity */}
+      <JsonLdScript id="website-ld" data={generateWebSiteSchema()} />
+      {/* Organization schema: APEX v4 addition for brand entity recognition */}
       <JsonLdScript
-        id="website-ld"
-        data={generateWebSiteSchema()}
+        id="organization-ld"
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Fashionistar",
+          url: "https://fashionistar.net",
+          logo: "https://res.cloudinary.com/fashionistar/image/upload/f_auto,q_auto/fashionistar-logo",
+          sameAs: [
+            "https://instagram.com/fashionistar",
+            "https://facebook.com/fashionistar",
+            "https://twitter.com/fashionistar",
+          ],
+          contactPoint: {
+            "@type": "ContactPoint",
+            contactType: "customer service",
+            areaServed: "NG",
+            availableLanguage: "English",
+          },
+        }}
       />
       {bundle.featured_products.length > 0 && (
         <JsonLdScript

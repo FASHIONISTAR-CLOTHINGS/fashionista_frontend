@@ -271,6 +271,26 @@ const HomepageBundleMetaSchema = z.object({
   hot_deals_count: z.number().nullable().default(0).transform((v) => v ?? 0),
   reviews_count: z.number().nullable().default(0).transform((v) => v ?? 0),
   banners_count: z.number().nullable().default(0).transform((v) => v ?? 0),
+  // APEX v4: new bundle counts — .default(0) so old backends still parse cleanly
+  trending_count: z.number().nullable().default(0).transform((v) => v ?? 0),
+  vendors_count: z.number().nullable().default(0).transform((v) => v ?? 0),
+});
+
+// APEX v4: Vendor spotlight card Zod schema
+const HomepageVendorCardSchema = z.object({
+  id: IdSchema,
+  store_name: z.string().default(""),
+  store_slug: z.string().default(""),
+  tagline: z.string().default(""),
+  logo_url: z.string().nullable().optional().default(null),
+  logo_cloudinary_url: z.string().nullable().optional().default(null),
+  city: z.string().default(""),
+  state: z.string().default(""),
+  is_verified: z.boolean().default(false),
+  is_featured: z.boolean().default(false),
+  average_rating: z.number().default(0),
+  review_count: z.number().default(0),
+  total_products: z.number().default(0),
 });
 
 export const HomepageBundleSchema = z.object({
@@ -280,5 +300,8 @@ export const HomepageBundleSchema = z.object({
   hot_deals: z.array(HomepageProductCardSchema).default([]),
   reviews: z.array(HomepageReviewCardSchema).default([]),
   banners: z.array(HomepageBannerCardSchema).default([]),
+  // APEX v4: new sections — .default([]) ensures old backends still parse cleanly
+  trending_products: z.array(HomepageProductCardSchema).default([]),
+  vendors: z.array(HomepageVendorCardSchema).default([]),
   meta: HomepageBundleMetaSchema.default({}),
 });

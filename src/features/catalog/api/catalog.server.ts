@@ -214,6 +214,9 @@ const EMPTY_BUNDLE_V2: HomepageBundle = {
   hot_deals: [],
   reviews: [],
   banners: [],
+  // APEX v4 additions
+  trending_products: [],
+  vendors: [],
   meta: {
     collections_count: 0,
     categories_count: 0,
@@ -221,17 +224,20 @@ const EMPTY_BUNDLE_V2: HomepageBundle = {
     hot_deals_count: 0,
     reviews_count: 0,
     banners_count: 0,
+    trending_count: 0,
+    vendors_count: 0,
   },
 };
 
 /**
- * Homepage bundle v2 — 6 sections including hero banners.
- * Calls /catalog/homepage/bundle/ (Phase B3 endpoint).
+ * Homepage bundle v2 (APEX v4) — 8 sections including trending + vendors.
+ * Calls /catalog/homepage/bundle/ (APEX v4 endpoint).
  *
  * RESILIENT FALLBACK CHAIN:
- *   1. Try /api/v1/ninja/catalog/homepage/bundle/ (v2 with banners)
- *   2. If that fails (500 / CatalogBanner table missing), fall back to
- *      /api/v1/ninja/catalog/homepage/ (v1, always works) + banners: []
+ *   1. Try /api/v1/ninja/catalog/homepage/bundle/ (v4 with all 8 sections)
+ *   2. If that fails (500 / table missing), fall back to
+ *      /api/v1/ninja/catalog/homepage/ (v1, always works) + empty arrays for
+ *      banners, trending_products, vendors
  */
 export async function getHomepageBundleV2(): Promise<HomepageBundle> {
   try {
@@ -254,9 +260,9 @@ export async function getHomepageBundleV2(): Promise<HomepageBundle> {
     try {
       const raw = await fetchHomepageBundle("/api/v1/ninja/catalog/homepage/");
       if (!raw) return EMPTY_BUNDLE_V2;
-      // v1 doesn't have banners — inject empty array so schema passes
+      // v1 doesn't have banners/trending/vendors — inject empty arrays so schema passes
       const merged = typeof raw === "object" && raw !== null
-        ? { banners: [], ...raw as object }
+        ? { banners: [], trending_products: [], vendors: [], ...raw as object }
         : {};
       const result = HomepageBundleSchema.safeParse(merged);
       if (!result.success) {

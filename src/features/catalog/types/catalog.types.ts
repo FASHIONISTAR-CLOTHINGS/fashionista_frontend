@@ -1,4 +1,4 @@
-/// ─────────────────────────────────────────────────────────────────────────────
+/// ───────────────────────────────────────────────────────────────────────────────
 // Catalog Entity Types  (read-side, from Django-Ninja async API)
 //
 // Single source of truth: these interfaces mirror the backend Django models
@@ -8,14 +8,15 @@
 //   CATEGORIES → for products  (a product belongs to 1–15 categories)
 //   COLLECTIONS → for vendors  (a vendor joins collections it specialises in)
 //
-// Phase enrichment (2026-Q3):
+// APEX v4 enrichment (2026-Q3):
 //   HomepageProductCard: +cloudinary_url, +gender_target, +age_group,
 //     +condition, +is_pre_order, +orders_count, +views
 //   HomepageCategoryCard: +cloudinary_url, +active (replaces is_deleted)
 //   HomepageCollectionCard: +cloudinary_url
-//   HomepageBundleMeta: +banners_count
-//   HomepageBundleOut: +banners list
-// ─────────────────────────────────────────────────────────────────────────────
+//   HomepageBundleMeta: +banners_count, +trending_count, +vendors_count
+//   HomepageBundleOut: +banners, +trending_products, +vendors
+//   HomepageVendorCard: NEW — vendor spotlight card for bundle v4
+// ───────────────────────────────────────────────────────────────────────────────
 
 export interface CatalogCategoryChild {
   id: string;
@@ -277,6 +278,60 @@ export interface HomepageBannerCard {
   sort_order: number;
 }
 
+/**
+ * Vendor spotlight card for homepage featured vendors section.
+ *
+ * Phase 12 v3: returned as "featured_vendors" array in the bundle.
+ * Eliminates the extra HTTP fetch from VendorSpotlightSection.
+ */
+export interface HomepageVendorCard {
+  id: string;
+  store_name: string;
+  store_slug: string;
+  tagline: string;
+  /** Cloudinary circular-crop URL w_200,h_200,c_fill,f_auto,q_auto */
+  logo_url: string | null;
+  city: string;
+  is_verified: boolean;
+  average_rating: number;
+  review_count: number;
+  total_products: number;
+}
+
+/** Lean blog post card for homepage blog section. */
+export interface HomepageBlogPostCard {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  featured_image: string | null;
+  featured_image_url: string | null;
+  author_avatar: string | null;
+  author_name: string;
+  published_at: string | null;
+  is_featured: boolean;
+  view_count: number;
+  tags: string[];
+}
+
+/** Platform aggregate counts for homepage campaign banner. */
+export interface HomepagePlatformStats {
+  products_count: number;
+  categories_count: number;
+  collections_count: number;
+  vendors_count: number;
+  reviews_count: number;
+}
+
+/** Trending tag for homepage tags rail. */
+export interface HomepageTrendingTag {
+  id: string;
+  name: string;
+  slug: string;
+  color_hex: string;
+  is_trending: boolean;
+}
+
 /** Metadata counts embedded in the bundle response. */
 export interface HomepageBundleMeta {
   collections_count: number;
@@ -285,12 +340,31 @@ export interface HomepageBundleMeta {
   hot_deals_count: number;
   reviews_count: number;
   banners_count: number;
+  trending_count: number;
+  featured_vendors_count: number;
+  blog_posts_count: number;
+  trending_tags_count: number;
+  mid_banners_count: number;
 }
 
 /**
- * Full homepage data bundle (v2).
- * Single RSC fetch from /api/v1/ninja/catalog/homepage/bundle/
+ * Full homepage data bundle (v3 — Phase 12 consolidation).
+ * Single RSC fetch from /api/v1/ninja/catalog/homepage/
  * ISR: revalidate 300s, tagged "homepage-bundle".
+ *
+ * v3 sections (12 concurrent DB queries via asyncio.gather):
+ *   - banners: hero slot CMS banners
+ *   - categories: shop-by-category grid
+ *   - collections: vendor collections carousel
+ *   - featured_products: admin-featured products grid
+ *   - hot_deals: discounted products + countdown
+ *   - trending_products: AI trend-scored products rail
+ *   - reviews: customer review cards
+ *   - blog_posts: featured editorial posts
+ *   - featured_vendors: verified vendor spotlight
+ *   - trending_tags: trending taxonomy tags
+ *   - platform_stats: aggregate counts for campaign banner
+ *   - mid_banners: mid-page CMS banners
  */
 export interface HomepageBundle {
   collections: HomepageCollectionCard[];
@@ -299,6 +373,12 @@ export interface HomepageBundle {
   hot_deals: HomepageProductCard[];
   reviews: HomepageReviewCard[];
   banners: HomepageBannerCard[];
+  trending_products: HomepageProductCard[];
+  featured_vendors: HomepageVendorCard[];
+  blog_posts: HomepageBlogPostCard[];
+  trending_tags: HomepageTrendingTag[];
+  platform_stats: HomepagePlatformStats;
+  mid_banners: HomepageBannerCard[];
   meta: HomepageBundleMeta;
 }
 
