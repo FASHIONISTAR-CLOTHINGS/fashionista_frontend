@@ -46,7 +46,6 @@ import { AIPersonalizedGreeting } from "./_components/AIPersonalizedGreeting";
 import { UrgencyBanner } from "./_components/UrgencyBanner";
 import { LiveShopperCounter } from "./_components/LiveShopperCounter";
 import { PersonalizedRail } from "./_components/PersonalizedRail";
-import { DealsOfTheWeekSection } from "./_components/DealsOfTheWeekSection";
 import { NewArrivalsRail } from "./_components/NewArrivalsRail";
 import { TrendingTagsRail } from "./_components/TrendingTagsRail";
 import { EmailCaptureModalLazy } from "./_components/EmailCaptureModalLazy";
@@ -312,7 +311,7 @@ export default async function Home() {
       {/* ── 10. Deals of the Week ───────────────────────────────────────────── */}
       <section
         aria-label="Deals of the Week"
-        className="px-5 py-10 md:px-10 lg:px-20 space-y-6 md:space-y-10"
+        className="px-5 py-10 md:px-10 lg:px-20 space-y-6 md:space-y-10 animate-fade-slide-up"
         data-testid="deals-section"
       >
         <div className="flex flex-wrap justify-center md:justify-normal items-center gap-5 lg:gap-16">
@@ -324,7 +323,15 @@ export default async function Home() {
             <DealsCountdown targetDate={countdownTarget} />
           </div>
         </div>
-        <HomepageHotDealsSection products={bundle.hot_deals.slice(0, 6)} />
+        {/* Use deals_of_the_week from the 12-way bundle (steep-discount products
+            with discount_countdown). Falls back to hot_deals if empty. */}
+        <HomepageHotDealsSection
+          products={
+            (bundle.deals_of_the_week?.length ?? 0) > 0
+              ? bundle.deals_of_the_week.slice(0, 6)
+              : bundle.hot_deals.slice(0, 6)
+          }
+        />
       </section>
 
       {/* ── 11. Customer Reviews ─────────────────────────────────────────────── */}
@@ -332,19 +339,32 @@ export default async function Home() {
         <HomepageReviewsSection reviews={bundle.reviews} />
       </section>
 
-      {/* ── 12. Blog Style Guide Rail (consolidated: props from bundle — zero client fetch) */}
-      <section aria-label="Style Guide & Blog" data-testid="blog-rail-section">
+      {/* ── 12. Blog Style Guide Rail ──────────────────────────────────────── */}
+      <section
+        aria-label="Style Guide & Blog"
+        data-testid="blog-rail-section"
+        className="animate-fade-slide-up"
+      >
         <BlogStyleGuideRail posts={bundle.blog_posts} />
       </section>
 
-      {/* ── 12b. Trending Tags Rail (consolidated: props from bundle) */}
-      <TrendingTagsRail tags={bundle.trending_tags} />
+      {/* ── 12b. Trending Tags Rail ─────────────────────────────────────────── */}
+      <section
+        aria-label="Trending Tags"
+        data-testid="trending-tags-section"
+        className="animate-fade-slide-up"
+      >
+        <TrendingTagsRail tags={bundle.trending_tags} />
+      </section>
 
-      {/* ── 12c. Deals of the Week (consolidated: steep-discount products with countdown) */}
-      <DealsOfTheWeekSection products={bundle.deals_of_the_week} countdownTarget={countdownTarget} />
-
-      {/* ── 12d. New Arrivals Rail (consolidated: newest products) */}
-      <NewArrivalsRail products={bundle.new_arrivals} />
+      {/* ── 12c. New Arrivals Rail ──────────────────────────────────────────── */}
+      <section
+        aria-label="New Arrivals"
+        data-testid="new-arrivals-section"
+        className="animate-fade-slide-up"
+      >
+        <NewArrivalsRail products={bundle.new_arrivals} />
+      </section>
 
       {/* ── 13. Vendor Spotlight (APEX v4: props from bundle — zero extra fetch) */}
       <section aria-label="Meet Our Vendors" data-testid="vendor-spotlight-section">
