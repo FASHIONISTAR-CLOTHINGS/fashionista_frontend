@@ -1124,3 +1124,73 @@ button[aria-invalid="true"] {
     color: black;
   }
 }
+
+/* ───────────────────────────────────────────────────────────────────────────── */
+/* Phase 7: Homepage 2026 animation + performance utilities                     */
+/* ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Missing keyframes: fade-out, slide-in-right, float ────────────────────── */
+@keyframes fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+/* ── Animation utility classes ─────────────────────────────────────────────── */
+.animate-fade-out      { animation: fade-out 0.3s ease-out both; }
+.animate-slide-in-right { animation: slide-in-right 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-float         { animation: float 3s ease-in-out infinite; }
+
+/* ── Content-visibility: skip rendering offscreen sections (perf) ──────────── */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+}
+
+/* ── Branded scrollbar (horizontal rails) ──────────────────────────────────── */
+.branded-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(1, 69, 74, 0.3) transparent;
+}
+.branded-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.branded-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.branded-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(1, 69, 74, 0.3);
+  border-radius: 9999px;
+}
+.branded-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(1, 69, 74, 0.5);
+}
+
+/* ── Reduced motion — extended to cover new animations ─────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-out,
+  .animate-slide-in-right,
+  .animate-float,
+  .animate-slide-up,
+  .animate-card-enter,
+  .animate-card-pop,
+  .animate-glimmer,
+  .glimmer-overlay::after {
+    animation: none !important;
+  }
+  .card-lift:hover,
+  .product-card-glass:hover,
+  .group:hover .group-hover\:scale-105 {
+    transform: none !important;
+  }
+}
+

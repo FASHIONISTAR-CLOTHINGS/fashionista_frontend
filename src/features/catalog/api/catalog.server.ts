@@ -8,9 +8,10 @@
  *   - Falls back to safe empty values on any error (never throws from RSC).
  *   - MUST NOT be imported into client components ("use client" files).
  *
- * Phase 11 — Homepage Bundle:
- *   getHomepageBundle() replaces 5 separate fetches with a single endpoint
- *   that runs asyncio.gather() on the backend (5 parallel DB queries).
+ * Consolidated Homepage Bundle:
+ *   getHomepageBundle() calls the single /catalog/homepage/ endpoint that runs
+ *   asyncio.gather(return_exceptions=True) on the backend (12 parallel DB queries).
+ *   Returns all 12 homepage sections in one response — zero additional HTTP round-trips.
  *   ISR revalidate: 300 seconds (5 min) — matches backend Redis TTL.
  */
 
@@ -207,16 +208,19 @@ import type {
   PaginatedProducts,
 } from "../types/catalog.types";
 
-const EMPTY_BUNDLE_V2: HomepageBundle = {
+const EMPTY_BUNDLE: HomepageBundle = {
   collections: [],
   categories: [],
   featured_products: [],
   hot_deals: [],
   reviews: [],
   banners: [],
-  // APEX v4 additions
   trending_products: [],
   vendors: [],
+  blog_posts: [],
+  trending_tags: [],
+  deals_of_the_week: [],
+  new_arrivals: [],
   meta: {
     collections_count: 0,
     categories_count: 0,
@@ -226,54 +230,40 @@ const EMPTY_BUNDLE_V2: HomepageBundle = {
     banners_count: 0,
     trending_count: 0,
     vendors_count: 0,
+    blog_count: 0,
+    tags_count: 0,
+    deals_of_week_count: 0,
+    new_arrivals_count: 0,
+    gather_ms: 0,
   },
 };
 
 /**
- * Homepage bundle v2 (APEX v4) — 8 sections including trending + vendors.
- * Calls /catalog/homepage/bundle/ (APEX v4 endpoint).
+ * Homepage bundle (consolidated) — 12 sections via a single asyncio.gather()
+ * on the backend. Calls /catalog/homepage/ (the single consolidated endpoint).
  *
- * RESILIENT FALLBACK CHAIN:
- *   1. Try /api/v1/ninja/catalog/homepage/bundle/ (v4 with all 8 sections)
- *   2. If that fails (500 / table missing), fall back to
- *      /api/v1/ninja/catalog/homepage/ (v1, always works) + empty arrays for
- *      banners, trending_products, vendors
+ * No backward compatibility — the old /homepage/bundle/ v2 route has been
+ * deleted. On any error (backend down, parse fail, timeout), returns
+ * EMPTY_BUNDLE with all 12 sections as empty arrays so the homepage NEVER
+ * crashes and sections degrade to graceful empty states.
+ *
+ * ISR: revalidate 300s, tagged "homepage-bundle" for on-demand invalidation.
  */
-export async function getHomepageBundleV2(): Promise<HomepageBundle> {
+export async function getHomepageBundle(): Promise<HomepageBundle> {
   try {
     const raw = await fetchHomepageBundle(
-      "/api/v1/ninja/catalog/homepage/bundle/"
+      "/api/v1/ninja/catalog/homepage/"
     );
-    if (!raw) throw new Error("bundle_v2_empty");
+    if (!raw) return EMPTY_BUNDLE;
     const result = HomepageBundleSchema.safeParse(raw);
     if (!result.success) {
-      console.warn("[catalog.server] getHomepageBundleV2 parse error:", result.error.flatten());
-      throw new Error("bundle_v2_parse_fail");
+      console.warn("[catalog.server] getHomepageBundle parse error:", result.error.flatten());
+      return EMPTY_BUNDLE;
     }
     return result.data as HomepageBundle;
   } catch (err) {
-    // ── Fallback: try v1 endpoint which is guaranteed to work ─────────
-    console.warn(
-      "[catalog.server] getHomepageBundleV2 falling back to v1 endpoint:",
-      err instanceof Error ? err.message : err
-    );
-    try {
-      const raw = await fetchHomepageBundle("/api/v1/ninja/catalog/homepage/");
-      if (!raw) return EMPTY_BUNDLE_V2;
-      // v1 doesn't have banners/trending/vendors — inject empty arrays so schema passes
-      const merged = typeof raw === "object" && raw !== null
-        ? { banners: [], trending_products: [], vendors: [], ...raw as object }
-        : {};
-      const result = HomepageBundleSchema.safeParse(merged);
-      if (!result.success) {
-        console.warn("[catalog.server] getHomepageBundleV2 v1-fallback parse error:", result.error.flatten());
-        return EMPTY_BUNDLE_V2;
-      }
-      return result.data as HomepageBundle;
-    } catch (fallbackErr) {
-      console.error("[catalog.server] getHomepageBundleV2 v1-fallback also failed:", fallbackErr);
-      return EMPTY_BUNDLE_V2;
-    }
+    console.error("[catalog.server] getHomepageBundle failed:", err instanceof Error ? err.message : err);
+    return EMPTY_BUNDLE;
   }
 }
 

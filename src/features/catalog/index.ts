@@ -19,8 +19,8 @@ export {
   getCatalogBrands,
   getCatalogCategories,
   getCatalogCollections,
-  // Phase B3 — homepage bundle v2 (6 parallel DB reads + banners) — SOLE bundle function
-  getHomepageBundleV2,
+  // Consolidated homepage bundle (12 parallel DB reads — single asyncio.gather)
+  getHomepageBundle,
   // Phase C4 — detail + paginated server functions
   getCategoryDetail,
   getCategoryProducts,

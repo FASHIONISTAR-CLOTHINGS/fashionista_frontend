@@ -138,7 +138,38 @@ export function TabbedFeaturedProducts({
   const tabProducts = getTabProducts(products, activeTab, limit);
   const currentTab = TABS.find((t) => t.id === activeTab)!;
 
-  if (products.length === 0) return null;
+  if (products.length === 0) {
+    return (
+      <section
+        className="section-wrapper"
+        aria-labelledby="featured-products-heading"
+        id="featured-products"
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-6">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-[var(--BV-gold)] mb-1">
+              Discover More
+            </p>
+            <h2 id="featured-products-heading" className="section-title">
+              Curated For You
+            </h2>
+          </div>
+        </div>
+        <div className="rounded-3xl border border-dashed border-[var(--BV-border)] bg-[var(--BV-surface)] px-6 py-14 text-center">
+          <p className="text-2xl font-bold text-[var(--BV-ink)]">Featured Products Coming Soon</p>
+          <p className="mt-2 text-sm text-[var(--BV-muted)] max-w-sm mx-auto">
+            Our curated selection is being updated. Check back shortly for the best picks!
+          </p>
+          <Link
+            href="/products"
+            className="mt-4 inline-flex items-center gap-2 rounded-full border border-[var(--BV-green)]/30 px-6 py-2.5 text-sm font-semibold text-[var(--BV-green)] hover:bg-[var(--BV-green)] hover:text-white transition-all duration-200"
+          >
+            Browse All Products →
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section

@@ -1,47 +1,30 @@
-"use client";
-
 /**
- * BlogStyleGuideRail.tsx — R19
+ * BlogStyleGuideRail.tsx — R19 (consolidated bundle version)
  *
- * "Style Guide" blog rail — 3 latest blog posts from CatalogBlogPost.
- * Appears at the bottom of the homepage above the newsletter.
- *
- * Data: GET /api/catalog/blog/ via catalogApi.getBlogPosts()
- *       TanStack Query, staleTime 10min
+ * "Style Guide" blog rail — 3 latest blog posts from the consolidated homepage
+ * bundle (12-way asyncio.gather). Now receives posts as props — ZERO client-side
+ * fetches. Degrades to a typed empty state when no posts are available.
  *
  * Design:
  *  - Section header: "Style Guide" with "Read All" link
  *  - 3-col grid (1-col mobile → 3-col desktop)
  *  - Each card: cover image, category tag, title, excerpt, read time, CTA
  *  - Cream background section
- *  - Skeleton loading state
- *  - Renders null when no posts available
+ *  - Typed empty state (section never disappears)
  */
 
 import Link from "next/link";
 import Image from "next/image";
-import { useQuery } from "@tanstack/react-query";
-import { catalogApi } from "@/features/catalog/api/catalog.api";
-import type { CatalogBlogPost } from "@/features/catalog/types/catalog.types";
-import { BookOpen, Clock } from "lucide-react";
+import type { HomepageBlogPostCard } from "@/features/catalog/types/catalog.types";
+import { BookOpen, Clock, PenLine } from "lucide-react";
 
 // ─── Blog card ────────────────────────────────────────────────────────────────
 
-function BlogCard({ post, index }: { post: CatalogBlogPost; index: number }) {
-  const imageUrl =
-    (post as unknown as Record<string, string | null>).cover_image_url ||
-    (post as unknown as Record<string, string | null>).thumbnail_url ||
-    null;
-  const slug =
-    (post as unknown as Record<string, string>).slug || String(post.id);
-  const excerpt =
-    (post as unknown as Record<string, string>).excerpt ||
-    (post as unknown as Record<string, string>).summary ||
-    "";
-  const category =
-    (post as unknown as Record<string, string>).category || "Style";
-  const readTime =
-    (post as unknown as Record<string, number>).read_time_minutes || 3;
+function BlogCard({ post, index }: { post: HomepageBlogPostCard; index: number }) {
+  const imageUrl = post.cloudinary_url || post.image_url || post.image || null;
+  const slug = post.slug || String(post.id);
+  const excerpt = post.excerpt || "";
+  const category = post.category_name || "Style";
 
   return (
     <article
@@ -85,7 +68,7 @@ function BlogCard({ post, index }: { post: CatalogBlogPost; index: number }) {
         <div className="mt-auto pt-2 flex items-center justify-between">
           <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
             <Clock size={9} aria-hidden="true" />
-            {readTime} min read
+            {post.author_name}
           </span>
           <Link
             href={`/blog/${slug}`}
@@ -99,39 +82,49 @@ function BlogCard({ post, index }: { post: CatalogBlogPost; index: number }) {
   );
 }
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
-
-function BlogRailSkeleton() {
-  return (
-    <div className="grid gap-5 grid-cols-1 sm:grid-cols-3 px-5 md:px-10 lg:px-20" aria-hidden="true">
-      {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="rounded-2xl overflow-hidden border border-border bg-card">
-          <div className="h-44 bg-muted animate-pulse" />
-          <div className="p-4 space-y-2">
-            <div className="h-2 w-1/4 bg-muted animate-pulse rounded" />
-            <div className="h-3 w-full bg-muted animate-pulse rounded" />
-            <div className="h-3 w-3/4 bg-muted animate-pulse rounded" />
-            <div className="h-2 w-1/3 bg-muted animate-pulse rounded mt-2" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 // ─── Main rail ────────────────────────────────────────────────────────────────
 
-export function BlogStyleGuideRail() {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["homepage-blog-posts"],
-    queryFn: () => catalogApi.getBlogPosts(),
-    staleTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
-
-  const posts: CatalogBlogPost[] = Array.isArray(data) ? data.slice(0, 3) : [];
-
-  if (!isLoading && (isError || posts.length === 0)) return null;
+export function BlogStyleGuideRail({ posts }: { posts: HomepageBlogPostCard[] }) {
+  // Typed empty state — section never disappears, degrades gracefully
+  if (!posts || posts.length === 0) {
+    return (
+      <section
+        className="py-10 bg-[#F4F3EC]/30"
+        data-testid="blog-style-guide-rail"
+        aria-label="Style guide blog posts"
+      >
+        <div className="flex items-center justify-between px-5 mb-6 md:px-10 lg:px-20">
+          <div>
+            <p className="font-raleway text-xs font-bold uppercase tracking-[0.2em] text-[#FDA600] mb-1">
+              Style Guide
+            </p>
+            <h2 className="font-bon_foyage text-2xl text-foreground md:text-3xl leading-tight">
+              Fashion Inspiration
+            </h2>
+          </div>
+          <Link
+            href="/blog"
+            data-testid="blog-rail-read-all"
+            className="font-raleway text-xs font-bold text-[#01454A] border border-[#01454A]/30 px-4 py-2 rounded-full hover:bg-[#01454A] hover:text-white transition-all duration-150 flex-shrink-0"
+          >
+            Read All →
+          </Link>
+        </div>
+        <div className="flex flex-col items-center justify-center py-12 px-5 text-center">
+          <PenLine size={32} className="text-muted-foreground/40 mb-3" aria-hidden="true" />
+          <p className="font-raleway text-sm text-muted-foreground">
+            Our editorial team is crafting style guides. Check back soon!
+          </p>
+          <Link
+            href="/blog"
+            className="mt-4 font-raleway text-xs font-bold text-[#01454A] border border-[#01454A]/30 px-4 py-2 rounded-full hover:bg-[#01454A] hover:text-white transition-all duration-150"
+          >
+            Browse Blog
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section
@@ -159,21 +152,17 @@ export function BlogStyleGuideRail() {
       </div>
 
       {/* Grid */}
-      {isLoading ? (
-        <BlogRailSkeleton />
-      ) : (
-        <div
-          className="grid gap-5 grid-cols-1 sm:grid-cols-3 px-5 md:px-10 lg:px-20"
-          role="list"
-          aria-label="Style guide articles"
-        >
-          {posts.map((post, i) => (
-            <div key={post.id} role="listitem">
-              <BlogCard post={post} index={i} />
-            </div>
-          ))}
-        </div>
-      )}
+      <div
+        className="grid gap-5 grid-cols-1 sm:grid-cols-3 px-5 md:px-10 lg:px-20"
+        role="list"
+        aria-label="Style guide articles"
+      >
+        {posts.map((post, i) => (
+          <div key={post.id} role="listitem">
+            <BlogCard post={post} index={i} />
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

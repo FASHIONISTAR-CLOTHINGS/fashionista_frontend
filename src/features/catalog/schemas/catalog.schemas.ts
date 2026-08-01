@@ -135,17 +135,10 @@ export const CatalogCollectionListSchema = z.array(CatalogCollectionSchema);
 export const CatalogBlogPostListSchema = z.array(CatalogBlogPostSchema);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Phase 11 + Enrich — Homepage Bundle Zod Schemas
-// Match the JSON shape returned by GET /api/v1/ninja/catalog/homepage/bundle/
+// Consolidated Homepage Bundle Zod Schemas
+// Match the JSON shape returned by GET /api/v1/ninja/catalog/homepage/
+// (12-section consolidated bundle — single asyncio.gather on the backend).
 // Every field uses safe transforms so partial/null server data never throws.
-//
-// Enriched fields (2026-Q3):
-//   HomepageProductCardSchema: cloudinary_url, gender_target, age_group,
-//     condition, is_pre_order, orders_count, views
-//   HomepageCategoryCardSchema: cloudinary_url, active
-//   HomepageCollectionCardSchema: cloudinary_url
-//   HomepageBundleMetaSchema: banners_count
-//   HomepageBundleSchema: banners
 // ─────────────────────────────────────────────────────────────────────────────
 
 const HomepageProductCardSchema = z.object({
@@ -271,12 +264,17 @@ const HomepageBundleMetaSchema = z.object({
   hot_deals_count: z.number().nullable().default(0).transform((v) => v ?? 0),
   reviews_count: z.number().nullable().default(0).transform((v) => v ?? 0),
   banners_count: z.number().nullable().default(0).transform((v) => v ?? 0),
-  // APEX v4: new bundle counts — .default(0) so old backends still parse cleanly
   trending_count: z.number().nullable().default(0).transform((v) => v ?? 0),
   vendors_count: z.number().nullable().default(0).transform((v) => v ?? 0),
+  // Consolidated bundle — 4 new section counts
+  blog_count: z.number().nullable().default(0).transform((v) => v ?? 0),
+  tags_count: z.number().nullable().default(0).transform((v) => v ?? 0),
+  deals_of_week_count: z.number().nullable().default(0).transform((v) => v ?? 0),
+  new_arrivals_count: z.number().nullable().default(0).transform((v) => v ?? 0),
+  gather_ms: z.number().nullable().default(0).transform((v) => v ?? 0),
 });
 
-// APEX v4: Vendor spotlight card Zod schema
+// Vendor spotlight card Zod schema
 const HomepageVendorCardSchema = z.object({
   id: IdSchema,
   store_name: z.string().default(""),
@@ -293,6 +291,32 @@ const HomepageVendorCardSchema = z.object({
   total_products: z.number().default(0),
 });
 
+// Blog post card Zod schema (consolidated bundle — _blog_card_out from backend)
+const HomepageBlogCardSchema = z.object({
+  id: IdSchema,
+  title: z.string().default(""),
+  slug: z.string().default(""),
+  excerpt: z.string().default(""),
+  image: z.string().nullable().optional().default(null),
+  image_url: z.string().nullable().optional().default(null),
+  cloudinary_url: z.string().nullable().optional().default(null),
+  is_featured: z.boolean().default(false),
+  published_at: z.string().nullable().optional().default(null),
+  view_count: z.number().default(0),
+  author_name: z.string().default("Fashionistar Editorial"),
+  category_name: z.string().default(""),
+  created_at: z.string().nullable().optional().default(null),
+});
+
+// Trending tag card Zod schema (consolidated bundle — _tag_out from backend)
+const HomepageTagCardSchema = z.object({
+  id: IdSchema,
+  name: z.string().default(""),
+  slug: z.string().default(""),
+  color_hex: z.string().default("#01454A"),
+  is_trending: z.boolean().default(false),
+});
+
 export const HomepageBundleSchema = z.object({
   collections: z.array(HomepageCollectionCardSchema).default([]),
   categories: z.array(HomepageCategoryCardSchema).default([]),
@@ -300,8 +324,12 @@ export const HomepageBundleSchema = z.object({
   hot_deals: z.array(HomepageProductCardSchema).default([]),
   reviews: z.array(HomepageReviewCardSchema).default([]),
   banners: z.array(HomepageBannerCardSchema).default([]),
-  // APEX v4: new sections — .default([]) ensures old backends still parse cleanly
   trending_products: z.array(HomepageProductCardSchema).default([]),
   vendors: z.array(HomepageVendorCardSchema).default([]),
+  // Consolidated bundle — 4 new sections
+  blog_posts: z.array(HomepageBlogCardSchema).default([]),
+  trending_tags: z.array(HomepageTagCardSchema).default([]),
+  deals_of_the_week: z.array(HomepageProductCardSchema).default([]),
+  new_arrivals: z.array(HomepageProductCardSchema).default([]),
   meta: HomepageBundleMetaSchema.default({}),
 });

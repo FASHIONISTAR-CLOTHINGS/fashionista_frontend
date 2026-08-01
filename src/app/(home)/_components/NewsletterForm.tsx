@@ -41,7 +41,7 @@ export function NewsletterForm() {
   }
 
   return (
-    <form className="flex w-full md:w-auto gap-2" onSubmit={handleSubmit}>
+    <form className="flex w-full md:w-auto gap-2 max-w-full" onSubmit={handleSubmit}>
       <input
         data-testid="newsletter-email-input"
         type="email"
@@ -49,7 +49,7 @@ export function NewsletterForm() {
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Your email address"
         required
-        className="flex-1 min-w-[220px] px-4 py-3 rounded-[100px] bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:border-[#FDA600] transition"
+        className="flex-1 min-w-0 max-w-full px-4 py-3 rounded-[100px] bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:border-[#FDA600] transition"
       />
       <Button
         data-testid="newsletter-submit"

@@ -1,29 +1,29 @@
 "use client";
 
 /**
- * TrendingProductsRail.tsx — R20 (consolidated bundle version)
+ * NewArrivalsRail.tsx — Consolidated homepage bundle section
  *
- * Horizontal scroll rail surfacing trending products using ai_trend_score.
- * Now receives products as props from the consolidated homepage bundle
- * (12-way asyncio.gather) — ZERO client-side fetches.
+ * "Just Landed" horizontal scroll rail surfacing the newest products.
+ * Receives products as props from the 12-way asyncio.gather bundle —
+ * ZERO client-side fetches. Ordered by created_at DESC on the backend.
  *
  * Design:
- *  - Gold accent label "TRENDING NOW" with flame emoji
+ *  - Forest green accent label "JUST LANDED"
  *  - Horizontal scroll rail with branded-scroll custom scrollbar
  *  - Compact product cards (image + title + price + vendor)
- *  - Flame badge on each card if ai_trend_score > 0.7
- *  - "View All" link to /products?ordering=-ai_trend_score
- *  - Typed empty state when no products (section never disappears)
+ *  - "NEW" badge on each card
+ *  - "View All" link to /products?sort=newest
+ *  - Typed empty state (section never disappears)
  */
 
 import Link from "next/link";
 import Image from "next/image";
 import type { HomepageProductCard } from "@/features/catalog/types/catalog.types";
-import { Flame, TrendingUp } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 // ─── Product card in the rail ─────────────────────────────────────────────────
 
-function TrendingCard({
+function NewArrivalCard({
   card,
   rank,
 }: {
@@ -31,9 +31,6 @@ function TrendingCard({
   rank: number;
 }) {
   const imageUrl = card.cloudinary_url || card.image_url;
-  const isHotTrend =
-    typeof card.ai_trend_score === "number" && card.ai_trend_score > 0.7;
-
   const priceNum = parseFloat(card.price);
   const formattedPrice = isNaN(priceNum)
     ? card.price
@@ -42,8 +39,8 @@ function TrendingCard({
   return (
     <Link
       href={`/products/${card.slug}`}
-      data-testid={`trending-card-${rank}`}
-      className="group flex-shrink-0 w-40 sm:w-48 flex flex-col rounded-2xl overflow-hidden bg-card border border-border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FDA600]"
+      data-testid={`new-arrival-card-${rank}`}
+      className="group flex-shrink-0 w-40 sm:w-48 flex flex-col rounded-2xl overflow-hidden bg-card border border-border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#01454A]"
     >
       {/* Image */}
       <div className="relative h-44 sm:h-52 w-full bg-muted overflow-hidden">
@@ -57,22 +54,14 @@ function TrendingCard({
           />
         ) : (
           <div className="flex items-center justify-center h-full text-muted-foreground/40">
-            <span className="text-4xl">👗</span>
+            <span className="text-4xl">✨</span>
           </div>
         )}
 
-        {/* Rank badge */}
-        <span className="absolute top-2 left-2 h-5 w-5 rounded-full bg-[#FDA600] text-black text-[10px] font-bold flex items-center justify-center shadow">
-          {rank}
+        {/* NEW badge */}
+        <span className="absolute top-2 left-2 rounded-full bg-[#01454A] text-white text-[10px] font-bold px-2 py-0.5 font-raleway uppercase tracking-wide shadow">
+          New
         </span>
-
-        {/* Trending badge */}
-        {isHotTrend && (
-          <span className="absolute top-2 right-2 flex items-center gap-0.5 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-bold text-[#FDA600]">
-            <Flame size={9} aria-hidden="true" />
-            Hot
-          </span>
-        )}
 
         {/* Out of stock */}
         {!card.in_stock && (
@@ -107,39 +96,39 @@ function TrendingCard({
 
 // ─── Main Rail ────────────────────────────────────────────────────────────────
 
-export function TrendingProductsRail({ products }: { products: HomepageProductCard[] }) {
+export function NewArrivalsRail({ products }: { products: HomepageProductCard[] }) {
   // Typed empty state — section never disappears, degrades gracefully
   if (!products || products.length === 0) {
     return (
       <section
         className="py-10 bg-background border-b border-border/50"
-        data-testid="trending-products-rail"
-        aria-label="Trending products"
+        data-testid="new-arrivals-rail"
+        aria-label="New arrivals"
       >
         <div className="flex items-center justify-between px-5 mb-5 md:px-10 lg:px-20">
           <div className="flex items-center gap-2.5">
-            <span className="text-xl" aria-hidden="true">🔥</span>
+            <span className="text-xl" aria-hidden="true">✨</span>
             <div>
-              <p className="font-raleway text-xs font-bold uppercase tracking-[0.2em] text-[#FDA600]">
-                Trending Now
+              <p className="font-raleway text-xs font-bold uppercase tracking-[0.2em] text-[#01454A]">
+                Just Landed
               </p>
               <h2 className="font-bon_foyage text-2xl text-foreground md:text-3xl leading-tight">
-                What Everyone&apos;s Wearing
+                New Arrivals
               </h2>
             </div>
           </div>
           <Link
-            href="/products?ordering=-ai_trend_score"
-            data-testid="trending-view-all"
+            href="/products?sort=newest"
+            data-testid="new-arrivals-view-all"
             className="font-raleway text-xs font-bold text-[#01454A] border border-[#01454A]/30 px-4 py-2 rounded-full hover:bg-[#01454A] hover:text-white transition-all duration-150 flex-shrink-0"
           >
             View All {"->"}
           </Link>
         </div>
         <div className="flex flex-col items-center justify-center py-12 px-5 text-center">
-          <TrendingUp size={32} className="text-muted-foreground/40 mb-3" aria-hidden="true" />
+          <Sparkles size={32} className="text-muted-foreground/40 mb-3" aria-hidden="true" />
           <p className="font-raleway text-sm text-muted-foreground">
-            Trending products are being calculated. Check back soon!
+            New arrivals are being added daily. Check back soon!
           </p>
           <Link
             href="/products"
@@ -155,25 +144,25 @@ export function TrendingProductsRail({ products }: { products: HomepageProductCa
   return (
     <section
       className="py-10 bg-background border-b border-border/50"
-      data-testid="trending-products-rail"
-      aria-label="Trending products"
+      data-testid="new-arrivals-rail"
+      aria-label="New arrivals"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-5 mb-5 md:px-10 lg:px-20">
         <div className="flex items-center gap-2.5">
-          <span className="text-xl" aria-hidden="true">🔥</span>
+          <span className="text-xl" aria-hidden="true">✨</span>
           <div>
-            <p className="font-raleway text-xs font-bold uppercase tracking-[0.2em] text-[#FDA600]">
-              Trending Now
+            <p className="font-raleway text-xs font-bold uppercase tracking-[0.2em] text-[#01454A]">
+              Just Landed
             </p>
             <h2 className="font-bon_foyage text-2xl text-foreground md:text-3xl leading-tight">
-              What Everyone&apos;s Wearing
+              New Arrivals
             </h2>
           </div>
         </div>
         <Link
-          href="/products?ordering=-ai_trend_score"
-          data-testid="trending-view-all"
+          href="/products?sort=newest"
+          data-testid="new-arrivals-view-all"
           className="font-raleway text-xs font-bold text-[#01454A] border border-[#01454A]/30 px-4 py-2 rounded-full hover:bg-[#01454A] hover:text-white transition-all duration-150 flex-shrink-0"
         >
           View All {"->"}
@@ -184,12 +173,12 @@ export function TrendingProductsRail({ products }: { products: HomepageProductCa
       <div
         className="overflow-x-auto branded-scroll pb-2"
         role="list"
-        aria-label="Trending products"
+        aria-label="New arrivals"
       >
         <div className="flex gap-3 px-5 md:px-10 lg:px-20 w-max">
           {products.map((card, i) => (
             <div key={card.id} role="listitem">
-              <TrendingCard card={card} rank={i + 1} />
+              <NewArrivalCard card={card} rank={i + 1} />
             </div>
           ))}
         </div>

@@ -1,35 +1,33 @@
 /**
- * app/(home)/page.tsx — Fashionistar Homepage (v4 — APEX Sprint)
+ * app/(home)/page.tsx — Fashionistar Homepage (Consolidated 12-section bundle)
  *
- * Production Architecture 2026–2027:
- *   - Single RSC with ONE server fetch: getHomepageBundleV2() (8-section APEX v4)
- *   - Backend: 8 parallel DB queries via asyncio.gather() < 30ms p95
+ * Production Architecture 2026–2028:
+ *   - Single RSC with ONE server fetch: getHomepageBundle() (12-section consolidated)
+ *   - Backend: 12 parallel DB queries via asyncio.gather(return_exceptions=True) < 30ms p95
  *   - Frontend: ISR revalidate 300s — matches backend Redis TTL
  *   - ALL sections receive data as props — ZERO additional HTTP round-trips
  *   - Suspense boundaries with pixel-perfect skeleton fallbacks
  *   - data-testid on every section for Playwright E2E tests
  *   - Semantic HTML5 section tags with aria-label on every section
+ *   - Every section has a CTA + typed empty state (never disappears)
  *
- * APEX Sprint Changes (v3):
- *   + TrustBar — 4 trust signals immediately below hero
- *   + MeasurementCTABanner — full-width AI measurement conversion section
- *   + StickyMobileCTA — 30s delayed mobile bottom bar
- *   + 6 hot deals (was 4)
- *   + Psychological funnel: Hero → Trust → Shop by Category → Measure or Buy →
- *       Featured Products → Collections → Deals → Reviews → Newsletter → Sticky CTA
+ * 12 sections (consolidated bundle):
+ *   collections, categories, featured_products, hot_deals, reviews, banners,
+ *   trending_products, vendors, blog_posts, trending_tags,
+ *   deals_of_the_week, new_arrivals
  *
- *   Data flow:
- *   getHomepageBundleV2() → HomepageBundle →
+ * Data flow:
+ *   getHomepageBundle() → HomepageBundle →
  *     { collections, categories, featured_products, hot_deals, reviews, banners,
- *       trending_products (v4 NEW), vendors (v4 NEW) }
+ *       trending_products, vendors, blog_posts, trending_tags,
+ *       deals_of_the_week, new_arrivals }
  *       ↓ props to each section component (no re-fetch anywhere)
  */
 
 import Link from "next/link";
 import { Suspense } from "react";
-import dynamic from "next/dynamic";
 import { CatalogCategoryGrid, CatalogCollectionGrid } from "@/features/catalog";
-import { getHomepageBundleV2 } from "@/features/catalog/api/catalog.server";
+import { getHomepageBundle } from "@/features/catalog/api/catalog.server";
 import TabbedFeaturedProducts, { HomepageFeaturedProductsSkeleton } from "@/features/catalog/components/TabbedFeaturedProducts";
 import { CatalogBannerHero } from "@/features/catalog/components/CatalogBannerHero";
 import { RecentlyViewedSection } from "./_components/RecentlyViewedSection";
@@ -48,6 +46,10 @@ import { AIPersonalizedGreeting } from "./_components/AIPersonalizedGreeting";
 import { UrgencyBanner } from "./_components/UrgencyBanner";
 import { LiveShopperCounter } from "./_components/LiveShopperCounter";
 import { PersonalizedRail } from "./_components/PersonalizedRail";
+import { DealsOfTheWeekSection } from "./_components/DealsOfTheWeekSection";
+import { NewArrivalsRail } from "./_components/NewArrivalsRail";
+import { TrendingTagsRail } from "./_components/TrendingTagsRail";
+import { EmailCaptureModalLazy } from "./_components/EmailCaptureModalLazy";
 import { LiveSocialProofToast } from "@/components/commerce/LiveSocialProofToast";
 import { Hero } from "@/components";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
@@ -55,13 +57,6 @@ import {
   generateWebSiteSchema,
   generateItemListSchema,
 } from "@/components/seo/schemas";
-
-// APEX v4: EmailCaptureModal is rarely interacted with — lazy-load it to
-// exclude from the initial JS bundle (~15KB saved).
-const EmailCaptureModal = dynamic(
-  () => import("@/components/marketing/EmailCaptureModal").then((m) => ({ default: m.EmailCaptureModal })),
-  { ssr: false }
-);
 
 // Skeleton placeholder for Trending and Vendor sections
 const TrendingProductsRailSkeleton = () => (
@@ -81,17 +76,6 @@ const VendorSpotlightSkeleton = () => (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
       {Array.from({ length: 4 }).map((_, i) => (
         <div key={i} className="h-40 bg-gray-200 rounded-2xl" />
-      ))}
-    </div>
-  </div>
-);
-
-const BlogRailSkeleton = () => (
-  <div className="px-5 md:px-10 lg:px-20 py-8 animate-pulse">
-    <div className="h-8 w-40 bg-gray-200 rounded mb-6" />
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-      {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="h-64 bg-gray-200 rounded-2xl" />
       ))}
     </div>
   </div>
@@ -167,20 +151,21 @@ export const metadata = {
 
 export default async function Home() {
   /**
-   * ONE server-side fetch — backend asyncio.gather() runs 8 DB queries in
-   * parallel via /catalog/homepage/bundle/ (APEX v4).
+   * ONE server-side fetch — backend asyncio.gather(return_exceptions=True) runs
+   * 12 DB queries in parallel via /catalog/homepage/ (consolidated bundle).
    * ISR: revalidate 300s, tagged "homepage-bundle" for on-demand invalidation.
-   * On error → EMPTY_BUNDLE (homepage never crashes).
-   * APEX v4: bundle now includes trending_products + vendors.
+   * On error → EMPTY_BUNDLE (homepage never crashes, sections degrade to empty states).
+   * Consolidated: bundle now includes blog_posts, trending_tags, deals_of_the_week, new_arrivals.
    */
-  const bundle = await getHomepageBundleV2();
+  const bundle = await getHomepageBundle();
   const highlightedCollection = bundle.collections[0] ?? null;
   const categoryCount = bundle.meta.categories_count || bundle.categories.length;
   const collectionCount = bundle.meta.collections_count || bundle.collections.length;
 
-  // APEX v4: DealsCountdown fallback — if no product has a countdown date,
+  // DealsCountdown fallback — if no product has a countdown date,
   // use next Sunday midnight as a universal weekly deals reset anchor.
   const countdownTarget: string | undefined =
+    (bundle.deals_of_the_week.find((p) => p.discount_countdown)?.discount_countdown as string | undefined) ??
     (bundle.hot_deals.find((p) => p.discount_countdown)?.discount_countdown as string | undefined) ??
     (() => {
       const d = new Date();
@@ -347,12 +332,19 @@ export default async function Home() {
         <HomepageReviewsSection reviews={bundle.reviews} />
       </section>
 
-      {/* ── 12. Blog Style Guide Rail ────────────────────────────────────────── */}
+      {/* ── 12. Blog Style Guide Rail (consolidated: props from bundle — zero client fetch) */}
       <section aria-label="Style Guide & Blog" data-testid="blog-rail-section">
-        <Suspense fallback={<BlogRailSkeleton />}>
-          <BlogStyleGuideRail />
-        </Suspense>
+        <BlogStyleGuideRail posts={bundle.blog_posts} />
       </section>
+
+      {/* ── 12b. Trending Tags Rail (consolidated: props from bundle) */}
+      <TrendingTagsRail tags={bundle.trending_tags} />
+
+      {/* ── 12c. Deals of the Week (consolidated: steep-discount products with countdown) */}
+      <DealsOfTheWeekSection products={bundle.deals_of_the_week} countdownTarget={countdownTarget} />
+
+      {/* ── 12d. New Arrivals Rail (consolidated: newest products) */}
+      <NewArrivalsRail products={bundle.new_arrivals} />
 
       {/* ── 13. Vendor Spotlight (APEX v4: props from bundle — zero extra fetch) */}
       <section aria-label="Meet Our Vendors" data-testid="vendor-spotlight-section">
@@ -385,7 +377,7 @@ export default async function Home() {
       <LiveSocialProofToast />
 
       {/* ── Work 10: Email Capture Modal ──────────────────────────────────── */}
-      <EmailCaptureModal />
+      <EmailCaptureModalLazy />
 
       {/* ── JSON-LD Structured Data ─────────────────────────────────────────── */}
       {/* WebSite schema: helps Google index Fashionistar as a site entity */}

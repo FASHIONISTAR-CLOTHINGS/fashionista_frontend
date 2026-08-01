@@ -1,10 +1,11 @@
 "use client";
 
 /**
- * VendorSpotlightSection.tsx — Homepage Component 3 (Item 9)
+ * VendorSpotlightSection.tsx — Homepage Component 3 (consolidated bundle version)
  *
  * "Meet Our Vendors" — 4 featured vendor cards on the homepage.
- * Fetches top 4 vendors ordered by rating/verification status.
+ * Now receives vendors as props from the 12-way asyncio.gather bundle —
+ * ZERO client-side fetches. Typed empty state when no vendors.
  *
  * Design:
  *  - Section header: "Meet Our Vendors" with "View All" link
@@ -12,38 +13,24 @@
  *  - Each card: store banner image, avatar, name, city, verified badge,
  *    product count, avg rating stars, dual CTA ("View Store" + "Get Measured")
  *  - Forest green verified badge for is_verified vendors
- *  - Skeleton loading state
- *  - Renders null if no vendor data
+ *  - Typed empty state (section never disappears)
  */
 
 import Link from "next/link";
 import Image from "next/image";
-import { useQuery } from "@tanstack/react-query";
-import { catalogApi } from "@/features/catalog/api/catalog.api";
-import type { CatalogVendorCard } from "@/features/catalog/types/catalog.types";
-import { BadgeCheck, Star, Package, Ruler } from "lucide-react";
+import type { HomepageVendorCard } from "@/features/catalog/types/catalog.types";
+import { BadgeCheck, Star, Package, Ruler, Store } from "lucide-react";
 
 // ─── Single vendor card ───────────────────────────────────────────────────────
 
-function VendorCard({ vendor }: { vendor: CatalogVendorCard }) {
+function VendorCard({ vendor }: { vendor: HomepageVendorCard }) {
   const storeUrl = `/vendors/${vendor.store_slug}`;
-  const bannerUrl =
-    (vendor as unknown as Record<string, string | null>).banner_image_url ||
-    (vendor as unknown as Record<string, string | null>).cloudinary_banner_url ||
-    null;
-  const avatarUrl =
-    (vendor as unknown as Record<string, string | null>).avatar_url ||
-    (vendor as unknown as Record<string, string | null>).logo_url ||
-    null;
-  const isVerified = Boolean(
-    (vendor as unknown as Record<string, unknown>).is_verified
-  );
-  const productCount =
-    (vendor as unknown as Record<string, number>).cached_product_count ?? 0;
-  const avgRating =
-    (vendor as unknown as Record<string, number>).avg_rating ?? 0;
-  const city =
-    (vendor as unknown as Record<string, string>).city ?? "";
+  const bannerUrl = null; // HomepageVendorCard doesn't include banner — use gradient
+  const avatarUrl = vendor.logo_url || null;
+  const isVerified = Boolean(vendor.is_verified);
+  const productCount = vendor.total_products ?? 0;
+  const avgRating = vendor.average_rating ?? 0;
+  const city = vendor.city ?? "";
 
   return (
     <article
@@ -144,39 +131,49 @@ function VendorCard({ vendor }: { vendor: CatalogVendorCard }) {
   );
 }
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
-
-function VendorSpotlightSkeleton() {
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-5 md:px-10 lg:px-20" aria-hidden="true">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="rounded-2xl overflow-hidden border border-border bg-card">
-          <div className="h-28 bg-muted animate-pulse" />
-          <div className="px-4 pt-6 pb-4 space-y-2">
-            <div className="h-3 w-3/4 bg-muted animate-pulse rounded" />
-            <div className="h-2 w-1/2 bg-muted animate-pulse rounded" />
-            <div className="h-8 w-full bg-muted animate-pulse rounded-full mt-3" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 // ─── Main section ─────────────────────────────────────────────────────────────
 
-export function VendorSpotlightSection() {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["homepage-vendor-spotlight"],
-    queryFn: () => catalogApi.getVendors(1, { page_size: "4", ordering: "-avg_rating" }),
-    staleTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
-
-  const vendors: CatalogVendorCard[] =
-    (data as unknown as { results?: CatalogVendorCard[] })?.results ?? [];
-
-  if (!isLoading && (isError || vendors.length === 0)) return null;
+export function VendorSpotlightSection({ vendors }: { vendors: HomepageVendorCard[] }) {
+  // Typed empty state — section never disappears, degrades gracefully
+  if (!vendors || vendors.length === 0) {
+    return (
+      <section
+        className="py-10 bg-[#F4F3EC]/50 border-b border-border/50"
+        data-testid="vendor-spotlight-section"
+        aria-label="Featured vendors"
+      >
+        <div className="flex items-center justify-between px-5 mb-6 md:px-10 lg:px-20">
+          <div>
+            <p className="font-raleway text-xs font-bold uppercase tracking-[0.2em] text-[#FDA600] mb-1">
+              Our Creators
+            </p>
+            <h2 className="font-bon_foyage text-2xl text-foreground md:text-3xl leading-tight">
+              Meet Our Vendors
+            </h2>
+          </div>
+          <Link
+            href="/vendors"
+            data-testid="vendor-spotlight-view-all"
+            className="font-raleway text-xs font-bold text-[#01454A] border border-[#01454A]/30 px-4 py-2 rounded-full hover:bg-[#01454A] hover:text-white transition-all duration-150 flex-shrink-0"
+          >
+            All Vendors →
+          </Link>
+        </div>
+        <div className="flex flex-col items-center justify-center py-12 px-5 text-center">
+          <Store size={32} className="text-muted-foreground/40 mb-3" aria-hidden="true" />
+          <p className="font-raleway text-sm text-muted-foreground">
+            Featured vendors are being curated. Check back soon!
+          </p>
+          <Link
+            href="/vendors"
+            className="mt-4 font-raleway text-xs font-bold text-[#01454A] border border-[#01454A]/30 px-4 py-2 rounded-full hover:bg-[#01454A] hover:text-white transition-all duration-150"
+          >
+            Browse All Vendors
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section
@@ -204,21 +201,17 @@ export function VendorSpotlightSection() {
       </div>
 
       {/* Grid */}
-      {isLoading ? (
-        <VendorSpotlightSkeleton />
-      ) : (
-        <div
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 px-5 md:px-10 lg:px-20"
-          role="list"
-          aria-label="Featured vendors"
-        >
-          {vendors.slice(0, 4).map((vendor) => (
-            <div key={vendor.store_slug} role="listitem">
-              <VendorCard vendor={vendor} />
-            </div>
-          ))}
-        </div>
-      )}
+      <div
+        className="grid grid-cols-2 md:grid-cols-4 gap-4 px-5 md:px-10 lg:px-20"
+        role="list"
+        aria-label="Featured vendors"
+      >
+        {vendors.slice(0, 4).map((vendor) => (
+          <div key={vendor.store_slug} role="listitem">
+            <VendorCard vendor={vendor} />
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

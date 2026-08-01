@@ -281,8 +281,7 @@ export interface HomepageBannerCard {
 /**
  * Vendor spotlight card for homepage featured vendors section.
  *
- * Phase 12 v3: returned as "featured_vendors" array in the bundle.
- * Eliminates the extra HTTP fetch from VendorSpotlightSection.
+ * Returned as "vendors" array in the consolidated homepage bundle.
  */
 export interface HomepageVendorCard {
   id: string;
@@ -298,20 +297,21 @@ export interface HomepageVendorCard {
   total_products: number;
 }
 
-/** Lean blog post card for homepage blog section. */
+/** Lean blog post card for homepage blog section (consolidated bundle). */
 export interface HomepageBlogPostCard {
   id: string;
   title: string;
   slug: string;
   excerpt: string;
-  featured_image: string | null;
-  featured_image_url: string | null;
-  author_avatar: string | null;
-  author_name: string;
-  published_at: string | null;
+  image: string | null;
+  image_url: string | null;
+  cloudinary_url: string | null;
   is_featured: boolean;
+  published_at: string | null;
   view_count: number;
-  tags: string[];
+  author_name: string;
+  category_name: string;
+  created_at: string | null;
 }
 
 /** Platform aggregate counts for homepage campaign banner. */
@@ -332,7 +332,7 @@ export interface HomepageTrendingTag {
   is_trending: boolean;
 }
 
-/** Metadata counts embedded in the bundle response. */
+/** Metadata counts embedded in the bundle response (consolidated 12-section). */
 export interface HomepageBundleMeta {
   collections_count: number;
   categories_count: number;
@@ -341,30 +341,32 @@ export interface HomepageBundleMeta {
   reviews_count: number;
   banners_count: number;
   trending_count: number;
-  featured_vendors_count: number;
-  blog_posts_count: number;
-  trending_tags_count: number;
-  mid_banners_count: number;
+  vendors_count: number;
+  blog_count: number;
+  tags_count: number;
+  deals_of_week_count: number;
+  new_arrivals_count: number;
+  gather_ms: number;
 }
 
 /**
- * Full homepage data bundle (v3 — Phase 12 consolidation).
+ * Full homepage data bundle (consolidated — 12 sections via single asyncio.gather).
  * Single RSC fetch from /api/v1/ninja/catalog/homepage/
  * ISR: revalidate 300s, tagged "homepage-bundle".
  *
- * v3 sections (12 concurrent DB queries via asyncio.gather):
- *   - banners: hero slot CMS banners
- *   - categories: shop-by-category grid
+ * 12 concurrent DB queries via asyncio.gather(return_exceptions=True):
  *   - collections: vendor collections carousel
+ *   - categories: shop-by-category grid
  *   - featured_products: admin-featured products grid
- *   - hot_deals: discounted products + countdown
- *   - trending_products: AI trend-scored products rail
+ *   - hot_deals: discounted products
  *   - reviews: customer review cards
+ *   - banners: hero slot CMS banners
+ *   - trending_products: AI trend-scored products rail
+ *   - vendors: verified vendor spotlight
  *   - blog_posts: featured editorial posts
- *   - featured_vendors: verified vendor spotlight
  *   - trending_tags: trending taxonomy tags
- *   - platform_stats: aggregate counts for campaign banner
- *   - mid_banners: mid-page CMS banners
+ *   - deals_of_the_week: steep-discount deals with countdown
+ *   - new_arrivals: newest products rail
  */
 export interface HomepageBundle {
   collections: HomepageCollectionCard[];
@@ -374,11 +376,11 @@ export interface HomepageBundle {
   reviews: HomepageReviewCard[];
   banners: HomepageBannerCard[];
   trending_products: HomepageProductCard[];
-  featured_vendors: HomepageVendorCard[];
+  vendors: HomepageVendorCard[];
   blog_posts: HomepageBlogPostCard[];
   trending_tags: HomepageTrendingTag[];
-  platform_stats: HomepagePlatformStats;
-  mid_banners: HomepageBannerCard[];
+  deals_of_the_week: HomepageProductCard[];
+  new_arrivals: HomepageProductCard[];
   meta: HomepageBundleMeta;
 }
 
