@@ -11,6 +11,8 @@ export default defineConfig({
     include: [
       "tests/unit/**/*.test.ts",
       "tests/unit/**/*.test.tsx",
+      "src/features/measurements/**/*.test.ts",
+      "src/features/measurements/**/*.test.tsx",
     ],
     coverage: {
       provider: "v8",

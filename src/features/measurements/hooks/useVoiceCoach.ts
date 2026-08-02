@@ -55,7 +55,10 @@ const VOLUME     = 1.0;
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 function getIsSupported() {
-  return typeof window !== "undefined" && "speechSynthesis" in window;
+  return typeof window !== "undefined" &&
+    typeof window.speechSynthesis !== "undefined" &&
+    typeof window.speechSynthesis.speak === "function" &&
+    typeof window.speechSynthesis.cancel === "function";
 }
 
 export function useVoiceCoach(): UseVoiceCoachReturn {
@@ -83,6 +86,7 @@ export function useVoiceCoach(): UseVoiceCoachReturn {
     }
 
     const selectVoice = () => {
+      if (typeof window.speechSynthesis?.getVoices !== "function") return;
       const voices = window.speechSynthesis.getVoices();
       if (!voices.length) return;
 
@@ -110,12 +114,17 @@ export function useVoiceCoach(): UseVoiceCoachReturn {
       voiceRef.current = selected;
     };
 
-    // Voices may not load immediately — listen for the event
+    // Voices may not load immediately — listen for the event when supported.
     selectVoice();
-    window.speechSynthesis.addEventListener("voiceschanged", selectVoice);
+    const synthesis = window.speechSynthesis;
+    if (typeof synthesis.addEventListener === "function") {
+      synthesis.addEventListener("voiceschanged", selectVoice);
+    }
 
     return () => {
-      window.speechSynthesis.removeEventListener("voiceschanged", selectVoice);
+      if (typeof synthesis.removeEventListener === "function") {
+        synthesis.removeEventListener("voiceschanged", selectVoice);
+      }
     };
   }, [isSupported]);
 

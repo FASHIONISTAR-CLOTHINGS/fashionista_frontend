@@ -26,11 +26,27 @@ import { ORIENTATION_CONFIG } from "@/lib/brand";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type OrientationStatus = "good" | "tilted" | "bad" | "unsupported" | "requesting";
+export type OrientationPermissionState =
+  | "unknown"
+  | "prompt"
+  | "requesting"
+  | "granted"
+  | "denied"
+  | "unsupported";
+
+export type OrientationStatus =
+  | "unknown"
+  | "good"
+  | "tilted"
+  | "bad"
+  | "unsupported"
+  | "requesting";
 
 export interface PhoneOrientationData {
   /** Current orientation status */
   status: OrientationStatus;
+  /** Browser/device permission and feature-detection state. */
+  permissionState: OrientationPermissionState;
   /** Raw gamma value (left-right tilt, degrees). Null if unavailable. */
   gamma: number | null;
   /** Raw beta value (front-back tilt, degrees). Null if unavailable. */
@@ -58,25 +74,58 @@ type DeviceOrientationEventWithPermission = typeof DeviceOrientationEvent & {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function usePhoneOrientation(): PhoneOrientationData {
-  const [status, setStatus]           = useState<OrientationStatus>("unsupported");
-  const [gamma, setGamma]             = useState<number | null>(null);
-  const [beta, setBeta]               = useState<number | null>(null);
+  const supportsOrientationApi = typeof window !== "undefined" &&
+    typeof window.DeviceOrientationEvent !== "undefined";
+  const requiresOrientationPermission = supportsOrientationApi &&
+    typeof (window.DeviceOrientationEvent as DeviceOrientationEventWithPermission).requestPermission === "function";
+  const [status, setStatus] = useState<OrientationStatus>(
+    supportsOrientationApi ? "unknown" : "unsupported",
+  );
+  const [permissionState, setPermissionState] = useState<OrientationPermissionState>(
+    !supportsOrientationApi
+      ? "unsupported"
+      : requiresOrientationPermission
+      ? "prompt"
+      : "granted",
+  );
+  const [gamma, setGamma] = useState<number | null>(null);
+  const [beta, setBeta] = useState<number | null>(null);
   const [isSustainedGood, setIsSustainedGood] = useState(false);
-  const handlerRef                    = useRef<((e: DeviceOrientationEvent) => void) | null>(null);
-  const lastGoodTimestampRef          = useRef<number | null>(null);
+  const handlerRef = useRef<((e: DeviceOrientationEvent) => void) | null>(null);
+  const lastGoodTimestampRef = useRef<number | null>(null);
+  const receivedEventRef = useRef(false);
+  const supportProbeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /** Duration of continuous 'good' state required to trigger auto-advance (ms) */
   const SUSTAINED_GOOD_MS = 1500;
+  const SUPPORT_PROBE_MS = 2000;
 
   // ── Compute status from raw values ─────────────────────────────────────────
   const computeStatus = useCallback(
     (rawGamma: number | null, rawBeta: number | null): OrientationStatus => {
       if (rawGamma === null || rawBeta === null) return "unsupported";
 
-      const absGamma = Math.abs(rawGamma);
+      const rollError = Math.abs(rawGamma);
+      // A phone held upright may report either +90° or -90° depending on
+      // browser/device coordinate conventions, so accept the nearest target.
+      const uprightError = Math.min(
+        Math.abs(rawBeta - ORIENTATION_CONFIG.betaTarget),
+        Math.abs(rawBeta + ORIENTATION_CONFIG.betaTarget),
+      );
+      const uprightTolerance = ORIENTATION_CONFIG.betaTolerance;
 
-      if (absGamma < ORIENTATION_CONFIG.greenThreshold) return "good";
-      if (absGamma < ORIENTATION_CONFIG.yellowThreshold) return "tilted";
+      if (
+        rollError <= ORIENTATION_CONFIG.greenThreshold &&
+        uprightError <= uprightTolerance
+      ) {
+        return "good";
+      }
+      if (
+        rollError <= ORIENTATION_CONFIG.yellowThreshold &&
+        uprightError <= uprightTolerance + 15
+      ) {
+        return "tilted";
+      }
       return "bad";
     },
     []
@@ -86,18 +135,26 @@ export function usePhoneOrientation(): PhoneOrientationData {
   const subscribe = useCallback(() => {
     if (typeof window === "undefined") return;
 
-    const handler = (event: DeviceOrientationEvent) => {
-      const rawGamma = event.gamma;
-      const rawBeta  = event.beta;
+    if (handlerRef.current) {
+      window.removeEventListener("deviceorientation", handlerRef.current, true);
+    }
 
-      // Null values = desktop or permission denied
-      if (rawGamma === null && rawBeta === null) {
+    const handler = (event: DeviceOrientationEvent) => {
+      receivedEventRef.current = true;
+      const rawGamma = event.gamma;
+      const rawBeta = event.beta;
+
+      // Null values after subscription mean this browser/device cannot expose
+      // usable orientation data. This is different from the pre-permission state.
+      if (rawGamma === null || rawBeta === null) {
+        setPermissionState((current) => current === "granted" ? "unsupported" : current);
         setStatus("unsupported");
         setIsSustainedGood(false);
         lastGoodTimestampRef.current = null;
         return;
       }
 
+      setPermissionState("granted");
       setGamma(rawGamma);
       setBeta(rawBeta);
 
@@ -114,7 +171,6 @@ export function usePhoneOrientation(): PhoneOrientationData {
           setIsSustainedGood(true);
         }
       } else {
-        // Reset sustained tracking when orientation drifts
         lastGoodTimestampRef.current = null;
         setIsSustainedGood(false);
       }
@@ -126,50 +182,80 @@ export function usePhoneOrientation(): PhoneOrientationData {
 
   // ── iOS 13+ permission request ─────────────────────────────────────────────
   const requestPermission = useCallback(async () => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || typeof window.DeviceOrientationEvent === "undefined") {
+      setPermissionState("unsupported");
+      setStatus("unsupported");
+      return;
+    }
 
-    const DOE = DeviceOrientationEvent as DeviceOrientationEventWithPermission;
+    const DOE = window.DeviceOrientationEvent as DeviceOrientationEventWithPermission;
 
     if (typeof DOE.requestPermission === "function") {
+      setPermissionState("requesting");
       setStatus("requesting");
+      receivedEventRef.current = false;
       try {
         const result = await DOE.requestPermission();
         if (result === "granted") {
+          setPermissionState("granted");
           subscribe();
+          if (supportProbeTimerRef.current) clearTimeout(supportProbeTimerRef.current);
+          supportProbeTimerRef.current = setTimeout(() => {
+            if (!receivedEventRef.current) {
+              setPermissionState("unsupported");
+              setStatus("unsupported");
+            }
+          }, SUPPORT_PROBE_MS);
         } else {
+          setPermissionState("denied");
           setStatus("unsupported");
         }
       } catch {
+        setPermissionState("denied");
         setStatus("unsupported");
       }
     } else {
-      // Android or non-iOS — no permission needed
+      // Android or non-iOS — subscription does not require an explicit prompt.
+      setPermissionState("granted");
       subscribe();
     }
-  }, [subscribe]);
+  }, [SUPPORT_PROBE_MS, subscribe]);
 
-  // ── Auto-subscribe on non-iOS (no permission needed) ──────────────────────
+  // ── Auto-subscribe on platforms without an explicit permission method ──────
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!supportsOrientationApi) return;
 
-    const DOE = DeviceOrientationEvent as DeviceOrientationEventWithPermission;
-
-    // Auto-subscribe on platforms that don't need permission
+    const DOE = window.DeviceOrientationEvent as DeviceOrientationEventWithPermission;
     if (typeof DOE.requestPermission !== "function") {
       subscribe();
+      supportProbeTimerRef.current = setTimeout(() => {
+        if (!receivedEventRef.current) {
+          setPermissionState("unsupported");
+          setStatus("unsupported");
+        }
+      }, SUPPORT_PROBE_MS);
     }
-    // iOS: wait for explicit requestPermission() call from user gesture
 
     return () => {
+      if (supportProbeTimerRef.current) {
+        clearTimeout(supportProbeTimerRef.current);
+        supportProbeTimerRef.current = null;
+      }
       if (handlerRef.current) {
         window.removeEventListener("deviceorientation", handlerRef.current, true);
         handlerRef.current = null;
       }
     };
-  }, [subscribe]);
+  }, [SUPPORT_PROBE_MS, subscribe, supportsOrientationApi]);
 
   // ── Derived values ─────────────────────────────────────────────────────────
-  const tiltDegrees  = gamma !== null ? Math.abs(gamma) : 0;
+  const betaError = beta === null
+    ? 0
+    : Math.min(
+        Math.abs(beta - ORIENTATION_CONFIG.betaTarget),
+        Math.abs(beta + ORIENTATION_CONFIG.betaTarget),
+      );
+  const tiltDegrees = gamma === null ? betaError : Math.max(Math.abs(gamma), betaError);
   const tiltDirection: "left" | "right" | null =
     gamma === null || status === "good"
       ? null
@@ -179,6 +265,7 @@ export function usePhoneOrientation(): PhoneOrientationData {
 
   return {
     status,
+    permissionState,
     gamma,
     beta,
     isLevel:          status === "good",
@@ -186,6 +273,6 @@ export function usePhoneOrientation(): PhoneOrientationData {
     tiltDegrees,
     tiltDirection,
     requestPermission,
-    isSupported: status !== "unsupported",
+    isSupported: permissionState !== "unsupported" && permissionState !== "denied",
   };
 }

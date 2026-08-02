@@ -217,7 +217,7 @@ export function DesktopQRGateway({
   const shareButtons = [
     {
       id:      "copy-link",
-      label:   copied ? "Copied!" : "Copy Link",
+      label:   "Copy Link",
       icon:    copied ? <IconCheck /> : <IconCopy />,
       onClick: handleCopy,
       accent:  copied,
@@ -441,7 +441,8 @@ export function DesktopQRGateway({
 
         {/* ── Privacy footer ────────────────────────────────────────────────── */}
         <p className="text-center text-xs text-white/20 mt-6">
-          🔒 No video stored • Only pose coordinates transmitted • Session ID: {sessionId.slice(0, 8)}…
+          🔒 No video stored • Only pose coordinates transmitted • Session ID:{" "}
+          <span data-testid="qr-session-id">{sessionId.slice(0, 8)}…</span>
         </p>
       </motion.div>
     </div>

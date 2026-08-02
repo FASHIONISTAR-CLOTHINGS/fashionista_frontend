@@ -17,6 +17,8 @@
 
 import { apiSync } from "@/core/api/client.sync";
 import { apiAsync } from "@/core/api/client.async";
+import { v4 as uuidv4 } from "uuid";
+import type { Options } from "ky";
 
 // ─── Landmark Point ───────────────────────────────────────────────────────────
 
@@ -75,6 +77,9 @@ export interface LandmarkSubmitPayload {
 
   /** Orientation confidence 0-1 from device orientation sensor (observational). */
   orientation_confidence?: number;
+
+  /** Stable client key reused when the same submit is retried. */
+  idempotency_key?: string;
 }
 
 // ─── Response Types ───────────────────────────────────────────────────────────
@@ -96,6 +101,8 @@ export interface ScanSessionResponse {
 export interface ScanStatusResponse {
   session_id:             string;
   status:                 "pending" | "processing" | "completed" | "failed";
+  /** Persisted workflow phase when available through polling or WebSocket. */
+  scan_phase?:            string;
   scan_confidence?:       number;
   /** Primary measurement output — all values in centimetres. */
   extracted_measurements?: Record<string, number | null>;
@@ -220,15 +227,25 @@ export async function submitLandmarks(
   sessionId: string,
   payload:   LandmarkSubmitPayload
 ): Promise<ScanSessionResponse> {
+  const { idempotency_key: suppliedIdempotencyKey, ...payloadBody } = payload;
+  const idempotencyKey = suppliedIdempotencyKey ?? uuidv4();
   const normalised = {
-    ...payload,
+    ...payloadBody,
     front_landmarks: payload.front_landmarks ?? payload.landmarks,
     landmarks:       payload.front_landmarks ?? payload.landmarks,
   };
 
   const { data } = await apiSync.post<{ status: string; data: ScanSessionResponse }>(
     `v1/measurements/scan/${sessionId}/submit-landmarks/`,
-    normalised
+    normalised,
+    {
+      headers: {
+        // The backend canonical contract is the standard header. Keep the
+        // legacy X-prefixed header for shared client middleware compatibility.
+        "Idempotency-Key": idempotencyKey,
+        "X-Idempotency-Key": idempotencyKey,
+      },
+    },
   );
   const response = data as unknown as { data?: ScanSessionResponse } & ScanSessionResponse;
   return response.data ?? response;
@@ -243,7 +260,7 @@ export async function pollScanStatus(
   const raw = await apiAsync
     .get(`measurements/scan/${sessionId}/status/`, {
       _suppressAuthRedirect: true,
-    } as any)
+    } as Options & { _suppressAuthRedirect?: boolean })
     .json<ScanStatusResponse>();
 
   const rawMeasurements = raw.extracted_measurements ?? raw.measurements_cm;

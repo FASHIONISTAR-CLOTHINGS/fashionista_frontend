@@ -119,6 +119,56 @@ describe("useAutoCapture", () => {
     expect(onCapture).not.toHaveBeenCalled();
   });
 
+  it("should not arm when pose intelligence is not ready", () => {
+    const onCapture = vi.fn();
+    const { result } = renderHook(() =>
+      useAutoCapture({ onCapture, stabilityFramesRequired: 2 }),
+    );
+
+    act(() => {
+      result.current.tick({
+        quality: 0.95,
+        isStable: true,
+        overallReady: false,
+        orientationReady: true,
+      });
+      result.current.tick({
+        quality: 0.95,
+        isStable: true,
+        overallReady: false,
+        orientationReady: true,
+      });
+      vi.advanceTimersByTime(5000);
+    });
+
+    expect(onCapture).not.toHaveBeenCalled();
+  });
+
+  it("should not arm while phone orientation is not ready", () => {
+    const onCapture = vi.fn();
+    const { result } = renderHook(() =>
+      useAutoCapture({ onCapture, stabilityFramesRequired: 2 }),
+    );
+
+    act(() => {
+      result.current.tick({
+        quality: 0.95,
+        isStable: true,
+        overallReady: true,
+        orientationReady: false,
+      });
+      result.current.tick({
+        quality: 0.95,
+        isStable: true,
+        overallReady: true,
+        orientationReady: false,
+      });
+      vi.advanceTimersByTime(5000);
+    });
+
+    expect(onCapture).not.toHaveBeenCalled();
+  });
+
   it("should fire exactly once even with many frames above threshold", () => {
     const onCapture = vi.fn();
     const { result } = renderHook(() =>

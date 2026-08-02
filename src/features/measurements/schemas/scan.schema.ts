@@ -24,40 +24,27 @@ export type LandmarkPoint = z.infer<typeof LandmarkPointSchema>;
 
 // ── Scan status response ───────────────────────────────────────────────────────
 
+const MeasurementRecordSchema = z.record(
+  z.string(),
+  z.union([z.number(), z.null()]),
+);
+
+/** Canonical shape returned by the Ninja polling endpoint. */
 export const ScanStatusSchema = z.object({
   session_id: z.string(),
-  status: z.enum([
-    "pending",
-    "processing",
-    "completed",
-    "failed",
-    "timed_out",
-  ]),
-  scan_phase: z.string().optional().default(""),
-  scan_type: z.string().optional().default("front_side"),
-  error: z.string().nullable().optional().default(null),
-
-  // Progress
-  progress_percent: z.number().min(0).max(100).optional().default(0),
-  scan_confidence: z.number().min(0).max(1).nullable().optional().default(null),
-
-  // Results
-  measurement_profile_id: z.union([z.string(), z.number()]).nullable().optional().default(null),
-
-  // Measurements (cm) — populated when status === "completed"
-  measurements: z.record(z.string(), z.union([z.string(), z.number(), z.null()])).optional().default({}),
-
-  // Measurements (inches) — T-005
-  measurements_inches: z.record(z.string(), z.union([z.string(), z.number(), z.null()])).optional().default({}),
-
-  // Quality metrics
-  pose_quality_score: z.number().min(0).max(1).nullable().optional().default(null),
-  pose_quality_grade: z.string().nullable().optional().default(null),
-
-  // Timestamps
-  created_at: z.string().optional().default(""),
-  updated_at: z.string().optional().default(""),
-  completed_at: z.string().nullable().optional().default(null),
+  status: z.enum(["pending", "processing", "completed", "failed"]),
+  scan_phase: z.string().nullable().optional(),
+  scan_confidence: z.number().min(0).max(1).nullable().optional(),
+  extracted_measurements: MeasurementRecordSchema.nullable().optional(),
+  measurements_cm: MeasurementRecordSchema.nullable().optional(),
+  measurements_inches: MeasurementRecordSchema.nullable().optional(),
+  plausibility_warnings: z.array(z.string()).optional().default([]),
+  bmi: z.number().nullable().optional(),
+  correction_applied: z.string().nullable().optional(),
+  error_message: z.string().nullable().optional(),
+  measurement_profile_id: z.union([z.string(), z.number()]).nullable().optional(),
+  processing_started_at: z.string().nullable().optional(),
+  completed_at: z.string().nullable().optional(),
 });
 
 export type ScanStatusResponse = z.infer<typeof ScanStatusSchema>;
@@ -100,6 +87,8 @@ export const SubmitLandmarksSchema = z.object({
   user_weight_kg: z.number().positive().optional(),
   image_width: z.number().int().positive().optional(),
   image_height: z.number().int().positive().optional(),
+  orientation_confidence: z.number().min(0).max(1).optional(),
+  idempotency_key: z.string().max(128).optional(),
 });
 
 export type SubmitLandmarksRequest = z.infer<typeof SubmitLandmarksSchema>;

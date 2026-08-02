@@ -35,6 +35,8 @@ interface PhoneOrientationIndicatorProps {
   onStatusChange?: (status: OrientationStatus) => void;
   /** Called when user taps the indicator to request permission on iOS */
   onRequestPermission?: () => void;
+  /** Optional positioning/style hook for camera-overlay mode. */
+  className?: string;
 }
 
 // ─── Status configuration ────────────────────────────────────────────────────
@@ -64,6 +66,14 @@ const STATUS_CONFIG = {
     label:      "Phone tilted — please level it",
     pulse:      false,
   },
+  unknown: {
+    ringColor:  "#6B7280",
+    textColor:  "#D1D5DB",
+    bgColor:    "bg-white/10",
+    borderColor:"border-white/20",
+    label:      "Waiting for orientation data...",
+    pulse:      false,
+  },
   unsupported: {
     ringColor:  "#6B7280",
     textColor:  "#9CA3AF",
@@ -91,6 +101,7 @@ export function PhoneOrientationIndicator({
   tiltDirection,
   onStatusChange,
   onRequestPermission,
+  className,
 }: PhoneOrientationIndicatorProps) {
   const prevStatusRef = useRef<OrientationStatus>(status);
 
@@ -106,7 +117,7 @@ export function PhoneOrientationIndicator({
   const rotationAngle = gamma ?? 0;
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className={`flex flex-col items-center gap-4 ${className ?? ""}`}>
 
       {/* Phone SVG with live rotation */}
       <div className="relative flex items-center justify-center w-28 h-28">

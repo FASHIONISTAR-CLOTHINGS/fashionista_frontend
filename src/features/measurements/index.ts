@@ -99,7 +99,7 @@ export type { UseScanSessionReturn, ScanPhase as ScanSessionPhase } from "./hook
 export { useHeightPrediction }       from "./hooks/useHeightPrediction";
 export type { HeightPredictionInput, UseHeightPredictionOptions, UseHeightPredictionReturn } from "./hooks/useHeightPrediction";
 export { useEnhancedMeasurementCapture }     from "./hooks/useEnhancedMeasurementCapture";
-export type { UseEnhancedMeasurementCaptureReturn, UseEnhancedMeasurementCaptureOptions, EnhancedCapturePhase, EnhancedCaptureFrame } from "./hooks/useEnhancedMeasurementCapture";
+export type { UseEnhancedMeasurementCaptureReturn, UseEnhancedMeasurementCaptureOptions, EnhancedCapturePhase, EnhancedCaptureFrame, CameraStatus } from "./hooks/useEnhancedMeasurementCapture";
 export { useScanWebSocket }          from "./hooks/useScanWebSocket";
 
 // ── AI Scan API ────────────────────────────────────────────────────────────────
@@ -149,10 +149,10 @@ export type { ScanPhase, UserSex, ScanState } from "./store/scanStore";
 
 // ── New Hooks (Measurement Workflow Refactor) ─────────────────────────────────
 export { useAutoCapture }                  from "./hooks/useAutoCapture";
-export type { UseAutoCaptureReturn, UseAutoCaptureConfig } from "./hooks/useAutoCapture";
+export type { UseAutoCaptureReturn, UseAutoCaptureConfig, AutoCaptureFrameInput } from "./hooks/useAutoCapture";
 export { useVoiceCoach }                   from "./hooks/useVoiceCoach";
 export { usePhoneOrientation }             from "./hooks/usePhoneOrientation";
-export type { PhoneOrientationData, OrientationStatus } from "./hooks/usePhoneOrientation";
+export type { PhoneOrientationData, OrientationStatus, OrientationPermissionState } from "./hooks/usePhoneOrientation";
 export { useHapticFeedback }               from "./hooks/useHapticFeedback";
 export { useDeviceType }                   from "./hooks/useDeviceType";
 export type { DeviceType, DeviceCategory } from "./hooks/useDeviceType";

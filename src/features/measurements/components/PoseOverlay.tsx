@@ -1,22 +1,15 @@
 "use client";
 /**
  * @file PoseOverlay.tsx
- * @description Canvas overlay that draws the MediaPipe skeleton and landmarks
- * in real-time on top of the camera feed.
+ * @description Canvas overlay that draws MediaPipe normalized landmarks over
+ * the mirrored camera preview.
  *
- * REWRITE (2026-08-02):
- * - Now uses normalLandmarks (0-1 normalized pixel coordinates) NOT worldLandmarks
- * - Mirrors X axis to match the CSS `scale-x-[-1]` mirror on the video element
- * - Canvas is sized to video's DISPLAY rect (getBoundingClientRect), not intrinsic resolution
- * - Quality-based color coding: green (good), brand-gold (medium), red (poor)
- * - Draws ALL 33 MediaPipe BlazePose landmarks + connections
- *
- * Performance:
- * - Draws directly onto a canvas element positioned over the video
- * - All drawing is in the requestAnimationFrame loop — no React re-renders
+ * The canvas follows the displayed video rectangle rather than intrinsic video
+ * pixels. The coordinate mapper accounts for CSS object-cover cropping, the
+ * mirrored video, viewport resizing, and device-pixel-ratio rendering.
  */
 
-import { useEffect, RefObject } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 import type { Landmark } from "../hooks/usePoseLandmarker";
 
 // ─── MediaPipe Pose Connections ───────────────────────────────────────────────
@@ -44,140 +37,149 @@ const KEY_LANDMARKS = new Set([0, 11, 12, 23, 24, 25, 26, 27, 28]);
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface PoseOverlayProps {
-  /** Normalized landmarks (0-1 pixel coordinates from MediaPipe). Use normalLandmarks, NOT worldLandmarks. */
+  /** Normalized image landmarks from MediaPipe, not world landmarks. */
   normalLandmarks: Landmark[] | null;
-  /** Quality score 0-1. Controls color: green ≥ 0.80, gold ≥ 0.65, red < 0.65 */
+  /** Quality score in the range 0-1. */
   quality: number;
-  canvasRef:  RefObject<HTMLCanvasElement | null>;
-  videoRef:   RefObject<HTMLVideoElement | null>;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
+  videoRef: RefObject<HTMLVideoElement | null>;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+interface DisplayTransform {
+  width: number;
+  height: number;
+  renderedWidth: number;
+  renderedHeight: number;
+  offsetX: number;
+  offsetY: number;
+}
+
+function getDisplayTransform(video: HTMLVideoElement, width: number, height: number): DisplayTransform {
+  const intrinsicWidth = video.videoWidth || width;
+  const intrinsicHeight = video.videoHeight || height;
+  const scale = Math.max(width / intrinsicWidth, height / intrinsicHeight);
+  const renderedWidth = intrinsicWidth * scale;
+  const renderedHeight = intrinsicHeight * scale;
+
+  return {
+    width,
+    height,
+    renderedWidth,
+    renderedHeight,
+    offsetX: (width - renderedWidth) / 2,
+    offsetY: (height - renderedHeight) / 2,
+  };
+}
+
+function toDisplayPixel(landmark: Landmark, transform: DisplayTransform): [number, number] {
+  // The video is mirrored with CSS scale-x-[-1]. Mirror normalized X once here
+  // so the canvas and video show the same left/right orientation.
+  return [
+    (1 - landmark.x) * transform.renderedWidth + transform.offsetX,
+    landmark.y * transform.renderedHeight + transform.offsetY,
+  ];
+}
 
 export function PoseOverlay({ normalLandmarks, quality, canvasRef, videoRef }: PoseOverlayProps) {
+  const latestDataRef = useRef({ normalLandmarks, quality });
+  const drawRef = useRef<() => void>(() => undefined);
+
+  useEffect(() => {
+    latestDataRef.current = { normalLandmarks, quality };
+    drawRef.current();
+  }, [normalLandmarks, quality]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
-    const video  = videoRef.current;
+    const video = videoRef.current;
     if (!canvas || !video) return;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const context = canvas.getContext("2d");
+    if (!context) return;
 
-    // ── Sync canvas size to video DISPLAY size (not intrinsic resolution) ─────
-    // Using getBoundingClientRect ensures we match the CSS-rendered size,
-    // including any object-cover, aspect-ratio, or scale transforms.
-    const rect = video.getBoundingClientRect();
-    const W = Math.round(rect.width);
-    const H = Math.round(rect.height);
+    const draw = () => {
+      const rect = video.getBoundingClientRect();
+      const width = Math.round(rect.width);
+      const height = Math.round(rect.height);
+      if (width <= 0 || height <= 0) return;
 
-    if (W === 0 || H === 0) return;
-
-    if (canvas.width !== W || canvas.height !== H) {
-      canvas.width  = W;
-      canvas.height = H;
-    }
-
-    // Clear the canvas
-    ctx.clearRect(0, 0, W, H);
-
-    // Nothing to draw
-    if (!normalLandmarks || normalLandmarks.length === 0) return;
-
-    // ── Quality-based color theme ─────────────────────────────────────────────
-    // Green  (≥0.80): Forest Green — perfect pose
-    // Gold   (≥0.65): Brand Gold — acceptable pose
-    // Red    (<0.65): Red — poor pose / low visibility
-    const strokeColor = quality >= 0.80
-      ? "rgba(82, 183, 136, 0.9)"    // Forest Green
-      : quality >= 0.65
-      ? "rgba(253, 166, 0, 0.85)"    // Brand Gold
-      : "rgba(239, 68, 68, 0.7)";
-
-    const fillColor = quality >= 0.80
-      ? "rgba(82, 183, 136, 1)"
-      : quality >= 0.65
-      ? "rgba(253, 166, 0, 1)"
-      : "rgba(239, 68, 68, 0.9)";
-
-    // ── Coordinate mapping ────────────────────────────────────────────────────
-    // normalLandmarks: x and y are 0.0 → 1.0 (fraction of video frame)
-    // The video element has CSS `scale-x[-1]` (mirrored horizontally for selfie view)
-    // So we mirror the X coordinate: canvasX = (1 - lm.x) * W
-    const toPixel = (lm: Landmark): [number, number] => [
-      (1 - lm.x) * W,   // Mirror X to match CSS scale-x[-1]
-      lm.y * H,
-    ];
-
-    // ── Draw skeleton connections ─────────────────────────────────────────────
-    ctx.lineWidth = 2.5;
-    ctx.strokeStyle = strokeColor;
-    ctx.lineCap = "round";
-
-    for (const [a, b] of POSE_CONNECTIONS) {
-      const lmA = normalLandmarks[a];
-      const lmB = normalLandmarks[b];
-      if (!lmA || !lmB) continue;
-
-      // Skip low-visibility connections
-      const visA = lmA.visibility ?? 0;
-      const visB = lmB.visibility ?? 0;
-      if (visA < 0.35 || visB < 0.35) continue;
-
-      const [x1, y1] = toPixel(lmA);
-      const [x2, y2] = toPixel(lmB);
-
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-    }
-
-    // ── Draw landmark circles ─────────────────────────────────────────────────
-    for (let i = 0; i < normalLandmarks.length; i++) {
-      const lm = normalLandmarks[i];
-      const vis = lm.visibility ?? 0;
-      if (vis < 0.35) continue;
-
-      const [px, py] = toPixel(lm);
-      const isKey = KEY_LANDMARKS.has(i);
-      const radius = isKey ? 6 : 3;
-
-      // Outer glow for key landmarks
-      if (isKey) {
-        ctx.beginPath();
-        ctx.arc(px, py, radius + 3, 0, Math.PI * 2);
-        ctx.fillStyle = quality >= 0.80
-          ? "rgba(82, 183, 136, 0.2)"
-          : "rgba(253, 166, 0, 0.15)";
-        ctx.fill();
+      const devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+      const physicalWidth = Math.round(width * devicePixelRatio);
+      const physicalHeight = Math.round(height * devicePixelRatio);
+      if (canvas.width !== physicalWidth || canvas.height !== physicalHeight) {
+        canvas.width = physicalWidth;
+        canvas.height = physicalHeight;
       }
 
-      // Main circle
-      ctx.beginPath();
-      ctx.arc(px, py, radius, 0, Math.PI * 2);
-      ctx.fillStyle = fillColor;
-      ctx.fill();
+      // Draw in CSS pixels while keeping a crisp physical backing canvas.
+      context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      context.clearRect(0, 0, width, height);
 
-      // White border ring
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    }
+      const { normalLandmarks: landmarks, quality: frameQuality } = latestDataRef.current;
+      if (!landmarks || landmarks.length === 0) return;
 
-    // ── Nose tracking dot (landmark 0) — quality pulse indicator ──────────────
-    const nose = normalLandmarks[0];
-    if (nose && (nose.visibility ?? 0) > 0.5) {
-      const [cx, cy] = toPixel(nose);
+      const transform = getDisplayTransform(video, width, height);
+      const strokeColor = frameQuality >= 0.80
+        ? "rgba(82, 183, 136, 0.9)"
+        : frameQuality >= 0.65
+        ? "rgba(253, 166, 0, 0.85)"
+        : "rgba(239, 68, 68, 0.7)";
+      const fillColor = frameQuality >= 0.80
+        ? "rgba(82, 183, 136, 1)"
+        : frameQuality >= 0.65
+        ? "rgba(253, 166, 0, 1)"
+        : "rgba(239, 68, 68, 0.9)";
 
-      ctx.beginPath();
-      ctx.arc(cx, cy, 14, 0, Math.PI * 2);
-      ctx.strokeStyle = quality >= 0.80
-        ? "rgba(82, 183, 136, 0.4)"
-        : "rgba(253, 166, 0, 0.35)";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-  }, [normalLandmarks, quality, canvasRef, videoRef]);
+      context.lineCap = "round";
+      context.lineWidth = 2.5;
+      context.strokeStyle = strokeColor;
+      for (const [a, b] of POSE_CONNECTIONS) {
+        const first = landmarks[a];
+        const second = landmarks[b];
+        if (!first || !second) continue;
+        if ((first.visibility ?? 0) < 0.35 || (second.visibility ?? 0) < 0.35) continue;
 
-  return null; // No JSX — draws directly to canvas via ref
+        const [x1, y1] = toDisplayPixel(first, transform);
+        const [x2, y2] = toDisplayPixel(second, transform);
+        context.beginPath();
+        context.moveTo(x1, y1);
+        context.lineTo(x2, y2);
+        context.stroke();
+      }
+
+      for (let index = 0; index < landmarks.length; index += 1) {
+        const landmark = landmarks[index];
+        if (!landmark || (landmark.visibility ?? 0) < 0.35) continue;
+        const [x, y] = toDisplayPixel(landmark, transform);
+        const radius = KEY_LANDMARKS.has(index) ? 6 : 3;
+
+        context.beginPath();
+        context.arc(x, y, radius, 0, Math.PI * 2);
+        context.fillStyle = fillColor;
+        context.fill();
+        context.strokeStyle = "rgba(255, 255, 255, 0.5)";
+        context.lineWidth = 1;
+        context.stroke();
+      }
+    };
+
+    drawRef.current = draw;
+    draw();
+
+    const resizeObserver = typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(draw)
+      : null;
+    resizeObserver?.observe(video);
+    window.addEventListener("resize", draw);
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", draw);
+      if (drawRef.current === draw) drawRef.current = () => undefined;
+      context.setTransform(1, 0, 0, 1, 0, 0);
+      context.clearRect(0, 0, canvas.width, canvas.height);
+    };
+  }, [canvasRef, videoRef]);
+
+  return null;
 }

@@ -35,6 +35,7 @@
  * - Buffer cleared between front and side captures
  */
 
+import { v4 as uuidv4 } from "uuid";
 import {
   useState,
   useCallback,
@@ -113,7 +114,6 @@ export interface UseEnhancedMeasurementCaptureReturn {
   error:              string | null;
   cameraStatus:       CameraStatus;
   cameraError:        string | null;
-  videoRefCallback:    (node: HTMLVideoElement | null) => void;
   // Buffer state
   landmarkBufferSize: number;
   bufferProgress:     number;  // 0-1 progress toward stabilityFramesRequired
@@ -226,6 +226,8 @@ export interface UseEnhancedMeasurementCaptureOptions {
   initialWeightKg?: number;
   /** Pre-filled biological sex — forwarded to backend for BMI correction */
   initialSex?: "male" | "female" | "neutral";
+  /** Observational orientation confidence forwarded with the scan payload. */
+  orientationConfidence?: number;
 }
 
 export function useEnhancedMeasurementCapture(
@@ -256,6 +258,7 @@ export function useEnhancedMeasurementCapture(
   // Final averaged landmarks to submit
   const frontLandmarksRef = useRef<Landmark[] | null>(null);
   const sideLandmarksRef  = useRef<Landmark[] | null>(null);
+  const submissionKeyRef = useRef<string | null>(null);
 
   const phaseRef = useRef<EnhancedCapturePhase>("idle");
 
@@ -268,7 +271,7 @@ export function useEnhancedMeasurementCapture(
     return localPhase;
   }, [scanSession.phase, localPhase]);
 
-  const error = localError ?? (scanSession.phase === "failed" ? scanSession.error : null);
+  const error = localError ?? cameraError ?? (scanSession.phase === "failed" ? scanSession.error : null);
 
   const setPhaseSync = useCallback((next: EnhancedCapturePhase) => {
     phaseRef.current = next;
@@ -323,13 +326,6 @@ export function useEnhancedMeasurementCapture(
     }
     return true;
   }, [markVideoReady]);
-
-  const videoRefCallback = useCallback((node: HTMLVideoElement | null) => {
-    videoRef.current = node;
-    if (node && streamRef.current) {
-      attachStreamToVideo(node);
-    }
-  }, [attachStreamToVideo, videoRef]);
 
   const startCamera = useCallback(async () => {
     clearCameraTimers();
@@ -399,10 +395,25 @@ export function useEnhancedMeasurementCapture(
     setCameraStatus("stopped");
   }, [clearCameraTimers, videoRef]);
 
+  // AnimatePresence may replace the video node at a phase boundary. Reattach
+  // the existing stream after the new node has committed to the DOM.
+  useEffect(() => {
+    if (
+      phase === "device_setup" ||
+      phase === "positioning" ||
+      phase === "front_aligning" ||
+      phase === "front_countdown" ||
+      phase.startsWith("side_")
+    ) {
+      attachStreamToVideo(videoRef.current);
+    }
+  }, [attachStreamToVideo, phase, videoRef]);
+
   // ── Start capture (begins with device_setup phase) ────────────────────────
   const startCapture = useCallback(
     async (heightCm?: number, ageYears?: number) => {
       setLocalError(null);
+      submissionKeyRef.current = uuidv4();
       setPhaseSync("loading_model");
 
       try {
@@ -466,9 +477,11 @@ export function useEnhancedMeasurementCapture(
       return emptyFrame;
     }
 
-    const worldLms  = result.worldLandmarks[0];
-    const normalLms = result.landmarks[0] ?? worldLms;
-    const quality   = landmarker.computeQualityScore(worldLms);
+    const worldLms = result.worldLandmarks[0];
+    // Normalized image landmarks and world landmarks use different coordinate
+    // systems; never substitute metric world values for canvas drawing.
+    const normalLms = result.landmarks[0] ?? null;
+    const quality = landmarker.computeQualityScore(worldLms);
 
     // Height estimation
     if (!userHeightCm && quality > 0.65) {
@@ -546,13 +559,20 @@ export function useEnhancedMeasurementCapture(
       return;
     }
 
-    // Submit both landmark sets to backend
+    // Submit both landmark sets to backend.
+    // Reuse one idempotency key for any retry of this captured scan.
+    const idempotencyKey = submissionKeyRef.current ?? uuidv4();
+    submissionKeyRef.current = idempotencyKey;
     // A-5 FIX: Include user_age, user_sex, user_weight_kg in payload
     await scanSession.submit({
+      idempotency_key: idempotencyKey,
       user_height_cm: height,
       ...(userAge != null && { user_age: userAge }),
       ...(options?.initialSex && { user_sex: options.initialSex }),
       ...(options?.initialWeightKg != null && { user_weight_kg: options.initialWeightKg }),
+      ...(options?.orientationConfidence != null && {
+        orientation_confidence: options.orientationConfidence,
+      }),
       front_landmarks: frontLms.map((l) => ({
         x: l.x, y: l.y, z: l.z, visibility: l.visibility ?? 0,
       })),
@@ -584,6 +604,7 @@ export function useEnhancedMeasurementCapture(
     sideBufferRef.current  = [];
     frontLandmarksRef.current = null;
     sideLandmarksRef.current  = null;
+    submissionKeyRef.current = null;
     setPhaseSync("idle");
     setCurrentFrame(null);
     setUserHeightCm(null);
@@ -603,7 +624,6 @@ export function useEnhancedMeasurementCapture(
     error,
     cameraStatus,
     cameraError,
-    videoRefCallback,
     landmarkBufferSize: CAPTURE_CONFIG.landmarkBufferSize,
     bufferProgress,
     isSidePosePhase:   phase.startsWith("side_"),

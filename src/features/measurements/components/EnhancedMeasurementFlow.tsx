@@ -105,13 +105,19 @@ export function EnhancedMeasurementFlow({
   // Camera refs owned by the component (avoids React Compiler ref-during-render warnings)
   const videoRef  = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const orientation = usePhoneOrientation();
+  const orientationConfidence = orientation.permissionState === "granted"
+    ? orientation.isLevel
+      ? 1
+      : 0.5
+    : 0;
   const capture     = useEnhancedMeasurementCapture(videoRef, {
     sessionId: sessionId,
     initialWeightKg: initialWeightKg,
     initialSex: initialSex,
+    orientationConfidence,
   });
   const voice       = useVoiceCoach();
-  const orientation = usePhoneOrientation();
   const haptic      = useHapticFeedback();
   const [tutorialDone, setTutorialDone] = useState(false);
 
@@ -143,7 +149,7 @@ export function EnhancedMeasurementFlow({
   const prevNosePosRef = useRef<{ x: number; y: number } | null>(null);
 
   // Destructure stable callbacks/values used inside the frame loop
-  const { processFrame, phase: capturePhase } = capture;
+  const { processFrame, phase: capturePhase, skipDeviceSetup } = capture;
   const { tick: frontTick } = frontAutoCapture;
   const { tick: sideTick }   = sideAutoCapture;
   const { speak } = voice;
@@ -208,7 +214,10 @@ export function EnhancedMeasurementFlow({
           : quality >= (phase.startsWith("side_") ? POSE_THRESHOLDS.sideGood : POSE_THRESHOLDS.frontGood);
 
         // Drive exactly one auto-capture state machine per processed frame.
-        const orientationReady = orientation.isLevel || orientation.status === "unsupported";
+        const orientationReady =
+          orientation.isLevel ||
+          orientation.permissionState === "unsupported" ||
+          orientation.permissionState === "denied";
         if (phase === "front_aligning" || phase === "front_countdown") {
           frontTick({
             quality,
@@ -260,6 +269,7 @@ export function EnhancedMeasurementFlow({
     }
 
     const activePhases = [
+      "device_setup",
       "positioning", "front_aligning", "front_countdown",
       "side_positioning", "side_aligning", "side_countdown",
     ];
@@ -267,7 +277,7 @@ export function EnhancedMeasurementFlow({
     if (activePhases.includes(capturePhaseRef.current)) {
       rafRef.current = requestAnimationFrame(() => frameLoopRef.current());
     }
-  }, [processFrame, frontTick, sideTick, speak, videoRef]);
+  }, [processFrame, frontTick, sideTick, speak, videoRef, orientation.isLevel, orientation.permissionState]);
 
 
   useEffect(() => {
@@ -276,6 +286,7 @@ export function EnhancedMeasurementFlow({
 
   useEffect(() => {
     const activePhases = [
+      "device_setup",
       "positioning", "front_aligning", "front_countdown",
       "side_positioning", "side_aligning", "side_countdown",
     ];
@@ -331,26 +342,29 @@ export function EnhancedMeasurementFlow({
   // → status = "unsupported". We skip the orientation check automatically after
   // a 600ms grace period (long enough to show the camera preview).
   useEffect(() => {
-    if (capture.phase !== "device_setup") return;
-    if (orientation.status !== "unsupported") return;
+    if (capturePhase !== "device_setup") return;
+    if (
+      orientation.status !== "unsupported" ||
+      !["unsupported", "denied"].includes(orientation.permissionState)
+    ) return;
     const timer = setTimeout(() => {
-      capture.skipDeviceSetup();
+      skipDeviceSetup();
     }, 600);
     return () => clearTimeout(timer);
-  }, [capture.phase, orientation.status, capture.skipDeviceSetup]);
+  }, [capturePhase, orientation.permissionState, orientation.status, skipDeviceSetup]);
 
   // ── PHASE 2: Auto-advance from device_setup when phone is sustainedly level ──
   // isSustainedGood = phone has been GREEN for ≥ 1500ms continuous.
   // This gives real mobile users a seamless auto-advance to the scan phase.
   useEffect(() => {
-    if (capture.phase !== "device_setup") return;
+    if (capturePhase !== "device_setup") return;
     if (!orientation.isSustainedGood) return;
     speak("phoneReady", { priority: false });
     const timer = setTimeout(() => {
-      capture.skipDeviceSetup();
+      skipDeviceSetup();
     }, 300); // 300ms grace — let the "Camera Ready" voice finish
     return () => clearTimeout(timer);
-  }, [capture.phase, orientation.isSustainedGood, capture.skipDeviceSetup, speak]);
+  }, [capturePhase, orientation.isSustainedGood, skipDeviceSetup, speak]);
 
   // ── Real-time Pose Intelligence (drives silhouette + coaching) ────────────
   const poseIntelligence = useMemo(() => {
@@ -460,7 +474,7 @@ export function EnhancedMeasurementFlow({
             {/* Camera preview BEHIND orientation UI */}
             <div className="relative rounded-2xl overflow-hidden bg-black aspect-[3/4] max-h-[50vh] mx-auto w-full max-w-sm shadow-2xl">
               <video
-                ref={capture.videoRefCallback}
+                ref={videoRef}
                 autoPlay
                 playsInline
                 muted
@@ -504,26 +518,47 @@ export function EnhancedMeasurementFlow({
                     onRequestPermission={orientation.requestPermission}
                   />
                 </div>
+                <div
+                  className="rounded-full bg-black/55 px-3 py-1 text-[11px] text-white/80 backdrop-blur-sm"
+                  aria-live="polite"
+                >
+                  {capture.cameraStatus === "ready"
+                    ? "Camera live"
+                    : capture.cameraStatus === "waiting_for_metadata"
+                    ? "Waiting for first camera frame…"
+                    : capture.cameraStatus === "attaching"
+                    ? "Connecting camera…"
+                    : capture.cameraStatus === "requesting"
+                    ? "Requesting camera permission…"
+                    : "Preparing camera…"}
+                </div>
               </div>
             </div>
 
             {/* A-1 FIX: Use capture.skipDeviceSetup() — replaces broken `as unknown as any` cast */}
             <button
               onClick={() => {
-                if (orientation.isLevel || orientation.status === "unsupported") {
+                if (orientation.isLevel || ["unsupported", "denied"].includes(orientation.permissionState)) {
                   capture.skipDeviceSetup();
                 }
               }}
-              disabled={orientation.status === "bad"}
+              disabled={
+                !orientation.isLevel &&
+                !["unsupported", "denied"].includes(orientation.permissionState)
+              }
               className={cn(
                 "w-full max-w-sm rounded-xl font-semibold py-3 transition flex items-center justify-center gap-2",
-                orientation.isLevel || orientation.status === "unsupported"
+                orientation.isLevel || ["unsupported", "denied"].includes(orientation.permissionState)
                   ? "bg-[#2D6A4F] hover:bg-[#1B4332] text-white"
                   : "bg-white/10 text-white/40 cursor-not-allowed"
               )}
             >
               <IconCamera />
-              {orientation.isLevel ? "Camera Ready — Start Scan" : orientation.status === "unsupported" ? "Start Scan" : "Level the phone to continue"}
+              {orientation.isLevel
+                ? "Camera Ready — Start Scan"
+                : ["unsupported", "denied"].includes(orientation.permissionState)
+                ? "Start Scan without orientation"
+                : "Level the phone to continue"}
             </button>
 
             <p className="text-white/20 text-xs text-center">
@@ -551,7 +586,7 @@ export function EnhancedMeasurementFlow({
             {/* Camera viewport */}
             <div className="relative rounded-2xl overflow-hidden bg-black aspect-[3/4] max-h-[70vh] mx-auto w-full max-w-sm shadow-2xl">
               <video
-                ref={capture.videoRefCallback}
+                ref={videoRef}
                 autoPlay
                 playsInline
                 muted

@@ -25,18 +25,22 @@ function dispatchOrientation(gamma: number, beta: number) {
 
 describe("usePhoneOrientation", () => {
   beforeEach(() => {
-    // Ensure the event is in scope
+    // jsdom does not expose a real sensor API. Provide a feature-detected
+    // non-iOS implementation so the hook can subscribe and consume fixtures.
+    vi.stubGlobal("DeviceOrientationEvent", class DeviceOrientationEvent {});
     vi.spyOn(window, "addEventListener");
     vi.spyOn(window, "removeEventListener");
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
-  it("should start with status 'unsupported'", () => {
+  it("should start in an unresolved orientation state", () => {
     const { result } = renderHook(() => usePhoneOrientation());
-    expect(result.current.status).toBe("unsupported");
+    expect(result.current.status).toBe("unknown");
+    expect(result.current.permissionState).toBe("granted");
   });
 
   it("should return 'good' when gamma is within ±5°", () => {
@@ -51,11 +55,19 @@ describe("usePhoneOrientation", () => {
     expect(["tilted", "bad"]).toContain(result.current.status);
   });
 
+  it("should reject a flat phone even when gamma is level", () => {
+    const { result } = renderHook(() => usePhoneOrientation());
+    dispatchOrientation(0, 0);
+    expect(result.current.status).toBe("bad");
+    expect(result.current.isLevel).toBe(false);
+  });
+
   it("should attach deviceorientation listener on mount", () => {
     renderHook(() => usePhoneOrientation());
     expect(window.addEventListener).toHaveBeenCalledWith(
       "deviceorientation",
       expect.any(Function),
+      true,
     );
   });
 
@@ -65,6 +77,7 @@ describe("usePhoneOrientation", () => {
     expect(window.removeEventListener).toHaveBeenCalledWith(
       "deviceorientation",
       expect.any(Function),
+      true,
     );
   });
 });

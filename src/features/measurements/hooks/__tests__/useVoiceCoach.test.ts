@@ -23,6 +23,19 @@ const mockGetVoices = vi.fn(() => [
 ]);
 
 function mockSpeechSynthesis(available = true) {
+  class MockSpeechSynthesisUtterance {
+    rate = 1;
+    pitch = 1;
+    volume = 1;
+    voice: SpeechSynthesisVoice | null = null;
+    onstart: (() => void) | null = null;
+    onend: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+
+    constructor(public text: string) {}
+  }
+  vi.stubGlobal("SpeechSynthesisUtterance", MockSpeechSynthesisUtterance);
+
   if (!available) {
     Object.defineProperty(window, "speechSynthesis", {
       value: undefined,
@@ -58,6 +71,7 @@ describe("useVoiceCoach", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   it("should call speechSynthesis.speak when speak() is called", () => {

@@ -30,6 +30,7 @@ interface ScanWsEvent {
   event:      string;
   session_id: string;
   status:     ScanStatusResponse["status"];
+  scan_phase?: string | null;
   data: {
     quality_score?:         number | null;
     measurements_cm?:       Record<string, number | null> | null;
@@ -86,9 +87,14 @@ export function useScanWebSocket(
 
   const wsRef              = useRef<WebSocket | null>(null);
   const reconnectAttempts  = useRef(0);
+  const reconnectTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMountedRef       = useRef(true);
 
   const disconnect = useCallback(() => {
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
     if (wsRef.current) {
       wsRef.current.close(1000, "client_disconnect");
       wsRef.current = null;
@@ -132,6 +138,7 @@ export function useScanWebSocket(
           const updatedStatus: ScanStatusResponse = {
             session_id:            msg.session_id,
             status:                msg.status ?? "processing",
+            scan_phase:            msg.scan_phase ?? undefined,
             scan_confidence:       msg.data.quality_score ?? undefined,
             measurements_cm:       normalizedMeasurements,
             extracted_measurements: normalizedMeasurements,
@@ -173,7 +180,14 @@ export function useScanWebSocket(
           reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS
         ) {
           reconnectAttempts.current += 1;
-          setTimeout(connect, RECONNECT_DELAY_MS * reconnectAttempts.current);
+          const delay = Math.min(
+            RECONNECT_DELAY_MS * 2 ** (reconnectAttempts.current - 1),
+            30_000,
+          );
+          reconnectTimerRef.current = setTimeout(() => {
+            reconnectTimerRef.current = null;
+            connect();
+          }, delay);
         } else if (reconnectAttempts.current >= MAX_RECONNECT_ATTEMPTS) {
           setIsWebSocketError(true);
         }
@@ -183,6 +197,10 @@ export function useScanWebSocket(
     connect();
 
     return () => {
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
       wsRef.current?.close(1000, "component_unmount");
       wsRef.current = null;
     };

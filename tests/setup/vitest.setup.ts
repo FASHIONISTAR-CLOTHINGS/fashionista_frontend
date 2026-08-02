@@ -2,7 +2,8 @@
  * Vitest Global Setup
  * Runs once before all tests.
  */
-import { vi, beforeAll, afterAll } from "vitest";
+import { vi, beforeAll, afterAll, afterEach } from "vitest";
+import { cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
 // Mock sessionStorage
@@ -40,6 +41,10 @@ beforeAll(() => {
     }
     originalConsoleError(...args);
   };
+});
+
+afterEach(() => {
+  cleanup();
 });
 
 afterAll(() => {

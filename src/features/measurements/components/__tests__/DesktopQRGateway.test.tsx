@@ -191,7 +191,7 @@ describe("DesktopQRGateway", () => {
     );
 
     const shortId = SAMPLE_SESSION_ID.slice(0, 8);
-    expect(screen.getByText(new RegExp(shortId))).toBeDefined();
+    expect(screen.getByTestId("qr-session-id").textContent).toContain(shortId);
   });
 
 });

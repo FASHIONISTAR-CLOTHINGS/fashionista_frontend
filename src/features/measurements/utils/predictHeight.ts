@@ -25,6 +25,6 @@ const ADULT_PLATEAU_CM = 172;
  */
 export function predictHeightCm(age: number): number {
   if (age < 5) return ADULT_PLATEAU_CM;
-  if (age >= 18) return ADULT_PLATEAU_CM;
+  if (age > 18) return ADULT_PLATEAU_CM;
   return HEIGHT_FOR_AGE[Math.floor(age)] ?? ADULT_PLATEAU_CM;
 }
