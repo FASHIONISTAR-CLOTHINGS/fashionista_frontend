@@ -61,10 +61,13 @@ export interface UseAutoCaptureReturn {
   isCapturing: boolean;
   /**
    * Call this every frame from processFrame loop.
-   * @param quality  Pose quality score 0-1
-   * @param isStable True if current pose is stable (compare to prev frame)
+   * @param quality       Pose quality score 0-1
+   * @param isStable      True if current pose is stable (compare to prev frame)
+   * @param overallReady  Optional pose-intelligence gate (arms/distance/centering).
+   *                      When false, arming is blocked even if quality is high.
+   *                      Defaults to true for backward compatibility.
    */
-  tick: (quality: number, isStable?: boolean) => void;
+  tick: (quality: number, isStable?: boolean, overallReady?: boolean) => void;
   /** Manually reset to 'watching' state */
   reset: () => void;
   /** Trigger capture immediately regardless of quality */
@@ -176,11 +179,12 @@ export function useAutoCapture({
   // ── Tick — called each frame ───────────────────────────────────────────────
   const tick = useCallback(
     /**
-     * A-2 FIX: isStable now gates stability frame accumulation.
-     * Both quality AND physical stability are required to arm the countdown.
-     * A jittery user (moving while quality score is high) will NOT trigger capture.
+     * A-2 FIX: isStable gates stability frame accumulation.
+     * WRONG-3 FIX: overallReady gates arming on full pose intelligence
+     * (arms at 45°, full body, centered, optimal distance).
+     * Quality + stability + overallReady are ALL required to arm countdown.
      */
-    (quality: number, isStable: boolean = false) => {
+    (quality: number, isStable: boolean = false, overallReady: boolean = true) => {
       if (!enabledRef.current) return;
 
       const state = captureStateRef.current;
@@ -188,9 +192,9 @@ export function useAutoCapture({
       // If already capturing or done — ignore frames
       if (state === "capturing" || state === "done") return;
 
-      const qualityOk = quality >= qualityThreshold;
+      const qualityOk = quality >= qualityThreshold && overallReady;
 
-      // During countdown — check if quality OR stability dropped (cancel countdown)
+      // During countdown — check if quality OR stability OR readiness dropped
       if (state === "countdown") {
         if (!qualityOk || !isStable) {
           stopCountdown();
@@ -203,7 +207,7 @@ export function useAutoCapture({
       }
 
       if (!qualityOk) {
-        // Reset stability if quality drops
+        // Reset stability if quality / overallReady drops
         if (stabilityFramesRef.current > 0) {
           stabilityFramesRef.current = 0;
           setStabilityFrames(0);
@@ -212,7 +216,7 @@ export function useAutoCapture({
         return;
       }
 
-      // A-2 FIX: Quality is good but user is physically moving — hold state, don't count frames
+      // Quality is good but user is physically moving — hold state, don't count frames
       if (!isStable) {
         // Don't reset stability counter (avoids punishing momentary micro-movements)
         // but don't increment either. Keep "arming" visual but pause stability bar.
@@ -220,7 +224,7 @@ export function useAutoCapture({
         return;
       }
 
-      // Quality is good AND stable — increment stability counter
+      // Quality good AND stable AND overallReady — increment stability counter
       stabilityFramesRef.current += 1;
       setStabilityFrames(stabilityFramesRef.current);
 

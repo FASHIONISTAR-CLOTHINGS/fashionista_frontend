@@ -199,10 +199,21 @@ export function EnhancedMeasurementFlow({
           : null;
 
         // ── Intelligence gate for auto-capture tick ─────────────────────────
-        // A-3 FIX: Only arm the countdown when ALL pose conditions are met.
+        // CRITICAL FIX: readyToArm was computed but frontTick/sideTick were NEVER called.
+        // Auto-capture countdown could never fire without these ticks.
         // If intel is available, require overallReady (score ≥ 70/100).
         // If intel is unavailable, fall back to pure quality score.
-        const readyToArm = intel ? intel.overallReady : quality >= POSE_THRESHOLDS.frontGood;
+        const readyToArm = intel
+          ? intel.overallReady
+          : quality >= (phase.startsWith("side_") ? POSE_THRESHOLDS.sideGood : POSE_THRESHOLDS.frontGood);
+
+        // Drive auto-capture state machines every frame
+        // 3rd arg = overallReady so useAutoCapture can gate internally (WRONG-3)
+        if (phase === "front_aligning" || phase === "front_countdown") {
+          frontTick(quality, isStable, readyToArm);
+        } else if (phase === "side_aligning" || phase === "side_countdown") {
+          sideTick(quality, isStable, readyToArm);
+        }
 
         if (intel) {
           // Full body visibility
@@ -213,27 +224,27 @@ export function EnhancedMeasurementFlow({
           }
 
           // Distance
-          if (intel.distanceStatus === "too_close") speak("tooClose", { minIntervalMs: 5000 });
-          if (intel.distanceStatus === "too_far")   speak("tooFar",   { minIntervalMs: 5000 });
+          if (intel.distanceStatus === "too_close") speak("stepBack", { minIntervalMs: 5000 });
+          if (intel.distanceStatus === "too_far")   speak("stepForward", { minIntervalMs: 5000 });
 
           // Centering — use direct left/right first
           if (intel.centeringStatus === "too_left")  speak("moveRight", { minIntervalMs: 5000 });
-          if (intel.centeringStatus === "too_right")  speak("moveLeft",  { minIntervalMs: 5000 });
+          if (intel.centeringStatus === "too_right") speak("moveLeft",  { minIntervalMs: 5000 });
 
           // Arms coaching
-          if (intel.armsStatus === "at_sides")   speak("armsOpen",  { minIntervalMs: 7000 });
-          if (intel.armsStatus === "too_high")   speak("spreadArms",{ minIntervalMs: 7000 });
+          if (intel.armsStatus === "at_sides")   speak("armsOpen",   { minIntervalMs: 7000 });
+          if (intel.armsStatus === "too_high")   speak("spreadArms", { minIntervalMs: 7000 });
 
-          // Overall readiness
+          // Overall readiness → perfect position / hold still
           if (intel.overallReady && (phase === "front_aligning" || phase === "side_aligning")) {
-            speak("holdStill", { minIntervalMs: 8000 });
+            speak("perfectPosition", { minIntervalMs: 8000 });
           }
         } else {
           // Fallback: use raw frame distance/centering
-          if (frame.distanceStatus === "too_close") speak("tooClose");
-          if (frame.distanceStatus === "too_far")   speak("tooFar");
-          if (frame.centeringStatus === "too_left")  speak("centerLeft",  { minIntervalMs: 5000 });
-          if (frame.centeringStatus === "too_right") speak("centerRight", { minIntervalMs: 5000 });
+          if (frame.distanceStatus === "too_close") speak("stepBack", { minIntervalMs: 5000 });
+          if (frame.distanceStatus === "too_far")   speak("stepForward", { minIntervalMs: 5000 });
+          if (frame.centeringStatus === "too_left")  speak("moveRight", { minIntervalMs: 5000 });
+          if (frame.centeringStatus === "too_right") speak("moveLeft",  { minIntervalMs: 5000 });
         }
       }
     }
@@ -382,7 +393,16 @@ export function EnhancedMeasurementFlow({
               </ul>
 
               <button
-                onClick={() => capture.startCapture(initialHeightCm, initialAge ?? undefined)}
+                onClick={async () => {
+                  // WRONG-4 FIX: iOS 13+ DeviceOrientation permission MUST run inside
+                  // a user gesture before orientation events fire. Request first, then start.
+                  try {
+                    await orientation.requestPermission();
+                  } catch {
+                    // Continue without orientation — desktop / denied still usable
+                  }
+                  await capture.startCapture(initialHeightCm, initialAge ?? undefined);
+                }}
                 className="w-full rounded-xl bg-gradient-to-r from-[#2D6A4F] to-[#1B4332]
                            text-white font-semibold py-3 hover:from-[#1B4332] hover:to-[#0D2818]
                            transition flex items-center justify-center gap-2 shadow-lg shadow-[#2D6A4F]/25"

@@ -70,9 +70,11 @@ const MEDIAPIPE_WASM_URL =
  * The user explicitly demands 100% accuracy GPU-grade precision matching
  * the HuggingFace GPU backend for the measurement calculations.
  */
+// Pin to versioned heavy model (not /latest/) for deterministic production loads.
+// Official Google sample: pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task
 const POSE_MODEL_URL =
   process.env.NEXT_PUBLIC_POSE_MODEL_URL ||
-  "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/latest/pose_landmarker_heavy.task";
+  "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task";
 
 /**
  * Maximum consecutive detectForVideo errors before we trigger graph recovery.
