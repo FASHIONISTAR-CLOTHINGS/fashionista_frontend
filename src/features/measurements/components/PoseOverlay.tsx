@@ -4,10 +4,12 @@
  * @description Canvas overlay that draws the MediaPipe skeleton and landmarks
  * in real-time on top of the camera feed.
  *
- * Drawing:
- * - Skeleton bones: white lines between connected landmarks
- * - Key landmarks: coloured circles (green = good visibility, amber = low)
- * - Body outline silhouette: semi-transparent fill for body region
+ * REWRITE (2026-08-02):
+ * - Now uses normalLandmarks (0-1 normalized pixel coordinates) NOT worldLandmarks
+ * - Mirrors X axis to match the CSS `scale-x-[-1]` mirror on the video element
+ * - Canvas is sized to video's DISPLAY rect (getBoundingClientRect), not intrinsic resolution
+ * - Quality-based color coding: green (good), brand-gold (medium), red (poor)
+ * - Draws ALL 33 MediaPipe BlazePose landmarks + connections
  *
  * Performance:
  * - Draws directly onto a canvas element positioned over the video
@@ -15,7 +17,6 @@
  */
 
 import { useEffect, RefObject } from "react";
-import type { CaptureFrame, } from "../hooks/useMeasurementCapture";
 import type { Landmark } from "../hooks/usePoseLandmarker";
 
 // ─── MediaPipe Pose Connections ───────────────────────────────────────────────
@@ -37,17 +38,23 @@ const POSE_CONNECTIONS: [number, number][] = [
   [24, 26], [26, 28], [28, 30], [28, 32], [30, 32],
 ];
 
+// Key landmark indices (larger circles)
+const KEY_LANDMARKS = new Set([0, 11, 12, 23, 24, 25, 26, 27, 28]);
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
-interface PoseOverlayProps {
-  frame:      CaptureFrame | null;
+export interface PoseOverlayProps {
+  /** Normalized landmarks (0-1 pixel coordinates from MediaPipe). Use normalLandmarks, NOT worldLandmarks. */
+  normalLandmarks: Landmark[] | null;
+  /** Quality score 0-1. Controls color: green ≥ 0.80, gold ≥ 0.65, red < 0.65 */
+  quality: number;
   canvasRef:  RefObject<HTMLCanvasElement | null>;
   videoRef:   RefObject<HTMLVideoElement | null>;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function PoseOverlay({ frame, canvasRef, videoRef }: PoseOverlayProps) {
+export function PoseOverlay({ normalLandmarks, quality, canvasRef, videoRef }: PoseOverlayProps) {
   useEffect(() => {
     const canvas = canvasRef.current;
     const video  = videoRef.current;
@@ -56,56 +63,68 @@ export function PoseOverlay({ frame, canvasRef, videoRef }: PoseOverlayProps) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Sync canvas size to video display size
-    const { clientWidth: w, clientHeight: h } = video;
-    if (canvas.width !== w || canvas.height !== h) {
-      canvas.width  = w;
-      canvas.height = h;
+    // ── Sync canvas size to video DISPLAY size (not intrinsic resolution) ─────
+    // Using getBoundingClientRect ensures we match the CSS-rendered size,
+    // including any object-cover, aspect-ratio, or scale transforms.
+    const rect = video.getBoundingClientRect();
+    const W = Math.round(rect.width);
+    const H = Math.round(rect.height);
+
+    if (W === 0 || H === 0) return;
+
+    if (canvas.width !== W || canvas.height !== H) {
+      canvas.width  = W;
+      canvas.height = H;
     }
 
-    // Clear
-    ctx.clearRect(0, 0, w, h);
+    // Clear the canvas
+    ctx.clearRect(0, 0, W, H);
 
-    if (!frame?.worldLandmarks) return;
+    // Nothing to draw
+    if (!normalLandmarks || normalLandmarks.length === 0) return;
 
-    // Convert normalised coords to pixel coords
-    // Note: worldLandmarks are in METRES (not normalised 0-1 like regular landmarks)
-    // We use the regular landmarks for drawing; worldLandmarks are for math only.
-    // Here we draw based on the current frame visibility/quality only.
+    // ── Quality-based color theme ─────────────────────────────────────────────
+    // Green  (≥0.80): Forest Green — perfect pose
+    // Gold   (≥0.65): Brand Gold — acceptable pose
+    // Red    (<0.65): Red — poor pose / low visibility
+    const strokeColor = quality >= 0.80
+      ? "rgba(82, 183, 136, 0.9)"    // Forest Green
+      : quality >= 0.65
+      ? "rgba(253, 166, 0, 0.85)"    // Brand Gold
+      : "rgba(239, 68, 68, 0.7)";
 
-    const lms = frame.worldLandmarks;
-    const quality = frame.quality;
+    const fillColor = quality >= 0.80
+      ? "rgba(82, 183, 136, 1)"
+      : quality >= 0.65
+      ? "rgba(253, 166, 0, 1)"
+      : "rgba(239, 68, 68, 0.9)";
 
-    // Project world coords to canvas
-    // World landmark coords: x,y,z in metres, centred at hip
-    // For drawing, we normalise relative to bounding box
-    const xs = lms.map((l: Landmark) => l.x);
-    const ys = lms.map((l: Landmark) => l.y);
-    const minX = Math.min(...xs), maxX = Math.max(...xs);
-    const minY = Math.min(...ys), maxY = Math.max(...ys);
-    const rangeX = maxX - minX || 1;
-    const rangeY = maxY - minY || 1;
-
-    const margin = 0.1;
+    // ── Coordinate mapping ────────────────────────────────────────────────────
+    // normalLandmarks: x and y are 0.0 → 1.0 (fraction of video frame)
+    // The video element has CSS `scale-x[-1]` (mirrored horizontally for selfie view)
+    // So we mirror the X coordinate: canvasX = (1 - lm.x) * W
     const toPixel = (lm: Landmark): [number, number] => [
-      ((lm.x - minX) / rangeX) * w * (1 - margin * 2) + w * margin,
-      ((lm.y - minY) / rangeY) * h * (1 - margin * 2) + h * margin,
+      (1 - lm.x) * W,   // Mirror X to match CSS scale-x[-1]
+      lm.y * H,
     ];
 
-    // ── Draw connections ────────────────────────────────────────────────────
-    ctx.lineWidth   = 2.5;
-    ctx.strokeStyle = quality >= 0.72
-      ? "rgba(253, 166, 0, 0.8)"     // Brand Gold
-      : "rgba(122, 107, 68, 0.6)";    // Muted Gold
+    // ── Draw skeleton connections ─────────────────────────────────────────────
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = strokeColor;
+    ctx.lineCap = "round";
 
     for (const [a, b] of POSE_CONNECTIONS) {
-      if (a >= lms.length || b >= lms.length) continue;
-      const visA = lms[a].visibility ?? 0;
-      const visB = lms[b].visibility ?? 0;
-      if (visA < 0.3 || visB < 0.3) continue;
+      const lmA = normalLandmarks[a];
+      const lmB = normalLandmarks[b];
+      if (!lmA || !lmB) continue;
 
-      const [x1, y1] = toPixel(lms[a]);
-      const [x2, y2] = toPixel(lms[b]);
+      // Skip low-visibility connections
+      const visA = lmA.visibility ?? 0;
+      const visB = lmB.visibility ?? 0;
+      if (visA < 0.35 || visB < 0.35) continue;
+
+      const [x1, y1] = toPixel(lmA);
+      const [x2, y2] = toPixel(lmB);
 
       ctx.beginPath();
       ctx.moveTo(x1, y1);
@@ -113,44 +132,52 @@ export function PoseOverlay({ frame, canvasRef, videoRef }: PoseOverlayProps) {
       ctx.stroke();
     }
 
-    // ── Draw landmark circles ───────────────────────────────────────────────
-    for (let i = 0; i < lms.length; i++) {
-      const lm  = lms[i];
+    // ── Draw landmark circles ─────────────────────────────────────────────────
+    for (let i = 0; i < normalLandmarks.length; i++) {
+      const lm = normalLandmarks[i];
       const vis = lm.visibility ?? 0;
-      if (vis < 0.3) continue;
+      if (vis < 0.35) continue;
 
       const [px, py] = toPixel(lm);
+      const isKey = KEY_LANDMARKS.has(i);
+      const radius = isKey ? 6 : 3;
 
-      // Key landmarks are larger
-      const isKey = [11, 12, 23, 24, 25, 26, 27, 28].includes(i);
-      const radius = isKey ? 5 : 3;
+      // Outer glow for key landmarks
+      if (isKey) {
+        ctx.beginPath();
+        ctx.arc(px, py, radius + 3, 0, Math.PI * 2);
+        ctx.fillStyle = quality >= 0.80
+          ? "rgba(82, 183, 136, 0.2)"
+          : "rgba(253, 166, 0, 0.15)";
+        ctx.fill();
+      }
 
+      // Main circle
       ctx.beginPath();
       ctx.arc(px, py, radius, 0, Math.PI * 2);
-      ctx.fillStyle = vis > 0.7
-        ? "rgba(253, 166, 0, 0.9)"    // Brand Gold
-        : "rgba(122, 107, 68, 0.7)";  // Muted Gold
+      ctx.fillStyle = fillColor;
       ctx.fill();
 
-      // White border
-      ctx.strokeStyle = "rgba(255,255,255,0.4)";
+      // White border ring
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
       ctx.lineWidth = 1;
       ctx.stroke();
     }
 
-    // ── Quality pulse ring at centre ────────────────────────────────────────
-    if (lms[0]) {
-      const [cx, cy] = toPixel(lms[0]);
-      const pulseRadius = 12;
+    // ── Nose tracking dot (landmark 0) — quality pulse indicator ──────────────
+    const nose = normalLandmarks[0];
+    if (nose && (nose.visibility ?? 0) > 0.5) {
+      const [cx, cy] = toPixel(nose);
+
       ctx.beginPath();
-      ctx.arc(cx, cy, pulseRadius, 0, Math.PI * 2);
-      ctx.strokeStyle = quality >= 0.72
-        ? "rgba(253, 166, 0, 0.6)"    // Brand Gold
-        : "rgba(122, 107, 68, 0.4)";  // Muted Gold
+      ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+      ctx.strokeStyle = quality >= 0.80
+        ? "rgba(82, 183, 136, 0.4)"
+        : "rgba(253, 166, 0, 0.35)";
       ctx.lineWidth = 2;
       ctx.stroke();
     }
-  }, [frame, canvasRef, videoRef]);
+  }, [normalLandmarks, quality, canvasRef, videoRef]);
 
   return null; // No JSX — draws directly to canvas via ref
 }

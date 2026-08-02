@@ -32,7 +32,7 @@
  *   <EnhancedMeasurementFlow onComplete={(id) => router.push(`/measurements/${id}`)} />
  */
 
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useRef, useCallback, useState, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEnhancedMeasurementCapture } from "../hooks/useEnhancedMeasurementCapture";
 import { useAutoCapture } from "../hooks/useAutoCapture";
@@ -46,10 +46,12 @@ import { CountdownOverlay } from "./CountdownOverlay";
 import { ScanProgressStepper } from "./ScanProgressStepper";
 import { ScanTutorialOverlay } from "./ScanTutorialOverlay";
 import { MeasurementReveal } from "./MeasurementReveal";
+import { BodySilhouetteOverlay } from "./BodySilhouetteOverlay";
 import { useHapticFeedback } from "../hooks/useHapticFeedback";
 import { ScanFallbackManual } from "./ScanFallbackManual";
 import { cn } from "@/lib/utils";
 import { POSE_THRESHOLDS, CAPTURE_CONFIG } from "@/lib/brand";
+import { analyzePose } from "../lib/poseIntelligence";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -261,6 +263,13 @@ export function EnhancedMeasurementFlow({
     [speak]
   );
 
+  // ── Real-time Pose Intelligence (drives silhouette + coaching) ────────────
+  const poseIntelligence = useMemo(() => {
+    const frame = capture.currentFrame;
+    if (!frame?.normalLandmarks || !frame.worldLandmarks) return null;
+    return analyzePose(frame.normalLandmarks, frame.worldLandmarks);
+  }, [capture.currentFrame]);
+
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -342,7 +351,7 @@ export function EnhancedMeasurementFlow({
           </motion.div>
         )}
 
-        {/* ── DEVICE SETUP: Phone orientation check ── */}
+        {/* ── DEVICE SETUP: Phone orientation check (with camera preview behind) ── */}
         {capture.phase === "device_setup" && (
           <motion.div
             key="device_setup"
@@ -350,21 +359,31 @@ export function EnhancedMeasurementFlow({
             transition={{ duration: 0.3 }}
             className="flex flex-col items-center gap-6 py-6"
           >
-            <div className="text-center">
-              <h3 className="text-white font-bold text-lg">Position Your Phone</h3>
-              <p className="text-white/50 text-sm mt-1">
-                Prop it upright against a wall at chest height
-              </p>
+            {/* Camera preview BEHIND orientation UI */}
+            <div className="relative rounded-2xl overflow-hidden bg-black aspect-[3/4] max-h-[50vh] mx-auto w-full max-w-sm shadow-2xl">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
+              />
+              {/* Semi-transparent dark overlay for orientation UI */}
+              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-4 p-4">
+                <h3 className="text-white font-bold text-lg text-center">Position Your Phone</h3>
+                <p className="text-white/60 text-sm text-center">
+                  Prop your phone upright at chest height
+                </p>
+                <PhoneOrientationIndicator
+                  status={orientation.status}
+                  gamma={orientation.gamma}
+                  tiltDegrees={orientation.tiltDegrees}
+                  tiltDirection={orientation.tiltDirection}
+                  onStatusChange={handleOrientationChange}
+                  onRequestPermission={orientation.requestPermission}
+                />
+              </div>
             </div>
-
-            <PhoneOrientationIndicator
-              status={orientation.status}
-              gamma={orientation.gamma}
-              tiltDegrees={orientation.tiltDegrees}
-              tiltDirection={orientation.tiltDirection}
-              onStatusChange={handleOrientationChange}
-              onRequestPermission={orientation.requestPermission}
-            />
 
             {/* A-1 FIX: Use capture.skipDeviceSetup() — replaces broken `as unknown as any` cast */}
             <button
@@ -375,14 +394,14 @@ export function EnhancedMeasurementFlow({
               }}
               disabled={orientation.status === "bad"}
               className={cn(
-                "w-full rounded-xl font-semibold py-3 transition flex items-center justify-center gap-2",
+                "w-full max-w-sm rounded-xl font-semibold py-3 transition flex items-center justify-center gap-2",
                 orientation.isLevel || orientation.status === "unsupported"
                   ? "bg-[#2D6A4F] hover:bg-[#1B4332] text-white"
                   : "bg-white/10 text-white/40 cursor-not-allowed"
               )}
             >
               <IconCamera />
-              {orientation.isLevel ? "Camera Ready — Start Scan" : "Level the phone to continue"}
+              {orientation.isLevel ? "Camera Ready — Start Scan" : orientation.status === "unsupported" ? "Start Scan" : "Level the phone to continue"}
             </button>
 
             <p className="text-white/20 text-xs text-center">
@@ -397,6 +416,7 @@ export function EnhancedMeasurementFlow({
           </motion.div>
         )}
 
+
         {/* ── CAMERA ACTIVE: positioning, front_aligning, front_countdown ── */}
         {["positioning", "front_aligning", "front_countdown",
           "side_positioning", "side_aligning", "side_countdown"].includes(capture.phase) && (
@@ -410,16 +430,25 @@ export function EnhancedMeasurementFlow({
             <div className="relative rounded-2xl overflow-hidden bg-black aspect-[3/4] max-h-[70vh] mx-auto w-full max-w-sm shadow-2xl">
               <video
                 ref={videoRef}
+                autoPlay
                 playsInline
                 muted
                 className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
               />
               <canvas
                 ref={canvasRef}
-                className="absolute inset-0 w-full h-full scale-x-[-1]"
+                className="absolute inset-0 w-full h-full pointer-events-none"
+              />
+              {/* Body silhouette guide — ghost outline user must step into (MirrSize-style) */}
+              <BodySilhouetteOverlay
+                isBodyDetected={(capture.currentFrame?.quality ?? 0) > 0.2}
+                isFullBodyVisible={poseIntelligence?.isFullBodyVisible ?? false}
+                isDistanceOptimal={poseIntelligence?.distanceStatus === "optimal"}
+                isCentered={poseIntelligence?.centeringStatus === "centered"}
               />
               <PoseOverlay
-                frame={capture.currentFrame}
+                normalLandmarks={capture.currentFrame?.normalLandmarks ?? null}
+                quality={capture.currentFrame?.quality ?? 0}
                 canvasRef={canvasRef}
                 videoRef={videoRef}
               />
@@ -454,23 +483,33 @@ export function EnhancedMeasurementFlow({
 
               {/* Direction arrows (distance + centering) */}
               {capture.currentFrame?.distanceStatus === "too_close" && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-                  <p className="text-[#F4C430] font-bold text-2xl drop-shadow-lg">↑ Step back</p>
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none">
+                  <div className="bg-black/70 rounded-full px-4 py-1.5 flex items-center gap-1.5">
+                    <span className="text-[#F4C430] text-lg">⬆</span>
+                    <p className="text-[#F4C430] font-bold text-sm">Step back</p>
+                  </div>
                 </div>
               )}
               {capture.currentFrame?.distanceStatus === "too_far" && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-                  <p className="text-[#F4C430] font-bold text-2xl drop-shadow-lg">↓ Step closer</p>
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none">
+                  <div className="bg-black/70 rounded-full px-4 py-1.5 flex items-center gap-1.5">
+                    <span className="text-[#F4C430] text-lg">⬇</span>
+                    <p className="text-[#F4C430] font-bold text-sm">Step closer</p>
+                  </div>
                 </div>
               )}
               {capture.currentFrame?.centeringStatus === "too_left" && (
-                <div className="absolute top-1/2 left-4 pointer-events-none">
-                  <p className="text-[#F4C430] font-bold text-2xl drop-shadow-lg">→</p>
+                <div className="absolute top-1/2 left-3 -translate-y-1/2 pointer-events-none">
+                  <div className="bg-black/70 rounded-full px-3 py-2">
+                    <p className="text-[#F4C430] font-bold text-xl">→</p>
+                  </div>
                 </div>
               )}
               {capture.currentFrame?.centeringStatus === "too_right" && (
-                <div className="absolute top-1/2 right-4 pointer-events-none">
-                  <p className="text-[#F4C430] font-bold text-2xl drop-shadow-lg">←</p>
+                <div className="absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none">
+                  <div className="bg-black/70 rounded-full px-3 py-2">
+                    <p className="text-[#F4C430] font-bold text-xl">←</p>
+                  </div>
                 </div>
               )}
             </div>
