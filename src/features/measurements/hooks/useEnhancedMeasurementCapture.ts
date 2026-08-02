@@ -380,12 +380,16 @@ export function useEnhancedMeasurementCapture(
     }
 
     metadataTimeoutRef.current = setTimeout(() => {
-      if (cameraStatus !== "ready") {
+      const video = videoRef.current;
+      const hasDecodedFrame = Boolean(
+        video && video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0,
+      );
+      if (!hasDecodedFrame) {
         setCameraStatus("error");
         setCameraError("The camera opened but did not provide a video frame. Please retry.");
       }
     }, 5000);
-  }, [attachStreamToVideo, cameraStatus, clearCameraTimers, videoRef]);
+  }, [attachStreamToVideo, clearCameraTimers, videoRef]);
 
   const stopCamera = useCallback(() => {
     clearCameraTimers();
@@ -444,6 +448,7 @@ export function useEnhancedMeasurementCapture(
     if (!videoRef.current || !landmarker.isReady) return null;
 
     const activePhases: EnhancedCapturePhase[] = [
+      "device_setup",
       "positioning", "front_aligning", "front_countdown",
       "side_positioning", "side_aligning", "side_countdown",
     ];
@@ -596,6 +601,9 @@ export function useEnhancedMeasurementCapture(
     sessionId:      scanSession.sessionId,
     sessionStatus:  scanSession.sessionStatus,
     error,
+    cameraStatus,
+    cameraError,
+    videoRefCallback,
     landmarkBufferSize: CAPTURE_CONFIG.landmarkBufferSize,
     bufferProgress,
     isSidePosePhase:   phase.startsWith("side_"),

@@ -460,26 +460,50 @@ export function EnhancedMeasurementFlow({
             {/* Camera preview BEHIND orientation UI */}
             <div className="relative rounded-2xl overflow-hidden bg-black aspect-[3/4] max-h-[50vh] mx-auto w-full max-w-sm shadow-2xl">
               <video
-                ref={videoRef}
+                ref={capture.videoRefCallback}
                 autoPlay
                 playsInline
                 muted
                 className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
               />
-              {/* Semi-transparent dark overlay for orientation UI */}
-              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-4 p-4">
-                <h3 className="text-white font-bold text-lg text-center">Position Your Phone</h3>
-                <p className="text-white/60 text-sm text-center">
-                  Prop your phone upright at chest height
-                </p>
-                <PhoneOrientationIndicator
-                  status={orientation.status}
-                  gamma={orientation.gamma}
-                  tiltDegrees={orientation.tiltDegrees}
-                  tiltDirection={orientation.tiltDirection}
-                  onStatusChange={handleOrientationChange}
-                  onRequestPermission={orientation.requestPermission}
-                />
+              <canvas
+                ref={canvasRef}
+                className="absolute inset-0 w-full h-full pointer-events-none"
+              />
+              <BodySilhouetteOverlay
+                isBodyDetected={(capture.currentFrame?.quality ?? 0) > 0.2}
+                isFullBodyVisible={poseIntelligence?.isFullBodyVisible ?? false}
+                isDistanceOptimal={poseIntelligence?.distanceStatus === "optimal"}
+                isCentered={poseIntelligence?.centeringStatus === "centered"}
+              />
+              <PoseOverlay
+                normalLandmarks={capture.currentFrame?.normalLandmarks ?? null}
+                quality={capture.currentFrame?.quality ?? 0}
+                canvasRef={canvasRef}
+                videoRef={videoRef}
+              />
+              <CalibrationGuide
+                phase={capture.phase}
+                intelligence={poseIntelligence}
+                qualityScore={capture.currentFrame?.quality ?? 0}
+                estimatedHeight={capture.userHeightCm}
+              />
+              {/* Keep the live preview readable; the panel does not obscure the body. */}
+              <div className="absolute inset-x-3 top-3 flex flex-col items-center gap-3 p-3 pointer-events-none">
+                <div className="rounded-xl bg-black/45 px-4 py-2 text-center backdrop-blur-sm">
+                  <h3 className="text-white font-bold text-lg">Position Your Phone</h3>
+                  <p className="text-white/75 text-sm">Prop it upright at chest height</p>
+                </div>
+                <div className="pointer-events-auto">
+                  <PhoneOrientationIndicator
+                    status={orientation.status}
+                    gamma={orientation.gamma}
+                    tiltDegrees={orientation.tiltDegrees}
+                    tiltDirection={orientation.tiltDirection}
+                    onStatusChange={handleOrientationChange}
+                    onRequestPermission={orientation.requestPermission}
+                  />
+                </div>
               </div>
             </div>
 
@@ -527,7 +551,7 @@ export function EnhancedMeasurementFlow({
             {/* Camera viewport */}
             <div className="relative rounded-2xl overflow-hidden bg-black aspect-[3/4] max-h-[70vh] mx-auto w-full max-w-sm shadow-2xl">
               <video
-                ref={videoRef}
+                ref={capture.videoRefCallback}
                 autoPlay
                 playsInline
                 muted
