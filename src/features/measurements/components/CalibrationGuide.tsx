@@ -11,6 +11,7 @@
  * - Estimated height indicator (bottom-left)
  */
 
+import React from "react";
 import { cn } from "@/lib/utils";
 
 interface CalibrationGuideProps {

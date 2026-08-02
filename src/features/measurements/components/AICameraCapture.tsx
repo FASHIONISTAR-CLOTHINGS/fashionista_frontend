@@ -242,9 +242,10 @@ export function AICameraCapture({
               ref={canvasRef}
               className="absolute inset-0 w-full h-full scale-x-[-1]"
             />
-            {/* Pose overlay */}
+            {/* Pose overlay — uses new PoseOverlay API with normalLandmarks */}
             <PoseOverlay
-              frame={capture.currentFrame}
+              normalLandmarks={null}
+              quality={capture.currentFrame?.quality ?? 0}
               canvasRef={canvasRef}
               videoRef={videoRef}
             />

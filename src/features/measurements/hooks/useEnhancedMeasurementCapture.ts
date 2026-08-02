@@ -256,23 +256,57 @@ export function useEnhancedMeasurementCapture(
   }, []);
 
   // ── Camera start/stop ────────────────────────────────────────────────────
+  /**
+   * BUG-001 FIX: The video element lives inside AnimatePresence and is NOT
+   * mounted when startCamera() first runs (phase is still "loading_model").
+   * We assign the stream immediately if the element exists, then start a
+   * retry interval (every 50ms, max 4s) to catch the moment AnimatePresence
+   * mounts the <video> element after phase transitions to "device_setup".
+   */
   const startCamera = useCallback(async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
-      audio: false,
-    });
-    streamRef.current = stream;
-    if (videoRef.current) {
-      videoRef.current.srcObject = stream;
-      await new Promise<void>((resolve, reject) => {
-        const el = videoRef.current!;
-        if (el.readyState >= 2 && el.videoWidth > 0) { resolve(); return; }
-        const onCanPlay = () => { el.removeEventListener("canplay", onCanPlay); el.removeEventListener("error", onError); resolve(); };
-        const onError   = (e: Event) => { el.removeEventListener("canplay", onCanPlay); el.removeEventListener("error", onError); reject(new Error(`Video error: ${(e as ErrorEvent).message ?? "unknown"}`)); };
-        el.addEventListener("canplay", onCanPlay);
-        el.addEventListener("error",   onError);
+    // 1. Get media stream — prefer front-facing camera (selfie/user-scan)
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: "user" },
+          width:  { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
       });
-      await videoRef.current.play();
+    } catch {
+      // Fallback: any camera (some devices may not expose facingMode correctly)
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
+    }
+    streamRef.current = stream;
+
+    // 2. Assign stream to video element — with retry loop for AnimatePresence mount timing
+    const assignStreamToVideo = () => {
+      const el = videoRef.current;
+      if (!el) return false;
+      if (el.srcObject === stream) return true; // already assigned
+      el.srcObject = stream;
+      // play() is triggered automatically by `autoPlay` attribute in JSX
+      // but we also call it explicitly for reliability
+      el.play().catch(() => {
+        // Browser may block play() before user gesture — autoPlay handles it
+      });
+      return true;
+    };
+
+    if (!assignStreamToVideo()) {
+      // Video element not yet in DOM — poll until AnimatePresence mounts it
+      let elapsed = 0;
+      const retryInterval = setInterval(() => {
+        elapsed += 50;
+        if (assignStreamToVideo() || elapsed >= 4000) {
+          clearInterval(retryInterval);
+        }
+      }, 50);
     }
   }, [videoRef]);
 

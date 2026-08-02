@@ -148,6 +148,13 @@ export function EnhancedMeasurementFlow({
   const { tick: sideTick }   = sideAutoCapture;
   const { speak } = voice;
 
+  // BUG-004 FIX: Mirror capture.phase into a ref so the rAF closure always
+  // reads the CURRENT phase (not the stale value from when useCallback fired).
+  const capturePhaseRef = useRef<typeof capturePhase>(capturePhase);
+  useEffect(() => {
+    capturePhaseRef.current = capturePhase;
+  }, [capturePhase]);
+
   // ── Jitter / Stability helper ─────────────────────────────────────────────
   /**
    * Returns true when nose (landmark 0) hasn't moved more than JITTER_THRESHOLD
@@ -179,7 +186,7 @@ export function EnhancedMeasurementFlow({
       const frame = processFrame();
       if (frame) {
         const quality = frame.quality;
-        const phase   = capturePhase;
+        const phase   = capturePhaseRef.current; // BUG-004 FIX: use ref, not stale closure
 
         // Tick auto-capture state machines — A-2 FIX: pass isStable for jitter gate
         const isStable = isFrameStable(frame);
@@ -195,6 +202,17 @@ export function EnhancedMeasurementFlow({
         if (frame.distanceStatus === "too_far")   speak("tooFar");
         if (frame.centeringStatus === "too_left")  speak("centerLeft", { minIntervalMs: 5000 });
         if (frame.centeringStatus === "too_right") speak("centerRight", { minIntervalMs: 5000 });
+
+        // Phase 5: Pose intelligence voice coaching (arms + ready state)
+        if (frame.normalLandmarks && frame.worldLandmarks) {
+          const intel = analyzePose(frame.normalLandmarks, frame.worldLandmarks);
+          if (intel.armsStatus === "at_sides") {
+            speak("spreadArms", { minIntervalMs: 6000 });
+          }
+          if (intel.overallReady && (phase === "front_aligning" || phase === "side_aligning")) {
+            speak("holdStill", { minIntervalMs: 8000 });
+          }
+        }
       }
     }
 
@@ -202,10 +220,12 @@ export function EnhancedMeasurementFlow({
       "positioning", "front_aligning", "front_countdown",
       "side_positioning", "side_aligning", "side_countdown",
     ];
-    if (activePhases.includes(capturePhase)) {
+    // BUG-004 FIX: Use ref to avoid stale closure
+    if (activePhases.includes(capturePhaseRef.current)) {
       rafRef.current = requestAnimationFrame(() => frameLoopRef.current());
     }
-  }, [processFrame, capturePhase, frontTick, sideTick, speak, videoRef]);
+  }, [processFrame, frontTick, sideTick, speak, videoRef]);
+
 
   useEffect(() => {
     frameLoopRef.current = frameLoop;
@@ -262,6 +282,19 @@ export function EnhancedMeasurementFlow({
     },
     [speak]
   );
+
+  // ── BUG-003 FIX: Auto-advance from device_setup when orientation unsupported ──
+  // On desktop / HuggingFace web, DeviceOrientationEvent returns null gamma/beta
+  // → status = "unsupported". We skip the orientation check automatically after
+  // a 600ms grace period (long enough to show the camera preview).
+  useEffect(() => {
+    if (capture.phase !== "device_setup") return;
+    if (orientation.status !== "unsupported") return;
+    const timer = setTimeout(() => {
+      capture.skipDeviceSetup();
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [capture.phase, orientation.status, capture.skipDeviceSetup]);
 
   // ── Real-time Pose Intelligence (drives silhouette + coaching) ────────────
   const poseIntelligence = useMemo(() => {
