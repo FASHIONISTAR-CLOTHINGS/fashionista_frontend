@@ -185,49 +185,60 @@ export type MeasurementKey = (typeof MEASUREMENT_FIELDS)[number]["key"];
 
 export const VOICE_SCRIPTS = {
   // Device setup phase
-  welcome:         "Welcome to FASHIONISTAR body scan. I'll guide you through every step.",
-  placePhone:      "First, place your phone against a wall at chest height, standing at 90 degrees. Watch the indicator. When it turns green, you're ready.",
-  phoneNotLevel:   "Your phone isn't level yet. Lean it against a wall or stable surface facing you.",
-  phoneTiltLeft:   "Your phone is tilted slightly to the right — rotate it a bit to the left.",
-  phoneTiltRight:  "Your phone is tilted slightly to the left — rotate it a bit to the right.",
-  phoneReady:      "Perfect! Your phone is level and ready. Now step into position.",
+  welcome:          "Welcome to FASHIONISTAR body scan. I'll guide you through every step.",
+  placePhone:       "First, place your phone against a wall at chest height, standing at 90 degrees. Watch the indicator. When it turns green, you're ready.",
+  phoneNotLevel:    "Your phone isn't level yet. Lean it against a wall or stable surface facing you.",
+  phoneTiltLeft:    "Your phone is tilted slightly to the right — rotate it a bit to the left.",
+  phoneTiltRight:   "Your phone is tilted slightly to the left — rotate it a bit to the right.",
+  phoneReady:       "Perfect! Your phone is level and ready. Now step into position.",
 
   // Positioning phase
-  stepIntoFrame:   "Now step into the camera frame. I need to see your full body from head to toe.",
-  tooClose:        "You're too close. Please step back until your full body is visible.",
-  tooFar:          "You're too far away. Step a little closer so I can see you clearly.",
-  centerYourself:  "Please center yourself in the frame.",
-  centerRight:     "Move slightly to your right.",
-  centerLeft:      "Move slightly to your left.",
+  stepIntoFrame:    "Now step into the camera frame. I need to see your full body from head to toe.",
+  tooClose:         "You're too close. Please step back until your full body is visible.",
+  tooFar:           "You're too far away. Step a little closer so I can see you clearly.",
+  stepBack:         "Take two steps back from the camera.",
+  stepForward:      "Step a little closer to the camera.",
+  centerYourself:   "Please center yourself in the frame.",
+  centerRight:      "Move slightly to your right.",
+  centerLeft:       "Move slightly to your left.",
+  moveLeft:         "Shift slightly to your left.",
+  moveRight:        "Shift slightly to your right.",
+
+  // Arms guidance
+  armsOpen:         "Open your arms to 45 degrees from your body — like a relaxed letter T.",
+  spreadArms:       "Great! Now spread your arms slightly — about 15 degrees, like a relaxed letter T.",
 
   // Aligning phase
-  standStraight:   "Stand up straight with your arms slightly apart from your body.",
-  spreadArms:      "Great! Now spread your arms slightly — about 15 degrees, like a relaxed letter T.",
-  holdStill:       "Perfect pose! Hold that position.",
+  standStraight:    "Stand up straight with your arms slightly apart from your body.",
+  holdStill:        "Perfect pose! Hold that position.",
+
+  // Readiness
+  perfectPosition:  "Perfect position! Capturing in 3 seconds. Don't move.",
+  capturingNow:     "Capturing now. Please don't move.",
 
   // Countdown
-  countdown3:      "3",
-  countdown2:      "2",
-  countdown1:      "1",
+  countdown3:       "3",
+  countdown2:       "2",
+  countdown1:       "1",
 
   // Capture confirmations
-  frontCaptured:   "Front pose captured! Excellent. Now please turn to face your right side.",
-  turnSide:        "Turn so your right shoulder faces the camera and stand straight.",
-  sideHoldStill:   "Perfect! Hold still for your side pose.",
-  sideCaptured:    "Both poses captured! I'm now sending your measurements to the AI.",
+  frontCaptured:    "Front pose captured! Excellent. Now please turn to face your right side.",
+  turnSide:         "Turn so your right shoulder faces the camera and stand straight.",
+  sideHoldStill:    "Perfect! Hold still for your side pose.",
+  sideCaptured:     "Both poses captured! I'm now sending your measurements to the AI.",
 
   // Processing
-  processing:      "Our AI is calculating your 14 body measurements. This takes about 10 seconds.",
-  complete:        "Your measurements are ready! 14 precise measurements have been saved to your profile.",
+  processing:       "Our AI is calculating your 14 body measurements. This takes about 10 seconds.",
+  complete:         "Your measurements are ready! 14 precise measurements have been saved to your profile.",
 
   // Errors and guidance
-  errorLighting:   "The lighting is too dark. Try facing a window or turning on more lights.",
-  errorFit:        "I can't see your full body. Please step back and ensure nothing is blocking the camera.",
-  errorTryAgain:   "Something went wrong. Please try again.",
-  poseGood:        "Excellent pose!",
-  poseWarning:     "Almost there — adjust your position slightly.",
-  poseBad:         "I can't detect your full body. Stand straight and face the camera.",
-  heightPredicted: "Based on your age, I've estimated your height. You can update this if needed.",
+  errorLighting:    "The lighting is too dark. Try facing a window or turning on more lights.",
+  errorFit:         "I can't see your full body. Please step back and ensure nothing is blocking the camera.",
+  errorTryAgain:    "Something went wrong. Please try again.",
+  poseGood:         "Excellent pose!",
+  poseWarning:      "Almost there — adjust your position slightly.",
+  poseBad:          "I can't detect your full body. Stand straight and face the camera.",
+  heightPredicted:  "Based on your age, I've estimated your height. You can update this if needed.",
 } as const;
 
 export type VoiceScriptKey = keyof typeof VOICE_SCRIPTS;

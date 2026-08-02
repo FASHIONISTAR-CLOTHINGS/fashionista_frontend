@@ -189,29 +189,51 @@ export function EnhancedMeasurementFlow({
         const phase   = capturePhaseRef.current; // BUG-004 FIX: use ref, not stale closure
 
         // Tick auto-capture state machines — A-2 FIX: pass isStable for jitter gate
+        // A-3 FIX: quality gated by readyToArm (pose intelligence) — computed below
         const isStable = isFrameStable(frame);
-        if (phase === "front_aligning" || phase === "front_countdown") {
-          frontTick(quality, isStable);
-        }
-        if (phase === "side_aligning" || phase === "side_countdown") {
-          sideTick(quality, isStable);
-        }
 
-        // Voice coaching for distance + centering (debounced internally)
-        if (frame.distanceStatus === "too_close") speak("tooClose");
-        if (frame.distanceStatus === "too_far")   speak("tooFar");
-        if (frame.centeringStatus === "too_left")  speak("centerLeft", { minIntervalMs: 5000 });
-        if (frame.centeringStatus === "too_right") speak("centerRight", { minIntervalMs: 5000 });
+        // ── Intelligence-driven Voice Coaching ─────────────────────────────
+        // Re-use or compute pose intelligence for this frame
+        const intel = (frame.normalLandmarks && frame.worldLandmarks)
+          ? analyzePose(frame.normalLandmarks, frame.worldLandmarks)
+          : null;
 
-        // Phase 5: Pose intelligence voice coaching (arms + ready state)
-        if (frame.normalLandmarks && frame.worldLandmarks) {
-          const intel = analyzePose(frame.normalLandmarks, frame.worldLandmarks);
-          if (intel.armsStatus === "at_sides") {
-            speak("spreadArms", { minIntervalMs: 6000 });
+        // ── Intelligence gate for auto-capture tick ─────────────────────────
+        // A-3 FIX: Only arm the countdown when ALL pose conditions are met.
+        // If intel is available, require overallReady (score ≥ 70/100).
+        // If intel is unavailable, fall back to pure quality score.
+        const readyToArm = intel ? intel.overallReady : quality >= POSE_THRESHOLDS.frontGood;
+
+        if (intel) {
+          // Full body visibility
+          if (!intel.isFullBodyVisible && intel.missingParts.includes("head")) {
+            speak("stepBack", { minIntervalMs: 6000 });
+          } else if (!intel.isFullBodyVisible && intel.missingParts.includes("ankles")) {
+            speak("stepBack", { minIntervalMs: 6000 });
           }
+
+          // Distance
+          if (intel.distanceStatus === "too_close") speak("tooClose", { minIntervalMs: 5000 });
+          if (intel.distanceStatus === "too_far")   speak("tooFar",   { minIntervalMs: 5000 });
+
+          // Centering — use direct left/right first
+          if (intel.centeringStatus === "too_left")  speak("moveRight", { minIntervalMs: 5000 });
+          if (intel.centeringStatus === "too_right")  speak("moveLeft",  { minIntervalMs: 5000 });
+
+          // Arms coaching
+          if (intel.armsStatus === "at_sides")   speak("armsOpen",  { minIntervalMs: 7000 });
+          if (intel.armsStatus === "too_high")   speak("spreadArms",{ minIntervalMs: 7000 });
+
+          // Overall readiness
           if (intel.overallReady && (phase === "front_aligning" || phase === "side_aligning")) {
             speak("holdStill", { minIntervalMs: 8000 });
           }
+        } else {
+          // Fallback: use raw frame distance/centering
+          if (frame.distanceStatus === "too_close") speak("tooClose");
+          if (frame.distanceStatus === "too_far")   speak("tooFar");
+          if (frame.centeringStatus === "too_left")  speak("centerLeft",  { minIntervalMs: 5000 });
+          if (frame.centeringStatus === "too_right") speak("centerRight", { minIntervalMs: 5000 });
         }
       }
     }
@@ -295,6 +317,19 @@ export function EnhancedMeasurementFlow({
     }, 600);
     return () => clearTimeout(timer);
   }, [capture.phase, orientation.status, capture.skipDeviceSetup]);
+
+  // ── PHASE 2: Auto-advance from device_setup when phone is sustainedly level ──
+  // isSustainedGood = phone has been GREEN for ≥ 1500ms continuous.
+  // This gives real mobile users a seamless auto-advance to the scan phase.
+  useEffect(() => {
+    if (capture.phase !== "device_setup") return;
+    if (!orientation.isSustainedGood) return;
+    speak("phoneReady", { priority: false });
+    const timer = setTimeout(() => {
+      capture.skipDeviceSetup();
+    }, 300); // 300ms grace — let the "Camera Ready" voice finish
+    return () => clearTimeout(timer);
+  }, [capture.phase, orientation.isSustainedGood, capture.skipDeviceSetup, speak]);
 
   // ── Real-time Pose Intelligence (drives silhouette + coaching) ────────────
   const poseIntelligence = useMemo(() => {
@@ -487,6 +522,7 @@ export function EnhancedMeasurementFlow({
               />
               <CalibrationGuide
                 phase={capture.phase}
+                intelligence={poseIntelligence}
                 qualityScore={capture.currentFrame?.quality ?? 0}
                 estimatedHeight={capture.userHeightCm}
               />

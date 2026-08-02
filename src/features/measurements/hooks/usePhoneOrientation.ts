@@ -37,6 +37,8 @@ export interface PhoneOrientationData {
   beta: number | null;
   /** True when status === 'good' */
   isLevel: boolean;
+  /** True when status has been 'good' continuously for ≥ 1500ms — triggers auto-advance */
+  isSustainedGood: boolean;
   /** Degrees off-vertical (absolute gamma value) */
   tiltDegrees: number;
   /** Direction of tilt for user correction: 'left' | 'right' | null */
@@ -59,7 +61,12 @@ export function usePhoneOrientation(): PhoneOrientationData {
   const [status, setStatus]           = useState<OrientationStatus>("unsupported");
   const [gamma, setGamma]             = useState<number | null>(null);
   const [beta, setBeta]               = useState<number | null>(null);
+  const [isSustainedGood, setIsSustainedGood] = useState(false);
   const handlerRef                    = useRef<((e: DeviceOrientationEvent) => void) | null>(null);
+  const lastGoodTimestampRef          = useRef<number | null>(null);
+
+  /** Duration of continuous 'good' state required to trigger auto-advance (ms) */
+  const SUSTAINED_GOOD_MS = 1500;
 
   // ── Compute status from raw values ─────────────────────────────────────────
   const computeStatus = useCallback(
@@ -86,17 +93,36 @@ export function usePhoneOrientation(): PhoneOrientationData {
       // Null values = desktop or permission denied
       if (rawGamma === null && rawBeta === null) {
         setStatus("unsupported");
+        setIsSustainedGood(false);
+        lastGoodTimestampRef.current = null;
         return;
       }
 
       setGamma(rawGamma);
       setBeta(rawBeta);
-      setStatus(computeStatus(rawGamma, rawBeta));
+
+      const newStatus = computeStatus(rawGamma, rawBeta);
+      setStatus(newStatus);
+
+      // ── Sustained green tracking ──────────────────────────────────────────
+      if (newStatus === "good") {
+        if (lastGoodTimestampRef.current === null) {
+          lastGoodTimestampRef.current = Date.now();
+        }
+        const elapsed = Date.now() - lastGoodTimestampRef.current;
+        if (elapsed >= SUSTAINED_GOOD_MS) {
+          setIsSustainedGood(true);
+        }
+      } else {
+        // Reset sustained tracking when orientation drifts
+        lastGoodTimestampRef.current = null;
+        setIsSustainedGood(false);
+      }
     };
 
     handlerRef.current = handler;
     window.addEventListener("deviceorientation", handler, true);
-  }, [computeStatus]);
+  }, [computeStatus, SUSTAINED_GOOD_MS]);
 
   // ── iOS 13+ permission request ─────────────────────────────────────────────
   const requestPermission = useCallback(async () => {
@@ -155,7 +181,8 @@ export function usePhoneOrientation(): PhoneOrientationData {
     status,
     gamma,
     beta,
-    isLevel:     status === "good",
+    isLevel:          status === "good",
+    isSustainedGood,
     tiltDegrees,
     tiltDirection,
     requestPermission,
