@@ -228,7 +228,7 @@ export const VOICE_SCRIPTS = {
   sideCaptured:     "Both poses captured! I'm now sending your measurements to the AI.",
 
   // Processing
-  processing:       "Our AI is calculating your 14 body measurements. This takes about 10 seconds.",
+  processing:       "Our AI is calculating your 14 body measurements. This takes about 60 seconds.",
   complete:         "Your measurements are ready! 14 precise measurements have been saved to your profile.",
 
   // Errors and guidance
