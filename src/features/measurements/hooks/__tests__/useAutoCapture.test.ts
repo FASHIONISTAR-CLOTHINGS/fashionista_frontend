@@ -37,7 +37,7 @@ describe("useAutoCapture", () => {
     // Feed 5 high-quality frames using tick()
     act(() => {
       for (let i = 0; i < 5; i++) {
-        result.current.tick(0.90, true);
+        result.current.tick({ quality: 0.90, isStable: true, overallReady: true, orientationReady: true });
       }
     });
 
@@ -60,7 +60,7 @@ describe("useAutoCapture", () => {
 
     act(() => {
       for (let i = 0; i < 10; i++) {
-        result.current.tick(0.60, true); // below threshold
+        result.current.tick({ quality: 0.60, isStable: true, overallReady: true, orientationReady: true }); // below threshold
       }
     });
 
@@ -82,7 +82,7 @@ describe("useAutoCapture", () => {
 
     act(() => {
       for (let i = 0; i < 5; i++) {
-        result.current.tick(0.95, true);
+        result.current.tick({ quality: 0.95, isStable: true, overallReady: true, orientationReady: true });
       }
     });
 
@@ -104,14 +104,14 @@ describe("useAutoCapture", () => {
 
     act(() => {
       // 3 good frames
-      result.current.tick(0.90, true);
-      result.current.tick(0.90, true);
-      result.current.tick(0.90, true);
+      result.current.tick({ quality: 0.90, isStable: true, overallReady: true, orientationReady: true });
+      result.current.tick({ quality: 0.90, isStable: true, overallReady: true, orientationReady: true });
+      result.current.tick({ quality: 0.90, isStable: true, overallReady: true, orientationReady: true });
       // Quality drops — should reset
-      result.current.tick(0.50, false);
+      result.current.tick({ quality: 0.50, isStable: false, overallReady: true, orientationReady: true });
       // Only 2 more good frames — not enough
-      result.current.tick(0.90, true);
-      result.current.tick(0.90, true);
+      result.current.tick({ quality: 0.90, isStable: true, overallReady: true, orientationReady: true });
+      result.current.tick({ quality: 0.90, isStable: true, overallReady: true, orientationReady: true });
     });
 
     act(() => { vi.advanceTimersByTime(5000); });
@@ -132,7 +132,7 @@ describe("useAutoCapture", () => {
 
     act(() => {
       for (let i = 0; i < 20; i++) {
-        result.current.tick(0.95, true);
+        result.current.tick({ quality: 0.95, isStable: true, overallReady: true, orientationReady: true });
       }
     });
 

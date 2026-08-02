@@ -53,6 +53,13 @@ export function CalibrationGuide({
     ?? (isGood ? "Great pose! Ready to capture." : isMedium ? "Adjust your position slightly." : "Stand straight, arms at 45°.");
 
   const secondaryMsg = intelligence?.secondaryMessage ?? "";
+  const phaseLabel = phase === "front_aligning" || phase === "front_countdown"
+    ? "Front pose"
+    : phase === "side_aligning" || phase === "side_countdown"
+    ? "Side pose"
+    : phase === "positioning" || phase === "side_positioning"
+    ? "Positioning"
+    : "Camera setup";
 
   // Color theme
   const color = isReady ? "#52B788" : isMedium ? "#F4C430" : "#DC2626";
@@ -64,7 +71,10 @@ export function CalibrationGuide({
     : "bg-[#DC2626]/15 border-[#DC2626]/20";
 
   return (
-    <div className="absolute inset-0 pointer-events-none select-none">
+    <div
+      className="absolute inset-0 pointer-events-none select-none"
+      aria-label={`${phaseLabel}: ${primaryMsg}`}
+    >
 
       {/* ── Corner scan-line brackets ── */}
       {(["tl", "tr", "bl", "br"] as const).map((corner) => (
@@ -173,13 +183,12 @@ function DistanceIndicator({
 }) {
   if (status === "unknown") return null;
 
+  const spanLabel = `${Math.round(distancePercent * 100)}% frame height`;
   const label = status === "too_close"
-    ? "⬆ Step back"
+    ? `⬆ Step back · ${spanLabel}`
     : status === "too_far"
-    ? "⬇ Step closer"
-    : null;
-
-  if (!label) return null;
+    ? `⬇ Step closer · ${spanLabel}`
+    : `✓ Distance good · ${spanLabel}`;
 
   return (
     <motion.div

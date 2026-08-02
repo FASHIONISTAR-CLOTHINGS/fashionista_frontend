@@ -46,6 +46,17 @@ export interface UseAutoCaptureConfig {
   enabled?: boolean;
 }
 
+export interface AutoCaptureFrameInput {
+  /** Pose quality score in the range 0-1. */
+  quality: number;
+  /** True when the pose is stable for the current processed frame. */
+  isStable: boolean;
+  /** True when the pose intelligence layer says every pose gate is ready. */
+  overallReady: boolean;
+  /** True when phone orientation is acceptable or the platform is unsupported. */
+  orientationReady: boolean;
+}
+
 export interface UseAutoCaptureReturn {
   /** Current state of the capture state machine */
   captureState: AutoCaptureState;
@@ -60,14 +71,11 @@ export interface UseAutoCaptureReturn {
   /** True during capture flash */
   isCapturing: boolean;
   /**
-   * Call this every frame from processFrame loop.
-   * @param quality       Pose quality score 0-1
-   * @param isStable      True if current pose is stable (compare to prev frame)
-   * @param overallReady  Optional pose-intelligence gate (arms/distance/centering).
-   *                      When false, arming is blocked even if quality is high.
-   *                      Defaults to true for backward compatibility.
+   * Call this once per processed video frame.
+   * Quality, stability, pose intelligence, and orientation are all explicit
+   * so a caller cannot accidentally omit a safety gate.
    */
-  tick: (quality: number, isStable?: boolean, overallReady?: boolean) => void;
+  tick: (input: AutoCaptureFrameInput) => void;
   /** Manually reset to 'watching' state */
   reset: () => void;
   /** Trigger capture immediately regardless of quality */
@@ -184,7 +192,7 @@ export function useAutoCapture({
      * (arms at 45°, full body, centered, optimal distance).
      * Quality + stability + overallReady are ALL required to arm countdown.
      */
-    (quality: number, isStable: boolean = false, overallReady: boolean = true) => {
+    ({ quality, isStable, overallReady, orientationReady }: AutoCaptureFrameInput) => {
       if (!enabledRef.current) return;
 
       const state = captureStateRef.current;
@@ -192,11 +200,12 @@ export function useAutoCapture({
       // If already capturing or done — ignore frames
       if (state === "capturing" || state === "done") return;
 
-      const qualityOk = quality >= qualityThreshold && overallReady;
+      const qualityOk = quality >= qualityThreshold;
+      const gatesReady = qualityOk && overallReady && orientationReady;
 
-      // During countdown — check if quality OR stability OR readiness dropped
+      // During countdown — cancel if any required gate drops.
       if (state === "countdown") {
-        if (!qualityOk || !isStable) {
+        if (!gatesReady || !isStable) {
           stopCountdown();
           stabilityFramesRef.current = 0;
           setStabilityFrames(0);
@@ -206,8 +215,8 @@ export function useAutoCapture({
         return;
       }
 
-      if (!qualityOk) {
-        // Reset stability if quality / overallReady drops
+      if (!gatesReady) {
+        // Reset stability if any quality, intelligence, or orientation gate drops
         if (stabilityFramesRef.current > 0) {
           stabilityFramesRef.current = 0;
           setStabilityFrames(0);
@@ -224,7 +233,7 @@ export function useAutoCapture({
         return;
       }
 
-      // Quality good AND stable AND overallReady — increment stability counter
+      // All gates good AND stable — increment stability counter
       stabilityFramesRef.current += 1;
       setStabilityFrames(stabilityFramesRef.current);
 

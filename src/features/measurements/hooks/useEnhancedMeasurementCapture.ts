@@ -90,6 +90,19 @@ export interface EnhancedCaptureFrame {
   centeringStatus:  CenteringStatus;
 }
 
+// ─── Camera lifecycle ──────────────────────────────────────────────────────────
+
+export type CameraStatus =
+  | "idle"
+  | "requesting"
+  | "attaching"
+  | "waiting_for_metadata"
+  | "ready"
+  | "denied"
+  | "unavailable"
+  | "error"
+  | "stopped";
+
 // ─── Return Type ──────────────────────────────────────────────────────────────
 
 export interface UseEnhancedMeasurementCaptureReturn {
@@ -98,6 +111,9 @@ export interface UseEnhancedMeasurementCaptureReturn {
   sessionId:          string | null;
   sessionStatus:      import("../api/scan.api").ScanStatusResponse | null;
   error:              string | null;
+  cameraStatus:       CameraStatus;
+  cameraError:        string | null;
+  videoRefCallback:    (node: HTMLVideoElement | null) => void;
   // Buffer state
   landmarkBufferSize: number;
   bufferProgress:     number;  // 0-1 progress toward stabilityFramesRequired
@@ -226,9 +242,13 @@ export function useEnhancedMeasurementCapture(
   const [localError, setLocalError]     = useState<string | null>(null);
   const [hasFrontCapture, setHasFrontCapture] = useState(false);
   const [bufferProgress, setBufferProgress]   = useState(0);
+  const [cameraStatus, setCameraStatus] = useState<CameraStatus>("idle");
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
-  // Camera stream ref
+  // Camera stream/timer refs — every async camera operation is cancellable.
   const streamRef = useRef<MediaStream | null>(null);
+  const attachRetryRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const metadataTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Landmark buffers (TASK-011) — refs to avoid re-render costs per frame
   const frontBufferRef = useRef<Landmark[][]>([]);
@@ -256,65 +276,124 @@ export function useEnhancedMeasurementCapture(
   }, []);
 
   // ── Camera start/stop ────────────────────────────────────────────────────
-  /**
-   * BUG-001 FIX: The video element lives inside AnimatePresence and is NOT
-   * mounted when startCamera() first runs (phase is still "loading_model").
-   * We assign the stream immediately if the element exists, then start a
-   * retry interval (every 50ms, max 4s) to catch the moment AnimatePresence
-   * mounts the <video> element after phase transitions to "device_setup".
-   */
+  const clearCameraTimers = useCallback(() => {
+    if (attachRetryRef.current) {
+      clearInterval(attachRetryRef.current);
+      attachRetryRef.current = null;
+    }
+    if (metadataTimeoutRef.current) {
+      clearTimeout(metadataTimeoutRef.current);
+      metadataTimeoutRef.current = null;
+    }
+  }, []);
+
+  const markVideoReady = useCallback((video: HTMLVideoElement) => {
+    if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+      clearCameraTimers();
+      setCameraStatus("ready");
+    }
+  }, [clearCameraTimers]);
+
+  const attachStreamToVideo = useCallback((video: HTMLVideoElement | null) => {
+    const stream = streamRef.current;
+    if (!video || !stream) return false;
+
+    if (video.srcObject !== stream) {
+      video.srcObject = stream;
+    }
+    setCameraStatus("attaching");
+
+    const onReady = () => {
+      video.removeEventListener("loadedmetadata", onReady);
+      video.removeEventListener("canplay", onReady);
+      void video.play().catch(() => {
+        // Autoplay policies may reject explicit play; the muted autoplay
+        // attribute remains the fallback for camera streams.
+      });
+      markVideoReady(video);
+    };
+
+    video.addEventListener("loadedmetadata", onReady, { once: true });
+    video.addEventListener("canplay", onReady, { once: true });
+
+    if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+      onReady();
+    } else {
+      setCameraStatus("waiting_for_metadata");
+    }
+    return true;
+  }, [markVideoReady]);
+
+  const videoRefCallback = useCallback((node: HTMLVideoElement | null) => {
+    videoRef.current = node;
+    if (node && streamRef.current) {
+      attachStreamToVideo(node);
+    }
+  }, [attachStreamToVideo, videoRef]);
+
   const startCamera = useCallback(async () => {
-    // 1. Get media stream — prefer front-facing camera (selfie/user-scan)
+    clearCameraTimers();
+    setCameraError(null);
+    setCameraStatus("requesting");
+
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: "user" },
-          width:  { ideal: 1280 },
+          width: { ideal: 1280 },
           height: { ideal: 720 },
         },
         audio: false,
       });
-    } catch {
-      // Fallback: any camera (some devices may not expose facingMode correctly)
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false,
-      });
+    } catch (firstError) {
+      try {
+        // Relax constraints for devices that reject facingMode or dimensions.
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      } catch (fallbackError) {
+        const error = fallbackError instanceof DOMException ? fallbackError : firstError;
+        const status = error instanceof DOMException && error.name === "NotAllowedError"
+          ? "denied"
+          : error instanceof DOMException && error.name === "NotFoundError"
+          ? "unavailable"
+          : "error";
+        setCameraStatus(status);
+        setCameraError(error instanceof Error ? error.message : "Unable to access the camera.");
+        throw error;
+      }
     }
+
     streamRef.current = stream;
+    setCameraStatus("attaching");
 
-    // 2. Assign stream to video element — with retry loop for AnimatePresence mount timing
-    const assignStreamToVideo = () => {
-      const el = videoRef.current;
-      if (!el) return false;
-      if (el.srcObject === stream) return true; // already assigned
-      el.srcObject = stream;
-      // play() is triggered automatically by `autoPlay` attribute in JSX
-      // but we also call it explicitly for reliability
-      el.play().catch(() => {
-        // Browser may block play() before user gesture — autoPlay handles it
-      });
-      return true;
-    };
-
-    if (!assignStreamToVideo()) {
-      // Video element not yet in DOM — poll until AnimatePresence mounts it
+    if (!attachStreamToVideo(videoRef.current)) {
       let elapsed = 0;
-      const retryInterval = setInterval(() => {
+      attachRetryRef.current = setInterval(() => {
         elapsed += 50;
-        if (assignStreamToVideo() || elapsed >= 4000) {
-          clearInterval(retryInterval);
+        if (attachStreamToVideo(videoRef.current) || elapsed >= 4000) {
+          clearCameraTimers();
         }
       }, 50);
     }
-  }, [videoRef]);
+
+    metadataTimeoutRef.current = setTimeout(() => {
+      if (cameraStatus !== "ready") {
+        setCameraStatus("error");
+        setCameraError("The camera opened but did not provide a video frame. Please retry.");
+      }
+    }, 5000);
+  }, [attachStreamToVideo, cameraStatus, clearCameraTimers, videoRef]);
 
   const stopCamera = useCallback(() => {
-    streamRef.current?.getTracks().forEach((t) => t.stop());
+    clearCameraTimers();
+    streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
-  }, [videoRef]);
+    setCameraStatus("stopped");
+  }, [clearCameraTimers, videoRef]);
 
   // ── Start capture (begins with device_setup phase) ────────────────────────
   const startCapture = useCallback(

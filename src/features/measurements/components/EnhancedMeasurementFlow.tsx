@@ -123,7 +123,7 @@ export function EnhancedMeasurementFlow({
     },
     qualityThreshold:       POSE_THRESHOLDS.frontGood,
     stabilityFramesRequired: CAPTURE_CONFIG.landmarkBufferSize,
-    enabled: capture.phase === "front_aligning",
+    enabled: capture.phase === "front_aligning" || capture.phase === "front_countdown",
   });
 
   const sideAutoCapture = useAutoCapture({
@@ -133,7 +133,7 @@ export function EnhancedMeasurementFlow({
     },
     qualityThreshold:       POSE_THRESHOLDS.sideGood,
     stabilityFramesRequired: Math.round(CAPTURE_CONFIG.landmarkBufferSize * 0.7),
-    enabled: capture.phase === "side_aligning",
+    enabled: capture.phase === "side_aligning" || capture.phase === "side_countdown",
   });
 
   // RAF refs
@@ -207,12 +207,22 @@ export function EnhancedMeasurementFlow({
           ? intel.overallReady
           : quality >= (phase.startsWith("side_") ? POSE_THRESHOLDS.sideGood : POSE_THRESHOLDS.frontGood);
 
-        // Drive auto-capture state machines every frame
-        // 3rd arg = overallReady so useAutoCapture can gate internally (WRONG-3)
+        // Drive exactly one auto-capture state machine per processed frame.
+        const orientationReady = orientation.isLevel || orientation.status === "unsupported";
         if (phase === "front_aligning" || phase === "front_countdown") {
-          frontTick(quality, isStable, readyToArm);
+          frontTick({
+            quality,
+            isStable,
+            overallReady: readyToArm,
+            orientationReady,
+          });
         } else if (phase === "side_aligning" || phase === "side_countdown") {
-          sideTick(quality, isStable, readyToArm);
+          sideTick({
+            quality,
+            isStable,
+            overallReady: readyToArm,
+            orientationReady,
+          });
         }
 
         if (intel) {
