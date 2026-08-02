@@ -73,6 +73,7 @@ function TimeBox({ value, label }: { value: number; label: string }) {
         className="block text-xl sm:text-2xl font-bold tabular-nums leading-tight"
         aria-live="polite"
         aria-atomic="true"
+        suppressHydrationWarning
       >
         {String(value).padStart(2, "0")}
       </span>

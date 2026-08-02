@@ -35,6 +35,7 @@ import {
   YouTubeIcon,
   TikTokIcon,
   WhatsAppIcon,
+  PaymentGatewayBadge,
 } from "@/components/shared/icons";
 import { cn } from "@/lib/utils";
 
@@ -108,7 +109,6 @@ const NewFooter = ({
       >
         <div className="w-full px-5 md:px-20 flex items-center gap-y-8 md:gap-4 flex-wrap justify-between py-8">
           <ul className="font-raleway text-sm md:text-lg md:w-full lg:max-w-[50%] md:order-1 text-muted-foreground max-w-[200px] w-full space-y-1">
-            <li>Tel: {phone}</li>
             <li>Mon–Fri: 8am – 8pm</li>
             <li>Sat–Sun: 8am – 7pm</li>
           </ul>
@@ -254,25 +254,33 @@ const NewFooter = ({
               </span>
             </div>
 
-            {/* Payment gateways — real logos via FashionistarImage */}
+            {/* Payment gateways — Cloudinary optimized image with automatic vector SVG fallback */}
             <div className="mt-2">
               <p className="font-satoshi font-medium text-sm md:text-base text-[#F8F5ED] mb-2">
                 Secured payment gateways
               </p>
               <div className="flex items-center gap-2 flex-wrap">
-                <FashionistarImage
+                <PaymentGatewayBadge
+                  provider="flutterwave"
                   src="https://res.cloudinary.com/fashionistar/image/upload/f_auto,q_auto,w_120,h_40,c_fit,fl_lossy/flutterwave-logo"
                   alt="Flutterwave"
                   width={120}
                   height={40}
-                  className="bg-[#F8F5ED] px-2 py-1.5 rounded-lg object-contain"
                 />
-                <FashionistarImage
+                <PaymentGatewayBadge
+                  provider="paystack"
                   src="https://res.cloudinary.com/fashionistar/image/upload/f_auto,q_auto,w_120,h_40,c_fit,fl_lossy/paystack-logo"
                   alt="Paystack"
                   width={120}
                   height={40}
-                  className="bg-[#F8F5ED] px-2 py-1.5 rounded-lg object-contain"
+                />
+                <PaymentGatewayBadge
+                  provider="mastercard"
+                  alt="Mastercard"
+                />
+                <PaymentGatewayBadge
+                  provider="visa"
+                  alt="Visa"
                 />
               </div>
             </div>

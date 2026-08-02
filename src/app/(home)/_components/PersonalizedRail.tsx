@@ -39,7 +39,7 @@ export function PersonalizedRail() {
       try {
         const endpoint = isAuthenticated
           ? "recommendations/for-you/?limit=8"
-          : "catalog/products/?ordering=-views_count&page_size=8";
+          : "products/?ordering=-views_count&page_size=8";
         const res = await apiAsync.get(endpoint).json<{
           results: HomepageProductCard[];
         }>();

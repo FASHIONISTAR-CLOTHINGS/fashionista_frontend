@@ -3,3 +3,6 @@
  **/
 
 export * from "./GoogleIcon";
+export * from "./SocialIcons";
+export * from "./PaymentGatewayBadge";
+
