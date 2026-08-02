@@ -34,6 +34,7 @@ import {
   TwitterIcon,
   YouTubeIcon,
   TikTokIcon,
+  WhatsAppIcon,
 } from "@/components/shared/icons";
 import { cn } from "@/lib/utils";
 
@@ -70,7 +71,7 @@ const NewFooter = ({
   const year = CURRENT_YEAR;
 
   const socialLinks: SocialLink[] = [
-    { label: "WhatsApp", href: process.env.NEXT_PUBLIC_FASHIONISTAR_WHATSAPP_URL ?? "", Icon: Phone },
+    { label: "WhatsApp", href: process.env.NEXT_PUBLIC_FASHIONISTAR_WHATSAPP_URL ?? "", Icon: WhatsAppIcon },
     { label: "TikTok", href: process.env.NEXT_PUBLIC_FASHIONISTAR_TIKTOK_URL ?? "https://tiktok.com/@fashionistar", Icon: TikTokIcon },
     { label: "Twitter / X", href: process.env.NEXT_PUBLIC_FASHIONISTAR_X_URL ?? "", Icon: TwitterIcon },
     { label: "Instagram", href: process.env.NEXT_PUBLIC_FASHIONISTAR_INSTAGRAM_URL ?? "", Icon: InstagramIcon },

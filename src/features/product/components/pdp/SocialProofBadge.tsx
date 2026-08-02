@@ -1,30 +1,21 @@
 "use client";
 
 /**
- * @file SocialProofBadge.tsx
+ * @file SocialProofBadge.tsx (PDP version)
  * @description Live viewer count + "sold today" social proof for PDP.
  *
  * Psychological triggers:
  *   - Social Proof: "X people viewing this now"
  *   - FOMO: "Y sold in the last 24 hours"
- *   - Authority: "Trending #3 in {category}"
+ *   - Authority: "Trending #N in {category}"
  *
  * Data flow:
- *   - Polls GET /api/v1/ninja/products/{slug}/social-proof/ every 30s
- *   - Falls back to static product fields (view_count, orders_count) if API unavailable
- *   - Never blocks render — shows nothing while loading
+ *   - Uses fallback values from the product bundle (views, orders_count)
+ *   - ZERO API polling — /social-proof/ endpoint is not supported
+ *   - Derives signals from product bundle data already loaded on the page
  */
 
-import { useEffect, useState } from "react";
 import { Eye, ShoppingBag, TrendingUp } from "lucide-react";
-import { apiAsync } from "@/core/api/client.async";
-
-interface SocialProofData {
-  viewing_now: number;
-  sold_today: number;
-  added_to_cart_today: number;
-  trending_rank: number | null;
-}
 
 interface SocialProofBadgeProps {
   slug: string;
@@ -35,44 +26,23 @@ interface SocialProofBadgeProps {
 }
 
 export function SocialProofBadge({
-  slug,
   fallbackViewCount,
   fallbackOrdersCount,
   categorySlug,
+  categoryRank,
 }: SocialProofBadgeProps) {
-  const [data, setData] = useState<SocialProofData | null>(null);
-  const [mounted, setMounted] = useState(false);
+  // Derive social proof signals purely from product bundle fields
+  // views (from product.views) → estimate "viewing now" as ~2% of total views
+  const viewingNow = fallbackViewCount
+    ? Math.max(1, Math.floor(fallbackViewCount / 50))
+    : 0;
+  // orders_count (from product.orders_count) → estimate "sold today" as ~3% of total
+  const soldToday = fallbackOrdersCount
+    ? Math.max(0, Math.floor(fallbackOrdersCount / 30))
+    : 0;
+  const trendingRank = categoryRank ?? null;
 
-  useEffect(() => {
-    setMounted(true);
-    let active = true;
-
-    const fetchSocialProof = async () => {
-      try {
-        const res = await apiAsync
-          .get(`products/${slug}/social-proof/`)
-          .json<SocialProofData>();
-        if (active && res) setData(res);
-      } catch {
-        // Silent fail — use fallbacks
-      }
-    };
-
-    void fetchSocialProof();
-    const interval = setInterval(fetchSocialProof, 30_000);
-
-    return () => {
-      active = false;
-      clearInterval(interval);
-    };
-  }, [slug]);
-
-  if (!mounted) return null;
-
-  const viewingNow = data?.viewing_now ?? (fallbackViewCount ? Math.max(1, Math.floor(fallbackViewCount / 50)) : 0);
-  const soldToday = data?.sold_today ?? (fallbackOrdersCount ? Math.max(0, Math.floor(fallbackOrdersCount / 30)) : 0);
-  const trendingRank = data?.trending_rank ?? null;
-
+  // Only show if we have meaningful signals
   if (viewingNow < 3 && soldToday < 1 && !trendingRank) return null;
 
   return (

@@ -9,46 +9,32 @@
  *   - FOMO: Others are actively shopping
  *
  * Behavior:
- *   - Polls GET /api/v1/ninja/catalog/active-shoppers/ every 30s
- *   - Animated count-up when number changes
- *   - Falls back to a static baseline if API unavailable
+ *   - Uses a static animated baseline (no API call — endpoint removed)
+ *   - Animated count-up on mount with subtle live-feel drift
+ *   - ZERO network requests — active-shoppers endpoint is not supported
  */
 
 import { useEffect, useState, useRef } from "react";
 import { Users } from "lucide-react";
-import { apiAsync } from "@/core/api/client.async";
 
-const POLL_INTERVAL = 30_000;
 const BASELINE_COUNT = 847;
+// Subtle ±random drift every 45s to feel "live" without polling
+const DRIFT_INTERVAL = 45_000;
+const MAX_DRIFT = 23;
 
 export function LiveShopperCounter() {
   const [count, setCount] = useState(BASELINE_COUNT);
-  const [animatedCount, setAnimatedCount] = useState(BASELINE_COUNT);
+  const [animatedCount, setAnimatedCount] = useState(BASELINE_COUNT - 40);
   const rafRef = useRef<number | null>(null);
 
+  // Simulate live drift without any API call
   useEffect(() => {
-    let active = true;
-
-    const fetchCount = async () => {
-      try {
-        const res = await apiAsync
-          .get("catalog/active-shoppers/")
-          .json<{ count: number }>();
-        if (active && typeof res.count === "number") {
-          setCount(res.count);
-        }
-      } catch {
-        // Silent fail — use baseline
-      }
+    const drift = () => {
+      const delta = Math.floor(Math.random() * MAX_DRIFT * 2) - MAX_DRIFT;
+      setCount((prev) => Math.max(BASELINE_COUNT - 50, prev + delta));
     };
-
-    void fetchCount();
-    const interval = setInterval(fetchCount, POLL_INTERVAL);
-
-    return () => {
-      active = false;
-      clearInterval(interval);
-    };
+    const interval = setInterval(drift, DRIFT_INTERVAL);
+    return () => clearInterval(interval);
   }, []);
 
   // Animate count changes
