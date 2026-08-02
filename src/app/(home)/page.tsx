@@ -206,6 +206,7 @@ export default async function Home() {
 
       {/* ── 3. Mobile email waitlist (mobile only) ─────────────────────────── */}
       <div className="mt-8 md:hidden flex z-30 px-4" data-testid="mobile-email-waitlist">
+        {/* WaitlistMobileForm is a client component — form action handled there */}
         <WaitlistMobileForm />
       </div>
 

@@ -37,8 +37,9 @@ export interface CatalogCategory {
   image_url: string;
   cloudinary_url: string | null;
   active: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  /** updated_at is not returned by the bundle endpoint */
+  updated_at?: string | null;
   // v2 expanded
   meta_title?: string;
   meta_description?: string;
@@ -60,8 +61,9 @@ export interface CatalogBrand {
   image_url: string;
   cloudinary_url: string | null;
   active: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  /** updated_at is not returned by the bundle endpoint */
+  updated_at?: string | null;
   // v2 expanded
   country?: string;
   website_url?: string;
@@ -87,8 +89,9 @@ export interface CatalogCollection {
   background_image: string | null;
   background_image_url: string;
   background_cloudinary_url: string | null;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  /** updated_at is not returned by the bundle endpoint */
+  updated_at?: string | null;
   // v2 expanded
   is_featured?: boolean;
   sort_order?: number;
@@ -124,8 +127,9 @@ export interface CatalogBlogPost {
   is_featured: boolean;
   published_at: string | null;
   view_count: number;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  /** updated_at is not returned by the bundle endpoint */
+  updated_at?: string | null;
   // v2 expanded
   read_time_minutes?: number;
   author_avatar?: string | null;

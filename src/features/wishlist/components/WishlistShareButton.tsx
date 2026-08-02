@@ -11,7 +11,8 @@
  */
 
 import { useState, useCallback } from "react";
-import { Share2, Copy, Check, Facebook, Twitter, MessageCircle } from "lucide-react";
+import { Share2, Copy, Check, MessageCircle } from "lucide-react";
+import { FacebookIcon, TwitterIcon } from "@/components/shared/icons";
 import { toast } from "sonner";
 
 interface WishlistShareButtonProps {
@@ -40,12 +41,12 @@ export function WishlistShareButton({ productSlug, productTitle }: WishlistShare
 
   const shareLinks = [
     {
-      icon: Twitter,
+      icon: TwitterIcon,
       label: "Twitter",
       href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out ${productTitle} on Fashionistar!`)}&url=${encodeURIComponent(shareUrl)}`,
     },
     {
-      icon: Facebook,
+      icon: FacebookIcon,
       label: "Facebook",
       href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
     },

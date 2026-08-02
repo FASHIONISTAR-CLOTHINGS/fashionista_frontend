@@ -27,25 +27,15 @@
 import type React from "react";
 import { FashionistarImage } from "@/components/media";
 import Link from "next/link";
-import { MapPin, Phone, Mail, Facebook, Instagram, Twitter, Youtube, type LucideIcon } from "lucide-react";
+import { MapPin, Phone, Mail, type LucideIcon } from "lucide-react";
+import {
+  FacebookIcon,
+  InstagramIcon,
+  TwitterIcon,
+  YouTubeIcon,
+  TikTokIcon,
+} from "@/components/shared/icons";
 import { cn } from "@/lib/utils";
-
-// ─── TikTok Icon (clean inline SVG — Lucide has no TikTok) ────────────────────
-
-function TikTokIcon({ size = 24, className }: { size?: number; className?: string }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.73 2.89 2.89 0 0 1 2.31-4.52 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z" />
-    </svg>
-  );
-}
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -82,10 +72,10 @@ const NewFooter = ({
   const socialLinks: SocialLink[] = [
     { label: "WhatsApp", href: process.env.NEXT_PUBLIC_FASHIONISTAR_WHATSAPP_URL ?? "", Icon: Phone },
     { label: "TikTok", href: process.env.NEXT_PUBLIC_FASHIONISTAR_TIKTOK_URL ?? "https://tiktok.com/@fashionistar", Icon: TikTokIcon },
-    { label: "Twitter / X", href: process.env.NEXT_PUBLIC_FASHIONISTAR_X_URL ?? "", Icon: Twitter },
-    { label: "Instagram", href: process.env.NEXT_PUBLIC_FASHIONISTAR_INSTAGRAM_URL ?? "", Icon: Instagram },
-    { label: "Facebook", href: process.env.NEXT_PUBLIC_FASHIONISTAR_FACEBOOK_URL ?? "", Icon: Facebook },
-    { label: "YouTube", href: process.env.NEXT_PUBLIC_FASHIONISTAR_YOUTUBE_URL ?? "", Icon: Youtube },
+    { label: "Twitter / X", href: process.env.NEXT_PUBLIC_FASHIONISTAR_X_URL ?? "", Icon: TwitterIcon },
+    { label: "Instagram", href: process.env.NEXT_PUBLIC_FASHIONISTAR_INSTAGRAM_URL ?? "", Icon: InstagramIcon },
+    { label: "Facebook", href: process.env.NEXT_PUBLIC_FASHIONISTAR_FACEBOOK_URL ?? "", Icon: FacebookIcon },
+    { label: "YouTube", href: process.env.NEXT_PUBLIC_FASHIONISTAR_YOUTUBE_URL ?? "", Icon: YouTubeIcon },
   ].filter(({ href }) => Boolean(href));
 
   // Account + Shop links (deduped — no duplicate labels)

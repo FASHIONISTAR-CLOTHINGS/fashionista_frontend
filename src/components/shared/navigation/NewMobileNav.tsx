@@ -34,10 +34,8 @@ import {
   Info,
   MapPin,
   MessageSquare,
-  Facebook,
-  Instagram,
-  Twitter,
 } from "lucide-react";
+import { FacebookIcon, InstagramIcon, TwitterIcon } from "@/components/shared/icons";
 import { cn } from "@/lib/utils";
 import { FashionistarImage } from "@/components/media";
 import AccountOptions from "@/components/shared/overlays/AccountOptions";
@@ -178,9 +176,9 @@ const NAV_LINKS: NavLink[] = [
 ];
 
 const SOCIAL_LINKS = [
-  { label: "Facebook", href: process.env.NEXT_PUBLIC_FASHIONISTAR_FACEBOOK_URL ?? "", Icon: Facebook },
-  { label: "Twitter / X", href: process.env.NEXT_PUBLIC_FASHIONISTAR_X_URL ?? "", Icon: Twitter },
-  { label: "Instagram", href: process.env.NEXT_PUBLIC_FASHIONISTAR_INSTAGRAM_URL ?? "", Icon: Instagram },
+  { label: "Facebook", href: process.env.NEXT_PUBLIC_FASHIONISTAR_FACEBOOK_URL ?? "", Icon: FacebookIcon },
+  { label: "Twitter / X", href: process.env.NEXT_PUBLIC_FASHIONISTAR_X_URL ?? "", Icon: TwitterIcon },
+  { label: "Instagram", href: process.env.NEXT_PUBLIC_FASHIONISTAR_INSTAGRAM_URL ?? "", Icon: InstagramIcon },
 ].filter(({ href }) => Boolean(href));
 
 function getRoleQuickLinks(role?: string, isStaff?: boolean) {

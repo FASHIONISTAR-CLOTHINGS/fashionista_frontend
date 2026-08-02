@@ -35,8 +35,9 @@ export const CatalogCategorySchema = z.object({
   image_url: ImageUrlSchema,
   cloudinary_url: OptionalNullableStringSchema,
   active: z.boolean().default(true),
-  created_at: z.string(),
-  updated_at: z.string(),
+  created_at: z.string().nullable().optional().default(null),
+  // updated_at is not returned by the bundle endpoint — make optional
+  updated_at: z.string().nullable().optional().default(null),
 });
 
 export const CatalogBrandSchema = z.object({
@@ -48,9 +49,10 @@ export const CatalogBrandSchema = z.object({
   image: NullableStringSchema,
   image_url: ImageUrlSchema,
   cloudinary_url: OptionalNullableStringSchema,
-  active: z.boolean(),
-  created_at: z.string(),
-  updated_at: z.string(),
+  active: z.boolean().default(true),
+  created_at: z.string().nullable().optional().default(null),
+  // updated_at is not returned by bundle endpoint — make optional
+  updated_at: z.string().nullable().optional().default(null),
 });
 
 export const CatalogCollectionSchema = z.object({
@@ -66,8 +68,9 @@ export const CatalogCollectionSchema = z.object({
   background_image: NullableStringSchema,
   background_image_url: ImageUrlSchema,
   background_cloudinary_url: OptionalNullableStringSchema,
-  created_at: z.string(),
-  updated_at: z.string(),
+  created_at: z.string().nullable().optional().default(null),
+  // updated_at is not returned by bundle endpoint — make optional
+  updated_at: z.string().nullable().optional().default(null),
 });
 
 // A blog media item from the backend can be a full serializer object or just a URL string
@@ -112,8 +115,9 @@ export const CatalogBlogPostSchema = z
     is_featured: z.boolean(),
     published_at: z.string().nullable(),
     view_count: z.number(),
-    created_at: z.string(),
-    updated_at: z.string(),
+    created_at: z.string().nullable().optional().default(null),
+    // updated_at is not always returned — make optional
+    updated_at: z.string().nullable().optional().default(null),
   })
   .transform((post) => {
     const resolvedImage =

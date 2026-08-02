@@ -257,7 +257,12 @@ export async function getHomepageBundle(): Promise<HomepageBundle> {
     if (!raw) return EMPTY_BUNDLE;
     const result = HomepageBundleSchema.safeParse(raw);
     if (!result.success) {
-      console.warn("[catalog.server] getHomepageBundle parse error:", result.error.flatten());
+      const errors = result.error.errors.slice(0, 10);
+      console.warn(
+        "[catalog.server] getHomepageBundle Zod parse failed. First errors:",
+        errors.map(e => `${e.path.join(".")}: ${e.message}`).join(" | ")
+      );
+      console.warn("[catalog.server] Raw bundle keys:", raw && typeof raw === "object" ? Object.keys(raw as Record<string, unknown>) : typeof raw);
       return EMPTY_BUNDLE;
     }
     return result.data as HomepageBundle;
