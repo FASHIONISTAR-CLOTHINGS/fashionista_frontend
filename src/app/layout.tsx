@@ -7,6 +7,7 @@ import { Providers } from "@/components/providers";
 import { Preloader } from "@/components/shared/preloader/Preloader";
 import { GlobalToastProvider } from "@/components";
 import { WebVitalsReporter } from "@/components/telemetry/WebVitalsReporter";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -325,6 +326,8 @@ export default function RootLayout({
           {children}
           {/* Global Toast Notifications — centralized via @/components GlobalToastProvider */}
           <GlobalToastProvider />
+          {/* Vercel Web Analytics — production visitor & pageview telemetry (non-blocking) */}
+          <Analytics />
         </Providers>
 
       </body>

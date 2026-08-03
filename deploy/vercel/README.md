@@ -55,7 +55,12 @@ Pull requests trigger preview deployments.
 - Preview deployments
 - Instant rollback
 
-## Architecture
+## Vercel Web Analytics & Telemetry
+
+- **Package**: `@vercel/analytics`
+- **Root Component**: `<Analytics />` mounted in `src/app/layout.tsx`
+- **Dashboard**: Tracked automatically in Vercel Dashboard → Analytics
+- **Performance**: Non-blocking async telemetry script (zero performance overhead)
 
 ```
 GitHub Push (main)
@@ -64,5 +69,5 @@ GitHub Actions: Docker Build Test → Static Analysis → Vercel Deploy → Heal
     ↓
 Vercel Edge Network (126 PoPs)
     ↓
-https://fashionistar.net
+https://fashionistar.net (With Vercel Web Analytics enabled)
 ```

@@ -41,7 +41,7 @@ export default function GetMeasuredPage() {
       <section
         className="relative overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, #2D6A4F 0%, #1B4332 60%, #0D2818 100%)",
+          background: "linear-gradient(135deg, #01454A 0%, #013337 60%, #012226 100%)",
           minHeight: "520px",
         }}
       >
@@ -49,7 +49,7 @@ export default function GetMeasuredPage() {
         <div
           className="absolute inset-0 opacity-[0.04]"
           style={{
-            backgroundImage: "radial-gradient(circle, #F4C430 1px, transparent 1px)",
+            backgroundImage: "radial-gradient(circle, #FDA600 1px, transparent 1px)",
             backgroundSize: "32px 32px",
           }}
           aria-hidden="true"
@@ -57,9 +57,9 @@ export default function GetMeasuredPage() {
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 py-20 md:py-28 flex flex-col items-center text-center gap-6">
           {/* Eyebrow badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F4C430]/15 border border-[#F4C430]/30">
-            <span className="w-2 h-2 rounded-full bg-[#F4C430] animate-pulse" aria-hidden="true" />
-            <span className="text-[#F4C430] text-xs font-semibold tracking-wide uppercase">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FDA600]/15 border border-[#FDA600]/30">
+            <span className="w-2 h-2 rounded-full bg-[#FDA600] animate-pulse" aria-hidden="true" />
+            <span className="text-[#FDA600] text-xs font-semibold tracking-wide uppercase">
               AI-Powered • Free • Private
             </span>
           </div>
@@ -67,7 +67,7 @@ export default function GetMeasuredPage() {
           {/* Headline — H1 for SEO */}
           <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight max-w-3xl">
             Your Perfect Fit,{" "}
-            <span style={{ color: "#F4C430" }}>Measured by AI</span>
+            <span style={{ color: "#FDA600" }}>Measured by AI</span>
           </h1>
 
           <p className="text-white/70 text-lg md:text-xl max-w-xl leading-relaxed">
@@ -105,11 +105,11 @@ export default function GetMeasuredPage() {
 
           {/* YouTube embed */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl font-bold text-[#111111] mb-4">
               See It in Action
             </h2>
             <div
-              className="relative w-full rounded-2xl overflow-hidden border-4 border-[#EDF2EC] shadow-lg"
+              className="relative w-full rounded-2xl overflow-hidden border-4 border-[#ECE6D6] shadow-lg"
               style={{ aspectRatio: "16/9" }}
             >
               <iframe
@@ -124,28 +124,28 @@ export default function GetMeasuredPage() {
 
           {/* How it works */}
           <div className="flex flex-col gap-6">
-            <h2 className="text-2xl font-bold text-gray-900">How It Works</h2>
+            <h2 className="text-2xl font-bold text-[#111111]">How It Works</h2>
             {[
               {
                 step: "1",
                 icon: "📱",
                 title: "Set Up Your Phone",
                 desc: "Prop your phone against a wall at chest height. Our orientation indicator guides you to exactly 90°.",
-                color: "#2D6A4F",
+                color: "#01454A",
               },
               {
                 step: "2",
                 icon: "🧍",
                 title: "AI Guides Your Pose",
                 desc: "Voice coaching walks you through front and side poses. Auto-capture fires when your pose is perfect.",
-                color: "#F4C430",
+                color: "#FDA600",
               },
               {
                 step: "3",
                 icon: "📊",
                 title: "Get 14 Measurements",
                 desc: "Results in both cm and inches — saved to your profile and applied to every future custom order.",
-                color: "#2D6A4F",
+                color: "#01454A",
               },
             ].map(({ step, icon, title, desc, color }) => (
               <div key={step} className="flex gap-4 items-start">
@@ -157,11 +157,11 @@ export default function GetMeasuredPage() {
                   {step}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900 flex items-center gap-2">
+                  <p className="font-semibold text-[#111111] flex items-center gap-2">
                     <span aria-hidden="true">{icon}</span>
                     {title}
                   </p>
-                  <p className="text-gray-500 text-sm mt-0.5 leading-relaxed">{desc}</p>
+                  <p className="text-[#5A6465] text-sm mt-0.5 leading-relaxed">{desc}</p>
                 </div>
               </div>
             ))}
@@ -175,14 +175,14 @@ export default function GetMeasuredPage() {
       {/* ── SECTION 3: WHAT WE MEASURE ── */}
       <section
         className="py-16 md:py-20"
-        style={{ background: "linear-gradient(180deg, #F9FAF5 0%, #fff 100%)" }}
+        style={{ background: "linear-gradient(180deg, #F4F3EC 0%, #fff 100%)" }}
       >
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-900">
+            <h2 className="text-3xl font-bold text-[#111111]">
               14 Measurements. One 30-Second Scan.
             </h2>
-            <p className="text-gray-500 mt-2 max-w-xl mx-auto">
+            <p className="text-[#5A6465] mt-2 max-w-xl mx-auto">
               Every dimension your tailor or custom brand needs — captured automatically.
             </p>
           </div>
@@ -207,11 +207,11 @@ export default function GetMeasuredPage() {
               <div
                 key={name}
                 className="flex flex-col items-center gap-2 p-4 rounded-xl
-                           bg-white border border-gray-100 shadow-sm
-                           hover:border-[#2D6A4F]/30 hover:shadow-md transition-all duration-200"
+                           bg-white border border-[#ECE6D6] shadow-sm
+                           hover:border-[#01454A]/30 hover:shadow-md transition-all duration-200"
               >
                 <span className="text-2xl" aria-hidden="true">{emoji}</span>
-                <span className="text-xs font-medium text-gray-700 text-center leading-tight">
+                <span className="text-xs font-medium text-[#5A6465] text-center leading-tight">
                   {name}
                 </span>
               </div>
@@ -222,7 +222,7 @@ export default function GetMeasuredPage() {
 
       {/* ── SECTION 4: WHY FASHIONISTAR ── */}
       <section className="max-w-5xl mx-auto px-6 py-16 md:py-20">
-        <h2 className="text-3xl font-bold text-gray-900 text-center mb-10">
+        <h2 className="text-3xl font-bold text-[#111111] text-center mb-10">
           Why Our Measurements Are Different
         </h2>
         <div className="grid gap-6 sm:grid-cols-3">
@@ -231,24 +231,24 @@ export default function GetMeasuredPage() {
               icon: "🎯",
               title: "AI-Powered Accuracy",
               desc: "MediaPipe pose estimation + our proprietary correction engine. Verified against professional measurements.",
-              accent: "#2D6A4F",
+              accent: "#01454A",
             },
             {
               icon: "🔒",
               title: "100% Private",
               desc: "Only pose coordinates are transmitted — no video or images are stored on our servers. Ever.",
-              accent: "#2D6A4F",
+              accent: "#01454A",
             },
             {
               icon: "👗",
               title: "Instant Application",
               desc: "Measurements saved to your profile are automatically used in every custom order you place.",
-              accent: "#F4C430",
+              accent: "#FDA600",
             },
           ].map(({ icon, title, desc, accent }) => (
             <div
               key={title}
-              className="p-6 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
+              className="p-6 rounded-2xl bg-white border border-[#ECE6D6] shadow-sm hover:shadow-md transition-shadow"
             >
               <div
                 className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mb-4"
@@ -256,8 +256,8 @@ export default function GetMeasuredPage() {
               >
                 {icon}
               </div>
-              <h3 className="font-bold text-gray-900 mb-2">{title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+              <h3 className="font-bold text-[#111111] mb-2">{title}</h3>
+              <p className="text-[#5A6465] text-sm leading-relaxed">{desc}</p>
             </div>
           ))}
         </div>
@@ -266,7 +266,7 @@ export default function GetMeasuredPage() {
       {/* ── SECTION 5: HOW TO PREPARE ── */}
       <section
         className="py-16 md:py-20"
-        style={{ background: "linear-gradient(135deg, #2D6A4F 0%, #1B4332 100%)" }}
+        style={{ background: "linear-gradient(135deg, #01454A 0%, #013337 100%)" }}
       >
         <div className="max-w-3xl mx-auto px-6 text-center">
           <h2 className="text-3xl font-bold text-white mb-3">Prepare for Best Results</h2>
@@ -287,7 +287,7 @@ export default function GetMeasuredPage() {
               >
                 <span
                   className="text-lg font-bold flex-shrink-0"
-                  style={{ color: "#F4C430" }}
+                  style={{ color: "#FDA600" }}
                   aria-hidden="true"
                 >
                   {check}
