@@ -23,6 +23,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMeasurements } from "@/features/measurements/hooks/use-measurements";
 import { MEASUREMENT_FIELDS } from "@/lib/brand";
 import { MeasurementTimeline } from "@/features/measurements/components/MeasurementTimeline";
+import { ManualMeasurementModal } from "@/features/measurements/components/ManualMeasurementModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -185,7 +186,7 @@ function ProfileCard({ profile, isSelected, onClick }: {
 
 // ─── Empty State ──────────────────────────────────────────────────────────────
 
-function EmptyState() {
+function EmptyState({ onManualClick }: { onManualClick: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -230,6 +231,23 @@ function EmptyState() {
         Start My Free Body Scan
       </Link>
 
+      {/* Divider */}
+      <div className="flex items-center gap-3 w-full max-w-xs mt-6 mb-3">
+        <div className="flex-1 h-px bg-white/10" />
+        <span className="text-xs text-white/30">or</span>
+        <div className="flex-1 h-px bg-white/10" />
+      </div>
+
+      {/* Manual input CTA */}
+      <button
+        onClick={onManualClick}
+        id="manual-input-empty-btn"
+        className="inline-flex items-center gap-2 rounded-xl border border-[#FDA600]/30 text-[#FDA600] font-semibold text-sm px-5 py-2.5 hover:bg-[#FDA600]/10 transition-colors"
+      >
+        <span>📋</span>
+        Input Measurements Manually
+      </button>
+
       <p className="text-xs text-white/30 mt-4">
         No images stored — only pose coordinates are processed
       </p>
@@ -244,6 +262,7 @@ export function MeasurementsDashboard() {
   const { data, isLoading } = useMeasurements();
 
   const [selectedProfileId, setSelectedProfileId] = useState<number | string | null>(null);
+  const [showManualModal, setShowManualModal] = useState(false);
 
   // Find selected or default profile
   const profiles: Record<string, unknown>[] = Array.isArray(data) ? data : (data as { results?: Record<string, unknown>[] })?.results ?? [];
@@ -274,7 +293,7 @@ export function MeasurementsDashboard() {
   // Loading skeleton
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#111111] via-[#0D1810] to-[#111111] px-4 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-[#111111] via-[#012226] to-[#111111] px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="h-8 w-48 bg-white/10 rounded-xl animate-pulse mb-8" />
           <div className="grid md:grid-cols-3 gap-6">
@@ -291,7 +310,7 @@ export function MeasurementsDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#111111] via-[#0D1810] to-[#111111] px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#111111] via-[#012226] to-[#111111] px-4 py-8 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
@@ -305,20 +324,32 @@ export function MeasurementsDashboard() {
             </p>
           </div>
 
-          <Link
-            href="/client/dashboard/measurements/scan"
-            id="new-scan-btn"
-            className="inline-flex items-center gap-2 rounded-xl bg-[#01454A] hover:bg-[#013337] text-white font-semibold text-sm px-5 py-2.5 transition-colors border border-[#01454A]"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            {profiles.length > 0 ? "Retake Scan" : "Start Scan"}
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowManualModal(true)}
+              id="manual-input-btn"
+              className="inline-flex items-center gap-2 rounded-xl border border-[#FDA600]/40 text-[#FDA600] font-semibold text-sm px-4 py-2.5 transition-colors hover:bg-[#FDA600]/10"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Input Manually
+            </button>
+            <Link
+              href="/client/dashboard/measurements/scan"
+              id="new-scan-btn"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#01454A] hover:bg-[#013337] text-white font-semibold text-sm px-5 py-2.5 transition-colors border border-[#01454A]"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              {profiles.length > 0 ? "Retake Scan" : "Start Scan"}
+            </Link>
+          </div>
         </div>
 
         {/* ── Empty state ─────────────────────────────────────────────────── */}
-        {profiles.length === 0 && <EmptyState />}
+        {profiles.length === 0 && <EmptyState onManualClick={() => setShowManualModal(true)} />}
 
         {/* ── Profile list + detail (2-column on md+) ─────────────────────── */}
         {profiles.length > 0 && (
@@ -343,13 +374,19 @@ export function MeasurementsDashboard() {
               ))}
 
               {/* Retake CTA below profile list */}
-              <div className="pt-2">
+              <div className="pt-2 space-y-2">
                 <Link
                   href="/client/dashboard/measurements/scan"
                   className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-[#01454A]/40 text-[#1A6B72] text-sm font-medium py-2.5 hover:bg-[#01454A]/10 transition-colors"
                 >
                   📷 Retake Body Scan
                 </Link>
+                <button
+                  onClick={() => setShowManualModal(true)}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-[#FDA600]/30 text-[#FDA600] text-sm font-medium py-2.5 hover:bg-[#FDA600]/10 transition-colors"
+                >
+                  📋 Input Manually
+                </button>
               </div>
             </div>
 
@@ -403,13 +440,19 @@ export function MeasurementsDashboard() {
                     </div>
 
                     {/* Footer actions */}
-                    <div className="flex items-center gap-3 mt-6 pt-6 border-t border-white/10">
+                    <div className="flex flex-wrap items-center gap-3 mt-6 pt-6 border-t border-white/10">
                       <Link
                         href={`/client/dashboard/measurements/scan`}
                         className="flex-1 text-center text-sm font-medium rounded-xl bg-[#01454A]/15 border border-[#01454A]/30 text-[#1A6B72] py-2.5 hover:bg-[#01454A]/25 transition-colors"
                       >
                         🔁 Retake Scan
                       </Link>
+                      <button
+                        onClick={() => setShowManualModal(true)}
+                        className="flex-1 text-center text-sm font-medium rounded-xl border border-[#FDA600]/30 text-[#FDA600] py-2.5 hover:bg-[#FDA600]/10 transition-colors"
+                      >
+                        📋 Edit Manually
+                      </button>
                       <button
                         className="flex-1 text-sm font-semibold rounded-xl bg-[#FDA600] text-[#111111] py-2.5 hover:bg-[#C88500] transition-colors"
                         onClick={() => router.push("/client/dashboard/size-guides")}
@@ -450,6 +493,12 @@ export function MeasurementsDashboard() {
           </div>
         )}
       </div>
+
+      {/* Manual Measurement Modal */}
+      <ManualMeasurementModal
+        isOpen={showManualModal}
+        onClose={() => setShowManualModal(false)}
+      />
     </div>
   );
 }

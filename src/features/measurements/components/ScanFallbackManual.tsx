@@ -10,7 +10,7 @@
  * Routes to the existing MeasurementProfile manual creation form.
  * Ensures zero measurement friction across all user types (accessibility).
  *
- * Brand: Forest Green + Golden Yellow on dark background
+ * Brand: Unified ClientShell palette — #01454A, #FDA600, #111111
  */
 
 import { motion } from "framer-motion";
@@ -45,7 +45,7 @@ export function ScanFallbackManual({
       <div className="text-center">
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3"
-          style={{ background: "rgba(244,196,48,0.12)", border: "1px solid rgba(244,196,48,0.25)" }}
+          style={{ background: "rgba(253,166,0,0.12)", border: "1px solid rgba(253,166,0,0.25)" }}
         >
           <span className="text-3xl">📋</span>
         </div>
@@ -72,7 +72,7 @@ export function ScanFallbackManual({
       {/* What you'll enter */}
       <div
         className="rounded-2xl p-4"
-        style={{ background: "rgba(45,106,79,0.08)", border: "1px solid rgba(45,106,79,0.2)" }}
+        style={{ background: "rgba(1,69,74,0.08)", border: "1px solid rgba(1,69,74,0.2)" }}
       >
         <p className="text-xs font-semibold text-[#1A6B72] mb-2 uppercase tracking-wider">
           You&apos;ll fill in:
@@ -95,7 +95,7 @@ export function ScanFallbackManual({
         style={{
           background: "linear-gradient(135deg, #FDA600, #C88500)",
           color: "#111111",
-          boxShadow: "0 4px 20px rgba(244,196,48,0.3)",
+          boxShadow: "0 4px 20px rgba(253,166,0,0.3)",
         }}
         id="manual-entry-cta-btn"
       >
@@ -127,7 +127,7 @@ export function ScanFallbackManual({
         <motion.div
           className="w-full max-w-sm rounded-3xl p-6"
           style={{
-            background: "linear-gradient(145deg, #0D1810, #111111)",
+            background: "linear-gradient(145deg, #012226, #111111)",
             border: "1px solid rgba(255,255,255,0.08)",
           }}
           initial={{ y: 60, scale: 0.95, opacity: 0 }}

@@ -72,7 +72,7 @@ export function MeasurementProfilePanel() {
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="font-bon_foyage text-5xl text-black">
+          <h1 className="font-bon_foyage text-5xl text-[#111111]">
             Body Measurements
           </h1>
           <p className="mt-3 max-w-3xl text-base leading-7 text-[#5A6465]">
@@ -82,7 +82,7 @@ export function MeasurementProfilePanel() {
         </div>
         <button
           onClick={() => setShowCreate((v) => !v)}
-          className="flex items-center gap-2 rounded-[16px] bg-[#FDA600] px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#e59500] active:scale-95"
+          className="flex items-center gap-2 rounded-[16px] bg-[#FDA600] px-5 py-3 text-sm font-semibold text-[#111111] shadow-md transition hover:bg-[#C88500] active:scale-95"
         >
           <Plus size={16} />
           {showCreate ? "Cancel" : "Add Profile"}
@@ -100,7 +100,7 @@ export function MeasurementProfilePanel() {
           {[1, 2].map((i) => (
             <div
               key={i}
-              className="h-28 animate-pulse rounded-[24px] bg-[#F0F0F0]"
+              className="h-28 animate-pulse rounded-[24px] bg-[#F8F5ED]"
             />
           ))}
         </div>
@@ -116,19 +116,19 @@ export function MeasurementProfilePanel() {
 
       {/* Empty state */}
       {!isLoading && !isError && profiles.length === 0 && (
-        <div className="flex flex-col items-center gap-4 rounded-[28px] border-2 border-dashed border-[#E5E7EB] py-16 text-center">
-          <Ruler size={40} className="text-[#D9D9D9]" />
+        <div className="flex flex-col items-center gap-4 rounded-[28px] border-2 border-dashed border-[#ECE6D6] py-16 text-center">
+          <Ruler size={40} className="text-[#7A6B44]" />
           <div>
             <p className="text-lg font-semibold text-[#5A6465]">
               No profiles yet
             </p>
-            <p className="mt-1 text-sm text-[#858585]">
+            <p className="mt-1 text-sm text-[#5A6465]">
               Add your measurements to unlock custom tailoring at checkout.
             </p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="mt-2 rounded-[14px] bg-[#FDA600] px-6 py-3 text-sm font-semibold text-white hover:bg-[#e59500]"
+            className="mt-2 rounded-[14px] bg-[#FDA600] px-6 py-3 text-sm font-semibold text-[#111111] hover:bg-[#C88500]"
           >
             Create First Profile
           </button>
@@ -185,8 +185,8 @@ function ProfileCard({
             <Ruler size={20} />
           </div>
           <div>
-            <p className="font-semibold text-black">{profile.name}</p>
-            <p className="text-xs text-[#858585]">
+            <p className="font-semibold text-[#111111]">{profile.name}</p>
+            <p className="text-xs text-[#5A6465]">
               {filled}/{MEASUREMENT_FIELDS.length} fields · {profile.unit.toUpperCase()}
             </p>
           </div>
@@ -208,11 +208,11 @@ function ProfileCard({
       {/* Core snapshot */}
       <div className="mt-4 grid grid-cols-3 gap-2">
         {(["bust", "waist", "hips"] as const).map((field) => (
-          <div key={field} className="rounded-[10px] bg-[#F8F9FC] px-3 py-2">
-            <p className="text-[9px] font-bold uppercase tracking-widest text-[#858585]">
+          <div key={field} className="rounded-[10px] bg-[#F8F5ED] px-3 py-2">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-[#5A6465]">
               {field}
             </p>
-            <p className="mt-0.5 text-sm font-semibold text-black">
+            <p className="mt-0.5 text-sm font-semibold text-[#111111]">
               {profile[field] ?? "—"}
             </p>
           </div>
@@ -222,7 +222,7 @@ function ProfileCard({
       {/* Expand toggle */}
       <button
         onClick={onToggle}
-        className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-[12px] border border-[#E5E7EB] py-2 text-xs font-medium text-[#5A6465] hover:bg-[#F8F9FC]"
+        className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-[12px] border border-[#ECE6D6] py-2 text-xs font-medium text-[#5A6465] hover:bg-[#F8F5ED]"
       >
         {expanded ? (
           <>
@@ -242,7 +242,7 @@ function ProfileCard({
             const fields = MEASUREMENT_FIELDS.filter((f) => f.group === group);
             return (
               <div key={group}>
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[#858585]">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[#5A6465]">
                   {group}
                 </p>
                 <div className="grid grid-cols-2 gap-2">
@@ -252,12 +252,12 @@ function ProfileCard({
                     return (
                       <div
                         key={f.key}
-                        className="flex justify-between rounded-[10px] bg-[#F8F9FC] px-3 py-2"
+                        className="flex justify-between rounded-[10px] bg-[#F8F5ED] px-3 py-2"
                       >
-                        <span className="text-xs text-[#858585]">
+                        <span className="text-xs text-[#5A6465]">
                           {f.label}
                         </span>
-                        <span className="text-xs font-semibold text-black">
+                        <span className="text-xs font-semibold text-[#111111]">
                           {val ?? "—"}
                         </span>
                       </div>
@@ -276,7 +276,7 @@ function ProfileCard({
           <button
             onClick={() => setDefault.mutate(profile.id)}
             disabled={setDefault.isPending}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-[12px] border border-[#FDA600] py-2 text-xs font-semibold text-[#FDA600] hover:bg-[#FFF9EC] disabled:opacity-50"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-[12px] border border-[#FDA600] py-2 text-xs font-semibold text-[#FDA600] hover:bg-[#F8F5ED] disabled:opacity-50"
           >
             <Star size={13} />
             Set Default
@@ -347,14 +347,14 @@ function CreateProfileForm({ onSuccess }: { onSuccess: () => void }) {
       onSubmit={handleSubmit}
       className="rounded-[28px] bg-white p-8 shadow-card_shadow"
     >
-      <h2 className="mb-6 font-bon_foyage text-2xl text-black">
+      <h2 className="mb-6 font-bon_foyage text-2xl text-[#111111]">
         New Measurement Profile
       </h2>
 
       {/* Profile meta */}
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <div className="sm:col-span-2">
-          <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-[#858585]">
+          <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-[#5A6465]">
             Profile Name *
           </label>
           <input
@@ -363,18 +363,18 @@ function CreateProfileForm({ onSuccess }: { onSuccess: () => void }) {
             value={formData.name ?? ""}
             onChange={handleChange}
             placeholder="e.g. Slim Fit, Casual, Maternity"
-            className="w-full rounded-[14px] border border-[#E5E7EB] px-4 py-3 text-sm text-black placeholder-[#C4C4C4] focus:border-[#FDA600] focus:outline-none"
+            className="w-full rounded-[14px] border border-[#ECE6D6] px-4 py-3 text-sm text-[#111111] placeholder-[#7A6B44] focus:border-[#FDA600] focus:outline-none"
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-[#858585]">
+          <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-[#5A6465]">
             Unit
           </label>
           <select
             name="unit"
             value={formData.unit}
             onChange={handleChange}
-            className="w-full rounded-[14px] border border-[#E5E7EB] px-4 py-3 text-sm text-black focus:border-[#FDA600] focus:outline-none"
+            className="w-full rounded-[14px] border border-[#ECE6D6] px-4 py-3 text-sm text-[#111111] focus:border-[#FDA600] focus:outline-none"
           >
             <option value="cm">Centimetres (cm)</option>
             <option value="inch">Inches (in)</option>
@@ -387,13 +387,13 @@ function CreateProfileForm({ onSuccess }: { onSuccess: () => void }) {
         const fields = MEASUREMENT_FIELDS.filter((f) => f.group === group);
         return (
           <div key={group} className="mb-6">
-            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#858585]">
+            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#5A6465]">
               {group}
             </p>
             <div className="grid gap-3 sm:grid-cols-3">
               {fields.map((f) => (
                 <div key={f.key}>
-                  <label className="mb-1 block text-[11px] text-[#858585]">
+                  <label className="mb-1 block text-[11px] text-[#5A6465]">
                     {f.label}
                   </label>
                   <input
@@ -409,7 +409,7 @@ function CreateProfileForm({ onSuccess }: { onSuccess: () => void }) {
                     }
                     onChange={handleChange}
                     placeholder="—"
-                    className="w-full rounded-[12px] border border-[#E5E7EB] px-3 py-2.5 text-sm text-black placeholder-[#D9D9D9] focus:border-[#FDA600] focus:outline-none"
+                    className="w-full rounded-[12px] border border-[#ECE6D6] px-3 py-2.5 text-sm text-[#111111] placeholder-[#7A6B44] focus:border-[#FDA600] focus:outline-none"
                   />
                 </div>
               ))}
@@ -437,14 +437,14 @@ function CreateProfileForm({ onSuccess }: { onSuccess: () => void }) {
         <button
           type="submit"
           disabled={create.isPending}
-          className="flex-1 rounded-[14px] bg-[#FDA600] py-3 text-sm font-bold text-white hover:bg-[#e59500] disabled:opacity-60"
+          className="flex-1 rounded-[14px] bg-[#FDA600] py-3 text-sm font-bold text-[#111111] hover:bg-[#C88500] disabled:opacity-60"
         >
           {create.isPending ? "Creating..." : "Create Profile"}
         </button>
         <button
           type="button"
           onClick={onSuccess}
-          className="rounded-[14px] border border-[#E5E7EB] px-5 py-3 text-sm text-[#5A6465] hover:bg-[#F8F9FC]"
+          className="rounded-[14px] border border-[#ECE6D6] px-5 py-3 text-sm text-[#5A6465] hover:bg-[#F8F5ED]"
         >
           Cancel
         </button>

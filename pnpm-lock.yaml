@@ -60,7 +60,7 @@ importers:
         specifier: ^5.66.0
         version: 5.101.2(@tanstack/react-query@5.101.2(react@19.2.7))(react@19.2.7)
       '@vercel/analytics':
-        specifier: ^1.6.0
+        specifier: ^1.6.1
         version: 1.6.1(next@16.2.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)
       axios:
         specifier: ^1.16.0
