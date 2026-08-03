@@ -191,7 +191,7 @@ export function QrHandoffClient({
               <div
                 className={`w-2.5 h-2.5 rounded-full ${
                   scanStatus === "completed"
-                    ? "bg-[#52B788]"
+                    ? "bg-[#1A6B72]"
                     : scanStatus === "processing"
                       ? "bg-[#FDA600] animate-pulse"
                       : scanStatus === "failed"
@@ -218,7 +218,7 @@ export function QrHandoffClient({
           <div className="mt-3 flex gap-1.5">
             <div className={`flex-1 h-1 rounded-full ${scanStatus !== "waiting" ? "bg-[#FDA600]" : "bg-[#ECE6D6]"}`} />
             <div className={`flex-1 h-1 rounded-full ${["processing", "completed"].includes(scanStatus) ? "bg-[#FDA600]" : "bg-[#ECE6D6]"}`} />
-            <div className={`flex-1 h-1 rounded-full ${scanStatus === "completed" ? "bg-[#52B788]" : "bg-[#ECE6D6]"}`} />
+            <div className={`flex-1 h-1 rounded-full ${scanStatus === "completed" ? "bg-[#1A6B72]" : "bg-[#ECE6D6]"}`} />
           </div>
         </div>
 

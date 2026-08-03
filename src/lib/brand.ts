@@ -8,41 +8,41 @@
  * Brand Identity (aligned with `src/app/globals.css` --BV-* tokens):
  *   Forest Green / Teal (#01454A) — trust, precision, growth
  *   Golden Yellow (#FDA600)       — luxury, measurement, craft
- *   Cream (#F8F5ED)               — calm, non-anxious waiting state
- *   Ink / Charcoal (#1A1208)      — premium, editorial text
- *   Surface (#F4F5FB)             — light backgrounds
+ *   Cream (#F4F3EC)               — calm, non-anxious waiting state
+ *   Ink / Charcoal (#111111)      — premium, editorial text
+ *   Surface (#F8F5ED)             — light backgrounds
  */
 
 // ─── Color Palette ────────────────────────────────────────────────────────────
 
 export const BRAND_COLORS = {
-  // Primary brand colors (teal/forest green)
-  forestGreen:      "#01454A",
-  forestGreenDark:  "#016B73",
-  forestGreenDarker: "#00373B",
-  forestGreenLight: "#016B73",
-  forestGreenMid:   "#01454A",
-
   // Secondary brand colors (golden yellow)
   goldenYellow:     "#FDA600",
-  goldenYellowDark: "#E09600",
+  goldenYellowDark: "#C88500",
   goldenYellowLight: "#F0A000",
 
   // Neutral
-  cream:            "#F8F5ED",
+  cream:            "#F4F3EC",
   creamDark:        "#ECE6D6",
-  black:            "#1A1208",
-  ink:              "#1A1208",
-  offWhite:         "#F4F5FB",
-  surface:          "#F4F5FB",
-  slate:            "#4B5563",
-  muted:            "#848484",
+  black:            "#111111",
+  ink:              "#111111",
+  offWhite:         "#F8F5ED",
+  surface:          "#F8F5ED",
+  slate:            "#5A6465",
+  muted:            "#7A6B44",
+
+  // Primary brand colors (teal/forest green)
+  forestGreen:      "#01454A",
+  forestGreenDark:  "#00373B",
+  forestGreenDarker: "#00373B",
+  forestGreenLight: "#1A6B72",
+  forestGreenMid:   "#01454A",
 
   // Status colors for measurement states
   statusGood:       "#01454A",   // Forest Green — pose perfect, 90° orientation
   statusWarning:    "#FDA600",   // Golden Yellow — adjust position, slight tilt
   statusError:      "#DC2626",   // Red — error, bad pose, severely tilted
-  statusProcessing: "#016B73",   // Light Green — AI working
+  statusProcessing: "#1A6B72",   // Light Green — AI working
 
   // Phone orientation indicator colors (90° detection system)
   orientGreen:      "#01454A",   // Phone at 90 degrees — PERFECT ✅

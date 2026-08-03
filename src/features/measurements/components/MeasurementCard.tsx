@@ -38,7 +38,7 @@ export function MeasurementCard({ profile, onEdit, onStartScan, className = "" }
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[#2D6A4F]/20 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-[#01454A]/20 flex items-center justify-center">
             <span className="text-base">📐</span>
           </div>
           <div>
@@ -50,7 +50,7 @@ export function MeasurementCard({ profile, onEdit, onStartScan, className = "" }
           {onStartScan && (
             <button
               onClick={onStartScan}
-              className="text-xs px-3 py-1.5 rounded-lg bg-[#2D6A4F] hover:bg-[#1B4332] text-white transition-colors"
+              className="text-xs px-3 py-1.5 rounded-lg bg-[#01454A] hover:bg-[#013337] text-white transition-colors"
               id="start-body-scan-btn"
             >
               📷 AI Scan
@@ -72,20 +72,20 @@ export function MeasurementCard({ profile, onEdit, onStartScan, className = "" }
       <div className="px-5 py-3 bg-white/3">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs text-white/40">Profile Completion</span>
-          <span className={`text-xs font-semibold ${completion >= 80 ? "text-[#52B788]" : completion >= 50 ? "text-[#F4C430]" : "text-red-400"}`}>
+          <span className={`text-xs font-semibold ${completion >= 80 ? "text-[#1A6B72]" : completion >= 50 ? "text-[#FDA600]" : "text-red-400"}`}>
             {completion}%
           </span>
         </div>
         <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-700 ${
-              completion >= 80 ? "bg-[#2D6A4F]" : completion >= 50 ? "bg-[#F4C430]" : "bg-red-500"
+              completion >= 80 ? "bg-[#01454A]" : completion >= 50 ? "bg-[#FDA600]" : "bg-red-500"
             }`}
             style={{ width: `${completion}%` }}
           />
         </div>
         {missingRequired.length > 0 && (
-          <p className="text-xs text-[#F4C430]/70 mt-1.5">
+          <p className="text-xs text-[#FDA600]/70 mt-1.5">
             Missing required: {missingRequired.map((f) => f.label).join(", ")}
           </p>
         )}
@@ -129,7 +129,7 @@ export function BodyDiagram({ profile, highlightField, className = "" }: BodyDia
 
   const hotspotClass = (field: keyof MeasurementProfile) =>
     hasValue(field)
-      ? "fill-[#2D6A4F]/70 stroke-[#52B788]"
+      ? "fill-[#01454A]/70 stroke-[#1A6B72]"
       : "fill-white/10 stroke-white/20";
 
   return (
@@ -184,7 +184,7 @@ export function BodyDiagram({ profile, highlightField, className = "" }: BodyDia
       {/* Legend */}
       <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 text-[10px] text-white/30">
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-[#2D6A4F]" />Measured
+          <span className="w-2 h-2 rounded-full bg-[#01454A]" />Measured
         </span>
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-white/20" />Missing

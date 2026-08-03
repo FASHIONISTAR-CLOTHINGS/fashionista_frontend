@@ -48,9 +48,9 @@ export function VoiceCoachDisplay({
           className={`
             absolute top-3 left-3 right-3 z-20
             flex items-center gap-2.5
-            bg-[#2D6A4F]/90 backdrop-blur-md
+            bg-[#01454A]/90 backdrop-blur-md
             rounded-xl px-4 py-2.5
-            border border-[#52B788]/30
+            border border-[#1A6B72]/30
             shadow-lg shadow-black/30
             ${className}
           `}
@@ -65,7 +65,7 @@ export function VoiceCoachDisplay({
               [0, 1, 2].map((i) => (
                 <motion.span
                   key={i}
-                  className="w-0.5 rounded-full bg-[#F4C430]"
+                  className="w-0.5 rounded-full bg-[#FDA600]"
                   animate={{ height: ["6px", "14px", "6px"] }}
                   transition={{
                     duration: 0.6,
@@ -77,7 +77,7 @@ export function VoiceCoachDisplay({
               ))
             ) : (
               // Static mic dot when text visible but not speaking (just fading)
-              <span className="w-2 h-2 rounded-full bg-[#52B788]" />
+              <span className="w-2 h-2 rounded-full bg-[#1A6B72]" />
             )}
           </div>
 

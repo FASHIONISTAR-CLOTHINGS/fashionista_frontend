@@ -32,7 +32,7 @@ const SLIDES: TutorialSlide[] = [
     title:  "Place Your Phone",
     body:   "Lean your phone against a wall or prop it on a stable surface at chest height, about 1.5–2 metres from where you'll stand.",
     tip:    "The camera should face you directly — like it's taking a photo of you.",
-    accent: "#2D6A4F",
+    accent: "#01454A",
   },
   {
     id:     "step-back",
@@ -40,7 +40,7 @@ const SLIDES: TutorialSlide[] = [
     title:  "Step into the Frame",
     body:   "Walk back until your entire body is visible — head to toe. Wear fitted clothing for the most accurate measurements.",
     tip:    "Loose or baggy clothing will reduce accuracy by up to 30%.",
-    accent: "#52B788",
+    accent: "#1A6B72",
   },
   {
     id:     "spread-arms",
@@ -48,7 +48,7 @@ const SLIDES: TutorialSlide[] = [
     title:  "Strike the Pose",
     body:   "Stand straight and spread your arms slightly — about 15° from your body, like a relaxed letter T. Hold still while the AI captures your pose.",
     tip:    "Our voice coach will count you down. Just hold the position!",
-    accent: "#F4C430",
+    accent: "#FDA600",
   },
   {
     id:     "results",
@@ -56,7 +56,7 @@ const SLIDES: TutorialSlide[] = [
     title:  "Get Your Measurements",
     body:   "After front and side poses, our AI calculates 14 precise body measurements in about 10 seconds — ready to find your perfect fit.",
     tip:    "Measurements are saved to your profile and used for all future purchases.",
-    accent: "#2D6A4F",
+    accent: "#01454A",
   },
 ];
 
@@ -205,7 +205,7 @@ export function ScanTutorialOverlay({ forceShow = false, onComplete }: ScanTutor
           <motion.div
             className="w-full max-w-sm rounded-3xl overflow-hidden"
             style={{
-              background: "linear-gradient(145deg, #0D1810, #0A0A0A)",
+              background: "linear-gradient(145deg, #0D1810, #111111)",
               border: "1px solid rgba(255,255,255,0.08)",
               boxShadow: "0 25px 60px rgba(0,0,0,0.6), 0 0 80px rgba(45,106,79,0.1)",
             }}
@@ -217,7 +217,7 @@ export function ScanTutorialOverlay({ forceShow = false, onComplete }: ScanTutor
             {/* Header */}
             <div className="flex items-center justify-between px-6 pt-6 pb-2">
               <div>
-                <span className="text-xs font-bold uppercase tracking-widest text-[#2D6A4F]">
+                <span className="text-xs font-bold uppercase tracking-widest text-[#01454A]">
                   FASHIONISTAR AI Scan
                 </span>
                 <p className="text-[10px] text-white/30 mt-0.5">Quick guide — 30 seconds</p>
@@ -255,11 +255,11 @@ export function ScanTutorialOverlay({ forceShow = false, onComplete }: ScanTutor
                 )}
                 <button
                   onClick={handleNext}
-                  className="flex-1 py-3 rounded-2xl text-[#0A0A0A] text-sm font-black transition-all active:scale-95"
+                  className="flex-1 py-3 rounded-2xl text-[#111111] text-sm font-black transition-all active:scale-95"
                   style={{
                     background: isLast
-                      ? "linear-gradient(135deg, #F4C430, #C9A227)"
-                      : "linear-gradient(135deg, #2D6A4F, #1B4332)",
+                      ? "linear-gradient(135deg, #FDA600, #C88500)"
+                      : "linear-gradient(135deg, #01454A, #013337)",
                     color: "white",
                     boxShadow: isLast ? "0 4px 20px rgba(244,196,48,0.3)" : "none",
                   }}

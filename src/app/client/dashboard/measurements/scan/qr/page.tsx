@@ -118,9 +118,9 @@ function QRGatewayInner() {
 
   if (isRefreshing) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+      <div className="min-h-screen bg-[#111111] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 rounded-full border-4 border-[#2D6A4F]/20 border-t-[#2D6A4F] animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 rounded-full border-4 border-[#01454A]/20 border-t-[#01454A] animate-spin mx-auto mb-4" />
           <p className="text-white/40 text-sm">Generating new QR code…</p>
         </div>
       </div>
@@ -143,8 +143,8 @@ function QRGatewayInner() {
 export default function QRGatewayPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <div className="w-12 h-12 rounded-full border-4 border-[#2D6A4F]/20 border-t-[#2D6A4F] animate-spin" />
+      <div className="min-h-screen bg-[#111111] flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full border-4 border-[#01454A]/20 border-t-[#01454A] animate-spin" />
       </div>
     }>
       <QRGatewayInner />

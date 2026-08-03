@@ -120,7 +120,7 @@ export function ShareModal({ measurementId, measurementName, isOpen, onClose }: 
                   id="share-consent-checkbox"
                 />
                 <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
-                  consentChecked ? "bg-[#F4C430] border-[#F4C430]" : "border-white/30 group-hover:border-white/50"
+                  consentChecked ? "bg-[#FDA600] border-[#FDA600]" : "border-white/30 group-hover:border-white/50"
                 }`}>
                   {consentChecked && <span className="text-xs text-white font-bold">✓</span>}
                 </div>
@@ -189,7 +189,7 @@ export function ShareModal({ measurementId, measurementName, isOpen, onClose }: 
             </div>
 
             {/* Security notice */}
-            <div className="p-3 rounded-xl bg-[#2D6A4F]/10 border border-[#2D6A4F]/20 text-xs text-[#52B788]">
+            <div className="p-3 rounded-xl bg-[#01454A]/10 border border-[#01454A]/20 text-xs text-[#1A6B72]">
               🔒 This link is encrypted and visible only to your chosen recipient.
             </div>
           </>

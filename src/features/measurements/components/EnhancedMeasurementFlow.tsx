@@ -13,7 +13,7 @@
  * - Landmark buffer averaging
  * - Distance + centering detection with directional guidance
  * - Two-pose flow: front → side → submit
- * - Brand-compliant colors (#01454A, #FDA600, #F8F5ED, #1A1208)
+ * - Brand-compliant colors (#01454A, #FDA600, #F4F3EC, #111111)
  */
 
 import { useEffect, useRef, useCallback, useState, useMemo } from "react";

@@ -27,7 +27,7 @@ export function PhoneLevelGuard({ status, badForMs = 0, className }: PhoneLevelG
   return (
     <div
       className={cn(
-        "absolute inset-0 z-40 flex flex-col items-center justify-center",
+        "absolute inset-0 z-[60] flex flex-col items-center justify-center",
         "bg-[var(--BV-cream)]/85 backdrop-blur-sm",
         className
       )}

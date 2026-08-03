@@ -51,7 +51,7 @@ export function CountdownOverlay({
           >
             {/* Pulsing green ring */}
             <motion.div
-              className="absolute rounded-full border-4 border-[#2D6A4F]"
+              className="absolute rounded-full border-4 border-[#01454A]"
               style={{ width: 120, height: 120 }}
               animate={{
                 scale:   [1, 1.12, 1],
@@ -130,15 +130,15 @@ export function CountdownOverlay({
             key="arming"
             className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20
                        px-3 py-1.5 rounded-full
-                       bg-[#2D6A4F]/80 backdrop-blur-sm
-                       border border-[#52B788]/30
+                       bg-[#01454A]/80 backdrop-blur-sm
+                       border border-[#1A6B72]/30
                        flex items-center gap-2"
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{   opacity: 0, y: 4 }}
           >
             <motion.div
-              className="w-1.5 h-1.5 rounded-full bg-[#F4C430]"
+              className="w-1.5 h-1.5 rounded-full bg-[#FDA600]"
               animate={{ opacity: [1, 0.3, 1] }}
               transition={{ duration: 0.8, repeat: Infinity }}
             />

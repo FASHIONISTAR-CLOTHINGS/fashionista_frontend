@@ -35,14 +35,14 @@ interface PhaseConfig {
 }
 
 const PHASE_CONFIG: Record<ScanProgressPhase, PhaseConfig> = {
-  idle:          { label: "Ready",                    sublabel: "Press start to begin scan",        pct: 0,   color: "[#2D6A4F]/40" },
-  loading:       { label: "Loading AI Model",         sublabel: "Downloading pose detector...",      pct: 12,  color: "[#2D6A4F]"    },
-  initialising:  { label: "Initialising Camera",      sublabel: "Starting pose detection engine...", pct: 28,  color: "[#2D6A4F]"    },
-  detecting:     { label: "Detecting Pose",            sublabel: "Hold still — capturing landmarks",  pct: 50,  color: "[#52B788]"    },
-  submitting:    { label: "Uploading Measurements",   sublabel: "Sending body data to server...",    pct: 68,  color: "[#F4C430]"    },
-  processing:    { label: "AI Processing",            sublabel: "Computing body measurements...",    pct: 82,  color: "[#F4C430]"    },
-  saving:        { label: "Saving Profile",           sublabel: "Creating your measurement profile", pct: 95,  color: "[#2D6A4F]"    },
-  completed:     { label: "Complete",                 sublabel: "Measurements saved successfully",   pct: 100, color: "[#52B788]"    },
+  idle:          { label: "Ready",                    sublabel: "Press start to begin scan",        pct: 0,   color: "[#01454A]/40" },
+  loading:       { label: "Loading AI Model",         sublabel: "Downloading pose detector...",      pct: 12,  color: "[#01454A]"    },
+  initialising:  { label: "Initialising Camera",      sublabel: "Starting pose detection engine...", pct: 28,  color: "[#01454A]"    },
+  detecting:     { label: "Detecting Pose",            sublabel: "Hold still — capturing landmarks",  pct: 50,  color: "[#1A6B72]"    },
+  submitting:    { label: "Uploading Measurements",   sublabel: "Sending body data to server...",    pct: 68,  color: "[#FDA600]"    },
+  processing:    { label: "AI Processing",            sublabel: "Computing body measurements...",    pct: 82,  color: "[#FDA600]"    },
+  saving:        { label: "Saving Profile",           sublabel: "Creating your measurement profile", pct: 95,  color: "[#01454A]"    },
+  completed:     { label: "Complete",                 sublabel: "Measurements saved successfully",   pct: 100, color: "[#1A6B72]"    },
   failed:        { label: "Scan Failed",              sublabel: "Please try again",                  pct: 0,   color: "[#DC2626]"    },
 };
 
@@ -197,27 +197,27 @@ const STEP_LABELS = ["Load", "Camera", "Pose", "Upload", "Save"];
 
 function phaseColorHex(phase: ScanProgressPhase): string {
   const map: Partial<Record<ScanProgressPhase, string>> = {
-    loading:      "#2D6A4F",
-    initialising: "#2D6A4F",
-    detecting:    "#52B788",
-    submitting:   "#F4C430",
-    processing:   "#F4C430",
-    saving:       "#2D6A4F",
-    completed:    "#52B788",
+    loading:      "#01454A",
+    initialising: "#01454A",
+    detecting:    "#1A6B72",
+    submitting:   "#FDA600",
+    processing:   "#FDA600",
+    saving:       "#01454A",
+    completed:    "#1A6B72",
     failed:       "#DC2626",
   };
   return map[phase] ?? "#ffffff20";
 }
 
 function phaseGradient(phase: ScanProgressPhase): string {
-  if (phase === "completed") return "linear-gradient(90deg, #2D6A4F, #52B788)";
+  if (phase === "completed") return "linear-gradient(90deg, #01454A, #1A6B72)";
   if (phase === "failed")    return "#DC2626";
   if (["loading", "initialising"].includes(phase))
-    return "linear-gradient(90deg, #1B4332, #2D6A4F)";
-  if (phase === "detecting")   return "linear-gradient(90deg, #2D6A4F, #52B788)";
-  if (phase === "submitting")  return "linear-gradient(90deg, #C9A227, #F4C430)";
-  if (phase === "processing")  return "linear-gradient(90deg, #C9A227, #F4C430)";
-  if (phase === "saving")      return "linear-gradient(90deg, #1B4332, #2D6A4F)";
+    return "linear-gradient(90deg, #013337, #01454A)";
+  if (phase === "detecting")   return "linear-gradient(90deg, #01454A, #1A6B72)";
+  if (phase === "submitting")  return "linear-gradient(90deg, #C88500, #FDA600)";
+  if (phase === "processing")  return "linear-gradient(90deg, #C88500, #FDA600)";
+  if (phase === "saving")      return "linear-gradient(90deg, #013337, #01454A)";
   return "rgba(255,255,255,0.1)";
 }
 

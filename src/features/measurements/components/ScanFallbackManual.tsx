@@ -74,14 +74,14 @@ export function ScanFallbackManual({
         className="rounded-2xl p-4"
         style={{ background: "rgba(45,106,79,0.08)", border: "1px solid rgba(45,106,79,0.2)" }}
       >
-        <p className="text-xs font-semibold text-[#52B788] mb-2 uppercase tracking-wider">
+        <p className="text-xs font-semibold text-[#1A6B72] mb-2 uppercase tracking-wider">
           You&apos;ll fill in:
         </p>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
           {["Bust / Chest", "Waist", "Hips", "Shoulder Width",
             "Arm Length", "Inseam", "Height", "Weight (opt.)"].map(field => (
             <div key={field} className="flex items-center gap-1.5">
-              <div className="w-1 h-1 rounded-full bg-[#2D6A4F]" />
+              <div className="w-1 h-1 rounded-full bg-[#01454A]" />
               <span className="text-xs text-white/60">{field}</span>
             </div>
           ))}
@@ -93,8 +93,8 @@ export function ScanFallbackManual({
         onClick={() => router.push(manualEntryUrl)}
         className="w-full rounded-2xl py-3.5 font-black text-sm transition-all active:scale-95"
         style={{
-          background: "linear-gradient(135deg, #F4C430, #C9A227)",
-          color: "#0A0A0A",
+          background: "linear-gradient(135deg, #FDA600, #C88500)",
+          color: "#111111",
           boxShadow: "0 4px 20px rgba(244,196,48,0.3)",
         }}
         id="manual-entry-cta-btn"
@@ -127,7 +127,7 @@ export function ScanFallbackManual({
         <motion.div
           className="w-full max-w-sm rounded-3xl p-6"
           style={{
-            background: "linear-gradient(145deg, #0D1810, #0A0A0A)",
+            background: "linear-gradient(145deg, #0D1810, #111111)",
             border: "1px solid rgba(255,255,255,0.08)",
           }}
           initial={{ y: 60, scale: 0.95, opacity: 0 }}

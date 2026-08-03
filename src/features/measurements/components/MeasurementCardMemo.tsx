@@ -37,8 +37,8 @@ export interface MeasurementCardMemoProps {
 
 function getConfidenceColor(score: number | null): string {
   if (score === null) return "rgba(255,255,255,0.2)";
-  if (score >= 0.80)  return "#2D6A4F";
-  if (score >= 0.60)  return "#F4C430";
+  if (score >= 0.80)  return "#01454A";
+  if (score >= 0.60)  return "#FDA600";
   return "#DC2626";
 }
 
@@ -83,7 +83,7 @@ function MeasurementCardImpl({
           {displayValue !== null ? displayValue.toFixed(1) : "—"}
         </span>
         {displayValue !== null && (
-          <span className="text-xs font-semibold" style={{ color: "#52B788" }}>
+          <span className="text-xs font-semibold" style={{ color: "#1A6B72" }}>
             {unitLabel}
           </span>
         )}

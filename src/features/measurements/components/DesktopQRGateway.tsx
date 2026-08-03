@@ -18,12 +18,12 @@
  *  - Forest Green #01454A (primary)
  *  - Golden Yellow #FDA600 (accent / copy flash)
  *  - Cream #F8F5ED (background)
- *  - Ink #1A1208 (text)
+ *  - Ink #111111 (text)
  *
  * Animations (Framer Motion):
  *  - QR card:    scale(0.85→1) + opacity(0→1), spring, delay 0.1s
  *  - Share row:  staggered opacity(0→1), 0.08s each
- *  - Copy flash: background color → #F4C430 for 1.5s on copy success
+ *  - Copy flash: background color → #FDA600 for 1.5s on copy success
  *  - Timer:      pulses amber when < 30 min remaining
  */
 

@@ -654,7 +654,7 @@ button[aria-invalid="true"] {
     cursor: pointer;
     border-radius: 0.75rem;
     overflow: hidden;
-    background-color: #F4F5FB;
+    background-color: #F8F5ED;
     box-shadow: 0 2px 12px 0 rgba(1, 69, 74, 0.08);
     transition: box-shadow 300ms ease, transform 300ms ease;
   }
@@ -720,9 +720,9 @@ button[aria-invalid="true"] {
   --color-brand-teal:   #01454A;
   --color-brand-gold:   #FDA600;
   --color-brand-cream:  #ECE6D6;
-  --color-brand-light:  #F4F5FB;
-  --color-brand-dark:   #333333;
-  --color-brand-muted:  #848484;
+  --color-brand-light:  #F8F5ED;
+  --color-brand-dark:   #111111;
+  --color-brand-muted:  #5A6465;
 }
 
 /* ── Reduced Motion — respect prefers-reduced-motion globally ─────────────── */
@@ -761,7 +761,7 @@ button[aria-invalid="true"] {
 [role="option"],
 [cmdk-list] {
   background-color: white !important;
-  color: #1A1208 !important;
+  color: #111111 !important;
 }
 
 /* Ensure Shadcn SelectItem has readable hover states */
@@ -769,7 +769,7 @@ button[aria-invalid="true"] {
 [role="option"]:focus,
 [role="option"][data-highlighted] {
   background-color: #F8F5ED !important;
-  color: #1A1208 !important;
+  color: #111111 !important;
 }
 
 /* ── Dashboard brand pulse animation ─────────────────────────────────────── */
@@ -803,22 +803,22 @@ button[aria-invalid="true"] {
  */
 :root {
   --BV-gold:        #FDA600;
-  --BV-gold-dark:   #E09600;
+  --BV-gold-dark:   #C88500;
   --BV-gold-hover:  #F0A000;
   --BV-green:       #01454A;
-  --BV-green-light: #016B73;
+  --BV-green-light: #1A6B72;
   --BV-green-pale:  rgba(1, 69, 74, 0.08);
-  --BV-cream:       #F8F5ED;
+  --BV-cream:       #F4F3EC;
   --BV-cream-dark:  #ECE6D6;
-  --BV-ink:         #1A1208;
-  --BV-slate:       #4B5563;
-  --BV-muted:       #848484;
-  --BV-surface:     #F4F5FB;
+  --BV-ink:         #111111;
+  --BV-slate:       #5A6465;
+  --BV-muted:       #7A6B44;
+  --BV-surface:     #F8F5ED;
   --BV-border:      rgba(1,69,74,0.10);
   /* Scarcity / urgency / eco signals */
   --BV-red-alert:   #DC2626;
   --BV-eco:         #059669;
-  --BV-pre-order:   #7C3AED;
+  --BV-pre-order:   #C88500;
 }
 
 /* ── Product card entrance keyframes ─────────────────────────────────────── */
@@ -865,7 +865,7 @@ button[aria-invalid="true"] {
 
 /* ── Product card glass morphism ─────────────────────────────────────────── */
 .product-card-glass {
-  background: rgba(248, 245, 237, 0.85);
+  background: rgba(244, 243, 236, 0.85);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(1, 69, 74, 0.07);

@@ -57,10 +57,10 @@ export function SizeRecommendation({
     return (
       <button
         onClick={() => mutate()}
-        className="flex items-center gap-2 text-xs text-[#F4C430] hover:text-[#F9D84A] transition-colors group"
+        className="flex items-center gap-2 text-xs text-[#FDA600] hover:text-[#FFD45E] transition-colors group"
         id="size-recommendation-btn"
       >
-        <span className="w-5 h-5 rounded-full bg-[#F4C430]/15 flex items-center justify-center text-[10px] group-hover:bg-[#F4C430]/25 transition-colors">
+        <span className="w-5 h-5 rounded-full bg-[#FDA600]/15 flex items-center justify-center text-[10px] group-hover:bg-[#FDA600]/25 transition-colors">
           ✨
         </span>
         {measurementProfileId ? "Get AI Size Recommendation" : "Get Your Size"}
@@ -112,7 +112,7 @@ export function SizeRecommendation({
 
         {/* Main size */}
         <div className="flex items-end gap-3">
-          <div className="text-4xl font-extrabold text-[#F4C430] leading-none">
+          <div className="text-4xl font-extrabold text-[#FDA600] leading-none">
             {result.recommended_size}
           </div>
           <div className="text-xs text-white/40 mb-1">
@@ -153,7 +153,7 @@ export function SizeRecommendation({
 
         <button
           onClick={() => { setResult(null); mutate(); }}
-          className="text-[10px] text-white/30 hover:text-[#F4C430] transition-colors"
+          className="text-[10px] text-white/30 hover:text-[#FDA600] transition-colors"
         >
           Recalculate ↻
         </button>

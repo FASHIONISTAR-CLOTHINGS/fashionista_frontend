@@ -215,7 +215,7 @@ export function MeasurementCapture({ profileName = "My Measurements", onComplete
   if (isPending) {
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-4">
-        <div className="w-16 h-16 rounded-full border-4 border-[#F4C430]/30 border-t-[#F4C430] animate-spin" />
+        <div className="w-16 h-16 rounded-full border-4 border-[#FDA600]/30 border-t-[#FDA600] animate-spin" />
         <p className="text-sm text-brand-gray">Saving your measurements…</p>
       </div>
     );
@@ -231,7 +231,7 @@ export function MeasurementCapture({ profileName = "My Measurements", onComplete
         </div>
         <div className="h-1.5 bg-white/8 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-[#F4C430] to-[#F4C430]/80 rounded-full transition-all duration-500"
+            className="h-full bg-gradient-to-r from-[#FDA600] to-[#FDA600]/80 rounded-full transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -261,7 +261,7 @@ export function MeasurementCapture({ profileName = "My Measurements", onComplete
               onChange={(e) => { setInputValue(e.target.value); setError(null); }}
               onKeyDown={(e) => e.key === "Enter" && handleNext()}
               placeholder={`${step.min}–${step.max}`}
-              className="w-36 h-14 text-center text-2xl font-bold bg-white/8 border border-white/15 rounded-xl text-white placeholder-brand-gray/60 focus:outline-none focus:border-[#F4C430]/60 focus:bg-white/12 transition-all tabular-nums"
+              className="w-36 h-14 text-center text-2xl font-bold bg-white/8 border border-white/15 rounded-xl text-white placeholder-brand-gray/60 focus:outline-none focus:border-[#FDA600]/60 focus:bg-white/12 transition-all tabular-nums"
               id={`measurement-input-${step.key}`}
               autoFocus
             />
@@ -300,9 +300,9 @@ export function MeasurementCapture({ profileName = "My Measurements", onComplete
             key={s.key}
             className={`w-2 h-2 rounded-full transition-all ${
               i < currentStep
-                ? "bg-[#2D6A4F]"
+                ? "bg-[#01454A]"
                 : i === currentStep
-                ? "bg-[#F4C430] scale-125"
+                ? "bg-[#FDA600] scale-125"
                 : "bg-white/15"
             }`}
             title={s.label}

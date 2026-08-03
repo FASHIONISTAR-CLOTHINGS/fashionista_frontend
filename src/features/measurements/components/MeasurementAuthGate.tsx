@@ -108,7 +108,7 @@ export function MeasurementAuthGate({
             <svg
               className="w-6 h-6"
               fill="none"
-              stroke="#52B788"
+              stroke="#1A6B72"
               viewBox="0 0 24 24"
               aria-hidden="true"
             >
@@ -136,8 +136,8 @@ export function MeasurementAuthGate({
             className="rounded-xl font-semibold px-6 py-3 text-sm transition-all
                        hover:scale-[1.02] active:scale-[0.98]"
             style={{
-              backgroundColor: "#F4C430",
-              color:           "#0A0A0A",
+              backgroundColor: "#FDA600",
+              color:           "#111111",
               boxShadow:       "0 4px 16px rgba(244,196,48,0.30)",
             }}
           >

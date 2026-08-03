@@ -7,8 +7,8 @@
  * Steps: Setup → Front Pose → Side Pose → Processing → Results
  *
  * Color coding:
- *   - Completed steps: Forest Green (#2D6A4F) with checkmark
- *   - Active step:     Golden Yellow (#F4C430) with pulsing indicator
+ *   - Completed steps: Forest Green (#01454A) with checkmark
+ *   - Active step:     Golden Yellow (#FDA600) with pulsing indicator
  *   - Upcoming steps:  Gray (white/20)
  *
  * Framer Motion:
@@ -88,12 +88,12 @@ function StepCircle({ status, icon }: {
   status:    StepStatus;
   icon:      string;
 }) {
-  const bg     = status === "completed" ? "#2D6A4F" :
-                 status === "active"    ? "#F4C430" :
+  const bg     = status === "completed" ? "#01454A" :
+                 status === "active"    ? "#FDA600" :
                  "rgba(255,255,255,0.08)";
 
-  const border = status === "completed" ? "#2D6A4F" :
-                 status === "active"    ? "#F4C430" :
+  const border = status === "completed" ? "#01454A" :
+                 status === "active"    ? "#FDA600" :
                  "rgba(255,255,255,0.15)";
 
   return (
@@ -120,7 +120,7 @@ function StepCircle({ status, icon }: {
       {status === "active" && (
         <motion.div
           className="absolute inset-0 rounded-full border-2"
-          style={{ borderColor: "#F4C430" }}
+          style={{ borderColor: "#FDA600" }}
           animate={{ scale: [1, 1.4, 1], opacity: [0.8, 0, 0.8] }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
         />
@@ -137,7 +137,7 @@ function Connector({ fromStatus }: { fromStatus: StepStatus }) {
     <div className="flex-1 h-0.5 mx-1 bg-white/10 relative overflow-hidden">
       <motion.div
         className="absolute inset-0 rounded-full"
-        style={{ background: "#2D6A4F" }}
+        style={{ background: "#01454A" }}
         initial={{ scaleX: 0, originX: 0 }}
         animate={{ scaleX: isDone ? 1 : 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
@@ -176,8 +176,8 @@ export function ScanProgressStepper({
                   <motion.span
                     className="text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap"
                     style={{
-                      color: status === "completed" ? "#52B788" :
-                             status === "active"    ? "#F4C430" :
+                      color: status === "completed" ? "#1A6B72" :
+                             status === "active"    ? "#FDA600" :
                              "rgba(255,255,255,0.25)",
                     }}
                     animate={{ opacity: status === "upcoming" ? 0.4 : 1 }}

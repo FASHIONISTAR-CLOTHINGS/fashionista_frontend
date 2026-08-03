@@ -99,8 +99,8 @@ function MeasurementCard({
 }) {
   const confidence = getConfidenceLevel(valueCm, qualityScore);
   const confidenceColor =
-    confidence === "high"    ? "#52B788" :
-    confidence === "medium"  ? "#F4C430" :
+    confidence === "high"    ? "#1A6B72" :
+    confidence === "medium"  ? "#FDA600" :
     confidence === "missing" ? "#6B7280" :
     "#DC2626";
 
@@ -141,7 +141,7 @@ function MeasurementCard({
                 {valueCm.toFixed(1)}
               </span>
               <span className="text-xs text-white/40 font-medium">cm</span>
-              <span className="text-sm font-semibold" style={{ color: "#F4C430" }}>
+              <span className="text-sm font-semibold" style={{ color: "#FDA600" }}>
                 {isHeight ? cmToFtIn(valueCm) : cmToIn(valueCm)}
               </span>
             </div>
@@ -164,14 +164,14 @@ function MeasurementCard({
 // ─── Zone Header ─────────────────────────────────────────────────────────────
 
 const ZONE_META: Record<string, { label: string; accent: string; icon: string }> = {
-  full:  { label: "Full Body",    accent: "#2D6A4F", icon: "📏" },
-  upper: { label: "Upper Body",   accent: "#2D6A4F", icon: "👕" },
-  core:  { label: "Core",         accent: "#F4C430", icon: "⬡"  },
-  lower: { label: "Lower Body",   accent: "#52B788", icon: "👖" },
+  full:  { label: "Full Body",    accent: "#01454A", icon: "📏" },
+  upper: { label: "Upper Body",   accent: "#01454A", icon: "👕" },
+  core:  { label: "Core",         accent: "#FDA600", icon: "⬡"  },
+  lower: { label: "Lower Body",   accent: "#1A6B72", icon: "👖" },
 };
 
 function ZoneHeader({ zone }: { zone: string }) {
-  const meta = ZONE_META[zone] ?? { label: zone, accent: "#2D6A4F", icon: "📐" };
+  const meta = ZONE_META[zone] ?? { label: zone, accent: "#01454A", icon: "📐" };
   return (
     <motion.div variants={cardVariants} className="flex items-center gap-2 mt-6 mb-3">
       <div className="w-1.5 h-1.5 rounded-full" style={{ background: meta.accent }} />
@@ -194,7 +194,7 @@ function QualityReport({
 }) {
   const pct          = Math.round(quality * 100);
   const isHighConf   = pct >= 85;
-  const accent       = isHighConf ? "#52B788" : pct >= 65 ? "#F4C430" : "#DC2626";
+  const accent       = isHighConf ? "#1A6B72" : pct >= 65 ? "#FDA600" : "#DC2626";
 
   return (
     <motion.div
@@ -230,7 +230,7 @@ function QualityReport({
       {warnings.length > 0 && (
         <div className="mt-3 space-y-1.5">
           {warnings.map((w, i) => (
-            <p key={i} className="text-xs text-[#F4C430]/80 flex items-start gap-1.5">
+            <p key={i} className="text-xs text-[#FDA600]/80 flex items-start gap-1.5">
               <span className="mt-0.5 flex-shrink-0">⚠️</span>
               <span>{w}</span>
             </p>
@@ -282,7 +282,7 @@ export function MeasurementReveal({
         {/* Animated checkmark */}
         <motion.div
           className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center"
-          style={{ background: "linear-gradient(135deg, #2D6A4F20, #2D6A4F40)" }}
+          style={{ background: "linear-gradient(135deg, #01454A20, #01454A40)" }}
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -301,7 +301,7 @@ export function MeasurementReveal({
           Measurements Complete!
         </h2>
         <p className="text-sm text-white/50">
-          <span className="font-bold" style={{ color: "#52B788" }}>{capturedCount}</span>
+          <span className="font-bold" style={{ color: "#1A6B72" }}>{capturedCount}</span>
           {" "}of {MEASUREMENT_FIELDS.length} measurements captured with AI precision
         </p>
         {scanResult.bmi != null && (
@@ -356,15 +356,15 @@ export function MeasurementReveal({
         {onRetake && (
           <button
             onClick={onRetake}
-            className="flex-1 py-3 rounded-xl border border-[#2D6A4F]/40 text-[#52B788] text-sm font-semibold hover:bg-[#2D6A4F]/10 transition-colors"
+            className="flex-1 py-3 rounded-xl border border-[#01454A]/40 text-[#1A6B72] text-sm font-semibold hover:bg-[#01454A]/10 transition-colors"
           >
             🔁 Retake Scan
           </button>
         )}
         <button
           onClick={onViewProfile}
-          className="flex-1 py-3 rounded-xl text-[#0A0A0A] text-sm font-bold transition-colors"
-          style={{ background: "linear-gradient(135deg, #F4C430, #C9A227)" }}
+          className="flex-1 py-3 rounded-xl text-[#111111] text-sm font-bold transition-colors"
+          style={{ background: "linear-gradient(135deg, #FDA600, #C88500)" }}
           id="find-my-size-btn"
         >
           🛍️ Find My Size

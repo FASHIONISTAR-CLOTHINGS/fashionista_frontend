@@ -105,9 +105,9 @@ export function BodyDiagram({ points, activePoint, onPointClick, className = "" 
                     : "rgba(255,255,255,0.15)"
                 }
                 stroke={
-                  isActive ? "#F4C430"
-                    : isMissing ? "#F4C430"
-                    : hasValue ? "#52B788"
+                  isActive ? "#FDA600"
+                    : isMissing ? "#FDA600"
+                    : hasValue ? "#1A6B72"
                     : "rgba(255,255,255,0.3)"
                 }
                 strokeWidth="1.5"
@@ -147,10 +147,10 @@ export function BodyDiagram({ points, activePoint, onPointClick, className = "" 
       {/* Legend */}
       <div className="flex items-center justify-center gap-4 mt-3 text-xs text-white/40">
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#52B788]/80" />Measured
+          <span className="w-2.5 h-2.5 rounded-full bg-[#1A6B72]/80" />Measured
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#F4C430]/80" />Required
+          <span className="w-2.5 h-2.5 rounded-full bg-[#FDA600]/80" />Required
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-white/25" />Optional

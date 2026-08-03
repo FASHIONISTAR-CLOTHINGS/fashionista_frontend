@@ -75,14 +75,14 @@ export function MeasurementGate({
 
   // ── Blocker UI ─────────────────────────────────────────────────────────────
   return (
-    <div className="rounded-2xl border border-[#F4C430]/30 bg-[#F4C430]/5 p-6 space-y-4" role="alert">
+    <div className="rounded-2xl border border-[#FDA600]/30 bg-[#FDA600]/5 p-6 space-y-4" role="alert">
       {/* Header */}
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-[#F4C430]/15 flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-[#FDA600]/15 flex items-center justify-center flex-shrink-0">
           <span className="text-xl">📏</span>
         </div>
         <div>
-          <h3 className="text-sm font-bold text-[#F4C430]">Measurements Required</h3>
+          <h3 className="text-sm font-bold text-[#FDA600]">Measurements Required</h3>
           <p className="text-xs text-white/40 mt-1">
             {itemsNeedingMeasurement.length === 1
               ? `"${itemsNeedingMeasurement[0].product_name ?? "This item"}" requires your body measurements for a custom fit.`
@@ -97,7 +97,7 @@ export function MeasurementGate({
         <ul className="space-y-1.5 pl-2">
           {itemsNeedingMeasurement.map((item) => (
             <li key={item.id} className="flex items-center gap-2 text-xs text-white/40">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#F4C430]/60" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FDA600]/60" />
               {item.product_name ?? `Item ${item.id}`}
             </li>
           ))}

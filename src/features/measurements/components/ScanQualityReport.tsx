@@ -36,8 +36,8 @@ interface ScanQualityReportProps {
 // --- Helpers -----------------------------------------------------------------
 
 function quality_color(q: number): string {
-  if (q >= 0.80) return "#2D6A4F";
-  if (q >= 0.60) return "#F4C430";
+  if (q >= 0.80) return "#01454A";
+  if (q >= 0.60) return "#FDA600";
   return "#DC2626";
 }
 
@@ -176,7 +176,7 @@ export function ScanQualityReport({
         <ReportRow
           icon={capturedPct >= 85 ? "✅" : "⚠️"}
           text={`${measurements_captured} of ${total_measurements} measurements captured with high confidence (${capturedPct}%)`}
-          color={capturedPct >= 85 ? "#52B788" : "#F4C430"}
+          color={capturedPct >= 85 ? "#1A6B72" : "#FDA600"}
           delay={0.1}
         />
 
@@ -205,7 +205,7 @@ export function ScanQualityReport({
           <ReportRow
             icon="⚠️"
             text={`${low_confidence_fields.map(k => FIELD_LABELS[k] ?? k).join(", ")} — visibility too low, may require retake`}
-            color="#F4C430"
+            color="#FDA600"
             delay={0.25}
           />
         )}
@@ -224,7 +224,7 @@ export function ScanQualityReport({
               style={{
                 background: "rgba(244,196,48,0.15)",
                 border: "1px solid rgba(244,196,48,0.4)",
-                color: "#F4C430",
+                color: "#FDA600",
               }}
               id="quality-report-retake-btn"
             >

@@ -11,7 +11,7 @@
  *   - Expandable measurement grid (click to open)
  *   - "Retake Scan" CTA per entry
  *
- * Brand: Forest Green (#2D6A4F) | Golden Yellow (#F4C430) | on #0A0A0A bg
+ * Brand: Forest Green (#01454A) | Golden Yellow (#FDA600) | on #111111 bg
  * Framer Motion: AnimatePresence + height-based collapse animations
  */
 
@@ -57,8 +57,8 @@ function formatDate(isoDate: string): string {
 
 function confidenceColor(score: number | null): string {
   if (score === null) return "rgba(255,255,255,0.3)";
-  if (score >= 0.8)  return "#2D6A4F";
-  if (score >= 0.6)  return "#F4C430";
+  if (score >= 0.8)  return "#01454A";
+  if (score >= 0.6)  return "#FDA600";
   return "#DC2626";
 }
 
@@ -76,7 +76,7 @@ function DeltaBadge({ diff }: { diff: number | null }) {
   const isUp = diff > 0;
   return (
     <span className="text-[10px] font-bold"
-      style={{ color: isUp ? "#F4C430" : "#52B788" }}>
+      style={{ color: isUp ? "#FDA600" : "#1A6B72" }}>
       {isUp ? "+" : ""}{diff}cm
     </span>
   );
@@ -134,7 +134,7 @@ function MeasurementGrid({
                 {val !== null ? val.toFixed(1) : "—"}
               </span>
               {val !== null && (
-                <span className="text-[10px]" style={{ color: "#52B788" }}>cm</span>
+                <span className="text-[10px]" style={{ color: "#1A6B72" }}>cm</span>
               )}
             </div>
             {diff !== null && <DeltaBadge diff={diff} />}
@@ -177,7 +177,7 @@ function TimelineEntry({
         <div
           className="w-3 h-3 rounded-full flex-shrink-0"
           style={{
-            background: isFirst ? "#F4C430" : "#2D6A4F",
+            background: isFirst ? "#FDA600" : "#01454A",
             boxShadow: isFirst ? "0 0 8px rgba(244,196,48,0.5)" : "none",
           }}
         />
@@ -186,7 +186,7 @@ function TimelineEntry({
             <span className="text-sm font-semibold text-white">{formatDate(entry.scanned_at)}</span>
             {isFirst && (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                style={{ background: "rgba(244,196,48,0.15)", color: "#F4C430", border: "1px solid rgba(244,196,48,0.3)" }}>
+                style={{ background: "rgba(244,196,48,0.15)", color: "#FDA600", border: "1px solid rgba(244,196,48,0.3)" }}>
                 LATEST
               </span>
             )}

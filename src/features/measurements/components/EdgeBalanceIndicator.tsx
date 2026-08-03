@@ -24,12 +24,12 @@ export function EdgeBalanceIndicator({ status, className }: EdgeBalanceIndicator
       ? "border-[var(--BV-gold)]"
       : status === "bad"
       ? "border-[var(--BV-red-alert)]"
-      : "border-white/20";
+      : "border-[var(--BV-cream-dark)]";
 
   return (
     <div
       className={cn(
-        "absolute inset-0 z-30 pointer-events-none border-[5px] transition-colors duration-200",
+        "absolute inset-0 z-30 pointer-events-none border-[8px] transition-colors duration-200",
         colorClass,
         className
       )}
