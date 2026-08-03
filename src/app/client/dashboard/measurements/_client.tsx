@@ -23,7 +23,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMeasurements } from "@/features/measurements/hooks/use-measurements";
 import { MEASUREMENT_FIELDS } from "@/lib/brand";
 import { MeasurementTimeline } from "@/features/measurements/components/MeasurementTimeline";
-import { ManualMeasurementModal } from "@/features/measurements/components/ManualMeasurementModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -262,7 +261,6 @@ export function MeasurementsDashboard() {
   const { data, isLoading } = useMeasurements();
 
   const [selectedProfileId, setSelectedProfileId] = useState<number | string | null>(null);
-  const [showManualModal, setShowManualModal] = useState(false);
 
   // Find selected or default profile
   const profiles: Record<string, unknown>[] = Array.isArray(data) ? data : (data as { results?: Record<string, unknown>[] })?.results ?? [];
@@ -326,7 +324,7 @@ export function MeasurementsDashboard() {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setShowManualModal(true)}
+              onClick={() => router.push("/client/dashboard/measurements/new")}
               id="manual-input-btn"
               className="inline-flex items-center gap-2 rounded-xl border border-[#FDA600]/40 text-[#FDA600] font-semibold text-sm px-4 py-2.5 transition-colors hover:bg-[#FDA600]/10"
             >
@@ -349,7 +347,7 @@ export function MeasurementsDashboard() {
         </div>
 
         {/* ── Empty state ─────────────────────────────────────────────────── */}
-        {profiles.length === 0 && <EmptyState onManualClick={() => setShowManualModal(true)} />}
+        {profiles.length === 0 && <EmptyState onManualClick={() => router.push("/client/dashboard/measurements/new")} />}
 
         {/* ── Profile list + detail (2-column on md+) ─────────────────────── */}
         {profiles.length > 0 && (
@@ -382,7 +380,7 @@ export function MeasurementsDashboard() {
                   📷 Retake Body Scan
                 </Link>
                 <button
-                  onClick={() => setShowManualModal(true)}
+                  onClick={() => router.push("/client/dashboard/measurements/new")}
                   className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-[#FDA600]/30 text-[#FDA600] text-sm font-medium py-2.5 hover:bg-[#FDA600]/10 transition-colors"
                 >
                   📋 Input Manually
@@ -448,7 +446,7 @@ export function MeasurementsDashboard() {
                         🔁 Retake Scan
                       </Link>
                       <button
-                        onClick={() => setShowManualModal(true)}
+                        onClick={() => router.push(`/client/dashboard/measurements/${selectedProfile.id}/edit`)}
                         className="flex-1 text-center text-sm font-medium rounded-xl border border-[#FDA600]/30 text-[#FDA600] py-2.5 hover:bg-[#FDA600]/10 transition-colors"
                       >
                         📋 Edit Manually
@@ -493,12 +491,6 @@ export function MeasurementsDashboard() {
           </div>
         )}
       </div>
-
-      {/* Manual Measurement Modal */}
-      <ManualMeasurementModal
-        isOpen={showManualModal}
-        onClose={() => setShowManualModal(false)}
-      />
     </div>
   );
 }
