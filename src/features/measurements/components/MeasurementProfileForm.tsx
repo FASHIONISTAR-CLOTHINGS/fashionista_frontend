@@ -113,7 +113,7 @@ export function MeasurementProfileForm({
       setUnit(initialData.unit || "cm");
       const filled: Record<string, string> = {};
       for (const key of ALL_FIELD_KEYS) {
-        const val = (initialData as Record<string, unknown>)[key];
+        const val = (initialData as unknown as Record<string, unknown>)[key];
         if (val != null && val !== "") {
           filled[key] = String(val);
         }

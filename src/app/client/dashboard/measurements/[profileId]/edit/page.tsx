@@ -10,7 +10,6 @@
  *        DELETE /api/v1/measurements/{id}/      (DRF sync — delete)
  */
 
-import { useParams } from "next/navigation";
 import { Suspense } from "react";
 import { EditProfileClient } from "./EditProfileClient";
 
