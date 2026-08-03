@@ -5,48 +5,53 @@
  * ALL measurement components must use these tokens instead of hardcoded colors.
  * BANNED colors: violet, purple, #8B5CF6, #A855F7, #7C3AED, #6D28D9
  *
- * Brand Identity:
- *   Forest Green (#2D6A4F) — trust, precision, growth
- *   Golden Yellow (#F4C430) — luxury, measurement, craft
- *   Cream (#F9FAF5)         — calm, non-anxious waiting state
- *   Black (#0A0A0A)         — premium, editorial
+ * Brand Identity (aligned with `src/app/globals.css` --BV-* tokens):
+ *   Forest Green / Teal (#01454A) — trust, precision, growth
+ *   Golden Yellow (#FDA600)       — luxury, measurement, craft
+ *   Cream (#F8F5ED)               — calm, non-anxious waiting state
+ *   Ink / Charcoal (#1A1208)      — premium, editorial text
+ *   Surface (#F4F5FB)             — light backgrounds
  */
 
 // ─── Color Palette ────────────────────────────────────────────────────────────
 
 export const BRAND_COLORS = {
-  // Primary brand colors
-  forestGreen:      "#2D6A4F",
-  forestGreenDark:  "#1B4332",
-  forestGreenDarker:"#0D2818",
-  forestGreenLight: "#52B788",
-  forestGreenMid:   "#40916C",
+  // Primary brand colors (teal/forest green)
+  forestGreen:      "#01454A",
+  forestGreenDark:  "#016B73",
+  forestGreenDarker: "#00373B",
+  forestGreenLight: "#016B73",
+  forestGreenMid:   "#01454A",
 
-  // Secondary brand colors
-  goldenYellow:     "#F4C430",
-  goldenYellowDark: "#C9A227",
-  goldenYellowLight:"#F9D84A",
+  // Secondary brand colors (golden yellow)
+  goldenYellow:     "#FDA600",
+  goldenYellowDark: "#E09600",
+  goldenYellowLight: "#F0A000",
 
   // Neutral
-  cream:            "#F9FAF5",
-  creamDark:        "#EDF2EC",
-  black:            "#0A0A0A",
-  offWhite:         "#F8F8F6",
+  cream:            "#F8F5ED",
+  creamDark:        "#ECE6D6",
+  black:            "#1A1208",
+  ink:              "#1A1208",
+  offWhite:         "#F4F5FB",
+  surface:          "#F4F5FB",
+  slate:            "#4B5563",
+  muted:            "#848484",
 
   // Status colors for measurement states
-  statusGood:       "#2D6A4F",   // Forest Green — pose perfect, 90° orientation
-  statusWarning:    "#F4C430",   // Golden Yellow — adjust position, slight tilt
+  statusGood:       "#01454A",   // Forest Green — pose perfect, 90° orientation
+  statusWarning:    "#FDA600",   // Golden Yellow — adjust position, slight tilt
   statusError:      "#DC2626",   // Red — error, bad pose, severely tilted
-  statusProcessing: "#52B788",   // Light Green — AI working
+  statusProcessing: "#016B73",   // Light Green — AI working
 
   // Phone orientation indicator colors (90° detection system)
-  orientGreen:      "#2D6A4F",   // Phone at 90 degrees — PERFECT ✅
-  orientYellow:     "#F4C430",   // Phone 5-10° off 90° — ADJUST 🟡
+  orientGreen:      "#01454A",   // Phone at 90 degrees — PERFECT ✅
+  orientYellow:     "#FDA600",   // Phone 5-10° off 90° — ADJUST 🟡
   orientRed:        "#DC2626",   // Phone >10° off 90° — TILTED 🔴
 
   // Quality bar colors (pose detection)
-  qualityGood:      "#2D6A4F",   // ≥85% quality
-  qualityMedium:    "#F4C430",   // 65-84% quality
+  qualityGood:      "#01454A",   // ≥85% quality
+  qualityMedium:    "#FDA600",   // 65-84% quality
   qualityBad:       "#DC2626",   // <65% quality
 } as const;
 
@@ -55,9 +60,11 @@ export type BrandColor = keyof typeof BRAND_COLORS;
 // ─── CSS Variable Names ────────────────────────────────────────────────────────
 
 export const BRAND_CSS_VARS = {
-  forestGreen:    "var(--color-forest-green)",
-  goldenYellow:   "var(--color-golden-yellow)",
-  cream:          "var(--color-cream)",
+  forestGreen:    "var(--BV-green)",
+  goldenYellow:   "var(--BV-gold)",
+  cream:          "var(--BV-cream)",
+  ink:            "var(--BV-ink)",
+  surface:        "var(--BV-surface)",
 } as const;
 
 // ─── Tailwind Class Helpers ───────────────────────────────────────────────────
@@ -65,46 +72,47 @@ export const BRAND_CSS_VARS = {
 
 export const BRAND_TW = {
   // Backgrounds
-  bgGreen:         "bg-[#2D6A4F]",
-  bgGreenDark:     "bg-[#1B4332]",
-  bgGreenLight:    "bg-[#52B788]",
-  bgGreenSubtle:   "bg-[#2D6A4F]/15",
-  bgGolden:        "bg-[#F4C430]",
-  bgGoldenSubtle:  "bg-[#F4C430]/15",
-  bgCream:         "bg-[#F9FAF5]",
-  bgError:         "bg-[#DC2626]",
-  bgErrorSubtle:   "bg-[#DC2626]/15",
+  bgGreen:         "bg-[var(--BV-green)]",
+  bgGreenDark:     "bg-[var(--BV-green-light)]",
+  bgGreenLight:    "bg-[var(--BV-green-light)]",
+  bgGreenSubtle:   "bg-[var(--BV-green)]/15",
+  bgGolden:        "bg-[var(--BV-gold)]",
+  bgGoldenSubtle:  "bg-[var(--BV-gold)]/15",
+  bgCream:         "bg-[var(--BV-cream)]",
+  bgError:         "bg-[var(--BV-red-alert)]",
+  bgErrorSubtle:   "bg-[var(--BV-red-alert)]/15",
 
   // Text
-  textGreen:       "text-[#2D6A4F]",
-  textGreenLight:  "text-[#52B788]",
-  textGolden:      "text-[#F4C430]",
-  textError:       "text-[#DC2626]",
+  textGreen:       "text-[var(--BV-green)]",
+  textGreenLight:  "text-[var(--BV-green-light)]",
+  textGolden:      "text-[var(--BV-gold)]",
+  textError:       "text-[var(--BV-red-alert)]",
+  textInk:         "text-[var(--BV-ink)]",
 
   // Borders
-  borderGreen:     "border-[#2D6A4F]",
-  borderGreenSubtle: "border-[#2D6A4F]/20",
-  borderGolden:    "border-[#F4C430]",
+  borderGreen:     "border-[var(--BV-green)]",
+  borderGreenSubtle: "border-[var(--BV-green)]/20",
+  borderGolden:    "border-[var(--BV-gold)]",
 
   // Rings / focus
-  ringGreen:       "ring-[#2D6A4F]",
-  ringGolden:      "ring-[#F4C430]",
-  focusGolden:     "focus:border-[#F4C430] focus:ring-1 focus:ring-[#F4C430]",
-  focusGreen:      "focus:border-[#2D6A4F] focus:ring-1 focus:ring-[#2D6A4F]",
+  ringGreen:       "ring-[var(--BV-green)]",
+  ringGolden:      "ring-[var(--BV-gold)]",
+  focusGolden:     "focus:border-[var(--BV-gold)] focus:ring-1 focus:ring-[var(--BV-gold)]",
+  focusGreen:      "focus:border-[var(--BV-green)] focus:ring-1 focus:ring-[var(--BV-green)]",
 
   // Gradients
-  gradientGreen:   "bg-gradient-to-r from-[#2D6A4F] to-[#1B4332]",
-  gradientGreenHover: "hover:from-[#1B4332] hover:to-[#0D2818]",
-  gradientGolden:  "bg-gradient-to-r from-[#F4C430] to-[#C9A227]",
+  gradientGreen:   "bg-gradient-to-r from-[var(--BV-green)] to-[var(--BV-green-light)]",
+  gradientGreenHover: "hover:from-[var(--BV-green-light)] hover:to-[var(--BV-green)]",
+  gradientGolden:  "bg-gradient-to-r from-[var(--BV-gold)] to-[var(--BV-gold-dark)]",
 
   // Shadows
-  shadowGreen:     "shadow-[#2D6A4F]/25",
-  shadowGolden:    "shadow-[#F4C430]/25",
+  shadowGreen:     "shadow-[var(--BV-green)]/25",
+  shadowGolden:    "shadow-[var(--BV-gold)]/25",
 
   // Buttons (primary — Golden Yellow CTA)
-  btnPrimary:      "bg-[#F4C430] text-[#0A0A0A] hover:bg-[#C9A227] font-semibold transition-colors",
+  btnPrimary:      "bg-[var(--BV-gold)] text-[var(--BV-ink)] hover:bg-[var(--BV-gold-dark)] font-semibold transition-colors",
   // Buttons (secondary — Forest Green)
-  btnSecondary:    "bg-[#2D6A4F] text-white hover:bg-[#1B4332] font-semibold transition-colors",
+  btnSecondary:    "bg-[var(--BV-green)] text-[var(--BV-cream)] hover:bg-[var(--BV-green-light)] font-semibold transition-colors",
   // Buttons (ghost)
   btnGhost:        "border border-white/20 bg-white/5 text-white/70 hover:bg-white/10 transition-colors",
 } as const;
@@ -237,65 +245,15 @@ export const VOICE_SCRIPTS = {
   errorTryAgain:    "Something went wrong. Please try again.",
   poseGood:         "Excellent pose!",
   poseWarning:      "Almost there — adjust your position slightly.",
-  poseBad:          "I can't detect your full body. Stand straight and face the camera.",
-  heightPredicted:  "Based on your age, I've estimated your height. You can update this if needed.",
+
+  // Added: specific distance guidance
+  stepBackOneFoot:  "Step back one foot.",
+  stepBackTwoFeet:  "Step back two feet.",
+  stepCloserOneFoot: "Step closer one foot.",
+  stepCloserTwoFeet: "Step closer two feet.",
+  moveLittleLeft:   "Move a little to your left.",
+  moveLittleRight:  "Move a little to your right.",
 } as const;
 
 export type VoiceScriptKey = keyof typeof VOICE_SCRIPTS;
 
-// ─── WHO Height Reference Tables (for age-to-height prediction) ───────────────
-
-export const WHO_HEIGHT_BY_AGE: Record<string, { male: number; female: number; neutral: number }> = {
-  "10": { male: 140, female: 142, neutral: 141 },
-  "11": { male: 145, female: 148, neutral: 147 },
-  "12": { male: 150, female: 153, neutral: 152 },
-  "13": { male: 156, female: 157, neutral: 157 },
-  "14": { male: 162, female: 160, neutral: 161 },
-  "15": { male: 167, female: 162, neutral: 164 },
-  "16": { male: 171, female: 163, neutral: 167 },
-  "17": { male: 174, female: 163, neutral: 168 },
-  "18": { male: 176, female: 164, neutral: 170 },
-  "19": { male: 177, female: 164, neutral: 170 },
-  "20": { male: 177, female: 164, neutral: 170 },
-  "25": { male: 177, female: 164, neutral: 170 },
-  "30": { male: 177, female: 163, neutral: 170 },
-  "35": { male: 176, female: 163, neutral: 169 },
-  "40": { male: 176, female: 162, neutral: 169 },
-  "45": { male: 175, female: 162, neutral: 168 },
-  "50": { male: 175, female: 161, neutral: 168 },
-  "55": { male: 174, female: 161, neutral: 167 },
-  "60": { male: 173, female: 160, neutral: 166 },
-  "65": { male: 172, female: 159, neutral: 165 },
-  "70": { male: 171, female: 158, neutral: 164 },
-  "75": { male: 170, female: 157, neutral: 163 },
-  "80": { male: 169, female: 156, neutral: 162 },
-} as const;
-
-/**
- * Predict height from age using WHO reference tables.
- * @param age User's age (10-100)
- * @param sex User's sex for more accurate prediction
- */
-export function predictHeightFromAge(
-  age: number,
-  sex: "male" | "female" | "neutral" = "neutral"
-): { predictedCm: number; rangeLow: number; rangeHigh: number; predictedInch: string } {
-  const clampedAge = Math.min(80, Math.max(10, age));
-  // Find closest age key
-  const keys = Object.keys(WHO_HEIGHT_BY_AGE).map(Number).sort((a, b) => a - b);
-  const closest = keys.reduce((prev, curr) =>
-    Math.abs(curr - clampedAge) < Math.abs(prev - clampedAge) ? curr : prev
-  );
-  const data = WHO_HEIGHT_BY_AGE[String(closest)];
-  const predictedCm = data[sex];
-  const rangeLow = Math.round(predictedCm - 10);
-  const rangeHigh = Math.round(predictedCm + 10);
-
-  // Convert to feet and inches
-  const totalInches = predictedCm / 2.54;
-  const feet = Math.floor(totalInches / 12);
-  const inches = Math.round(totalInches % 12);
-  const predictedInch = `${feet}'${inches}"`;
-
-  return { predictedCm, rangeLow, rangeHigh, predictedInch };
-}

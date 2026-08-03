@@ -199,7 +199,7 @@ export function MeasurementEntryModal({
     <AnimatePresence>
       <motion.div
         key="entry-modal-backdrop"
-        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-[var(--BV-ink)]/40 backdrop-blur-sm"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -214,12 +214,7 @@ export function MeasurementEntryModal({
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         <div
-          className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl p-6 flex flex-col gap-5"
-          style={{
-            backgroundColor: "#0F1A14",
-            border: "1px solid rgba(45,106,79,0.3)",
-            boxShadow: "0 25px 60px rgba(0,0,0,0.6)",
-          }}
+          className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl p-6 flex flex-col gap-5 bg-[var(--BV-cream)] border border-[var(--BV-cream-dark)] shadow-2xl"
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
@@ -228,7 +223,7 @@ export function MeasurementEntryModal({
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-white/40 hover:text-white/80 transition text-lg"
+            className="absolute top-4 right-4 text-[var(--BV-muted)] hover:text-[var(--BV-ink)] transition text-lg"
             aria-label="Close modal"
           >
             ✕
@@ -236,16 +231,16 @@ export function MeasurementEntryModal({
 
           {/* Header */}
           <div>
-            <h2 className="text-white font-bold text-xl">Before Your Scan</h2>
-            <p className="text-white/50 text-sm mt-1">
+            <h2 className="text-[var(--BV-ink)] font-bold text-xl">Before Your Scan</h2>
+            <p className="text-[var(--BV-slate)] text-sm mt-1">
               A few details help our AI give you the most accurate results
             </p>
           </div>
 
           {/* Age (required) */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-white/70">
-              Your Age <span className="text-[#F4C430]">*</span>
+            <label className="text-sm font-medium text-[var(--BV-ink)]">
+              Your Age <span className="text-[var(--BV-gold)]">*</span>
             </label>
             <input
               type="number"
@@ -254,15 +249,11 @@ export function MeasurementEntryModal({
               placeholder="e.g. 28"
               value={age}
               onChange={(e) => setAge(e.target.value)}
-              className="w-full rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 transition outline-none focus:ring-1 focus:ring-[#F4C430]"
-              style={{
-                backgroundColor: "rgba(255,255,255,0.07)",
-                border: "1px solid rgba(255,255,255,0.12)",
-              }}
+              className="w-full rounded-xl px-4 py-2.5 text-sm text-[var(--BV-ink)] placeholder:text-[var(--BV-muted)] outline-none focus:ring-1 focus:ring-[var(--BV-gold)] bg-[var(--BV-surface)] border border-[var(--BV-cream-dark)]"
               aria-required="true"
             />
             {errors.age && (
-              <p className="text-[#DC2626] text-xs">{errors.age}</p>
+              <p className="text-[var(--BV-red-alert)] text-xs">{errors.age}</p>
             )}
 
             {/* Height prediction pill */}
@@ -270,12 +261,7 @@ export function MeasurementEntryModal({
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="px-3 py-2 rounded-lg text-xs flex items-center gap-2"
-                style={{
-                  backgroundColor: "rgba(244,196,48,0.08)",
-                  border: "1px solid rgba(244,196,48,0.2)",
-                  color: "#F4C430",
-                }}
+                className="px-3 py-2 rounded-lg text-xs flex items-center gap-2 bg-[var(--BV-gold)]/8 border border-[var(--BV-gold)]/20 text-[var(--BV-gold-dark)]"
               >
                 <span>{prediction.source === "backend" ? "🤖" : "✨"}</span>
                 <span>
@@ -289,11 +275,8 @@ export function MeasurementEntryModal({
 
           {/* Sex (for prediction accuracy) */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-white/70">Biological Sex</label>
-            <div
-              className="flex rounded-xl overflow-hidden"
-              style={{ border: "1px solid rgba(255,255,255,0.10)" }}
-            >
+            <label className="text-sm font-medium text-[var(--BV-ink)]">Biological Sex</label>
+            <div className="flex rounded-xl overflow-hidden border border-[var(--BV-cream-dark)]">
               {([
                 { value: "male", label: "Male" },
                 { value: "female", label: "Female" },
@@ -304,8 +287,8 @@ export function MeasurementEntryModal({
                   onClick={() => setSex(value)}
                   className="flex-1 py-2 text-xs font-semibold transition"
                   style={{
-                    backgroundColor: sex === value ? "#2D6A4F" : "rgba(255,255,255,0.04)",
-                    color: sex === value ? "#fff" : "rgba(255,255,255,0.4)",
+                    backgroundColor: sex === value ? "var(--BV-green)" : "var(--BV-surface)",
+                    color: sex === value ? "var(--BV-cream)" : "var(--BV-slate)",
                   }}
                 >
                   {label}
@@ -316,9 +299,9 @@ export function MeasurementEntryModal({
 
           {/* Height (auto-filled, optional override) */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-white/70">
+            <label className="text-sm font-medium text-[var(--BV-ink)]">
               Your Height{" "}
-              <span className="text-white/30 text-xs">(auto-predicted — update if known)</span>
+              <span className="text-[var(--BV-muted)] text-xs">(auto-predicted — update if known)</span>
             </label>
             <div className="flex gap-2">
               <input
@@ -326,24 +309,17 @@ export function MeasurementEntryModal({
                 placeholder={heightUnit === "cm" ? "e.g. 175" : "e.g. 69"}
                 value={heightInput}
                 onChange={(e) => setHeightInput(e.target.value)}
-                className="flex-1 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 transition outline-none focus:ring-1 focus:ring-[#F4C430]"
-                style={{
-                  backgroundColor: "rgba(255,255,255,0.07)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                }}
+                className="flex-1 rounded-xl px-4 py-2.5 text-sm text-[var(--BV-ink)] placeholder:text-[var(--BV-muted)] outline-none focus:ring-1 focus:ring-[var(--BV-gold)] bg-[var(--BV-surface)] border border-[var(--BV-cream-dark)]"
               />
-              <div
-                className="flex rounded-xl overflow-hidden"
-                style={{ border: "1px solid rgba(255,255,255,0.10)" }}
-              >
+              <div className="flex rounded-xl overflow-hidden border border-[var(--BV-cream-dark)]">
                 {(["cm", "inch"] as const).map((unit) => (
                   <button
                     key={unit}
                     onClick={() => setHeightUnit(unit)}
                     className="px-3 py-2 text-xs font-semibold transition"
                     style={{
-                      backgroundColor: heightUnit === unit ? "#2D6A4F" : "rgba(255,255,255,0.04)",
-                      color: heightUnit === unit ? "#fff" : "rgba(255,255,255,0.4)",
+                      backgroundColor: heightUnit === unit ? "var(--BV-green)" : "var(--BV-surface)",
+                      color: heightUnit === unit ? "var(--BV-cream)" : "var(--BV-slate)",
                     }}
                   >
                     {unit}
@@ -354,20 +330,17 @@ export function MeasurementEntryModal({
 
             {/* AI Predict Height CTA */}
             <div className="mt-1">
-              <p className="text-xs text-white/40 mb-2">
+              <p className="text-xs text-[var(--BV-muted)] mb-2">
                 Not sure of your height? Let our AI predict it using your age inputted above.
               </p>
               <button
                 onClick={handleAiPredictHeight}
                 disabled={isAiPredicting || !age}
-                className="w-full rounded-xl border border-[#2D6A4F]/40 bg-[#2D6A4F]/10 text-[#52B788]
-                           text-xs font-semibold py-2.5 transition-all hover:bg-[#2D6A4F]/20
-                           disabled:opacity-40 disabled:cursor-not-allowed
-                           flex items-center justify-center gap-2"
+                className="w-full rounded-xl border border-[var(--BV-green)]/40 bg-[var(--BV-green)]/10 text-[var(--BV-green)] text-xs font-semibold py-2.5 transition-all hover:bg-[var(--BV-green)]/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isAiPredicting ? (
                   <>
-                    <span className="w-3 h-3 rounded-full border-2 border-[#52B788]/30 border-t-[#52B788] animate-spin" />
+                    <span className="w-3 h-3 rounded-full border-2 border-[var(--BV-green)]/30 border-t-[var(--BV-green)] animate-spin" />
                     AI is estimating your height...
                   </>
                 ) : (
@@ -377,27 +350,23 @@ export function MeasurementEntryModal({
                 )}
               </button>
               {aiPredictError && (
-                <p className="text-[#F4C430]/60 text-[10px] mt-1">{aiPredictError}</p>
+                <p className="text-[var(--BV-gold)] text-[10px] mt-1">{aiPredictError}</p>
               )}
             </div>
           </div>
 
           {/* Weight (optional) */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-white/70">
+            <label className="text-sm font-medium text-[var(--BV-ink)]">
               Weight (kg){" "}
-              <span className="text-white/30 text-xs">(optional — improves waist/hip accuracy)</span>
+              <span className="text-[var(--BV-muted)] text-xs">(optional — improves waist/hip accuracy)</span>
             </label>
             <input
               type="number"
               placeholder="e.g. 70"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
-              className="w-full rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 transition outline-none focus:ring-1 focus:ring-[#F4C430]"
-              style={{
-                backgroundColor: "rgba(255,255,255,0.07)",
-                border: "1px solid rgba(255,255,255,0.12)",
-              }}
+              className="w-full rounded-xl px-4 py-2.5 text-sm text-[var(--BV-ink)] placeholder:text-[var(--BV-muted)] outline-none focus:ring-1 focus:ring-[var(--BV-gold)] bg-[var(--BV-surface)] border border-[var(--BV-cream-dark)]"
             />
           </div>
 
@@ -405,11 +374,10 @@ export function MeasurementEntryModal({
           <button
             onClick={handleSubmit}
             disabled={!age}
-            className="w-full rounded-xl font-semibold py-3.5 text-sm transition-all flex items-center justify-center gap-2"
+            className="w-full rounded-xl font-semibold py-3.5 text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
-              backgroundColor: !age ? "rgba(255,255,255,0.08)" : "#F4C430",
-              color: !age ? "rgba(255,255,255,0.3)" : "#0A0A0A",
-              cursor: !age ? "not-allowed" : "pointer",
+              backgroundColor: !age ? "var(--BV-surface)" : "var(--BV-gold)",
+              color: !age ? "var(--BV-muted)" : "var(--BV-ink)",
             }}
           >
             Continue to Scan →

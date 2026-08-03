@@ -14,6 +14,7 @@
  */
 
 import { motion } from "framer-motion";
+import { BRAND_COLORS } from "@/lib/brand";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -43,10 +44,10 @@ export function BodySilhouetteOverlay({
   const partial = isBodyDetected && (!isFullBodyVisible || !isDistanceOptimal || !isCentered);
 
   const color = allGood
-    ? "#52B788"   // Forest Green (brand)
+    ? BRAND_COLORS.qualityGood   // Forest Green
     : partial
-    ? "#FDA600"   // Brand Gold
-    : "#EF4444";  // Red — no body / not ready
+    ? BRAND_COLORS.qualityMedium // Brand Gold
+    : BRAND_COLORS.qualityBad;   // Red
 
   const opacity = allGood ? 0.5 : partial ? 0.4 : 0.3;
 

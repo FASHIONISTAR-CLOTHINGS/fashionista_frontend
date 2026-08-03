@@ -43,50 +43,50 @@ interface PhoneOrientationIndicatorProps {
 
 const STATUS_CONFIG = {
   good: {
-    ringColor:  "#2D6A4F",
-    textColor:  "#52B788",
-    bgColor:    "bg-[#2D6A4F]/15",
-    borderColor:"border-[#2D6A4F]/30",
+    ringColor:  "var(--BV-green)",
+    textColor:  "var(--BV-green-light)",
+    bgColor:    "bg-[var(--BV-green)]/15",
+    borderColor:"border-[var(--BV-green)]/30",
     label:      "✓ Camera level and ready!",
     pulse:      true,
   },
   tilted: {
-    ringColor:  "#F4C430",
-    textColor:  "#F4C430",
-    bgColor:    "bg-[#F4C430]/15",
-    borderColor:"border-[#F4C430]/30",
+    ringColor:  "var(--BV-gold)",
+    textColor:  "var(--BV-gold)",
+    bgColor:    "bg-[var(--BV-gold)]/15",
+    borderColor:"border-[var(--BV-gold)]/30",
     label:      "Almost there — adjust slightly",
     pulse:      false,
   },
   bad: {
-    ringColor:  "#DC2626",
-    textColor:  "#DC2626",
-    bgColor:    "bg-[#DC2626]/15",
-    borderColor:"border-[#DC2626]/30",
+    ringColor:  "var(--BV-red-alert)",
+    textColor:  "var(--BV-red-alert)",
+    bgColor:    "bg-[var(--BV-red-alert)]/15",
+    borderColor:"border-[var(--BV-red-alert)]/30",
     label:      "Phone tilted — please level it",
     pulse:      false,
   },
   unknown: {
-    ringColor:  "#6B7280",
-    textColor:  "#D1D5DB",
-    bgColor:    "bg-white/10",
-    borderColor:"border-white/20",
+    ringColor:  "var(--BV-slate)",
+    textColor:  "var(--BV-muted)",
+    bgColor:    "bg-[var(--BV-surface)]",
+    borderColor:"border-[var(--BV-slate)]/30",
     label:      "Waiting for orientation data...",
     pulse:      false,
   },
   unsupported: {
-    ringColor:  "#6B7280",
-    textColor:  "#9CA3AF",
-    bgColor:    "bg-white/10",
-    borderColor:"border-white/20",
+    ringColor:  "var(--BV-slate)",
+    textColor:  "var(--BV-muted)",
+    bgColor:    "bg-[var(--BV-surface)]",
+    borderColor:"border-[var(--BV-slate)]/30",
     label:      "Place phone on a stable surface facing you",
     pulse:      false,
   },
   requesting: {
-    ringColor:  "#F4C430",
-    textColor:  "#F4C430",
-    bgColor:    "bg-[#F4C430]/10",
-    borderColor:"border-[#F4C430]/20",
+    ringColor:  "var(--BV-gold)",
+    textColor:  "var(--BV-gold)",
+    bgColor:    "bg-[var(--BV-gold)]/10",
+    borderColor:"border-[var(--BV-gold)]/20",
     label:      "Tap to allow orientation access...",
     pulse:      false,
   },
@@ -201,7 +201,7 @@ export function PhoneOrientationIndicator({
 
       {/* Degree reading (dev-friendly, only when tilted) */}
       {(status === "tilted" || status === "bad") && (
-        <p className="text-[10px] text-white/30 font-mono">
+        <p className="text-[10px] text-[var(--BV-muted)] font-mono">
           {tiltDegrees.toFixed(1)}° off vertical
         </p>
       )}

@@ -52,6 +52,16 @@ export interface PoseIntelligenceResult {
   /** 0-100 composite readiness score */
   readinessScore: number;
 
+  /** Approximate feet the user should move based on distance ratio */
+  distanceFeet: number;
+
+  /** Calibrated coaching message for distance */
+  distanceMessage: string;
+  /** Calibrated coaching message for centering */
+  centeringMessage: string;
+  /** Calibrated coaching message for arms */
+  armsMessage: string;
+
   /** Primary actionable message for the user */
   primaryMessage: string;
   /** Secondary supporting message */
@@ -86,6 +96,7 @@ const LM = {
 export function analyzePose(
   normalLandmarks: Landmark[],
   worldLandmarks: Landmark[],
+  userHeightCm?: number,
 ): PoseIntelligenceResult {
   const result: PoseIntelligenceResult = {
     isFullBodyVisible: false,
@@ -101,6 +112,10 @@ export function analyzePose(
     feetWidthRatio: 0,
     overallReady: false,
     readinessScore: 0,
+    distanceFeet: 0,
+    distanceMessage: "",
+    centeringMessage: "",
+    armsMessage: "",
     primaryMessage: "Step in front of the camera",
     secondaryMessage: "",
   };
@@ -135,6 +150,7 @@ export function analyzePose(
   result.isFullBodyVisible = result.missingParts.length === 0;
 
   // ── Distance (body span as fraction of frame height) ──────────────────────
+  const OPTIMAL_SPAN = 0.72;
   if (nose && ankleVis) {
     const avgAnkleY = lAnkle && rAnkle
       ? (lAnkle.y + rAnkle.y) / 2
@@ -142,10 +158,31 @@ export function analyzePose(
     const span = Math.abs(avgAnkleY - nose.y);
     result.distancePercent = span;
 
-    if (span > 0.88) result.distanceStatus = "too_close";
-    else if (span >= 0.68) result.distanceStatus = "optimal";
-    else if (span < 0.50) result.distanceStatus = "too_far";
-    else result.distanceStatus = "optimal"; // 0.50-0.68 acceptable margin
+    if (span > 0.85) result.distanceStatus = "too_close";
+    else if (span >= 0.60) result.distanceStatus = "optimal";
+    else if (span < 0.45) result.distanceStatus = "too_far";
+    else result.distanceStatus = "optimal";
+
+    // Calibrated "step back / closer by N feet" guidance.
+    // Using the user-supplied height gives a rough distance estimate.
+    const height = userHeightCm && userHeightCm > 50 ? userHeightCm : 170;
+    const distanceCm = (height / 100) * (OPTIMAL_SPAN / Math.max(span, 0.15));
+    const optimalDistanceCm = (height / 100) * 1.15; // ~2m for 170cm
+    const diffCm = distanceCm - optimalDistanceCm;
+    result.distanceFeet = Math.max(0.5, Math.abs(diffCm) / 30.48); // cm → feet
+
+    if (result.distanceStatus === "too_close") {
+      if (result.distanceFeet > 2.5) result.distanceMessage = `Step back ${Math.round(result.distanceFeet)} feet`;
+      else if (result.distanceFeet > 1.3) result.distanceMessage = `Step back 1 foot`;
+      else result.distanceMessage = `Step back a little`;
+    } else if (result.distanceStatus === "too_far") {
+      if (result.distanceFeet > 2.5) result.distanceMessage = `Step closer ${Math.round(result.distanceFeet)} feet`;
+      else if (result.distanceFeet > 1.3) result.distanceMessage = `Step closer 1 foot`;
+      else result.distanceMessage = `Step closer a little`;
+    } else {
+      result.distanceMessage = "Distance looks good";
+      result.distanceFeet = 0;
+    }
   }
 
   // ── Horizontal Centering ──────────────────────────────────────────────────
@@ -153,9 +190,22 @@ export function analyzePose(
   if (nose && (nose.visibility ?? 0) > VIS) {
     const mirroredX = 1 - nose.x;
     result.centerOffset = mirroredX - 0.5;
-    if (mirroredX < 0.33) result.centeringStatus = "too_right";
-    else if (mirroredX > 0.67) result.centeringStatus = "too_left";
+    if (mirroredX < 0.35) result.centeringStatus = "too_right";
+    else if (mirroredX > 0.65) result.centeringStatus = "too_left";
     else result.centeringStatus = "centered";
+
+    const absOffset = Math.abs(result.centerOffset);
+    if (result.centeringStatus === "centered") {
+      result.centeringMessage = "Centered";
+    } else if (result.centeringStatus === "too_left") {
+      if (absOffset > 0.25) result.centeringMessage = "Move a little to your left";
+      else if (absOffset > 0.12) result.centeringMessage = "Move slightly to your left";
+      else result.centeringMessage = "Move tiny bit to your left";
+    } else {
+      if (absOffset > 0.25) result.centeringMessage = "Move a little to your right";
+      else if (absOffset > 0.12) result.centeringMessage = "Move slightly to your right";
+      else result.centeringMessage = "Move tiny bit to your right";
+    }
   }
 
   // ── Arms Angle (A-pose: ~45° from vertical) ────────────────────────────────
@@ -181,6 +231,11 @@ export function analyzePose(
     else if (avgAngle < 30) result.armsStatus = "approaching_45";
     else if (avgAngle <= 65) result.armsStatus = "at_45";
     else result.armsStatus = "too_high";
+
+    if (result.armsStatus === "at_45") result.armsMessage = "Arms at perfect 45°";
+    else if (result.armsStatus === "approaching_45") result.armsMessage = "Almost — open arms a bit more";
+    else if (result.armsStatus === "at_sides") result.armsMessage = "Open arms to 45°";
+    else if (result.armsStatus === "too_high") result.armsMessage = "Lower arms slightly";
   } else if (lShoulder && lAnkle && rShoulder) {
     // Fallback using normalized landmarks: check wrist Y position relative to body
     const lWrist = normalLandmarks[LM.L_WRIST];
@@ -190,9 +245,16 @@ export function analyzePose(
 
     if (lWrist && rWrist) {
       const avgWristY = (lWrist.y + rWrist.y) / 2;
-      if (avgWristY > hipY) result.armsStatus = "at_sides";
-      else if (avgWristY > shoulderY) result.armsStatus = "at_45";
-      else result.armsStatus = "too_high";
+      if (avgWristY > hipY) {
+        result.armsStatus = "at_sides";
+        result.armsMessage = "Open arms to 45°";
+      } else if (avgWristY > shoulderY) {
+        result.armsStatus = "at_45";
+        result.armsMessage = "Arms at perfect 45°";
+      } else {
+        result.armsStatus = "too_high";
+        result.armsMessage = "Lower arms slightly";
+      }
     }
   }
 
@@ -219,34 +281,25 @@ export function analyzePose(
   result.readinessScore = score;
   result.overallReady = score >= 70;
 
-  // ── Primary Coaching Message ──────────────────────────────────────────────
+  // ── Primary Coaching Message (priority: full body → distance → centering → arms) ─
   if (!result.isFullBodyVisible) {
     if (result.missingParts.includes("head")) {
-      result.primaryMessage = "Step back — head is cut off";
+      result.primaryMessage = "Step back so your head is visible";
     } else if (result.missingParts.includes("ankles")) {
-      result.primaryMessage = "Step back to show your feet";
+      result.primaryMessage = "Step back so your feet are visible";
     } else {
-      result.primaryMessage = "Ensure your full body is visible";
+      result.primaryMessage = "Show your full body in the frame";
       result.secondaryMessage = `Not visible: ${result.missingParts.join(", ")}`;
     }
-  } else if (result.distanceStatus === "too_close") {
-    result.primaryMessage = "Take 2 steps back";
-    result.secondaryMessage = "You are too close to the camera";
-  } else if (result.distanceStatus === "too_far") {
-    result.primaryMessage = "Step closer to the camera";
-    result.secondaryMessage = "Too far away";
-  } else if (result.centeringStatus === "too_left") {
-    result.primaryMessage = "Move right";
-    result.secondaryMessage = "Center yourself in frame";
-  } else if (result.centeringStatus === "too_right") {
-    result.primaryMessage = "Move left";
-    result.secondaryMessage = "Center yourself in frame";
-  } else if (result.armsStatus === "at_sides") {
-    result.primaryMessage = "Open your arms";
-    result.secondaryMessage = "Hold arms at 45° from your body";
-  } else if (result.armsStatus === "too_high") {
-    result.primaryMessage = "Lower your arms slightly";
-    result.secondaryMessage = "Keep arms at 45° angle";
+  } else if (result.distanceStatus !== "optimal") {
+    result.primaryMessage = result.distanceMessage;
+    result.secondaryMessage = result.centeringMessage;
+  } else if (result.centeringStatus !== "centered") {
+    result.primaryMessage = result.centeringMessage;
+    result.secondaryMessage = result.distanceMessage;
+  } else if (result.armsStatus !== "at_45") {
+    result.primaryMessage = result.armsMessage;
+    result.secondaryMessage = "Stand straight, arms relaxed at 45°";
   } else if (result.overallReady) {
     result.primaryMessage = "Perfect! Hold still...";
     result.secondaryMessage = "Capturing in 3 seconds";

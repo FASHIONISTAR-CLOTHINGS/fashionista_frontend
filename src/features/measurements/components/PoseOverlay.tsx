@@ -11,6 +11,7 @@
 
 import { useEffect, useRef, type RefObject } from "react";
 import type { Landmark } from "../hooks/usePoseLandmarker";
+import { BRAND_COLORS } from "@/lib/brand";
 
 // ─── MediaPipe Pose Connections ───────────────────────────────────────────────
 // Based on the official BlazePose 33-landmark topology
@@ -120,15 +121,15 @@ export function PoseOverlay({ normalLandmarks, quality, canvasRef, videoRef }: P
 
       const transform = getDisplayTransform(video, width, height);
       const strokeColor = frameQuality >= 0.80
-        ? "rgba(82, 183, 136, 0.9)"
+        ? `${BRAND_COLORS.qualityGood}E6`
         : frameQuality >= 0.65
-        ? "rgba(253, 166, 0, 0.85)"
-        : "rgba(239, 68, 68, 0.7)";
+        ? `${BRAND_COLORS.qualityMedium}D9`
+        : `${BRAND_COLORS.qualityBad}B3`;
       const fillColor = frameQuality >= 0.80
-        ? "rgba(82, 183, 136, 1)"
+        ? BRAND_COLORS.qualityGood
         : frameQuality >= 0.65
-        ? "rgba(253, 166, 0, 1)"
-        : "rgba(239, 68, 68, 0.9)";
+        ? BRAND_COLORS.qualityMedium
+        : `${BRAND_COLORS.qualityBad}E6`;
 
       context.lineCap = "round";
       context.lineWidth = 2.5;

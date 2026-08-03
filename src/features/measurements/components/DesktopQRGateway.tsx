@@ -15,10 +15,10 @@
  *  6. Footer      — privacy note
  *
  * Brand Compliance:
- *  - Forest Green #2D6A4F (primary)
- *  - Golden Yellow #F4C430 (accent / copy flash)
- *  - Near-black #0A0A0A (background)
- *  - White text only
+ *  - Forest Green #01454A (primary)
+ *  - Golden Yellow #FDA600 (accent / copy flash)
+ *  - Cream #F8F5ED (background)
+ *  - Ink #1A1208 (text)
  *
  * Animations (Framer Motion):
  *  - QR card:    scale(0.85→1) + opacity(0→1), spring, delay 0.1s
@@ -30,8 +30,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-
-// ─── Types ─────────────────────────────────────────────────────────────────────
+import { BRAND_COLORS } from "@/lib/brand";
 
 export interface DesktopQRGatewayProps {
   /** The scan session UUID */
@@ -208,10 +207,10 @@ export function DesktopQRGateway({
   const isCritical = remaining < 5 * 60 && !isExpired;   // < 5 min
 
   const timerColor = isCritical
-    ? "#EF4444"
+    ? BRAND_COLORS.qualityBad
     : isWarning
-    ? "#F4C430"
-    : "#52B788";
+    ? BRAND_COLORS.qualityMedium
+    : BRAND_COLORS.qualityGood;
 
   // ── Share button definition ──────────────────────────────────────────────────
   const shareButtons = [
@@ -256,15 +255,7 @@ export function DesktopQRGateway({
 
   // ────────────────────────────────────────────────────────────────────────────
   return (
-    <div className={`relative min-h-screen bg-gradient-to-br from-[#0A0A0A] via-[#0D1810] to-[#0A0A0A] flex items-center justify-center px-4 py-12 ${className ?? ""}`}>
-
-      {/* Background glow */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-30"
-        style={{
-          background: "radial-gradient(ellipse 60% 50% at 50% 30%, #2D6A4F33 0%, transparent 70%)",
-        }}
-      />
+    <div className={`relative min-h-screen bg-[var(--BV-cream)] flex items-center justify-center px-4 py-12 ${className ?? ""}`}>
 
       <motion.div
         initial={{ opacity: 0, y: 24 }}
@@ -278,16 +269,15 @@ export function DesktopQRGateway({
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1, type: "spring", stiffness: 260 }}
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 border border-[#2D6A4F]/40"
-            style={{ background: "linear-gradient(135deg, #2D6A4F22, #2D6A4F44)" }}
+            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 border border-[var(--BV-green)]/40 bg-[var(--BV-green)]/10 text-[var(--BV-green)]"
           >
             <span className="text-3xl">📱</span>
           </motion.div>
 
-          <h1 className="text-2xl font-bold text-white tracking-tight">
+          <h1 className="text-2xl font-bold text-[var(--BV-ink)] tracking-tight">
             Scan with Your Phone
           </h1>
-          <p className="mt-2 text-sm text-white/50 max-w-xs mx-auto">
+          <p className="mt-2 text-sm text-[var(--BV-slate)] max-w-xs mx-auto">
             Your AI body scan requires a mobile camera. Scan the QR code or share
             the link to continue on your phone.
           </p>
@@ -298,24 +288,18 @@ export function DesktopQRGateway({
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2, type: "spring", stiffness: 220, damping: 18 }}
-          className="rounded-2xl p-6 mb-6 flex flex-col items-center"
-          style={{
-            background:   "linear-gradient(135deg, #0F1F17, #162a1c)",
-            border:       "1px solid #2D6A4F40",
-            boxShadow:    "0 8px 40px rgba(45,106,79,0.15), 0 2px 8px rgba(0,0,0,0.4)",
-          }}
+          className="rounded-2xl p-6 mb-6 flex flex-col items-center bg-[var(--BV-surface)] border border-[var(--BV-cream-dark)] shadow-xl"
         >
           {isExpired ? (
             <div className="flex flex-col items-center gap-4 py-8">
               <div className="text-4xl">⏰</div>
-              <p className="text-white/60 text-sm text-center">
+              <p className="text-[var(--BV-slate)] text-sm text-center">
                 This scan session has expired.
               </p>
               <button
                 id="qr-gateway-refresh"
                 onClick={onRefresh}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
-                style={{ backgroundColor: "#2D6A4F", color: "#fff" }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] bg-[var(--BV-green)] text-[var(--BV-cream)]"
               >
                 <IconRefresh /> Generate New Code
               </button>
@@ -324,8 +308,7 @@ export function DesktopQRGateway({
             <>
               {/* QR Image */}
               <div
-                className="rounded-xl overflow-hidden p-2"
-                style={{ background: "#0A0A0A", border: "2px solid #2D6A4F50" }}
+                className="rounded-xl overflow-hidden p-2 bg-[var(--BV-cream)] border-2 border-[var(--BV-cream-dark)]"
               >
                 <Image
                   id="qr-code-image"
@@ -338,27 +321,26 @@ export function DesktopQRGateway({
                 />
               </div>
 
-              <p className="mt-4 text-xs text-white/40 text-center">
+              <p className="mt-4 text-xs text-[var(--BV-muted)] text-center">
                 Open your phone camera and point it at the QR code
               </p>
             </>
           ) : (
             /* Loading skeleton */
-            <div className="w-[200px] h-[200px] rounded-xl bg-[#2D6A4F]/10 animate-pulse flex items-center justify-center">
-              <div className="text-white/20 text-sm">Generating…</div>
+            <div className="w-[200px] h-[200px] rounded-xl bg-[var(--BV-green)]/10 animate-pulse flex items-center justify-center">
+              <div className="text-[var(--BV-muted)] text-sm">Generating…</div>
             </div>
           )}
         </motion.div>
 
         {/* ── Scan URL field ────────────────────────────────────────────────── */}
         <div className="mb-6">
-          <label className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2 block">
+          <label className="text-xs font-semibold text-[var(--BV-slate)] uppercase tracking-wider mb-2 block">
             Or copy the link
           </label>
           <div className="flex gap-2">
             <div
-              className="flex-1 rounded-xl px-3 py-2.5 text-sm text-white/60 font-mono overflow-hidden text-ellipsis whitespace-nowrap"
-              style={{ background: "#111B15", border: "1px solid #2D6A4F30" }}
+              className="flex-1 rounded-xl px-3 py-2.5 text-sm text-[var(--BV-ink)] font-mono overflow-hidden text-ellipsis whitespace-nowrap bg-[var(--BV-surface)] border border-[var(--BV-cream-dark)]"
               title={measurementUrl}
             >
               {measurementUrl}
@@ -367,10 +349,9 @@ export function DesktopQRGateway({
               id="qr-gateway-copy-btn"
               onClick={handleCopy}
               whileTap={{ scale: 0.95 }}
-              animate={{ backgroundColor: copied ? "#F4C430" : "#2D6A4F" }}
+              animate={{ backgroundColor: copied ? BRAND_COLORS.goldenYellow : BRAND_COLORS.forestGreen }}
               transition={{ duration: 0.2 }}
-              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold shrink-0"
-              style={{ color: copied ? "#0A0A0A" : "#fff" }}
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold shrink-0 text-[var(--BV-cream)]"
               aria-label="Copy measurement link to clipboard"
             >
               {copied ? <IconCheck /> : <IconCopy />}
@@ -381,7 +362,7 @@ export function DesktopQRGateway({
 
         {/* ── Share buttons ─────────────────────────────────────────────────── */}
         <div className="mb-6">
-          <label className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3 block">
+          <label className="text-xs font-semibold text-[var(--BV-slate)] uppercase tracking-wider mb-3 block">
             Share via
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -397,9 +378,9 @@ export function DesktopQRGateway({
                 whileTap={{ scale: 0.96 }}
                 className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors"
                 style={{
-                  background: btn.accent ? "#F4C430" : "#111B15",
-                  border:     `1px solid ${btn.accent ? "#F4C430" : "#2D6A4F30"}`,
-                  color:      btn.accent ? "#0A0A0A" : "#fff",
+                  background: btn.accent ? BRAND_COLORS.goldenYellow : "var(--BV-surface)",
+                  border:     `1px solid ${btn.accent ? BRAND_COLORS.goldenYellow : "var(--BV-cream-dark)"}`,
+                  color:      btn.accent ? BRAND_COLORS.ink : "var(--BV-ink)",
                 }}
                 aria-label={btn.label}
               >
@@ -411,10 +392,8 @@ export function DesktopQRGateway({
         </div>
 
         {/* ── Session timer ─────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between px-4 py-3 rounded-xl mb-6"
-          style={{ background: "#111B15", border: "1px solid #2D6A4F20" }}
-        >
-          <span className="text-xs text-white/40">Session expires in</span>
+        <div className="flex items-center justify-between px-4 py-3 rounded-xl mb-6 bg-[var(--BV-surface)] border border-[var(--BV-cream-dark)]">
+          <span className="text-xs text-[var(--BV-muted)]">Session expires in</span>
           <motion.span
             key={isWarning ? "warning" : "ok"}
             animate={isWarning ? { opacity: [1, 0.5, 1] } : {}}
@@ -426,21 +405,21 @@ export function DesktopQRGateway({
           </motion.span>
         </div>
 
-        {/* ── Cancel ────────────────────────────────────────────────────────── */}
+        {/* ── Cancel / done row ─────────────────────────────────────────────── */}
         {onCancel && (
-          <div className="text-center">
+          <div className="text-center mb-4">
             <button
               id="qr-gateway-cancel"
               onClick={onCancel}
-              className="text-xs text-white/30 hover:text-white/50 transition-colors"
+              className="text-sm text-[var(--BV-slate)] hover:text-[var(--BV-ink)] underline"
             >
-              Cancel and go back
+              Cancel and return
             </button>
           </div>
         )}
 
         {/* ── Privacy footer ────────────────────────────────────────────────── */}
-        <p className="text-center text-xs text-white/20 mt-6">
+        <p className="text-center text-xs text-[var(--BV-muted)] mt-6">
           🔒 No video stored • Only pose coordinates transmitted • Session ID:{" "}
           <span data-testid="qr-session-id">{sessionId.slice(0, 8)}…</span>
         </p>

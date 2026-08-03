@@ -198,22 +198,22 @@ export function ScanEntryClient() {
   // ── ERROR PHASE ──
   if (phase === "error") {
     return (
-      <div className="min-h-screen bg-[#F4F3EC] px-4 py-8 flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--BV-cream)] px-4 py-8 flex items-center justify-center">
         <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 rounded-full bg-red-500/15 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-16 h-16 rounded-full bg-[var(--BV-red-alert)]/10 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-[var(--BV-red-alert)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-[#01454A] mb-2">Session Failed</h2>
-          <p className="text-sm text-[#7A6B44] mb-6">{error}</p>
+          <h2 className="text-xl font-bold text-[var(--BV-ink)] mb-2">Session Failed</h2>
+          <p className="text-sm text-[var(--BV-slate)] mb-6">{error}</p>
           <button
             onClick={() => {
               setPhase("modal");
               setShowModal(true);
               setError(null);
             }}
-            className="rounded-xl bg-[#01454A] hover:bg-[#016B73] text-white
+            className="rounded-xl bg-[var(--BV-green)] hover:bg-[var(--BV-green-light)] text-[var(--BV-cream)]
                        font-semibold text-sm px-6 py-3 transition-colors"
           >
             Try Again
@@ -226,20 +226,20 @@ export function ScanEntryClient() {
   // ── INITIATING PHASE ──
   if (phase === "initiating") {
     return (
-      <div className="min-h-screen bg-[#F4F3EC] px-4 py-8 flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--BV-cream)] px-4 py-8 flex items-center justify-center">
         <div className="max-w-md w-full text-center">
           <div className="relative w-20 h-20 mx-auto mb-6">
-            <div className="absolute inset-0 rounded-full border-4 border-[#FDA600]/20" />
-            <div className="absolute inset-0 rounded-full border-4 border-t-[#FDA600] animate-spin" />
-            <div className="absolute inset-0 flex items-center justify-center text-[#FDA600]">
+            <div className="absolute inset-0 rounded-full border-4 border-[var(--BV-gold)]/20" />
+            <div className="absolute inset-0 rounded-full border-4 border-t-[var(--BV-gold)] animate-spin" />
+            <div className="absolute inset-0 flex items-center justify-center text-[var(--BV-gold)]">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                 <circle cx="12" cy="13" r="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
               </svg>
             </div>
           </div>
-          <h2 className="text-xl font-bold text-[#01454A] mb-2">Creating your scan session...</h2>
-          <p className="text-sm text-[#7A6B44]">Preparing AI model and camera permissions</p>
+          <h2 className="text-xl font-bold text-[var(--BV-ink)] mb-2">Creating your scan session...</h2>
+          <p className="text-sm text-[var(--BV-slate)]">Preparing AI model and camera permissions</p>
         </div>
       </div>
     );
@@ -247,20 +247,20 @@ export function ScanEntryClient() {
 
   // ── TUTORIAL + MODAL PHASE ──
   return (
-    <div className="min-h-screen bg-[#F4F3EC] px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[var(--BV-cream)] px-4 py-8 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
         {/* Page header */}
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#01454A]/8 border border-[#01454A]/15 px-4 py-1.5 mb-4">
-            <span className="w-2 h-2 rounded-full bg-[#FDA600] animate-pulse" />
-            <span className="text-xs font-medium text-[#01454A] tracking-wider uppercase">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[var(--BV-green)]/8 border border-[var(--BV-green)]/15 px-4 py-1.5 mb-4">
+            <span className="w-2 h-2 rounded-full bg-[var(--BV-gold)] animate-pulse" />
+            <span className="text-xs font-medium text-[var(--BV-green)] tracking-wider uppercase">
               AI Body Measurement
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#01454A] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--BV-ink)] tracking-tight">
             30-Second Body Scan
           </h1>
-          <p className="mt-2 text-sm text-[#7A6B44] max-w-sm mx-auto">
+          <p className="mt-2 text-sm text-[var(--BV-slate)] max-w-sm mx-auto">
             Stand in front of your camera in fitted clothing. Our in-house AI
             captures your 14 key measurements automatically.
           </p>
@@ -284,7 +284,7 @@ export function ScanEntryClient() {
         />
 
         {/* Footer note */}
-        <p className="mt-6 text-center text-xs text-[#7A6B44]/60">
+        <p className="mt-6 text-center text-xs text-[var(--BV-muted)]">
           All measurements are processed on our servers. No video is stored or
           transmitted — only pose landmark coordinates.
         </p>

@@ -62,13 +62,13 @@ export function CalibrationGuide({
     : "Camera setup";
 
   // Color theme
-  const color = isReady ? "#52B788" : isMedium ? "#F4C430" : "#DC2626";
-  const colorClass = isReady ? "text-[#52B788]" : isMedium ? "text-[#F4C430]" : "text-[#DC2626]/80";
+  const color = isReady ? "var(--BV-green-light)" : isMedium ? "var(--BV-gold)" : "var(--BV-red-alert)";
+  const colorClass = isReady ? "text-[var(--BV-green-light)]" : isMedium ? "text-[var(--BV-gold)]" : "text-[var(--BV-red-alert)]/80";
   const bgClass = isReady
-    ? "bg-[#2D6A4F]/20 border-[#2D6A4F]/40"
+    ? "bg-[var(--BV-green)]/20 border-[var(--BV-green)]/40"
     : isMedium
-    ? "bg-[#F4C430]/15 border-[#F4C430]/30"
-    : "bg-[#DC2626]/15 border-[#DC2626]/20";
+    ? "bg-[var(--BV-gold)]/15 border-[var(--BV-gold)]/30"
+    : "bg-[var(--BV-red-alert)]/15 border-[var(--BV-red-alert)]/20";
 
   return (
     <div
@@ -114,21 +114,21 @@ export function CalibrationGuide({
               {primaryMsg}
             </p>
             {secondaryMsg && (
-              <p className="text-[10px] text-white/40 mt-0.5 leading-tight">{secondaryMsg}</p>
+              <p className="text-[10px] text-[var(--BV-muted)] mt-0.5 leading-tight">{secondaryMsg}</p>
             )}
           </div>
           {/* Pulsing dot */}
           <div className={cn(
             "w-2.5 h-2.5 rounded-full flex-shrink-0 mt-0.5",
-            isReady ? "bg-[#52B788] animate-pulse" : isMedium ? "bg-[#F4C430]" : "bg-[#DC2626]/60",
+            isReady ? "bg-[var(--BV-green-light)] animate-pulse" : isMedium ? "bg-[var(--BV-gold)]" : "bg-[var(--BV-red-alert)]/60",
           )} />
         </div>
       </div>
 
       {/* ── Estimated height chip (top-left) ── */}
       {estimatedHeight && (
-        <div className="absolute top-4 left-4 px-2.5 py-1 rounded-lg bg-black/40 backdrop-blur-sm
-                        border border-white/10 text-xs text-white/60 font-mono">
+        <div className="absolute top-4 left-4 px-2.5 py-1 rounded-lg bg-[var(--BV-ink)]/40 backdrop-blur-sm
+                        border border-[var(--BV-cream-dark)] text-xs text-[var(--BV-cream)]/80 font-mono">
           ~{estimatedHeight.toFixed(1)} cm
         </div>
       )}
@@ -197,8 +197,8 @@ function DistanceIndicator({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
     >
-      <div className="bg-black/70 backdrop-blur-sm rounded-full px-4 py-1.5 border border-white/10">
-        <p className="text-[#F4C430] font-bold text-xs whitespace-nowrap">{label}</p>
+      <div className="bg-[var(--BV-ink)]/70 backdrop-blur-sm rounded-full px-4 py-1.5 border border-[var(--BV-cream-dark)]/50">
+        <p className="text-[var(--BV-gold)] font-bold text-xs whitespace-nowrap">{label}</p>
       </div>
     </motion.div>
   );
@@ -219,8 +219,8 @@ function CenteringArrows({ status }: { status: "too_left" | "centered" | "too_ri
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0 }}
     >
-      <div className="bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-2 border border-[#F4C430]/30">
-        <p className="text-[#F4C430] font-bold text-xl">
+      <div className="bg-[var(--BV-ink)]/60 backdrop-blur-sm rounded-full px-2.5 py-2 border border-[var(--BV-gold)]/30">
+        <p className="text-[var(--BV-gold)] font-bold text-xl">
           {status === "too_left" ? "→" : "←"}
         </p>
       </div>
@@ -239,19 +239,19 @@ function ArmsGuide() {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="bg-black/60 backdrop-blur-sm rounded-xl px-3 py-2 border border-[#F4C430]/40 flex flex-col items-center gap-1">
+      <div className="bg-[var(--BV-ink)]/60 backdrop-blur-sm rounded-xl px-3 py-2 border border-[var(--BV-gold)]/40 flex flex-col items-center gap-1">
         {/* Mini arms-at-45° SVG guide */}
         <svg width="48" height="28" viewBox="0 0 48 28" fill="none">
           {/* Left arm at 45° */}
-          <line x1="24" y1="10" x2="4" y2="26" stroke="#F4C430" strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="24" y1="10" x2="4" y2="26" stroke="var(--BV-gold)" strokeWidth="2.5" strokeLinecap="round" />
           {/* Right arm at 45° */}
-          <line x1="24" y1="10" x2="44" y2="26" stroke="#F4C430" strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="24" y1="10" x2="44" y2="26" stroke="var(--BV-gold)" strokeWidth="2.5" strokeLinecap="round" />
           {/* Shoulders */}
-          <line x1="12" y1="10" x2="36" y2="10" stroke="#F4C430" strokeWidth="2" strokeLinecap="round" />
+          <line x1="12" y1="10" x2="36" y2="10" stroke="var(--BV-gold)" strokeWidth="2" strokeLinecap="round" />
           {/* Head hint */}
-          <circle cx="24" cy="4" r="3" stroke="#F4C430" strokeWidth="1.5" fill="none" />
+          <circle cx="24" cy="4" r="3" stroke="var(--BV-gold)" strokeWidth="1.5" fill="none" />
         </svg>
-        <p className="text-[#F4C430] text-[10px] font-semibold">Open arms to 45°</p>
+        <p className="text-[var(--BV-gold)] text-[10px] font-semibold">Open arms to 45°</p>
       </div>
     </motion.div>
   );
@@ -272,7 +272,7 @@ function ReadinessRing({ score, color }: { score: number; color: string }) {
         <circle
           cx="18" cy="18" r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.1)"
+          stroke="rgba(255,255,255,0.15)"
           strokeWidth="3"
         />
         {/* Progress arc */}
@@ -308,7 +308,7 @@ function ReadinessRing({ score, color }: { score: number; color: string }) {
 function ScanLine() {
   return (
     <motion.div
-      className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-[#52B788] to-transparent"
+      className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-[var(--BV-green-light)] to-transparent"
       initial={{ top: "5%", opacity: 0.7 }}
       animate={{ top: ["5%", "90%", "5%"] }}
       transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}

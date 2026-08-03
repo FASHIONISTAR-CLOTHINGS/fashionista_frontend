@@ -53,12 +53,14 @@ export interface PhoneOrientationData {
   beta: number | null;
   /** True when status === 'good' */
   isLevel: boolean;
-  /** True when status has been 'good' continuously for ≥ 1500ms — triggers auto-advance */
+  /** True when status has been 'good' continuously for ≥ 2500ms */
   isSustainedGood: boolean;
   /** Degrees off-vertical (absolute gamma value) */
   tiltDegrees: number;
   /** Direction of tilt for user correction: 'left' | 'right' | null */
   tiltDirection: "left" | "right" | null;
+  /** Milliseconds the phone has been continuously 'bad'. 0 if not bad. */
+  badForMs: number;
   /** Request iOS 13+ permission — call from a button tap event handler */
   requestPermission: () => Promise<void>;
   /** Whether the device supports orientation events */
@@ -91,13 +93,15 @@ export function usePhoneOrientation(): PhoneOrientationData {
   const [gamma, setGamma] = useState<number | null>(null);
   const [beta, setBeta] = useState<number | null>(null);
   const [isSustainedGood, setIsSustainedGood] = useState(false);
+  const [badForMs, setBadForMs] = useState(0);
   const handlerRef = useRef<((e: DeviceOrientationEvent) => void) | null>(null);
   const lastGoodTimestampRef = useRef<number | null>(null);
+  const lastBadTimestampRef = useRef<number | null>(null);
   const receivedEventRef = useRef(false);
   const supportProbeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /** Duration of continuous 'good' state required to trigger auto-advance (ms) */
-  const SUSTAINED_GOOD_MS = 1500;
+  const SUSTAINED_GOOD_MS = 2500;
   const SUPPORT_PROBE_MS = 2000;
 
   // ── Compute status from raw values ─────────────────────────────────────────
@@ -161,8 +165,10 @@ export function usePhoneOrientation(): PhoneOrientationData {
       const newStatus = computeStatus(rawGamma, rawBeta);
       setStatus(newStatus);
 
-      // ── Sustained green tracking ──────────────────────────────────────────
+      // ── Sustained green / bad tracking ────────────────────────────────────
       if (newStatus === "good") {
+        lastBadTimestampRef.current = null;
+        setBadForMs(0);
         if (lastGoodTimestampRef.current === null) {
           lastGoodTimestampRef.current = Date.now();
         }
@@ -173,6 +179,10 @@ export function usePhoneOrientation(): PhoneOrientationData {
       } else {
         lastGoodTimestampRef.current = null;
         setIsSustainedGood(false);
+        if (lastBadTimestampRef.current === null) {
+          lastBadTimestampRef.current = Date.now();
+        }
+        setBadForMs(Date.now() - lastBadTimestampRef.current);
       }
     };
 
@@ -270,6 +280,7 @@ export function usePhoneOrientation(): PhoneOrientationData {
     beta,
     isLevel:          status === "good",
     isSustainedGood,
+    badForMs,
     tiltDegrees,
     tiltDirection,
     requestPermission,

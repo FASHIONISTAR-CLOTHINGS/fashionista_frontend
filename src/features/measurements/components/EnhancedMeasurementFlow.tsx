@@ -1,54 +1,39 @@
 "use client";
 /**
  * @file EnhancedMeasurementFlow.tsx
- * @description TASK-014: Full AI body scan orchestration component with all enhanced features.
+ * @description Full AI body scan orchestration component.
  *
- * This is the DASHBOARD version of the scan flow. The public page uses
- * InHouseMeasurementFlow (simpler, no auth required).
+ * This is the DASHBOARD version of the scan flow.
  *
  * Feature set:
- * ✅ Phone orientation detection (90° indicator: GREEN/YELLOW/RED)
- * ✅ Voice AI coaching at every phase transition
- * ✅ Auto-capture countdown (3-2-1 after 30 stable frames)
- * ✅ Landmark buffer averaging (best-frame selection)
- * ✅ Distance + centering detection with directional arrows
- * ✅ Two-pose flow: front → side → submit
- * ✅ Framer Motion phase transitions
- * ✅ Manual capture override button (accessibility)
- * ✅ Forest Green + Golden Yellow brand system throughout
- *
- * Phase flow:
- *   device_setup → positioning → front_aligning → front_countdown
- *   → front_captured → side_transition → side_positioning → side_aligning
- *   → side_countdown → side_captured → submitting → processing → completed
- *
- * Architecture:
- *   useEnhancedMeasurementCapture (state + hooks)
- *   useAutoCapture (state machine per pose)
- *   useVoiceCoach (speech synthesis)
- *   usePhoneOrientation (DeviceOrientationEvent)
- *
- * Usage:
- *   <EnhancedMeasurementFlow onComplete={(id) => router.push(`/measurements/${id}`)} />
+ * - Phone orientation detection with continuous level guard
+ * - Full-screen camera viewport like a selfie preview
+ * - Voice AI coaching at every phase transition
+ * - Auto-capture countdown with safety gates
+ * - Landmark buffer averaging
+ * - Distance + centering detection with directional guidance
+ * - Two-pose flow: front → side → submit
+ * - Brand-compliant colors (#01454A, #FDA600, #F8F5ED, #1A1208)
  */
 
 import { useEffect, useRef, useCallback, useState, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEnhancedMeasurementCapture } from "../hooks/useEnhancedMeasurementCapture";
+import type { EnhancedCaptureFrame } from "../hooks/useEnhancedMeasurementCapture";
 import { useAutoCapture } from "../hooks/useAutoCapture";
 import { useVoiceCoach } from "../hooks/useVoiceCoach";
 import { usePhoneOrientation, type OrientationStatus } from "../hooks/usePhoneOrientation";
-import { PoseOverlay } from "./PoseOverlay";
 import { CalibrationGuide } from "./CalibrationGuide";
 import { VoiceCoachDisplay } from "./VoiceCoachDisplay";
 import { PhoneOrientationIndicator } from "./PhoneOrientationIndicator";
 import { CountdownOverlay } from "./CountdownOverlay";
-import { ScanProgressStepper } from "./ScanProgressStepper";
 import { ScanTutorialOverlay } from "./ScanTutorialOverlay";
 import { MeasurementReveal } from "./MeasurementReveal";
-import { BodySilhouetteOverlay } from "./BodySilhouetteOverlay";
 import { useHapticFeedback } from "../hooks/useHapticFeedback";
 import { ScanFallbackManual } from "./ScanFallbackManual";
+import { CameraViewport } from "./CameraViewport";
+import { useScanStore } from "../store/scanStore";
+import { encryptLandmarks, decryptLandmarks } from "../lib/scanCrypto";
 import { cn } from "@/lib/utils";
 import { POSE_THRESHOLDS, CAPTURE_CONFIG } from "@/lib/brand";
 import { analyzePose } from "../lib/poseIntelligence";
@@ -111,14 +96,16 @@ export function EnhancedMeasurementFlow({
       ? 1
       : 0.5
     : 0;
-  const capture     = useEnhancedMeasurementCapture(videoRef, {
-    sessionId: sessionId,
-    initialWeightKg: initialWeightKg,
-    initialSex: initialSex,
+
+  const capture = useEnhancedMeasurementCapture(videoRef, {
+    sessionId,
+    initialWeightKg,
+    initialSex,
     orientationConfidence,
   });
-  const voice       = useVoiceCoach();
-  const haptic      = useHapticFeedback();
+
+  const voice  = useVoiceCoach();
+  const haptic = useHapticFeedback();
   const [tutorialDone, setTutorialDone] = useState(false);
 
   // Separate auto-capture instances for front and side
@@ -145,11 +132,91 @@ export function EnhancedMeasurementFlow({
   // RAF refs
   const rafRef = useRef<number | null>(null);
   const frameLoopRef = useRef<() => void>(() => {});
-  // A-2 FIX: Track previous frame's landmarks for jitter / stability detection
   const prevNosePosRef = useRef<{ x: number; y: number } | null>(null);
 
-  // Destructure stable callbacks/values used inside the frame loop
-  const { processFrame, phase: capturePhase, skipDeviceSetup } = capture;
+  // ── Destructure capture properties used for persistence and frame loop ───
+  const { processFrame, phase: capturePhase, skipDeviceSetup, frontLandmarks: captureFrontLandmarks, userHeightCm: captureUserHeightCm } = capture;
+
+  const scanStorePhase     = useScanStore((s) => s.enhancedPhase);
+  const scanStoreSessionId = useScanStore((s) => s.sessionId);
+  const frontLandmarksCipher = useScanStore((s) => s.frontLandmarksCipher);
+  const persistEnhancedState = useScanStore((s) => s.persistEnhancedState);
+  const resetScanStore = useScanStore((s) => s.reset);
+  const setScanPhase = useScanStore((s) => s.setPhase);
+
+  // ── Sync phase + front landmarks to scanStore for refresh-resume ───────
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const mapToScanPhase = (phase: typeof capturePhase): import("../store/scanStore").ScanPhase => {
+      switch (phase) {
+        case "idle": return "idle";
+        case "loading_model":
+        case "device_setup":
+        case "positioning":
+        case "front_aligning":
+        case "front_countdown":
+          return "capturing_front";
+        case "front_captured":
+          return "side_prompt";
+        case "side_transition":
+        case "side_positioning":
+        case "side_aligning":
+        case "side_countdown":
+          return "capturing_side";
+        case "side_captured":
+        case "submitting":
+          return "submitting";
+        case "processing": return "processing";
+        case "completed":  return "completed";
+        case "failed":     return "failed";
+        default:           return "capturing_front";
+      }
+    };
+
+    const save = async () => {
+      let cipher: string | null = null;
+      if (captureFrontLandmarks && capturePhase !== "idle") {
+        cipher = await encryptLandmarks(captureFrontLandmarks, sessionId);
+      }
+      persistEnhancedState(capturePhase, cipher);
+      setScanPhase(mapToScanPhase(capturePhase));
+    };
+    void save();
+  }, [capturePhase, captureFrontLandmarks, sessionId, persistEnhancedState, setScanPhase]);
+
+  // ── Trigger auto-start / resume from persisted scanStore state ─────────
+  const didAutoStartRef = useRef(false);
+  useEffect(() => {
+    if (didAutoStartRef.current) return;
+    if (sessionId && scanStoreSessionId === sessionId && scanStorePhase && scanStorePhase !== "idle") {
+      didAutoStartRef.current = true;
+      void (async () => {
+        await capture.startCapture(initialHeightCm, initialAge ?? undefined);
+        if (["positioning", "front_aligning", "front_countdown"].includes(scanStorePhase)) {
+          capture.skipDeviceSetup();
+        } else if (scanStorePhase === "front_captured" && frontLandmarksCipher) {
+          const landmarks = await decryptLandmarks(frontLandmarksCipher, sessionId);
+          if (landmarks) {
+            capture.restoreFrontLandmarks(landmarks);
+          } else {
+            capture.skipDeviceSetup();
+          }
+        } else if (["side_transition", "side_positioning", "side_aligning", "side_countdown"].includes(scanStorePhase)) {
+          capture.skipDeviceSetup();
+          capture.advanceToSidePhase();
+        }
+      })();
+    }
+  }, [sessionId, scanStoreSessionId, scanStorePhase, initialHeightCm, initialAge, frontLandmarksCipher, capture]);
+
+  // ── On completion reset scan store ─────────────────────────────────────
+  useEffect(() => {
+    if (capturePhase === "completed" || capturePhase === "failed") {
+      resetScanStore();
+    }
+  }, [capturePhase, resetScanStore]);
+
   const { tick: frontTick } = frontAutoCapture;
   const { tick: sideTick }   = sideAutoCapture;
   const { speak } = voice;
@@ -162,12 +229,7 @@ export function EnhancedMeasurementFlow({
   }, [capturePhase]);
 
   // ── Jitter / Stability helper ─────────────────────────────────────────────
-  /**
-   * Returns true when nose (landmark 0) hasn't moved more than JITTER_THRESHOLD
-   * in normalised coords between consecutive frames.
-   * dx²+dy² < 0.0004 ≡ sub-pixel motion at 720p → "stable".
-   */
-  function isFrameStable(frame: import("../hooks/useEnhancedMeasurementCapture").EnhancedCaptureFrame): boolean {
+  function isFrameStable(frame: EnhancedCaptureFrame): boolean {
     const nose = frame.normalLandmarks?.[0];
     if (!nose || (nose.visibility ?? 0) < 0.5) return false;
     const prev = prevNosePosRef.current;
@@ -192,7 +254,7 @@ export function EnhancedMeasurementFlow({
       const frame = processFrame();
       if (frame) {
         const quality = frame.quality;
-        const phase   = capturePhaseRef.current; // BUG-004 FIX: use ref, not stale closure
+        const phase   = capturePhaseRef.current;
 
         // Tick auto-capture state machines — A-2 FIX: pass isStable for jitter gate
         // A-3 FIX: quality gated by readyToArm (pose intelligence) — computed below
@@ -201,7 +263,7 @@ export function EnhancedMeasurementFlow({
         // ── Intelligence-driven Voice Coaching ─────────────────────────────
         // Re-use or compute pose intelligence for this frame
         const intel = (frame.normalLandmarks && frame.worldLandmarks)
-          ? analyzePose(frame.normalLandmarks, frame.worldLandmarks)
+          ? analyzePose(frame.normalLandmarks, frame.worldLandmarks, captureUserHeightCm ?? undefined)
           : null;
 
         // ── Intelligence gate for auto-capture tick ─────────────────────────
@@ -218,20 +280,11 @@ export function EnhancedMeasurementFlow({
           orientation.isLevel ||
           orientation.permissionState === "unsupported" ||
           orientation.permissionState === "denied";
+
         if (phase === "front_aligning" || phase === "front_countdown") {
-          frontTick({
-            quality,
-            isStable,
-            overallReady: readyToArm,
-            orientationReady,
-          });
+          frontTick({ quality, isStable, overallReady: readyToArm, orientationReady });
         } else if (phase === "side_aligning" || phase === "side_countdown") {
-          sideTick({
-            quality,
-            isStable,
-            overallReady: readyToArm,
-            orientationReady,
-          });
+          sideTick({ quality, isStable, overallReady: readyToArm, orientationReady });
         }
 
         if (intel) {
@@ -277,8 +330,7 @@ export function EnhancedMeasurementFlow({
     if (activePhases.includes(capturePhaseRef.current)) {
       rafRef.current = requestAnimationFrame(() => frameLoopRef.current());
     }
-  }, [processFrame, frontTick, sideTick, speak, videoRef, orientation.isLevel, orientation.permissionState]);
-
+  }, [processFrame, frontTick, sideTick, speak, videoRef, orientation.isLevel, orientation.permissionState, captureUserHeightCm]);
 
   useEffect(() => {
     frameLoopRef.current = frameLoop;
@@ -337,55 +389,38 @@ export function EnhancedMeasurementFlow({
     [speak]
   );
 
-  // ── BUG-003 FIX: Auto-advance from device_setup when orientation unsupported ──
-  // On desktop / HuggingFace web, DeviceOrientationEvent returns null gamma/beta
-  // → status = "unsupported". We skip the orientation check automatically after
-  // a 600ms grace period (long enough to show the camera preview).
-  useEffect(() => {
-    if (capturePhase !== "device_setup") return;
-    if (
-      orientation.status !== "unsupported" ||
-      !["unsupported", "denied"].includes(orientation.permissionState)
-    ) return;
-    const timer = setTimeout(() => {
-      skipDeviceSetup();
-    }, 600);
-    return () => clearTimeout(timer);
-  }, [capturePhase, orientation.permissionState, orientation.status, skipDeviceSetup]);
-
-  // ── PHASE 2: Auto-advance from device_setup when phone is sustainedly level ──
-  // isSustainedGood = phone has been GREEN for ≥ 1500ms continuous.
-  // This gives real mobile users a seamless auto-advance to the scan phase.
-  useEffect(() => {
-    if (capturePhase !== "device_setup") return;
-    if (!orientation.isSustainedGood) return;
-    speak("phoneReady", { priority: false });
-    const timer = setTimeout(() => {
-      skipDeviceSetup();
-    }, 300); // 300ms grace — let the "Camera Ready" voice finish
-    return () => clearTimeout(timer);
-  }, [capturePhase, orientation.isSustainedGood, skipDeviceSetup, speak]);
-
   // ── Real-time Pose Intelligence (drives silhouette + coaching) ────────────
   const poseIntelligence = useMemo(() => {
     const frame = capture.currentFrame;
     if (!frame?.normalLandmarks || !frame.worldLandmarks) return null;
-    return analyzePose(frame.normalLandmarks, frame.worldLandmarks);
-  }, [capture.currentFrame]);
+    return analyzePose(frame.normalLandmarks, frame.worldLandmarks, captureUserHeightCm ?? undefined);
+  }, [capture.currentFrame, captureUserHeightCm]);
 
+  // ── Render helpers ───────────────────────────────────────────────────────
+
+  const canContinueSetup =
+    orientation.isLevel ||
+    orientation.permissionState === "unsupported" ||
+    orientation.permissionState === "denied";
+
+  // A-2: Optional auto-advance after phone has been steadily level for 2.5s
+  useEffect(() => {
+    if (capturePhase === "device_setup" && orientation.isSustainedGood) {
+      skipDeviceSetup();
+    }
+  }, [capturePhase, orientation.isSustainedGood, skipDeviceSetup]);
+
+  const isCameraActive =
+    ["device_setup", "positioning", "front_aligning", "front_countdown",
+     "side_positioning", "side_aligning", "side_countdown"].includes(capture.phase);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className={cn("flex flex-col gap-4 w-full max-w-sm mx-auto", className)}>
+    <div className={cn("relative w-full", className)}>
 
       {/* ── Tutorial overlay (first-visit only) ─────────────────────────── */}
-      {!tutorialDone && (
+      {!tutorialDone && capture.phase === "idle" && (
         <ScanTutorialOverlay onComplete={() => setTutorialDone(true)} />
-      )}
-
-      {/* ── Progress Stepper ── */}
-      {capture.phase !== "idle" && capture.phase !== "loading_model" && capture.phase !== "failed" && (
-        <ScanProgressStepper phase={capture.phase} className="px-1" />
       )}
 
       <AnimatePresence mode="wait">
@@ -396,20 +431,20 @@ export function EnhancedMeasurementFlow({
             key="idle"
             {...PAGE_VARIANTS}
             transition={{ duration: 0.25 }}
-            className="flex flex-col gap-5"
+            className="flex flex-col gap-5 min-h-[80vh] justify-center px-4"
           >
-            <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6 flex flex-col gap-5">
+            <div className="rounded-2xl border border-[var(--BV-green)]/10 bg-[var(--BV-surface)] p-6 flex flex-col gap-5 max-w-sm mx-auto shadow-lg">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#2D6A4F]/20 flex items-center justify-center text-[#52B788]">
+                <div className="w-10 h-10 rounded-full bg-[var(--BV-green)]/10 flex items-center justify-center text-[var(--BV-green)]">
                   <IconCamera />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">AI Body Scan</h3>
-                  <p className="text-xs text-white/50">30-second measurement scan</p>
+                  <h3 className="font-semibold text-[var(--BV-ink)]">AI Body Scan</h3>
+                  <p className="text-xs text-[var(--BV-muted)]">30-second measurement scan</p>
                 </div>
               </div>
 
-              <ul className="text-xs text-white/50 space-y-1 list-disc list-inside">
+              <ul className="text-xs text-[var(--BV-slate)] space-y-1 list-disc list-inside">
                 <li>Stand 1.5–2 metres from camera</li>
                 <li>Wear fitted clothing (no baggy clothes)</li>
                 <li>Good lighting (face the window)</li>
@@ -427,9 +462,9 @@ export function EnhancedMeasurementFlow({
                   }
                   await capture.startCapture(initialHeightCm, initialAge ?? undefined);
                 }}
-                className="w-full rounded-xl bg-gradient-to-r from-[#2D6A4F] to-[#1B4332]
-                           text-white font-semibold py-3 hover:from-[#1B4332] hover:to-[#0D2818]
-                           transition flex items-center justify-center gap-2 shadow-lg shadow-[#2D6A4F]/25"
+                className="w-full rounded-xl bg-[var(--BV-gold)] text-[var(--BV-ink)]
+                           font-semibold py-3 hover:bg-[var(--BV-gold-dark)]
+                           transition flex items-center justify-center gap-2 shadow-md"
               >
                 <IconCamera />
                 Start Body Scan
@@ -438,7 +473,7 @@ export function EnhancedMeasurementFlow({
               {onCancel && (
                 <button
                   onClick={onCancel}
-                  className="text-xs text-white/40 hover:text-white/70 transition text-center"
+                  className="text-xs text-[var(--BV-muted)] hover:text-[var(--BV-ink)] transition text-center"
                 >
                   Cancel
                 </button>
@@ -453,286 +488,218 @@ export function EnhancedMeasurementFlow({
             key="loading"
             {...PAGE_VARIANTS}
             transition={{ duration: 0.25 }}
-            className="flex flex-col items-center gap-4 py-12"
+            className="flex flex-col items-center gap-4 py-12 min-h-[80vh] justify-center"
           >
-            <div className="w-16 h-16 rounded-full bg-[#2D6A4F]/20 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-[var(--BV-green)]/10 flex items-center justify-center text-[var(--BV-green)]">
               <IconLoader />
             </div>
-            <p className="text-white/70 font-medium">Loading AI pose detection model...</p>
-            <p className="text-white/30 text-xs">This usually takes 3–5 seconds</p>
+            <p className="text-[var(--BV-ink)]/70 font-medium">Loading AI pose detection model...</p>
+            <p className="text-[var(--BV-muted)] text-xs">This usually takes 3–5 seconds</p>
           </motion.div>
         )}
 
-        {/* ── DEVICE SETUP: Phone orientation check (with camera preview behind) ── */}
-        {capture.phase === "device_setup" && (
-          <motion.div
-            key="device_setup"
-            {...PAGE_VARIANTS}
-            transition={{ duration: 0.3 }}
-            className="flex flex-col items-center gap-6 py-6"
+        {/* ── CAMERA ACTIVE (all camera phases) ── */}
+        {isCameraActive && (
+          <CameraViewport
+            key="camera_active"
+            videoRef={videoRef}
+            canvasRef={canvasRef}
+            phase={capture.phase}
+            frame={capture.currentFrame}
+            intelligence={poseIntelligence}
+            orientationStatus={orientation.status}
+            phoneBadForMs={orientation.badForMs}
           >
-            {/* Camera preview BEHIND orientation UI */}
-            <div className="relative rounded-2xl overflow-hidden bg-black aspect-[3/4] max-h-[50vh] mx-auto w-full max-w-sm shadow-2xl">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
-              />
-              <canvas
-                ref={canvasRef}
-                className="absolute inset-0 w-full h-full pointer-events-none"
-              />
-              <BodySilhouetteOverlay
-                isBodyDetected={(capture.currentFrame?.quality ?? 0) > 0.2}
-                isFullBodyVisible={poseIntelligence?.isFullBodyVisible ?? false}
-                isDistanceOptimal={poseIntelligence?.distanceStatus === "optimal"}
-                isCentered={poseIntelligence?.centeringStatus === "centered"}
-              />
-              <PoseOverlay
-                normalLandmarks={capture.currentFrame?.normalLandmarks ?? null}
-                quality={capture.currentFrame?.quality ?? 0}
-                canvasRef={canvasRef}
-                videoRef={videoRef}
-              />
-              <CalibrationGuide
-                phase={capture.phase}
-                intelligence={poseIntelligence}
-                qualityScore={capture.currentFrame?.quality ?? 0}
-                estimatedHeight={capture.userHeightCm}
-              />
-              {/* Keep the live preview readable; the panel does not obscure the body. */}
-              <div className="absolute inset-x-3 top-3 flex flex-col items-center gap-3 p-3 pointer-events-none">
-                <div className="rounded-xl bg-black/45 px-4 py-2 text-center backdrop-blur-sm">
-                  <h3 className="text-white font-bold text-lg">Position Your Phone</h3>
-                  <p className="text-white/75 text-sm">Prop it upright at chest height</p>
+            {capture.phase === "device_setup" && (
+              <div className="absolute inset-0 z-40 flex flex-col items-center justify-between p-6 pointer-events-none">
+                <div className="flex flex-col items-center gap-3 mt-8">
+                  <div className="rounded-xl bg-[var(--BV-cream)]/85 px-4 py-2 text-center backdrop-blur-sm border border-[var(--BV-cream-dark)]">
+                    <h3 className="text-[var(--BV-ink)] font-bold text-lg">Position Your Phone</h3>
+                    <p className="text-[var(--BV-slate)] text-sm">Prop it upright at chest height</p>
+                  </div>
+                  <div className="pointer-events-auto">
+                    <PhoneOrientationIndicator
+                      status={orientation.status}
+                      gamma={orientation.gamma}
+                      tiltDegrees={orientation.tiltDegrees}
+                      tiltDirection={orientation.tiltDirection}
+                      onStatusChange={handleOrientationChange}
+                      onRequestPermission={orientation.requestPermission}
+                    />
+                  </div>
+                  <div
+                    className="rounded-full bg-[var(--BV-cream)]/85 px-3 py-1 text-[11px] text-[var(--BV-slate)] backdrop-blur-sm border border-[var(--BV-cream-dark)]"
+                    aria-live="polite"
+                  >
+                    {capture.cameraStatus === "ready"
+                      ? "Camera live"
+                      : capture.cameraStatus === "waiting_for_metadata"
+                      ? "Waiting for first camera frame…"
+                      : capture.cameraStatus === "attaching"
+                      ? "Connecting camera…"
+                      : capture.cameraStatus === "requesting"
+                      ? "Requesting camera permission…"
+                      : "Preparing camera…"}
+                  </div>
                 </div>
-                <div className="pointer-events-auto">
-                  <PhoneOrientationIndicator
-                    status={orientation.status}
-                    gamma={orientation.gamma}
-                    tiltDegrees={orientation.tiltDegrees}
-                    tiltDirection={orientation.tiltDirection}
-                    onStatusChange={handleOrientationChange}
-                    onRequestPermission={orientation.requestPermission}
-                  />
-                </div>
-                <div
-                  className="rounded-full bg-black/55 px-3 py-1 text-[11px] text-white/80 backdrop-blur-sm"
-                  aria-live="polite"
-                >
-                  {capture.cameraStatus === "ready"
-                    ? "Camera live"
-                    : capture.cameraStatus === "waiting_for_metadata"
-                    ? "Waiting for first camera frame…"
-                    : capture.cameraStatus === "attaching"
-                    ? "Connecting camera…"
-                    : capture.cameraStatus === "requesting"
-                    ? "Requesting camera permission…"
-                    : "Preparing camera…"}
+
+                <div className="w-full max-w-sm pointer-events-auto mb-6 flex flex-col gap-3">
+                  <button
+                    onClick={() => {
+                      if (canContinueSetup) skipDeviceSetup();
+                    }}
+                    disabled={!canContinueSetup}
+                    className={cn(
+                      "w-full rounded-xl font-semibold py-3 transition flex items-center justify-center gap-2",
+                      canContinueSetup
+                        ? "bg-[var(--BV-gold)] text-[var(--BV-ink)] hover:bg-[var(--BV-gold-dark)]"
+                        : "bg-[var(--BV-surface)] text-[var(--BV-muted)] cursor-not-allowed"
+                    )}
+                  >
+                    <IconCamera />
+                    {orientation.isLevel
+                      ? "Phone is level — Continue"
+                      : canContinueSetup
+                      ? "Continue without orientation"
+                      : "Level the phone to continue"}
+                  </button>
+
+                  <p className="text-[var(--BV-muted)] text-xs text-center">
+                    Or use without orientation check →{" "}
+                    <button
+                      className="underline text-[var(--BV-slate)] hover:text-[var(--BV-ink)]"
+                      onClick={() => skipDeviceSetup()}
+                    >
+                      Skip
+                    </button>
+                  </p>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* A-1 FIX: Use capture.skipDeviceSetup() — replaces broken `as unknown as any` cast */}
-            <button
-              onClick={() => {
-                if (orientation.isLevel || ["unsupported", "denied"].includes(orientation.permissionState)) {
-                  capture.skipDeviceSetup();
-                }
-              }}
-              disabled={
-                !orientation.isLevel &&
-                !["unsupported", "denied"].includes(orientation.permissionState)
-              }
-              className={cn(
-                "w-full max-w-sm rounded-xl font-semibold py-3 transition flex items-center justify-center gap-2",
-                orientation.isLevel || ["unsupported", "denied"].includes(orientation.permissionState)
-                  ? "bg-[#2D6A4F] hover:bg-[#1B4332] text-white"
-                  : "bg-white/10 text-white/40 cursor-not-allowed"
-              )}
-            >
-              <IconCamera />
-              {orientation.isLevel
-                ? "Camera Ready — Start Scan"
-                : ["unsupported", "denied"].includes(orientation.permissionState)
-                ? "Start Scan without orientation"
-                : "Level the phone to continue"}
-            </button>
+            {capture.phase !== "device_setup" && (
+              <>
+                <CalibrationGuide
+                  phase={capture.phase}
+                  intelligence={poseIntelligence}
+                  qualityScore={capture.currentFrame?.quality ?? 0}
+                  estimatedHeight={captureUserHeightCm}
+                />
+                <VoiceCoachDisplay
+                  text={voice.currentText}
+                  isSpeaking={voice.isSpeaking}
+                />
+                <CountdownOverlay
+                  countdown={
+                    capture.phase.startsWith("side_")
+                      ? sideAutoCapture.countdown
+                      : frontAutoCapture.countdown
+                  }
+                  isCapturing={
+                    capture.phase.startsWith("side_")
+                      ? sideAutoCapture.isCapturing
+                      : frontAutoCapture.isCapturing
+                  }
+                  isArming={
+                    capture.phase.startsWith("side_")
+                      ? sideAutoCapture.isArming
+                      : frontAutoCapture.isArming
+                  }
+                />
 
-            <p className="text-white/20 text-xs text-center">
-              Or use without orientation check →{" "}
-              <button
-                className="underline text-white/40 hover:text-white/60"
-                onClick={() => capture.skipDeviceSetup()}
-              >
-                Skip
-              </button>
-            </p>
-          </motion.div>
-        )}
-
-
-        {/* ── CAMERA ACTIVE: positioning, front_aligning, front_countdown ── */}
-        {["positioning", "front_aligning", "front_countdown",
-          "side_positioning", "side_aligning", "side_countdown"].includes(capture.phase) && (
-          <motion.div
-            key="camera_active"
-            {...PAGE_VARIANTS}
-            transition={{ duration: 0.3 }}
-            className="flex flex-col gap-4"
-          >
-            {/* Camera viewport */}
-            <div className="relative rounded-2xl overflow-hidden bg-black aspect-[3/4] max-h-[70vh] mx-auto w-full max-w-sm shadow-2xl">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
-              />
-              <canvas
-                ref={canvasRef}
-                className="absolute inset-0 w-full h-full pointer-events-none"
-              />
-              {/* Body silhouette guide — ghost outline user must step into (MirrSize-style) */}
-              <BodySilhouetteOverlay
-                isBodyDetected={(capture.currentFrame?.quality ?? 0) > 0.2}
-                isFullBodyVisible={poseIntelligence?.isFullBodyVisible ?? false}
-                isDistanceOptimal={poseIntelligence?.distanceStatus === "optimal"}
-                isCentered={poseIntelligence?.centeringStatus === "centered"}
-              />
-              <PoseOverlay
-                normalLandmarks={capture.currentFrame?.normalLandmarks ?? null}
-                quality={capture.currentFrame?.quality ?? 0}
-                canvasRef={canvasRef}
-                videoRef={videoRef}
-              />
-              <CalibrationGuide
-                phase={capture.phase}
-                intelligence={poseIntelligence}
-                qualityScore={capture.currentFrame?.quality ?? 0}
-                estimatedHeight={capture.userHeightCm}
-              />
-              {/* Voice coaching text overlay */}
-              <VoiceCoachDisplay
-                text={voice.currentText}
-                isSpeaking={voice.isSpeaking}
-              />
-              {/* Auto-capture countdown */}
-              <CountdownOverlay
-                countdown={
-                  capture.phase.startsWith("side_")
-                    ? sideAutoCapture.countdown
-                    : frontAutoCapture.countdown
-                }
-                isCapturing={
-                  capture.phase.startsWith("side_")
-                    ? sideAutoCapture.isCapturing
-                    : frontAutoCapture.isCapturing
-                }
-                isArming={
-                  capture.phase.startsWith("side_")
-                    ? sideAutoCapture.isArming
-                    : frontAutoCapture.isArming
-                }
-              />
-
-              {/* Direction arrows (distance + centering) */}
-              {capture.currentFrame?.distanceStatus === "too_close" && (
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none">
-                  <div className="bg-black/70 rounded-full px-4 py-1.5 flex items-center gap-1.5">
-                    <span className="text-[#F4C430] text-lg">⬆</span>
-                    <p className="text-[#F4C430] font-bold text-sm">Step back</p>
+                {/* Direction guidance */}
+                {capture.currentFrame?.distanceStatus === "too_close" && (
+                  <div className="absolute top-24 left-1/2 -translate-x-1/2 pointer-events-none z-40">
+                    <div className="bg-[var(--BV-ink)]/70 rounded-full px-4 py-1.5 flex items-center gap-1.5">
+                      <span className="text-[var(--BV-gold)] text-lg">⬆</span>
+                      <p className="text-[var(--BV-gold)] font-bold text-sm">Step back</p>
+                    </div>
                   </div>
-                </div>
-              )}
-              {capture.currentFrame?.distanceStatus === "too_far" && (
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none">
-                  <div className="bg-black/70 rounded-full px-4 py-1.5 flex items-center gap-1.5">
-                    <span className="text-[#F4C430] text-lg">⬇</span>
-                    <p className="text-[#F4C430] font-bold text-sm">Step closer</p>
-                  </div>
-                </div>
-              )}
-              {capture.currentFrame?.centeringStatus === "too_left" && (
-                <div className="absolute top-1/2 left-3 -translate-y-1/2 pointer-events-none">
-                  <div className="bg-black/70 rounded-full px-3 py-2">
-                    <p className="text-[#F4C430] font-bold text-xl">→</p>
-                  </div>
-                </div>
-              )}
-              {capture.currentFrame?.centeringStatus === "too_right" && (
-                <div className="absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none">
-                  <div className="bg-black/70 rounded-full px-3 py-2">
-                    <p className="text-[#F4C430] font-bold text-xl">←</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Quality bar */}
-            <QualityProgressBar
-              quality={capture.currentFrame?.quality ?? 0}
-              bufferProgress={capture.bufferProgress}
-              isSide={capture.isSidePosePhase}
-            />
-
-            {/* Manual capture override */}
-            <div className="flex gap-3 max-w-sm mx-auto w-full">
-              <button
-                onClick={
-                  capture.isSidePosePhase
-                    ? sideAutoCapture.forceCapture
-                    : frontAutoCapture.forceCapture
-                }
-                disabled={!(capture.currentFrame?.isGoodPose)}
-                className={cn(
-                  "flex-1 rounded-xl font-semibold py-3 transition flex items-center justify-center gap-2",
-                  capture.currentFrame?.isGoodPose
-                    ? "bg-gradient-to-r from-[#2D6A4F] to-[#1B4332] text-white shadow-lg shadow-[#2D6A4F]/25"
-                    : "bg-white/10 text-white/30 cursor-not-allowed"
                 )}
-              >
-                <IconCamera />
-                {capture.currentFrame?.isGoodPose
-                  ? (capture.isSidePosePhase ? "Capture Side Pose" : "Capture Front Pose")
-                  : "Hold Still..."}
-              </button>
-              <button
-                onClick={capture.reset}
-                className="px-4 py-3 rounded-xl bg-white/10 text-white/60 hover:bg-white/20 transition text-sm"
-              >
-                Cancel
-              </button>
-            </div>
+                {capture.currentFrame?.distanceStatus === "too_far" && (
+                  <div className="absolute top-24 left-1/2 -translate-x-1/2 pointer-events-none z-40">
+                    <div className="bg-[var(--BV-ink)]/70 rounded-full px-4 py-1.5 flex items-center gap-1.5">
+                      <span className="text-[var(--BV-gold)] text-lg">⬇</span>
+                      <p className="text-[var(--BV-gold)] font-bold text-sm">Step closer</p>
+                    </div>
+                  </div>
+                )}
+                {capture.currentFrame?.centeringStatus === "too_left" && (
+                  <div className="absolute top-1/2 left-3 -translate-y-1/2 pointer-events-none z-40">
+                    <div className="bg-[var(--BV-ink)]/70 rounded-full px-3 py-2">
+                      <p className="text-[var(--BV-gold)] font-bold text-xl">→</p>
+                    </div>
+                  </div>
+                )}
+                {capture.currentFrame?.centeringStatus === "too_right" && (
+                  <div className="absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none z-40">
+                    <div className="bg-[var(--BV-ink)]/70 rounded-full px-3 py-2">
+                      <p className="text-[var(--BV-gold)] font-bold text-xl">←</p>
+                    </div>
+                  </div>
+                )}
 
-            <p className="text-center text-white/30 text-xs">
-              Auto-capture activates after {CAPTURE_CONFIG.landmarkBufferSize} stable frames
-            </p>
-          </motion.div>
+                {/* Quality bar */}
+                <div className="absolute bottom-24 left-4 right-4 z-40 max-w-sm mx-auto">
+                  <QualityProgressBar
+                    quality={capture.currentFrame?.quality ?? 0}
+                    bufferProgress={capture.bufferProgress}
+                    isSide={capture.isSidePosePhase}
+                  />
+                </div>
+
+                {/* Manual capture */}
+                <div className="absolute bottom-6 left-4 right-4 z-40 flex gap-3 max-w-sm mx-auto">
+                  <button
+                    onClick={
+                      capture.isSidePosePhase
+                        ? sideAutoCapture.forceCapture
+                        : frontAutoCapture.forceCapture
+                    }
+                    disabled={!(capture.currentFrame?.isGoodPose)}
+                    className={cn(
+                      "flex-1 rounded-xl font-semibold py-3 transition flex items-center justify-center gap-2",
+                      capture.currentFrame?.isGoodPose
+                        ? "bg-[var(--BV-gold)] text-[var(--BV-ink)] hover:bg-[var(--BV-gold-dark)]"
+                        : "bg-[var(--BV-surface)] text-[var(--BV-muted)] cursor-not-allowed"
+                    )}
+                  >
+                    <IconCamera />
+                    {capture.currentFrame?.isGoodPose
+                      ? (capture.isSidePosePhase ? "Capture Side Pose" : "Capture Front Pose")
+                      : "Hold Still..."}
+                  </button>
+                  <button
+                    onClick={capture.reset}
+                    className="px-4 py-3 rounded-xl bg-[var(--BV-surface)] text-[var(--BV-slate)] hover:bg-[var(--BV-cream-dark)] transition text-sm"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </>
+            )}
+          </CameraViewport>
         )}
 
-        {/* ── FRONT CAPTURED confirmation ── */}
+        {/* ── FRONT CAPTURED ── */}
         {capture.phase === "front_captured" && (
           <motion.div
             key="front_captured"
             {...PAGE_VARIANTS}
             transition={{ duration: 0.25 }}
-            className="flex flex-col items-center gap-5 py-10 text-center"
+            className="flex flex-col items-center gap-5 py-10 text-center min-h-[80vh] justify-center"
           >
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="w-20 h-20 rounded-full bg-[#2D6A4F]/20 ring-4 ring-[#2D6A4F]/40 flex items-center justify-center text-[#52B788]"
+              className="w-20 h-20 rounded-full bg-[var(--BV-green)]/10 ring-4 ring-[var(--BV-green)]/30 flex items-center justify-center text-[var(--BV-green)]"
             >
               <IconCheck />
             </motion.div>
             <div>
-              <h3 className="text-white font-bold text-lg">Front Pose ✓</h3>
-              <p className="text-white/50 text-sm mt-1">
+              <h3 className="text-[var(--BV-ink)] font-bold text-lg">Front Pose ✓</h3>
+              <p className="text-[var(--BV-muted)] text-sm mt-1">
                 Excellent! Now turning for side pose...
               </p>
             </div>
@@ -745,7 +712,7 @@ export function EnhancedMeasurementFlow({
             key="side_transition"
             {...PAGE_VARIANTS}
             transition={{ duration: 0.25 }}
-            className="flex flex-col items-center gap-5 py-10 text-center"
+            className="flex flex-col items-center gap-5 py-10 text-center min-h-[80vh] justify-center"
           >
             <motion.div
               animate={{ rotateY: [0, 90, 0] }}
@@ -755,14 +722,14 @@ export function EnhancedMeasurementFlow({
               🔄
             </motion.div>
             <div>
-              <h3 className="text-white font-bold text-lg">Turn to Your Right Side</h3>
-              <p className="text-white/50 text-sm mt-1">
+              <h3 className="text-[var(--BV-ink)] font-bold text-lg">Turn to Your Right Side</h3>
+              <p className="text-[var(--BV-muted)] text-sm mt-1">
                 Stand sideways with your right shoulder facing the camera
               </p>
             </div>
             <button
               onClick={capture.advanceToSidePhase}
-              className="rounded-xl bg-[#F4C430] text-[#0A0A0A] font-semibold px-6 py-3 hover:bg-[#C9A227] transition"
+              className="rounded-xl bg-[var(--BV-gold)] text-[var(--BV-ink)] font-semibold px-6 py-3 hover:bg-[var(--BV-gold-dark)] transition"
             >
               I&apos;m in position →
             </button>
@@ -775,22 +742,22 @@ export function EnhancedMeasurementFlow({
             key="processing"
             {...PAGE_VARIANTS}
             transition={{ duration: 0.25 }}
-            className="flex flex-col items-center gap-6 py-12 max-w-sm mx-auto"
+            className="flex flex-col items-center gap-6 py-12 min-h-[80vh] justify-center px-4"
           >
             <div className="relative w-24 h-24">
-              <div className="absolute inset-0 rounded-full border-4 border-[#2D6A4F]/20" />
-              <div className="absolute inset-0 rounded-full border-4 border-t-[#2D6A4F] animate-spin" />
-              <div className="absolute inset-0 flex items-center justify-center text-[#52B788]">
+              <div className="absolute inset-0 rounded-full border-4 border-[var(--BV-green)]/20" />
+              <div className="absolute inset-0 rounded-full border-4 border-t-[var(--BV-green)] animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center text-[var(--BV-green)]">
                 <IconLoader />
               </div>
             </div>
-            <div className="text-center">
-              <p className="text-white font-semibold">
+            <div className="text-center max-w-sm">
+              <p className="text-[var(--BV-ink)] font-semibold">
                 {capture.phase === "submitting" ? "Uploading scan data..." : "AI is processing your measurements..."}
               </p>
-              <p className="text-white/40 text-xs mt-1">Usually takes 5–15 seconds</p>
+              <p className="text-[var(--BV-muted)] text-xs mt-1">Usually takes 5–15 seconds</p>
             </div>
-            <div className="w-full space-y-2 text-xs text-white/40">
+            <div className="w-full max-w-sm space-y-2 text-xs text-[var(--BV-muted)]">
               {[
                 "Validating pose quality",
                 "Extracting body landmarks",
@@ -800,9 +767,9 @@ export function EnhancedMeasurementFlow({
                 <div key={step} className="flex items-center gap-2">
                   <div className={cn(
                     "w-4 h-4 rounded-full border flex items-center justify-center",
-                    i === 0 ? "border-[#2D6A4F] bg-[#2D6A4F]/20" : "border-white/10"
+                    i === 0 ? "border-[var(--BV-green)] bg-[var(--BV-green)]/10" : "border-[var(--BV-muted)]/20"
                   )}>
-                    {i === 0 && <div className="w-1.5 h-1.5 rounded-full bg-[#2D6A4F] animate-pulse" />}
+                    {i === 0 && <div className="w-1.5 h-1.5 rounded-full bg-[var(--BV-green)] animate-pulse" />}
                   </div>
                   <span>{step}</span>
                 </div>
@@ -811,7 +778,7 @@ export function EnhancedMeasurementFlow({
           </motion.div>
         )}
 
-        {/* ── COMPLETED — Full MeasurementReveal ── */}
+        {/* ── COMPLETED ── */}
         {capture.phase === "completed" && capture.sessionStatus && (
           <motion.div
             key="completed"
@@ -826,7 +793,7 @@ export function EnhancedMeasurementFlow({
               onViewProfile={() => {
                 const profileId = capture.sessionStatus?.measurement_profile_id;
                 if (profileId) {
-                  window.location.href = `/client/dashboard/measurements`;
+                  window.location.href = "/client/dashboard/measurements";
                 }
               }}
             />
@@ -839,19 +806,19 @@ export function EnhancedMeasurementFlow({
             key="failed"
             {...PAGE_VARIANTS}
             transition={{ duration: 0.3 }}
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-4 min-h-[80vh] justify-center px-4"
           >
             <div className="flex flex-col items-center gap-2 text-center">
-              <div className="w-16 h-16 rounded-full bg-[#DC2626]/20 flex items-center justify-center">
-                <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 rounded-full bg-[var(--BV-red-alert)]/10 flex items-center justify-center">
+                <svg className="w-8 h-8 text-[var(--BV-red-alert)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
-              <p className="text-white font-bold">Scan Failed</p>
-              {capture.error && <p className="text-red-400/80 text-xs">{capture.error}</p>}
+              <p className="text-[var(--BV-ink)] font-bold">Scan Failed</p>
+              {capture.error && <p className="text-[var(--BV-red-alert)]/80 text-xs">{capture.error}</p>}
               <button
                 onClick={capture.reset}
-                className="rounded-xl bg-[#2D6A4F] hover:bg-[#1B4332] text-white px-6 py-2 font-medium text-sm transition flex items-center gap-2"
+                className="rounded-xl bg-[var(--BV-green)] hover:bg-[var(--BV-green-light)] text-[var(--BV-cream)] px-6 py-2 font-medium text-sm transition flex items-center gap-2"
               >
                 <IconRefresh /> Try Again
               </button>
@@ -881,16 +848,16 @@ function QualityProgressBar({
   const isGood   = quality >= threshold;
   const isMed    = quality >= (isSide ? POSE_THRESHOLDS.sideMedium : POSE_THRESHOLDS.frontMedium);
 
-  const barColor = isGood ? "bg-[#2D6A4F]" : isMed ? "bg-[#F4C430]" : "bg-[#DC2626]";
-  const textColor = isGood ? "text-[#52B788]" : isMed ? "text-[#F4C430]" : "text-[#DC2626]/80";
+  const barColor = isGood ? "bg-[var(--BV-green)]" : isMed ? "bg-[var(--BV-gold)]" : "bg-[var(--BV-red-alert)]";
+  const textColor = isGood ? "text-[var(--BV-green)]" : isMed ? "text-[var(--BV-gold)]" : "text-[var(--BV-red-alert)]/80";
 
   return (
-    <div className="max-w-sm mx-auto w-full flex flex-col gap-1.5">
-      <div className="flex justify-between text-xs text-white/40">
+    <div className="w-full flex flex-col gap-1.5">
+      <div className="flex justify-between text-xs text-[var(--BV-muted)]">
         <span>Pose quality</span>
         <span className={cn("font-semibold", textColor)}>{pct}%</span>
       </div>
-      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+      <div className="h-1.5 rounded-full bg-[var(--BV-cream-dark)] overflow-hidden">
         <div
           className={cn("h-full rounded-full transition-all duration-200", barColor)}
           style={{ width: `${pct}%` }}
@@ -899,19 +866,19 @@ function QualityProgressBar({
       {/* Buffer progress (stability accumulator) */}
       {bufferProgress > 0 && (
         <>
-          <div className="flex justify-between text-xs text-white/30">
+          <div className="flex justify-between text-xs text-[var(--BV-muted)]">
             <span>Stability</span>
             <span>{Math.round(bufferProgress * 100)}%</span>
           </div>
-          <div className="h-0.5 rounded-full bg-white/10 overflow-hidden">
+          <div className="h-0.5 rounded-full bg-[var(--BV-cream-dark)] overflow-hidden">
             <div
-              className="h-full rounded-full bg-[#F4C430] transition-all duration-100"
+              className="h-full rounded-full bg-[var(--BV-gold)] transition-all duration-100"
               style={{ width: `${bufferProgress * 100}%` }}
             />
           </div>
         </>
       )}
-      <p className="text-xs text-white/30">
+      <p className="text-xs text-[var(--BV-muted)]">
         {isGood
           ? "✓ Great pose — auto-capturing..."
           : isMed

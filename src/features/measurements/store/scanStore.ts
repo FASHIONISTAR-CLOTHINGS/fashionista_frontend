@@ -5,6 +5,7 @@
  * Manages:
  *   - Pre-scan user inputs (age, sex, height)
  *   - Current scan phase
+ *   - Encrypted front-pose landmarks for refresh-resume
  *   - Session ID
  *   - Error state
  *
@@ -44,11 +45,19 @@ export interface ScanState {
   sessionId: string | null;
   error: string | null;
 
+  // Persistence for the enhanced capture flow
+  enhancedPhase: string | null;
+  frontLandmarksCipher: string | null;
+  lastPersistedAt: number | null;
+
   // Actions
   setEntryData: (data: { age: number; sex: UserSex; heightCm: number; weightKg?: number }) => void;
   setPhase: (phase: ScanPhase) => void;
   setSessionId: (id: string | null) => void;
   setError: (error: string | null) => void;
+  setEnhancedPhase: (phase: string | null) => void;
+  setFrontLandmarksCipher: (cipher: string | null) => void;
+  persistEnhancedState: (phase: string, cipher: string | null) => void;
   reset: () => void;
 }
 
@@ -60,6 +69,9 @@ const initialState = {
   phase: "idle" as ScanPhase,
   sessionId: null,
   error: null,
+  enhancedPhase: null,
+  frontLandmarksCipher: null,
+  lastPersistedAt: null,
 };
 
 export const useScanStore = create<ScanState>()(
@@ -82,6 +94,17 @@ export const useScanStore = create<ScanState>()(
 
       setError: (error) => set({ error }),
 
+      setEnhancedPhase: (enhancedPhase) => set({ enhancedPhase }),
+
+      setFrontLandmarksCipher: (frontLandmarksCipher) => set({ frontLandmarksCipher }),
+
+      persistEnhancedState: (enhancedPhase, frontLandmarksCipher) =>
+        set({
+          enhancedPhase,
+          frontLandmarksCipher,
+          lastPersistedAt: Date.now(),
+        }),
+
       reset: () => set({ ...initialState }),
     }),
     {
@@ -90,7 +113,7 @@ export const useScanStore = create<ScanState>()(
         if (typeof window === "undefined") {
           return { getItem: () => null, setItem: () => {}, removeItem: () => {} } as unknown as StateStorage;
         }
-        return sessionStorage;
+        return localStorage;
       }),
       partialize: (state) => ({
         age: state.age,
@@ -98,6 +121,10 @@ export const useScanStore = create<ScanState>()(
         heightCm: state.heightCm,
         weightKg: state.weightKg,
         sessionId: state.sessionId,
+        phase: state.phase,
+        enhancedPhase: state.enhancedPhase,
+        frontLandmarksCipher: state.frontLandmarksCipher,
+        lastPersistedAt: state.lastPersistedAt,
       }),
     }
   )

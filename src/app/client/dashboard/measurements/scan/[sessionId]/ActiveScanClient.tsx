@@ -16,8 +16,6 @@
 import { useEffect, useState, useCallback, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { EnhancedMeasurementFlow } from "@/features/measurements/components/EnhancedMeasurementFlow";
-import type { EnhancedCapturePhase } from "@/features/measurements/hooks/useEnhancedMeasurementCapture";
-import { ScanProgressStepper } from "@/features/measurements/components/ScanProgressStepper";
 import { ScanFallbackManual } from "@/features/measurements/components/ScanFallbackManual";
 import { registerMediaPipeSW } from "@/features/measurements/lib/registerMediaPipeSW";
 import { useScanStore } from "@/features/measurements/store/scanStore";
@@ -175,14 +173,20 @@ export function ActiveScanClient({
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F3EC] px-4 py-8 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
-        {/* Progress stepper */}
-        <div className="mb-6 rounded-2xl bg-[#01454A] p-4">
-          <ScanProgressStepper phase={scanPhase as EnhancedCapturePhase} />
+    <div className="min-h-screen bg-[var(--BV-cream)]">
+      {showFallback ? (
+        <div className="min-h-screen px-4 py-8 sm:px-6 lg:px-8">
+          <div className="max-w-2xl mx-auto">
+            <div className="rounded-2xl bg-white border border-[var(--BV-cream-dark)] p-6">
+              <ScanFallbackManual
+                variant="inline"
+                manualEntryUrl="/client/dashboard/measurements"
+                onDismiss={() => setShowFallback(false)}
+              />
+            </div>
+          </div>
         </div>
-
-        {/* Main scan flow */}
+      ) : (
         <EnhancedMeasurementFlow
           onComplete={handleScanComplete}
           onCancel={handleScanCancel}
@@ -192,17 +196,18 @@ export function ActiveScanClient({
           initialWeightKg={scanWeightKg ?? undefined}
           sessionId={sessionId}
         />
+      )}
 
-        {/* Fallback link */}
-        <div className="mt-6 text-center">
+      {!showFallback && (
+        <div className="fixed bottom-6 left-0 right-0 z-50 text-center pointer-events-none">
           <button
             onClick={() => setShowFallback(true)}
-            className="text-xs text-[#7A6B44] hover:text-[#01454A] transition underline"
+            className="pointer-events-auto text-xs text-[var(--BV-slate)] hover:text-[var(--BV-green)] transition underline bg-[var(--BV-cream)]/80 backdrop-blur-sm px-3 py-1 rounded-full"
           >
             Enter measurements manually instead
           </button>
         </div>
-      </div>
+      )}
     </div>
   );
 }

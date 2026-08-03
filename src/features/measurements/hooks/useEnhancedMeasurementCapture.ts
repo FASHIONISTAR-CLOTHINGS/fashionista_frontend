@@ -120,6 +120,7 @@ export interface UseEnhancedMeasurementCaptureReturn {
   // Side pose state
   isSidePosePhase:    boolean;
   hasFrontCapture:    boolean;
+  frontLandmarks:     Landmark[] | null;
   // Actions
   startCapture:       (heightCm?: number, ageyears?: number) => Promise<void>;
   processFrame:       () => EnhancedCaptureFrame | null;
@@ -136,6 +137,11 @@ export interface UseEnhancedMeasurementCaptureReturn {
   userHeightCm:       number | null;
   /** A-5 FIX: Age in years forwarded to backend for anthropometric anchoring. */
   userAge:            number | null;
+  /**
+   * Restore a previously captured front pose from persisted storage.
+   * Sets phase to `front_captured` and stores the landmarks for side capture.
+   */
+  restoreFrontLandmarks: (landmarks: Landmark[]) => void;
 }
 
 // ─── Landmark Buffer Averaging (TASK-011) ─────────────────────────────────────
@@ -243,6 +249,7 @@ export function useEnhancedMeasurementCapture(
   const [userAge, setUserAge]           = useState<number | null>(null);   // A-5 FIX
   const [localError, setLocalError]     = useState<string | null>(null);
   const [hasFrontCapture, setHasFrontCapture] = useState(false);
+  const [frontLandmarks, setFrontLandmarks] = useState<Landmark[] | null>(null);
   const [bufferProgress, setBufferProgress]   = useState(0);
   const [cameraStatus, setCameraStatus] = useState<CameraStatus>("idle");
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -531,8 +538,9 @@ export function useEnhancedMeasurementCapture(
 
   // ── Front capture (TASK-013) ───────────────────────────────────────────────
   const triggerFrontCapture = useCallback(() => {
-    // Save averaged front landmarks
-    frontLandmarksRef.current = computeAverageLandmarks(frontBufferRef.current);
+    const landmarks = computeAverageLandmarks(frontBufferRef.current);
+    frontLandmarksRef.current = landmarks;
+    setFrontLandmarks(landmarks);
     setHasFrontCapture(true);
     setPhaseSync("front_captured");
 
@@ -595,6 +603,19 @@ export function useEnhancedMeasurementCapture(
     setPhaseSync("side_positioning");
   }, [setPhaseSync]);
 
+  // ── Restore persisted front landmarks ─────────────────────────────────────
+  const restoreFrontLandmarks = useCallback((landmarks: Landmark[]) => {
+    frontLandmarksRef.current = landmarks;
+    setFrontLandmarks(landmarks);
+    setHasFrontCapture(true);
+    setPhaseSync("front_captured");
+    setTimeout(() => {
+      sideBufferRef.current = [];
+      setBufferProgress(0);
+      setPhaseSync("side_transition");
+    }, CAPTURE_CONFIG.sideAdvanceDelay);
+  }, [setPhaseSync]);
+
   // ── Reset ─────────────────────────────────────────────────────────────────
   const reset = useCallback(() => {
     stopCamera();
@@ -605,13 +626,14 @@ export function useEnhancedMeasurementCapture(
     frontLandmarksRef.current = null;
     sideLandmarksRef.current  = null;
     submissionKeyRef.current = null;
-    setPhaseSync("idle");
+    setFrontLandmarks(null);
+    setHasFrontCapture(false);
     setCurrentFrame(null);
     setUserHeightCm(null);
     setUserAge(null);
-    setHasFrontCapture(false);
     setBufferProgress(0);
     setLocalError(null);
+    setPhaseSync("idle");
   }, [stopCamera, landmarker, scanSession, setPhaseSync]);
 
   useEffect(() => () => stopCamera(), [stopCamera]);
@@ -628,15 +650,17 @@ export function useEnhancedMeasurementCapture(
     bufferProgress,
     isSidePosePhase:   phase.startsWith("side_"),
     hasFrontCapture,
+    frontLandmarks,
     startCapture,
     processFrame,
     triggerFrontCapture,
     triggerSideCapture,
     advanceToSidePhase,
-    skipDeviceSetup,   // A-1 FIX: proper public API instead of cast hack
+    skipDeviceSetup,
     reset,
     stopCamera,
     userHeightCm,
-    userAge,           // A-5 FIX: exposed for any component that needs to display it
+    userAge,
+    restoreFrontLandmarks,
   };
 }
