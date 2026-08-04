@@ -272,7 +272,7 @@ export async function getHomepageBundle(): Promise<HomepageBundle> {
     // malformed, only that section degrades to [] while the other 11 still
     // render. This mirrors the backend's asyncio.gather(return_exceptions=True).
     function parseSection<T>(
-      schema: z.ZType,
+      schema: z.ZodType,
       rawVal: unknown,
       sectionName: string
     ): T {
