@@ -35,8 +35,8 @@ import { getServerBackendRootUrl } from "@/core/config/api-roots";
 /** Request timeout in ms — keeps SSR from hanging on slow backends. */
 const FALLBACK_TIMEOUT_MS = 5_000;
 
-/** ISR revalidation window — 5 minutes, matches backend Redis TTL. */
-const ISR_REVALIDATE_SECONDS = 300;
+/** ISR revalidation window — 1 hour, matches backend Redis TTL. */
+const ISR_REVALIDATE_SECONDS = 3600;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Internal helpers
@@ -56,7 +56,7 @@ function unwrapEnvelope(payload: unknown): unknown {
   return payload;
 }
 
-async function fetchCatalog(path: string): Promise<unknown[]> {
+async function fetchCatalog(path: string, tags?: string[]): Promise<unknown[]> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FALLBACK_TIMEOUT_MS);
 
@@ -66,7 +66,7 @@ async function fetchCatalog(path: string): Promise<unknown[]> {
         Accept: "application/json",
         "ngrok-skip-browser-warning": "true",
       },
-      next: { revalidate: ISR_REVALIDATE_SECONDS },
+      next: { revalidate: ISR_REVALIDATE_SECONDS, ...(tags ? { tags } : {}) },
       signal: controller.signal,
     });
 
@@ -82,7 +82,7 @@ async function fetchCatalog(path: string): Promise<unknown[]> {
   }
 }
 
-async function fetchCatalogItem(path: string): Promise<unknown | null> {
+async function fetchCatalogItem(path: string, tags?: string[]): Promise<unknown | null> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FALLBACK_TIMEOUT_MS);
 
@@ -92,7 +92,7 @@ async function fetchCatalogItem(path: string): Promise<unknown | null> {
         Accept: "application/json",
         "ngrok-skip-browser-warning": "true",
       },
-      next: { revalidate: ISR_REVALIDATE_SECONDS },
+      next: { revalidate: ISR_REVALIDATE_SECONDS, ...(tags ? { tags } : {}) },
       signal: controller.signal,
     });
 
@@ -176,7 +176,7 @@ export async function getCatalogCollections(): Promise<CatalogCollection[]> {
 }
 
 export async function getCatalogBlogPosts(): Promise<CatalogBlogPost[]> {
-  const raw = await fetchCatalog("/api/v1/ninja/catalog/blog/");
+  const raw = await fetchCatalog("/api/v1/ninja/catalog/blog/", ["blog"]);
   const result = CatalogBlogPostListSchema.safeParse(raw);
   if (!result.success) {
     console.warn("[catalog.server] getCatalogBlogPosts parse error:", result.error.flatten());
@@ -186,7 +186,7 @@ export async function getCatalogBlogPosts(): Promise<CatalogBlogPost[]> {
 }
 
 export async function getCatalogBlogPostBySlug(slug: string): Promise<CatalogBlogPost | null> {
-  const raw = await fetchCatalogItem(`/api/v1/ninja/catalog/blog/${slug}/`);
+  const raw = await fetchCatalogItem(`/api/v1/ninja/catalog/blog/${slug}/`, ["blog"]);
   if (!raw) return null;
   const result = CatalogBlogPostSchema.safeParse(raw);
   if (!result.success) {

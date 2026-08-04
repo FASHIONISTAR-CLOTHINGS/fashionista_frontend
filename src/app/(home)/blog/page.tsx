@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { CatalogBlogList } from "@/features/catalog";
 import { NewsletterForm } from "../_components/NewsletterForm";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Fashionistar Blog | Digital Measurements, Tailoring, Fashion Commerce",
@@ -66,19 +66,19 @@ export default async function BlogPage({
   return (
     <main className="bg-background text-foreground">
       {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-[#0D0D0D] px-4 py-20 md:px-8 lg:px-20">
+      <section aria-label="Blog hero" className="relative overflow-hidden bg-[hsl(var(--brand-green))] px-4 py-20 md:px-8 lg:px-20" data-testid="blog-hero">
         {/* Decorative blobs */}
         <div
           aria-hidden="true"
-          className="absolute -top-20 right-0 h-72 w-72 rounded-full bg-[#fda600]/10 blur-3xl pointer-events-none"
+          className="absolute -top-20 right-0 h-72 w-72 rounded-full bg-[hsl(var(--accent))]/10 blur-3xl pointer-events-none"
         />
         <div
           aria-hidden="true"
-          className="absolute bottom-0 left-1/3 h-40 w-40 rounded-full bg-[#01454A]/20 blur-3xl pointer-events-none"
+          className="absolute bottom-0 left-1/3 h-40 w-40 rounded-full bg-[hsl(var(--brand-green-hover))]/20 blur-3xl pointer-events-none"
         />
 
         <div className="relative max-w-3xl">
-          <p className="font-raleway text-xs font-bold uppercase tracking-[0.25em] text-[#fda600] mb-4">
+          <p className="font-raleway text-xs font-bold uppercase tracking-[0.25em] text-[hsl(var(--accent))] mb-4">
             Style Intelligence
           </p>
           <h1 className="font-bon_foyage text-[clamp(2.5rem,7vw,5.5rem)] leading-none text-white">
@@ -98,7 +98,7 @@ export default async function BlogPage({
                   key={tag}
                   className={`rounded-full px-4 py-1.5 font-raleway text-xs font-semibold transition-all duration-200 cursor-pointer ${
                     tag === "All"
-                      ? "bg-[#fda600] text-black"
+                      ? "bg-[hsl(var(--accent))] text-black"
                       : "border border-white/20 bg-white/5 text-white/80 hover:bg-white/10"
                   }`}
                 >
@@ -111,14 +111,15 @@ export default async function BlogPage({
       </section>
 
       {/* ── Featured CTA strip ────────────────────────────────────────── */}
-      <section className="border-b border-border/40 bg-card/60 px-4 py-5 md:px-8 lg:px-20">
+      <section aria-label="Featured CTA" className="border-b border-border/40 bg-card/60 px-4 py-5 md:px-8 lg:px-20">
         <div className="mx-auto flex max-w-screen-xl flex-wrap items-center justify-between gap-4">
           <p className="font-raleway text-sm text-muted-foreground">
             AI measurement guidance · verified storefronts · practical commerce insights
           </p>
           <Link
             href="/get-measured"
-            className="inline-flex items-center gap-2 rounded-full bg-[#fda600] px-6 py-2 font-raleway text-xs font-bold text-black shadow hover:bg-[#e09500] transition-all duration-200"
+            className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--accent))] px-6 py-2 font-raleway text-xs font-bold text-black shadow hover:bg-[hsl(var(--brand-gold-hover))] transition-all duration-200"
+            data-testid="blog-cta-get-measured"
           >
             Get Measured Free →
           </Link>
@@ -126,10 +127,10 @@ export default async function BlogPage({
       </section>
 
       {/* ── Blog Grid ─────────────────────────────────────────────────── */}
-      <section className="px-4 py-12 md:px-8 lg:px-20">
+      <section aria-label="Blog post grid" className="px-4 py-12 md:px-8 lg:px-20" data-testid="blog-grid-section">
         <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="font-raleway text-xs font-semibold uppercase tracking-widest text-[#fda600] mb-1">
+            <p className="font-raleway text-xs font-semibold uppercase tracking-widest text-[hsl(var(--accent))] mb-1">
               Latest Articles
             </p>
             <h2 className="font-bon_foyage text-3xl text-foreground md:text-4xl">
@@ -145,9 +146,9 @@ export default async function BlogPage({
       </section>
 
       {/* ── Newsletter Footer CTA ─────────────────────────────────────── */}
-      <section className="bg-[#01454A] px-4 py-16 md:px-8 lg:px-20">
+      <section aria-label="Newsletter subscription" className="bg-[hsl(var(--brand-green))] px-4 py-16 md:px-8 lg:px-20" data-testid="blog-newsletter-cta">
         <div className="max-w-2xl mx-auto text-center space-y-5">
-          <p className="font-raleway text-sm font-semibold uppercase tracking-widest text-[#fda600]">
+          <p className="font-raleway text-sm font-semibold uppercase tracking-widest text-[hsl(var(--accent))]">
             Never Miss a Drop
           </p>
           <h2 className="font-bon_foyage text-3xl text-white md:text-4xl">

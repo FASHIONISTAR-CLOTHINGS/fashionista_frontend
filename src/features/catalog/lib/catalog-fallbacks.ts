@@ -1,4 +1,5 @@
 import type { CatalogBlogPost, CatalogCategory, CatalogCollection } from "../types/catalog.types";
+import staticBlogPosts from "./static-blog-posts.json";
 
 const now = "2026-04-26T00:00:00.000Z";
 
@@ -92,57 +93,5 @@ export const fallbackCatalogCollections: CatalogCollection[] = [
   },
 ];
 
-export const fallbackCatalogBlogPosts: CatalogBlogPost[] = [
-  {
-    id: "fallback-blog-1",
-    author: null,
-    author_name: "Fashionistar Editorial",
-    category: null,
-    category_name: "Measurements",
-    title: "How Digital Body Measurements Help Tailors Deliver Better Fits",
-    slug: "digital-body-measurements-tailor-fit",
-    excerpt:
-      "A practical look at how accurate measurements reduce costly remakes and improve client trust.",
-    content:
-      "Fashionistar uses digital measurement workflows to help clients share precise sizing with tailors and fashion designers.",
-    featured_image: "/gown.svg",
-    featured_image_cloudinary_url: null,
-    image_url: "/gown.svg",
-    status: "published",
-    tags: ["measurements", "tailoring", "fit"],
-    seo_title: "Digital Body Measurements For Better Tailor Fit",
-    seo_description:
-      "Learn how Fashionistar digital measurements improve tailoring accuracy and reduce fashion production errors.",
-    is_featured: true,
-    published_at: now,
-    view_count: 0,
-    created_at: now,
-    updated_at: now,
-  },
-  {
-    id: "fallback-blog-2",
-    author: null,
-    author_name: "Fashionistar Editorial",
-    category: null,
-    category_name: "Marketplace",
-    title: "Choosing The Right Tailor For Custom Fashion Orders",
-    slug: "choosing-right-tailor-custom-orders",
-    excerpt:
-      "What clients should check before placing custom clothing orders with marketplace vendors.",
-    content:
-      "Strong vendor profiles, clear measurements, delivery expectations, and payment protection all help clients order with confidence.",
-    featured_image: "/minimalist.svg",
-    featured_image_cloudinary_url: null,
-    image_url: "/minimalist.svg",
-    status: "published",
-    tags: ["marketplace", "vendors", "orders"],
-    seo_title: "How To Choose The Right Tailor Online",
-    seo_description:
-      "Fashionistar tips for selecting reliable tailors and fashion designers for custom clothing orders.",
-    is_featured: false,
-    published_at: now,
-    view_count: 0,
-    created_at: now,
-    updated_at: now,
-  },
-];
+export const fallbackCatalogBlogPosts: CatalogBlogPost[] =
+  staticBlogPosts as CatalogBlogPost[];

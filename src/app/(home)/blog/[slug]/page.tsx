@@ -1,15 +1,16 @@
 /**
- * app/(home)/blog/[slug]/page.tsx  — Phase C4
+ * app/(home)/blog/[slug]/page.tsx  — Phase C4 (Modernized)
  *
  * Rich blog post detail page.
  *
  * Architecture:
  *   - RSC: server-fetches post + related posts in parallel
- *   - ISR: revalidate 300s, tagged "blog-{slug}"
+ *   - ISR: revalidate 3600s (1 hour), tagged "blog"
  *   - JSON-LD: Article structured data for Google rich results
  *   - SEO: dynamic metadata from seo_title / seo_description / og_image
  *   - Never crashes: falls back to notFound() on missing post
  *   - data-testid on key regions for Playwright E2E coverage
+ *   - Marketing triggers: social proof, inline products, sticky CTA, exit intent, trust badges, urgency
  */
 
 import type { Metadata } from "next";
@@ -18,11 +19,17 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import {
   getCatalogBlogPostBySlug,
-  getCatalogBlogPosts,
 } from "@/features/catalog";
+import { getBlogPostsSync } from "@/features/catalog/api/blog-sync";
 import type { CatalogBlogPost } from "@/features/catalog/types/catalog.types";
+import { SocialProofBar } from "./_components/SocialProofBar";
+import { InlineProductRecommendations } from "./_components/InlineProductRecommendations";
+import { StickyCTABar } from "./_components/StickyCTABar";
+import { ExitIntentPopup } from "./_components/ExitIntentPopup";
+import { TrustBadges } from "./_components/TrustBadges";
+import { UrgencyTimer } from "./_components/UrgencyTimer";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -103,7 +110,7 @@ function renderContent(content: string) {
 
 export async function generateStaticParams() {
   try {
-    const posts = await getCatalogBlogPosts();
+    const posts = await getBlogPostsSync();
     const params = posts
       .slice(0, 50)
       .filter((p) => Boolean(p.slug))
@@ -160,39 +167,41 @@ export async function generateMetadata({
 function RelatedPostCard({ post }: { post: CatalogBlogPost }) {
   const coverImage = post.image_url || post.featured_image;
   return (
-    <Link
-      href={`/blog/${post.slug}`}
+    <article
       className="group flex flex-col gap-3 rounded-2xl overflow-hidden bg-card border border-border hover:shadow-md transition-shadow duration-200"
+      data-testid={`related-post-${post.slug}`}
     >
-      <div className="relative h-44 bg-[#F4F3EC] overflow-hidden">
-        {coverImage ? (
-          <Image
-            src={coverImage}
-            alt={post.title}
-            fill
-            sizes="(max-width: 768px) 100vw, 320px"
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <svg className="h-12 w-12 text-[#01454A]/20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1} aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
-            </svg>
-          </div>
-        )}
-      </div>
-      <div className="px-4 pb-4 space-y-1.5">
-        {post.category_name && (
-          <span className="text-[10px] font-bold uppercase tracking-widest text-[#01454A]">
-            {post.category_name}
-          </span>
-        )}
-        <h3 className="font-bon_foyage text-base leading-snug text-foreground group-hover:text-[#01454A] transition-colors line-clamp-2">
-          {post.title}
-        </h3>
-        <p className="text-xs text-muted-foreground">{formatDate(post.published_at)}</p>
-      </div>
-    </Link>
+      <Link href={`/blog/${post.slug}`} className="flex flex-col gap-3 h-full">
+        <div className="relative h-44 bg-[hsl(var(--brand-cream))] overflow-hidden">
+          {coverImage ? (
+            <Image
+              src={coverImage}
+              alt={post.title}
+              fill
+              sizes="(max-width: 768px) 100vw, 320px"
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <svg className="h-12 w-12 text-[hsl(var(--brand-green))]/20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
+              </svg>
+            </div>
+          )}
+        </div>
+        <div className="px-4 pb-4 space-y-1.5">
+          {post.category_name && (
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[hsl(var(--brand-green))]">
+              {post.category_name}
+            </span>
+          )}
+          <h3 className="font-bon_foyage text-base leading-snug text-foreground group-hover:text-[hsl(var(--brand-green))] transition-colors line-clamp-2">
+            {post.title}
+          </h3>
+          <p className="text-xs text-muted-foreground">{formatDate(post.published_at)}</p>
+        </div>
+      </Link>
+    </article>
   );
 }
 
@@ -209,7 +218,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
   // Parallel fetch: post + all posts (for related section)
   const [post, allPosts] = await Promise.all([
     getCatalogBlogPostBySlug(slug),
-    getCatalogBlogPosts(),
+    getBlogPostsSync(),
   ]);
 
   if (!post) notFound();
@@ -256,6 +265,10 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
     keywords: post.tags?.join(", ") || undefined,
   };
 
+  // Split content for inline product recommendations
+  const contentParts = renderContent(post.content);
+  const midPoint = Math.ceil(contentParts.length / 2);
+
   return (
     <>
       {/* JSON-LD */}
@@ -270,7 +283,8 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
       >
         {/* ── Hero ───────────────────────────────────────────────────────────── */}
         <section
-          className="relative min-h-[340px] md:min-h-[520px] bg-[#01454A] flex items-end overflow-hidden"
+          aria-label="Blog post hero"
+          className="relative min-h-[340px] md:min-h-[520px] bg-[hsl(var(--brand-green))] flex items-end overflow-hidden"
           data-testid="blog-hero"
         >
           {/* Background cover image */}
@@ -285,15 +299,15 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
             />
           )}
           {/* Dark gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#01454A] via-[#01454A]/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--brand-green))] via-[hsl(var(--brand-green))]/60 to-transparent" />
 
           {/* Hero content */}
           <div className="relative z-10 px-5 py-10 md:px-10 lg:px-20 w-full max-w-5xl space-y-5">
             {/* Breadcrumb */}
             <nav className="flex items-center gap-2 text-sm text-white/60 font-raleway" aria-label="Breadcrumb">
-              <Link href="/" className="hover:text-[#FDA600] transition-colors">Home</Link>
+              <Link href="/" className="hover:text-[hsl(var(--accent))] transition-colors">Home</Link>
               <span aria-hidden="true">/</span>
-              <Link href="/blog" className="hover:text-[#FDA600] transition-colors">Blog</Link>
+              <Link href="/blog" className="hover:text-[hsl(var(--accent))] transition-colors">Blog</Link>
               <span aria-hidden="true">/</span>
               <span className="text-white/90 truncate max-w-[200px]">{post.title}</span>
             </nav>
@@ -301,13 +315,13 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
             {/* Category + featured badges */}
             <div className="flex flex-wrap items-center gap-2">
               {post.category_name && (
-                <span className="rounded-full bg-[#FDA600]/20 border border-[#FDA600]/40 px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#FDA600]">
+                <span className="rounded-full bg-[hsl(var(--accent))]/20 border border-[hsl(var(--accent))]/40 px-3 py-1 text-xs font-bold uppercase tracking-wide text-[hsl(var(--accent))]">
                   {post.category_name}
                 </span>
               )}
               {post.is_featured && (
                 <span className="rounded-full bg-white/15 border border-white/30 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
-                  ⭐ Featured
+                  Featured
                 </span>
               )}
             </div>
@@ -344,33 +358,40 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
         </section>
 
         {/* ── Article body ───────────────────────────────────────────────────── */}
-        <div className="px-5 py-12 md:px-10 lg:px-20">
-          <div className="mx-auto max-w-3xl">
+        <section
+          aria-label="Blog article body"
+          className="px-5 py-12 md:px-10 lg:px-20"
+          data-testid="blog-article-body"
+        >
+          <div className="mx-auto max-w-3xl space-y-8">
+
+            {/* Social proof bar */}
+            <SocialProofBar
+              viewCount={post.view_count}
+              readTime={readTime}
+              publishedDate={post.published_at}
+            />
 
             {/* Excerpt pull-quote */}
             {post.excerpt && (
               <blockquote
-                className="
-                  border-l-4 border-[#FDA600] pl-6 py-2 mb-10
-                  text-xl leading-relaxed text-foreground/80 italic font-raleway
-                "
+                className="border-l-4 border-[hsl(var(--accent))] pl-6 py-2 text-xl leading-relaxed text-foreground/80 italic font-raleway"
                 data-testid="blog-excerpt"
               >
                 {post.excerpt}
               </blockquote>
             )}
 
-            {/* Content */}
-            <article
-              className="space-y-6"
-              data-testid="blog-content"
-            >
-              {renderContent(post.content)}
+            {/* Content with inline product recommendations */}
+            <article className="space-y-6" data-testid="blog-content">
+              {contentParts.slice(0, midPoint)}
+              <InlineProductRecommendations tags={post.tags} />
+              {contentParts.slice(midPoint)}
             </article>
 
             {/* Tags */}
             {post.tags && post.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-12 pt-8 border-t border-border" data-testid="blog-tags">
+              <div className="flex flex-wrap gap-2 pt-8 border-t border-border" data-testid="blog-tags">
                 <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground self-center">
                   Tags:
                 </span>
@@ -378,7 +399,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                   <Link
                     key={tag}
                     href={`/blog?tag=${encodeURIComponent(tag)}`}
-                    className="rounded-full border border-border bg-card px-4 py-1.5 text-xs font-semibold text-foreground hover:bg-[#01454A] hover:text-white hover:border-[#01454A] transition-all duration-200"
+                    className="rounded-full border border-border bg-card px-4 py-1.5 text-xs font-semibold text-foreground hover:bg-[hsl(var(--brand-green))] hover:text-white hover:border-[hsl(var(--brand-green))] transition-all duration-200"
                   >
                     {tag}
                   </Link>
@@ -387,25 +408,28 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
             )}
 
             {/* Author card */}
-            <div className="mt-12 flex items-start gap-4 rounded-2xl border border-border bg-card p-6" data-testid="blog-author">
-              <div className="h-14 w-14 rounded-full bg-[#01454A]/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-xl font-bold text-[#01454A]">
+            <div className="flex items-start gap-4 rounded-2xl border border-border bg-card p-6" data-testid="blog-author">
+              <div className="h-14 w-14 rounded-full bg-[hsl(var(--brand-green))]/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-xl font-bold text-[hsl(var(--brand-green))]">
                   {(post.author_name || "F")[0].toUpperCase()}
                 </span>
               </div>
               <div>
                 <p className="font-semibold text-foreground">{post.author_name || "Fashionistar Editorial"}</p>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  Fashion & Style Writer at Fashionistar — Nigeria's premier AI-powered fashion platform.
+                  Fashion & Style Writer at Fashionistar — Nigeria&apos;s premier AI-powered fashion platform.
                 </p>
               </div>
             </div>
 
-            {/* Back CTA */}
-            <div className="mt-10 flex items-center gap-4">
+            {/* Urgency timer */}
+            <UrgencyTimer />
+
+            {/* CTA Row */}
+            <div className="flex flex-wrap items-center gap-4" data-testid="blog-cta-row">
               <Link
                 href="/blog"
-                className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-semibold text-foreground hover:bg-[#01454A] hover:text-white hover:border-[#01454A] transition-all duration-200"
+                className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-semibold text-foreground hover:bg-[hsl(var(--brand-green))] hover:text-white hover:border-[hsl(var(--brand-green))] transition-all duration-200"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -414,18 +438,30 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
               </Link>
               <Link
                 href="/products"
-                className="inline-flex items-center gap-2 rounded-full bg-[#FDA600] px-6 py-3 text-sm font-bold text-black hover:bg-[#FDA600]/90 transition-all duration-200 hover:scale-105 active:scale-95"
+                className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--accent))] px-6 py-3 text-sm font-bold text-black hover:bg-[hsl(var(--brand-gold-hover))] transition-all duration-200 hover:scale-105 active:scale-95"
+                data-testid="blog-cta-shop"
               >
-                Shop Now
+                Shop the Collection
+              </Link>
+              <Link
+                href="/get-measured"
+                className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--brand-green))] px-6 py-3 text-sm font-bold text-white hover:bg-[hsl(var(--brand-green-hover))] transition-all duration-200 hover:scale-105 active:scale-95"
+                data-testid="blog-cta-measured"
+              >
+                Get Your Perfect Fit — Start Free
               </Link>
             </div>
           </div>
-        </div>
+        </section>
+
+        {/* ── Trust Badges ───────────────────────────────────────────────────── */}
+        <TrustBadges />
 
         {/* ── Related Posts ──────────────────────────────────────────────────── */}
         {relatedPosts.length > 0 && (
           <section
-            className="px-5 py-14 md:px-10 lg:px-20 bg-[#F8F9FC]"
+            aria-label="Related articles"
+            className="px-5 py-14 md:px-10 lg:px-20 bg-[hsl(var(--brand-cream))]"
             data-testid="blog-related"
           >
             <div className="mx-auto max-w-5xl space-y-8">
@@ -442,7 +478,11 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
         )}
 
         {/* ── Newsletter CTA ────────────────────────────────────────────────── */}
-        <section className="mx-5 md:mx-10 lg:mx-20 my-14 rounded-3xl bg-gradient-to-r from-[#01454A] to-[#016B73] p-10 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8">
+        <section
+          aria-label="Newsletter CTA"
+          className="mx-5 md:mx-10 lg:mx-20 my-14 rounded-3xl bg-gradient-to-r from-[hsl(var(--brand-green))] to-[hsl(var(--brand-green-hover))] p-10 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8"
+          data-testid="blog-newsletter-cta"
+        >
           <div className="text-center md:text-left">
             <h2 className="font-bon_foyage text-3xl text-white mb-2">
               Stay Fashion-Forward
@@ -453,11 +493,18 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
           </div>
           <Link
             href="/#newsletter-section"
-            className="inline-flex items-center gap-2 rounded-full bg-[#FDA600] px-8 py-4 font-bold text-black hover:bg-[#FDA600]/90 transition-all duration-200 hover:scale-105 active:scale-95 min-h-[48px] whitespace-nowrap"
+            className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--accent))] px-8 py-4 font-bold text-black hover:bg-[hsl(var(--brand-gold-hover))] transition-all duration-200 hover:scale-105 active:scale-95 min-h-[48px] whitespace-nowrap"
+            data-testid="blog-newsletter-button"
           >
-            Subscribe Free
+            Join 10,000+ Style Insiders
           </Link>
         </section>
+
+        {/* ── Sticky CTA Bar (client component, scroll-triggered) ─────────────── */}
+        <StickyCTABar />
+
+        {/* ── Exit Intent Popup (client component, mouseleave triggered) ─────── */}
+        <ExitIntentPopup />
       </main>
     </>
   );

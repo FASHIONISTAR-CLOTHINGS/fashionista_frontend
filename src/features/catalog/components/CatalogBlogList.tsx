@@ -9,7 +9,7 @@ import Link from "next/link";
 
 import { FashionistarImage } from "@/components/media";
 import { FashionistarPagination } from "@/components/ui/FashionistarPagination";
-import { getCatalogBlogPosts } from "../api/catalog.server";
+import { getBlogPostsSync } from "../api/blog-sync";
 
 const BLOG_PAGE_SIZE = 7; // 1 featured + 6 secondary
 
@@ -25,7 +25,7 @@ export default async function CatalogBlogList({
   showHeading = true,
   page = 1,
 }: CatalogBlogListProps) {
-  const allPosts = await getCatalogBlogPosts();
+  const allPosts = await getBlogPostsSync();
 
   // If a hard limit is passed (homepage use-case), use that — no pagination
   const usePagination = !limit;
@@ -65,6 +65,7 @@ export default async function CatalogBlogList({
         <Link
           href={`/blog/${featuredPost.slug}`}
           className="card-shadow card-shadow-hover group mb-8 grid overflow-hidden rounded-xl border border-border bg-card text-card-foreground md:grid-cols-[1.1fr_0.9fr] transition-all duration-300 hover:-translate-y-1"
+          data-testid="blog-featured-post"
         >
           <div className="relative min-h-[200px] bg-[hsl(var(--brand-cream))] md:min-h-[420px]">
             <FashionistarImage
@@ -114,11 +115,11 @@ export default async function CatalogBlogList({
       {secondaryPosts.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {secondaryPosts.map((post) => (
-            <Link
-              key={post.id}
-              href={`/blog/${post.slug}`}
-              className="card-shadow card-shadow-hover group overflow-hidden rounded-xl border border-border bg-card text-card-foreground transition-all duration-300 hover:-translate-y-1"
-            >
+            <article key={post.id} className="card-shadow card-shadow-hover group overflow-hidden rounded-xl border border-border bg-card text-card-foreground transition-all duration-300 hover:-translate-y-1" data-testid={`blog-post-card-${post.slug}`}>
+              <Link
+                href={`/blog/${post.slug}`}
+                className="block h-full"
+              >
               <div className="relative h-48 bg-[hsl(var(--brand-cream))]">
                 <FashionistarImage
                   src={post.image_url || post.featured_image || "/minimalist.svg"}
@@ -128,16 +129,17 @@ export default async function CatalogBlogList({
                   imgClassName="object-contain p-6 group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
-              <div className="space-y-2.5 p-5">
-                <span className="inline-flex rounded-full bg-[hsl(var(--accent)/0.14)] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[hsl(var(--accent))]">
-                  {post.category_name || "Fashion guide"}
-                </span>
-                <h2 className="text-lg font-semibold leading-6">{post.title}</h2>
-                <p className="line-clamp-2 text-sm leading-5 text-muted-foreground">
-                  {post.excerpt || post.seo_description}
-                </p>
-              </div>
-            </Link>
+                <div className="space-y-2.5 p-5">
+                  <span className="inline-flex rounded-full bg-[hsl(var(--accent)/0.14)] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[hsl(var(--accent))]">
+                    {post.category_name || "Fashion guide"}
+                  </span>
+                  <h3 className="text-lg font-semibold leading-6">{post.title}</h3>
+                  <p className="line-clamp-2 text-sm leading-5 text-muted-foreground">
+                    {post.excerpt || post.seo_description}
+                  </p>
+                </div>
+              </Link>
+            </article>
           ))}
         </div>
       ) : null}

@@ -13,6 +13,8 @@ export type {
 } from "./api/catalog.api";
 
 // ── Server functions (RSC only) ───────────────────────────────────────────────
+// NOTE: getBlogPostsSync is NOT exported here because it imports "server-only".
+// Import it directly from "./api/blog-sync" in server components only.
 export {
   getCatalogBlogPostBySlug,
   getCatalogBlogPosts,
