@@ -15,13 +15,22 @@
  *   ISR revalidate: 300 seconds (5 min) — matches backend Redis TTL.
  */
 
+import { z } from "zod";
 import {
   CatalogBrandListSchema,
   CatalogBlogPostListSchema,
   CatalogBlogPostSchema,
   CatalogCategoryListSchema,
   CatalogCollectionListSchema,
-  HomepageBundleSchema,
+  HomepageProductCardSchema,
+  HomepageReviewCardSchema,
+  HomepageCollectionCardSchema,
+  HomepageCategoryCardSchema,
+  HomepageBannerCardSchema,
+  HomepageBundleMetaSchema,
+  HomepageVendorCardSchema,
+  HomepageBlogCardSchema,
+  HomepageTagCardSchema,
 } from "../schemas/catalog.schemas";
 import type {
   CatalogBlogPost,
@@ -254,18 +263,64 @@ export async function getHomepageBundle(): Promise<HomepageBundle> {
     const raw = await fetchHomepageBundle(
       "/api/v1/ninja/catalog/homepage/"
     );
-    if (!raw) return EMPTY_BUNDLE;
-    const result = HomepageBundleSchema.safeParse(raw);
-    if (!result.success) {
-      const errors = result.error.errors.slice(0, 10);
-      console.warn(
-        "[catalog.server] getHomepageBundle Zod parse failed. First errors:",
-        errors.map(e => `${e.path.join(".")}: ${e.message}`).join(" | ")
-      );
-      console.warn("[catalog.server] Raw bundle keys:", raw && typeof raw === "object" ? Object.keys(raw as Record<string, unknown>) : typeof raw);
-      return EMPTY_BUNDLE;
+    if (!raw || typeof raw !== "object") return EMPTY_BUNDLE;
+
+    const obj = raw as Record<string, unknown>;
+
+    // ── Per-section resilient parsing ──────────────────────────────────────
+    // Each section is validated independently — if one section's data is
+    // malformed, only that section degrades to [] while the other 11 still
+    // render. This mirrors the backend's asyncio.gather(return_exceptions=True).
+    function parseSection<T>(
+      schema: z.ZType,
+      rawVal: unknown,
+      sectionName: string
+    ): T {
+      if (!Array.isArray(rawVal)) return [] as unknown as T;
+      const result = (schema as z.ZodArray<z.ZodTypeAny>).safeParse(rawVal);
+      if (!result.success) {
+        const errors = result.error?.errors?.slice(0, 3) ?? [];
+        console.warn(
+          `[catalog.server] Section "${sectionName}" parse failed:`,
+          errors.map((e: { path: (string|number)[]; message: string }) => `${e.path.join(".")}: ${e.message}`).join(" | ")
+        );
+        return [] as unknown as T;
+      }
+      return result.data as T;
     }
-    return result.data as HomepageBundle;
+
+    function parseMeta(rawVal: unknown): HomepageBundle["meta"] {
+      const result = HomepageBundleMetaSchema.safeParse(rawVal);
+      if (!result.success) {
+        return EMPTY_BUNDLE.meta;
+      }
+      return result.data as HomepageBundle["meta"];
+    }
+
+    const productArr = z.array(HomepageProductCardSchema);
+    const collectionArr = z.array(HomepageCollectionCardSchema);
+    const categoryArr = z.array(HomepageCategoryCardSchema);
+    const reviewArr = z.array(HomepageReviewCardSchema);
+    const bannerArr = z.array(HomepageBannerCardSchema);
+    const vendorArr = z.array(HomepageVendorCardSchema);
+    const blogArr = z.array(HomepageBlogCardSchema);
+    const tagArr = z.array(HomepageTagCardSchema);
+
+    return {
+      collections: parseSection(collectionArr, obj.collections, "collections"),
+      categories: parseSection(categoryArr, obj.categories, "categories"),
+      featured_products: parseSection(productArr, obj.featured_products, "featured_products"),
+      hot_deals: parseSection(productArr, obj.hot_deals, "hot_deals"),
+      reviews: parseSection(reviewArr, obj.reviews, "reviews"),
+      banners: parseSection(bannerArr, obj.banners, "banners"),
+      trending_products: parseSection(productArr, obj.trending_products, "trending_products"),
+      vendors: parseSection(vendorArr, obj.vendors, "vendors"),
+      blog_posts: parseSection(blogArr, obj.blog_posts, "blog_posts"),
+      trending_tags: parseSection(tagArr, obj.trending_tags, "trending_tags"),
+      deals_of_the_week: parseSection(productArr, obj.deals_of_the_week, "deals_of_the_week"),
+      new_arrivals: parseSection(productArr, obj.new_arrivals, "new_arrivals"),
+      meta: parseMeta(obj.meta),
+    };
   } catch (err) {
     console.error("[catalog.server] getHomepageBundle failed:", err instanceof Error ? err.message : err);
     return EMPTY_BUNDLE;

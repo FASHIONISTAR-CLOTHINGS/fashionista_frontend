@@ -145,7 +145,7 @@ export const CatalogBlogPostListSchema = z.array(CatalogBlogPostSchema);
 // Every field uses safe transforms so partial/null server data never throws.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const HomepageProductCardSchema = z.object({
+export const HomepageProductCardSchema = z.object({
   id: IdSchema,
   title: z.string(),
   slug: z.string(),
@@ -185,6 +185,9 @@ const HomepageProductCardSchema = z.object({
     .array(z.object({ id: IdSchema, name: z.string(), hex_code: z.string() }))
     .default([]),
   created_at: z.string().nullable().optional().default(null),
+  // Optional fields not always returned by backend
+  ai_trend_score: z.number().nullable().optional(),
+  discount_countdown: z.string().nullable().optional().default(null),
 }).transform((data) => ({
   ...data,
   // Coerce any remaining null numeric fields to their safe defaults
@@ -205,7 +208,7 @@ const HomepageProductCardSchema = z.object({
   store_slug: data.vendor_slug,
 }));
 
-const HomepageReviewCardSchema = z.object({
+export const HomepageReviewCardSchema = z.object({
   id: IdSchema,
   reviewer_name: z.string().default("Anonymous"),
   reviewer_avatar_url: NullableStringSchema,
@@ -217,7 +220,7 @@ const HomepageReviewCardSchema = z.object({
   created_at: z.string().nullable().optional().default(null),
 });
 
-const HomepageCollectionCardSchema = z.object({
+export const HomepageCollectionCardSchema = z.object({
   id: IdSchema,
   name: z.string().default(""),
   title: z.string().default(""),
@@ -232,7 +235,7 @@ const HomepageCollectionCardSchema = z.object({
   created_at: z.string().nullable().optional().default(null),
 });
 
-const HomepageCategoryCardSchema = z.object({
+export const HomepageCategoryCardSchema = z.object({
   id: IdSchema,
   name: z.string(),
   title: z.string().default(""),
@@ -249,7 +252,7 @@ const HomepageCategoryCardSchema = z.object({
   active: data.active ?? !data.is_deleted,
 }));
 
-const HomepageBannerCardSchema = z.object({
+export const HomepageBannerCardSchema = z.object({
   id: IdSchema,
   slot: z.enum(["hero", "mid", "footer_cta"]).default("hero"),
   title: z.string().default(""),
@@ -261,7 +264,7 @@ const HomepageBannerCardSchema = z.object({
   sort_order: z.number().default(0),
 });
 
-const HomepageBundleMetaSchema = z.object({
+export const HomepageBundleMetaSchema = z.object({
   collections_count: z.number().nullable().default(0).transform((v) => v ?? 0),
   categories_count: z.number().nullable().default(0).transform((v) => v ?? 0),
   products_count: z.number().nullable().default(0).transform((v) => v ?? 0),
@@ -279,7 +282,7 @@ const HomepageBundleMetaSchema = z.object({
 });
 
 // Vendor spotlight card Zod schema
-const HomepageVendorCardSchema = z.object({
+export const HomepageVendorCardSchema = z.object({
   id: IdSchema,
   store_name: z.string().default(""),
   store_slug: z.string().default(""),
@@ -296,7 +299,7 @@ const HomepageVendorCardSchema = z.object({
 });
 
 // Blog post card Zod schema (consolidated bundle — _blog_card_out from backend)
-const HomepageBlogCardSchema = z.object({
+export const HomepageBlogCardSchema = z.object({
   id: IdSchema,
   title: z.string().default(""),
   slug: z.string().default(""),
@@ -313,7 +316,7 @@ const HomepageBlogCardSchema = z.object({
 });
 
 // Trending tag card Zod schema (consolidated bundle — _tag_out from backend)
-const HomepageTagCardSchema = z.object({
+export const HomepageTagCardSchema = z.object({
   id: IdSchema,
   name: z.string().default(""),
   slug: z.string().default(""),

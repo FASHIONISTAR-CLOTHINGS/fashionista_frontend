@@ -48,6 +48,7 @@ import { PersonalizedRail } from "./_components/PersonalizedRail";
 import { NewArrivalsRail } from "./_components/NewArrivalsRail";
 import { TrendingTagsRail } from "./_components/TrendingTagsRail";
 import { EmailCaptureModalLazy } from "./_components/EmailCaptureModalLazy";
+import { SectionErrorBoundary } from "./_components/SectionErrorBoundary";
 import { LiveSocialProofToast } from "@/components/commerce/LiveSocialProofToast";
 import { Hero } from "@/components";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
@@ -183,11 +184,13 @@ export default async function Home() {
 
       {/* ── 1. Hero: CMS Banner if available, else static Hero ─────────────── */}
       <section aria-label="Homepage Hero" data-testid="hero-section">
-        {bundle.banners.length > 0 ? (
-          <CatalogBannerHero banners={bundle.banners} />
-        ) : (
-          <Hero />
-        )}
+        <SectionErrorBoundary sectionName="hero">
+          {bundle.banners.length > 0 ? (
+            <CatalogBannerHero banners={bundle.banners} />
+          ) : (
+            <Hero />
+          )}
+        </SectionErrorBoundary>
       </section>
 
       {/* ── 2. Trust Bar ──────────────────────────────────────────────────── */}
@@ -222,7 +225,9 @@ export default async function Home() {
 
       {/* ── 4. Shop by Category ────────────────────────────────────────────── */}
       <section aria-label="Shop by Category" data-testid="category-grid-section">
-        <CatalogCategoryGrid categories={bundle.categories} />
+        <SectionErrorBoundary sectionName="categories">
+          <CatalogCategoryGrid categories={bundle.categories} />
+        </SectionErrorBoundary>
       </section>
 
       {/* ── 5. AI Measurement CTA Banner ──────────────────────────────────── */}
@@ -232,16 +237,20 @@ export default async function Home() {
 
       {/* ── 6. Featured Products — Tabbed Rails ───────────────────────────── */}
       <section aria-label="Featured Products" data-testid="featured-products-section">
-        <Suspense fallback={<HomepageFeaturedProductsSkeleton count={8} />}>
-          <TabbedFeaturedProducts products={bundle.featured_products} limit={8} />
-        </Suspense>
+        <SectionErrorBoundary sectionName="featured-products">
+          <Suspense fallback={<HomepageFeaturedProductsSkeleton count={8} />}>
+            <TabbedFeaturedProducts products={bundle.featured_products} limit={8} />
+          </Suspense>
+        </SectionErrorBoundary>
       </section>
 
       {/* ── 7. Trending Now Rail (APEX v4: props from bundle — zero extra fetch) */}
       <section aria-label="Trending Now" data-testid="trending-products-section">
-        <Suspense fallback={<TrendingProductsRailSkeleton />}>
-          <TrendingProductsRail products={bundle.trending_products} />
-        </Suspense>
+        <SectionErrorBoundary sectionName="trending-products">
+          <Suspense fallback={<TrendingProductsRailSkeleton />}>
+            <TrendingProductsRail products={bundle.trending_products} />
+          </Suspense>
+        </SectionErrorBoundary>
       </section>
 
       {/* ── Personalized Rail ──────────────────────────────────────────────── */}
@@ -256,7 +265,9 @@ export default async function Home() {
 
       {/* ── 9. Collections ────────────────────────────────────────────────────── */}
       <section aria-label="Shop Collections" data-testid="collection-grid-section">
-        <CatalogCollectionGrid collections={bundle.collections} />
+        <SectionErrorBoundary sectionName="collections">
+          <CatalogCollectionGrid collections={bundle.collections} />
+        </SectionErrorBoundary>
       </section>
 
       {/* ── Campaign Banner ────────────────────────────────────────────────── */}
@@ -336,18 +347,22 @@ export default async function Home() {
         </div>
         {/* Use deals_of_the_week from the 12-way bundle (steep-discount products
             with discount_countdown). Falls back to hot_deals if empty. */}
-        <HomepageHotDealsSection
-          products={
-            (bundle.deals_of_the_week?.length ?? 0) > 0
-              ? bundle.deals_of_the_week.slice(0, 6)
-              : bundle.hot_deals.slice(0, 6)
-          }
-        />
+        <SectionErrorBoundary sectionName="deals-of-the-week">
+          <HomepageHotDealsSection
+            products={
+              (bundle.deals_of_the_week?.length ?? 0) > 0
+                ? bundle.deals_of_the_week.slice(0, 6)
+                : bundle.hot_deals.slice(0, 6)
+            }
+          />
+        </SectionErrorBoundary>
       </section>
 
       {/* ── 11. Customer Reviews ─────────────────────────────────────────────── */}
       <section aria-label="Customer Reviews" data-testid="reviews-section">
-        <HomepageReviewsSection reviews={bundle.reviews} />
+        <SectionErrorBoundary sectionName="reviews">
+          <HomepageReviewsSection reviews={bundle.reviews} />
+        </SectionErrorBoundary>
       </section>
 
       {/* ── 12. Blog Style Guide Rail ──────────────────────────────────────── */}
@@ -356,7 +371,9 @@ export default async function Home() {
         data-testid="blog-rail-section"
         className="animate-fade-slide-up"
       >
-        <BlogStyleGuideRail posts={bundle.blog_posts} />
+        <SectionErrorBoundary sectionName="blog-posts">
+          <BlogStyleGuideRail posts={bundle.blog_posts} />
+        </SectionErrorBoundary>
       </section>
 
       {/* ── 12b. Trending Tags Rail ─────────────────────────────────────────── */}
@@ -365,7 +382,9 @@ export default async function Home() {
         data-testid="trending-tags-section"
         className="animate-fade-slide-up"
       >
-        <TrendingTagsRail tags={bundle.trending_tags} />
+        <SectionErrorBoundary sectionName="trending-tags">
+          <TrendingTagsRail tags={bundle.trending_tags} />
+        </SectionErrorBoundary>
       </section>
 
       {/* ── 12c. New Arrivals Rail ──────────────────────────────────────────── */}
@@ -374,14 +393,18 @@ export default async function Home() {
         data-testid="new-arrivals-section"
         className="animate-fade-slide-up"
       >
-        <NewArrivalsRail products={bundle.new_arrivals} />
+        <SectionErrorBoundary sectionName="new-arrivals">
+          <NewArrivalsRail products={bundle.new_arrivals} />
+        </SectionErrorBoundary>
       </section>
 
       {/* ── 13. Vendor Spotlight (APEX v4: props from bundle — zero extra fetch) */}
       <section aria-label="Meet Our Vendors" data-testid="vendor-spotlight-section">
-        <Suspense fallback={<VendorSpotlightSkeleton />}>
-          <VendorSpotlightSection vendors={bundle.vendors} />
-        </Suspense>
+        <SectionErrorBoundary sectionName="vendor-spotlight">
+          <Suspense fallback={<VendorSpotlightSkeleton />}>
+            <VendorSpotlightSection vendors={bundle.vendors} />
+          </Suspense>
+        </SectionErrorBoundary>
       </section>
 
       {/* ── Newsletter CTA ───────────────────────────────────────────────────── */}

@@ -149,7 +149,7 @@ export interface CatalogTag {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Homepage Bundle Types
-// v2: GET /api/v1/ninja/catalog/homepage/bundle/ (6 sections + banners)
+// v2: GET /api/v1/ninja/catalog/homepage/bundle/ (12 sections + banners)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -292,10 +292,14 @@ export interface HomepageVendorCard {
   store_name: string;
   store_slug: string;
   tagline: string;
-  /** Cloudinary circular-crop URL w_200,h_200,c_fill,f_auto,q_auto */
+  /** Cloudinary circular-crop URL w_240,h_240,c_fill,f_auto,q_auto,r_max */
   logo_url: string | null;
+  /** Alias for logo_url — Cloudinary-optimised circular avatar. */
+  logo_cloudinary_url: string | null;
   city: string;
+  state: string;
   is_verified: boolean;
+  is_featured: boolean;
   average_rating: number;
   review_count: number;
   total_products: number;
