@@ -9,7 +9,7 @@ import Link from "next/link";
 
 import { FashionistarImage } from "@/components/media";
 import { FashionistarPagination } from "@/components/ui/FashionistarPagination";
-import { getBlogPostsSync } from "../api/blog-sync";
+import { getCatalogBlogPosts } from "../api/catalog.server";
 
 const BLOG_PAGE_SIZE = 7; // 1 featured + 6 secondary
 
@@ -25,7 +25,7 @@ export default async function CatalogBlogList({
   showHeading = true,
   page = 1,
 }: CatalogBlogListProps) {
-  const allPosts = await getBlogPostsSync();
+  const allPosts = await getCatalogBlogPosts();
 
   // If a hard limit is passed (homepage use-case), use that — no pagination
   const usePagination = !limit;

@@ -42,7 +42,6 @@ import { StickyMobileCTA } from "./_components/StickyMobileCTA";
 import { TrendingProductsRail } from "./_components/TrendingProductsRail";
 import { VendorSpotlightSection } from "./_components/VendorSpotlightSection";
 import { BlogStyleGuideRail } from "./_components/BlogStyleGuideRail";
-import { AIPersonalizedGreeting } from "./_components/AIPersonalizedGreeting";
 import { UrgencyBanner } from "./_components/UrgencyBanner";
 import { LiveShopperCounter } from "./_components/LiveShopperCounter";
 import { PersonalizedRail } from "./_components/PersonalizedRail";
@@ -172,6 +171,8 @@ export default async function Home() {
       d.setDate(d.getDate() + daysUntilSunday);
       d.setHours(23, 59, 59, 0);
       return d.toISOString();
+
+
     })();
 
   return (
@@ -199,10 +200,19 @@ export default async function Home() {
         <LiveShopperCounter />
       </div>
 
+
+
+
+    {/* 
+    AI Personalized Greeting COMMENTED OUT FOR NOW, 
+    WILL BE RE-ADDED LATER WITH A MORE REFINED TAILWIND CSS GRIDS AND 
+    CLOUMNS WITH A MORE MODERNISED SHADCN UI CARDS RESPECTRIVELY PLEASE 
+    */}
+
       {/* ── AI Personalized Greeting ───────────────────────────────────────── */}
-      <div data-testid="ai-greeting" suppressHydrationWarning>
+      {/* <div data-testid="ai-greeting" suppressHydrationWarning>
         <AIPersonalizedGreeting />
-      </div>
+      </div> */}
 
       {/* ── 3. Mobile email waitlist (mobile only) ─────────────────────────── */}
       <div className="mt-8 md:hidden flex z-30 px-4" data-testid="mobile-email-waitlist">
